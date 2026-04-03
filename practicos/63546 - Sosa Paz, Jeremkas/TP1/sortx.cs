@@ -164,3 +164,33 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
     return query!.ToList();
 }
+string Serialize(string? header, List<Dictionary<string, string>> rows, AppConfig config)
+{
+    var sb = new StringBuilder();
+    if (header != null) sb.AppendLine(header);
+
+    if (rows.Count > 0)
+    {
+        // Extraemos las claves del primer diccionario para mantener el orden de las columnas
+        var keys = rows[0].Keys.ToList();
+        foreach (var row in rows)
+        {
+            var values = keys.Select(k => row[k]);
+            sb.AppendLine(string.Join(config.Delimiter, values));
+        }
+    }
+    
+    return sb.ToString();
+}
+
+void WriteOutput(string text, AppConfig config)
+{
+    if (string.IsNullOrEmpty(config.OutputFile))
+    {
+        Console.Write(text);
+    }
+    else
+    {
+        File.WriteAllText(config.OutputFile, text);
+    }
+}
