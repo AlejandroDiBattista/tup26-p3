@@ -27,18 +27,6 @@ catch (Exception ex)
     Console.Error.WriteLine($"Error: {ex.Message}");
     return 1;
 }
-
-// --- 2. MODELO DE CONFIGURACIÓN ---
-record SortField(string Name, bool Numeric, bool Descending);
-
-record AppConfig(
-    string? InputFile,
-    string? OutputFile,
-    string Delimiter,
-    bool NoHeader,
-    List<SortField> SortFields,
-    bool ShowHelp
-);
 // --- 3. FUNCIONES LOCALES ---
 
 AppConfig ParseArgs(string[] args)
@@ -194,3 +182,14 @@ void WriteOutput(string text, AppConfig config)
         File.WriteAllText(config.OutputFile, text);
     }
 }
+// --- 2. MODELO DE CONFIGURACIÓN ---
+record SortField(string Name, bool Numeric, bool Descending);
+
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields,
+    bool ShowHelp
+);
