@@ -27,8 +27,8 @@ catch (Exception ex)
     Console.Error.WriteLine($"Error: {ex.Message}");
     return 1;
 }
-// --- 3. FUNCIONES LOCALES ---
 
+// --- 3. FUNCIONES LOCALES ---
 AppConfig ParseArgs(string[] args)
 {
     string? input = null;
@@ -71,6 +71,7 @@ void ShowHelp()
 {
     Console.WriteLine("Uso: sortx [input [output]] [-b|--by campo[:tipo[:orden]]]... [-d delimitador] [-nh] [-h]");
 }
+
 string ReadInput(AppConfig config)
 {
     if (string.IsNullOrEmpty(config.InputFile))
@@ -116,6 +117,7 @@ string ReadInput(AppConfig config)
     }
     return (headerLine, rowsList);
 }
+
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
 {
     if (config.SortFields.Count == 0 || rows.Count == 0) return rows;
@@ -130,12 +132,10 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
             if (!row.TryGetValue(field.Name, out string? val))
                 throw new Exception($"Columna inexistente: {field.Name}");
 
-            // Si el profe pidió orden numérico, intentamos convertir el texto a número
             if (field.Numeric)
             {
                 return double.TryParse(val, out double num) ? num : double.MinValue;
             }
-            // Si es alfabético, devolvemos el texto tal cual
             return val;
         }
 
@@ -152,6 +152,7 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
     return query!.ToList();
 }
+
 string Serialize(string? header, List<Dictionary<string, string>> rows, AppConfig config)
 {
     var sb = new StringBuilder();
@@ -159,7 +160,6 @@ string Serialize(string? header, List<Dictionary<string, string>> rows, AppConfi
 
     if (rows.Count > 0)
     {
-        // Extraemos las claves del primer diccionario para mantener el orden de las columnas
         var keys = rows[0].Keys.ToList();
         foreach (var row in rows)
         {
@@ -182,6 +182,7 @@ void WriteOutput(string text, AppConfig config)
         File.WriteAllText(config.OutputFile, text);
     }
 }
+
 // --- 2. MODELO DE CONFIGURACIÓN ---
 record SortField(string Name, bool Numeric, bool Descending);
 
