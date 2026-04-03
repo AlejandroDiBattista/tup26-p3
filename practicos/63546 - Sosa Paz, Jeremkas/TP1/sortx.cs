@@ -83,3 +83,48 @@ void ShowHelp()
 {
     Console.WriteLine("Uso: sortx [input [output]] [-b|--by campo[:tipo[:orden]]]... [-d delimitador] [-nh] [-h]");
 }
+string ReadInput(AppConfig config)
+{
+    if (string.IsNullOrEmpty(config.InputFile))
+    {
+        if (Console.IsInputRedirected) return Console.In.ReadToEnd();
+        throw new Exception("Falta archivo de entrada.");
+    }
+    if (!File.Exists(config.InputFile)) throw new Exception($"Archivo no encontrado: {config.InputFile}");
+    return File.ReadAllText(config.InputFile);
+}
+
+(string? header, List<Dictionary<string, string>> rows) ParseDelimited(string text, AppConfig config)
+{
+    var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    if (lines.Length == 0) return (null, new List<Dictionary<string, string>>());
+
+    string? headerLine = null;
+    int startIndex = 0;
+    string[] keys;
+
+    if (config.NoHeader)
+    {
+        int colCount = lines[0].Split(config.Delimiter).Length;
+        keys = Enumerable.Range(0, colCount).Select(i => i.ToString()).ToArray();
+    }
+    else
+    {
+        headerLine = lines[0];
+        keys = headerLine.Split(config.Delimiter);
+        startIndex = 1;
+    }
+
+    var rowsList = new List<Dictionary<string, string>>();
+    for (int i = startIndex; i < lines.Length; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+        var dict = new Dictionary<string, string>();
+        for (int j = 0; j < keys.Length; j++)
+        {
+            dict[keys[j]] = j < values.Length ? values[j] : "";
+        }
+        rowsList.Add(dict);
+    }
+    return (headerLine, rowsList);
+}
