@@ -128,3 +128,39 @@ string ReadInput(AppConfig config)
     }
     return (headerLine, rowsList);
 }
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (config.SortFields.Count == 0 || rows.Count == 0) return rows;
+
+    IOrderedEnumerable<Dictionary<string, string>>? query = null;
+    bool isFirst = true;
+
+    foreach (var field in config.SortFields)
+    {
+        object KeySelector(Dictionary<string, string> row)
+        {
+            if (!row.TryGetValue(field.Name, out string? val))
+                throw new Exception($"Columna inexistente: {field.Name}");
+
+            // Si el profe pidió orden numérico, intentamos convertir el texto a número
+            if (field.Numeric)
+            {
+                return double.TryParse(val, out double num) ? num : double.MinValue;
+            }
+            // Si es alfabético, devolvemos el texto tal cual
+            return val;
+        }
+
+        if (isFirst)
+        {
+            query = field.Descending ? rows.OrderByDescending(KeySelector) : rows.OrderBy(KeySelector);
+            isFirst = false;
+        }
+        else
+        {
+            query = field.Descending ? query!.ThenByDescending(KeySelector) : query!.ThenBy(KeySelector);
+        }
+    }
+
+    return query!.ToList();
+}
