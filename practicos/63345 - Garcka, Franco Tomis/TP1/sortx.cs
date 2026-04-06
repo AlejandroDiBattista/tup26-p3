@@ -4,4 +4,4 @@
 //       [-d|--delimiter delimitador]
 //       [-nh|--no-header] [-h|--help]
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+Console.WriteLine("Inicio sortx");
