@@ -1,10 +1,23 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
+try
+{
+    var config = ParseArgs(args);
+    var input = ReadInput(config);
+    var rows = ParseDelimited(input, config);
+    var sorted = SortRows(rows, config);
+    var output = Serialize(sorted, config);
+    WriteOutput(output, config);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    Environment.Exit(1);
+}
 
-Console.WriteLine("Inicio sortx");
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
