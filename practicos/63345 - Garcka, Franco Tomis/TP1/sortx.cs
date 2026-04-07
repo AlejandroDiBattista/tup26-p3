@@ -123,7 +123,7 @@ List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
     int startIndex = 0;
     if (!config.NoHeader)
     {
-        headers = lines[0].Split(config.Delimiter);
+        headers = lines[0].Split(config.Delimiter).Select(h => h.Trim()).ToArray();
         startIndex = 1;
     }
     else
@@ -143,7 +143,7 @@ List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
         for (int j = 0; j < headers.Length; j++)
         {
             var value = j < values.Length ? values[j] : "";
-            dict[headers[j]] = value;
+            dict[headers[j]] = value.Trim();
         }
         rows.Add(dict);
     }
@@ -234,4 +234,3 @@ record AppConfig(
     bool NoHeader,
     List<SortField> SortFields
 );
-
