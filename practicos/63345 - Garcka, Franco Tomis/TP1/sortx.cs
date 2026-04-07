@@ -107,29 +107,39 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 {
     if (config.SortFields.Count == 0)
         return rows;
-    var field = config.SortFields[0];
-    if (field.Numeric)
+
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+    for (int i = 0; i < config.SortFields.Count; i++)
     {
-        if (field.Descending)
+        var field = config.SortFields[i];
+
+        Func<Dictionary<string, string>, object> keySelector;
+
+        if (field.Numeric)
         {
-            return rows.OrderByDescending(r => double.Parse(r[field.Name])).ToList();
+            keySelector = r => double.Parse(r[field.Name]);
         }
         else
         {
-            return rows.OrderBy(r => double.Parse(r[field.Name])).ToList();
+            keySelector = r => r[field.Name];
         }
-    }
-    else
-    {
-        if (field.Descending)
+
+        if (i == 0)
         {
-            return rows.OrderByDescending(r => r[field.Name]).ToList();
+            ordered = field.Descending
+                ? rows.OrderByDescending(keySelector)
+                : rows.OrderBy(keySelector);
         }
         else
         {
-            return rows.OrderBy(r => r[field.Name]).ToList();
+            ordered = field.Descending
+                ? ordered!.ThenByDescending(keySelector)
+                : ordered!.ThenBy(keySelector);
         }
     }
+
+    return ordered!.ToList();
 }
 
 //Serialize
