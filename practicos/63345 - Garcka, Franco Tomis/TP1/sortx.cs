@@ -15,9 +15,7 @@ try
 catch (Exception ex)
 {
     Console.Error.WriteLine(ex.Message);
-    Environment.Exit(1);
 }
-
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
