@@ -105,7 +105,31 @@ List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
 //SortRows
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    throw new NotImplementedException();
+    if (config.SortFields.Count == 0)
+        return rows;
+    var field = config.SortFields[0];
+    if (field.Numeric)
+    {
+        if (field.Descending)
+        {
+            return rows.OrderByDescending(r => double.Parse(r[field.Name])).ToList();
+        }
+        else
+        {
+            return rows.OrderBy(r => double.Parse(r[field.Name])).ToList();
+        }
+    }
+    else
+    {
+        if (field.Descending)
+        {
+            return rows.OrderByDescending(r => r[field.Name]).ToList();
+        }
+        else
+        {
+            return rows.OrderBy(r => r[field.Name]).ToList();
+        }
+    }
 }
 
 //Serialize
