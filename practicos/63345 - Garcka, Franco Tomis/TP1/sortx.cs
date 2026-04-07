@@ -145,7 +145,24 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 //Serialize
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    throw new NotImplementedException();
+    if (rows.Count == 0)
+        return "";
+
+    var lines = new List<string>();
+
+    var headers = rows[0].Keys.ToList();
+    //header
+    if (!config.NoHeader)
+    {
+        lines.Add(string.Join(config.Delimiter, headers));
+    }
+    //filas
+    foreach (var row in rows)
+    {
+        var values = headers.Select(h => row.ContainsKey(h) ? row[h] : "");
+        lines.Add(string.Join(config.Delimiter, values));
+    }
+    return string.Join(Environment.NewLine, lines);
 }
 
 //WriteOutput
