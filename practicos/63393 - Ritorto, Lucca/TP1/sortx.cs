@@ -292,7 +292,7 @@ void EscribirSalida(string archivoSalida, string contenido)
 {
     if (archivoSalida != null)
     {
-      System.IO.File.WriteAllText(archivoSalida, contenido, System.Text.Encoding.UTF8);
+              System.IO.File.WriteAllText(archivoSalida, contenido, System.Text.Encoding.UTF8);
     }
     else
     {
