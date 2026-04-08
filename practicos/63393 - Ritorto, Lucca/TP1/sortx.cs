@@ -167,11 +167,11 @@ for (int i = sortFields.Count - 1; i >= 0; i--)
     if (noHeader)
     {
         bool pudo = int.TryParse(campo, out indiceCampo);
-        if (!pudo)
-        {
-            System.Console.Error.WriteLine("Error: Con --no-header el campo debe ser un índice numérico.");
-            System.Environment.Exit(1);
-        }
+    if (!pudo || indiceCampo < 0)
+    {
+    System.Console.Error.WriteLine("Error: Con --no-header el campo debe ser un índice numérico mayor o igual a 0.");
+    System.Environment.Exit(1);
+    }
     }
     else
     {
