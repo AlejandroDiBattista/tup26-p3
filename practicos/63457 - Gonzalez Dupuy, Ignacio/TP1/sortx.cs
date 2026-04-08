@@ -22,10 +22,18 @@ Opciones LeerArgumentos(string[] args)
     }
     return new Opciones(entrada, salida, ",", false, criterios);
 }
+string LeerTexto(Opciones op)
+{
+    if (op.Entrada != null)
+        return File.ReadAllText(op.Entrada);
+    else
+        return Console.In.ReadToEnd();
+}
 try
 {
     var opciones = LeerArgumentos(args);
-    Console.WriteLine(opciones.Entrada);
+    var texto = LeerTexto(opciones);
+    Console.WriteLine(texto);
 }
 catch (Exception ex)
 {
