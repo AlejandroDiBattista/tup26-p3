@@ -268,6 +268,9 @@ EscribirSalida(outputFile, sb.ToString());
 
 void MostrarAyuda()
 {
+
+
+    
     System.Console.WriteLine("Uso:");
     System.Console.WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...");
     System.Console.WriteLine("      [-i|--input input] [-o|--output output]");
