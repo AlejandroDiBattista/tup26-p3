@@ -15,48 +15,63 @@ for (int i = 0; i < args.Length; i++)
     {
         helpRequested = true;
     }
-    else if (args[i] == "-nh" || args[i] == "--no-header")
+   else if (args[i] == "-d" || args[i] == "--delimiter")
+{
+    if (i + 1 < args.Length)
     {
-        noHeader = true;
-    }
-    else if (args[i] == "-d" || args[i] == "--delimiter")
-    {
-        if (i + 1 < args.Length)
-        {
-            delimiter = args[i + 1];
+        delimiter = args[i + 1];
 
-            if (delimiter == "\\t")
-            {
-                delimiter = "\t";
-            }
+        if (delimiter == "\\t")
+        {
+            delimiter = "\t";
+        }
 
-            i++;
-        }
+        i++;
     }
-    else if (args[i] == "-i" || args[i] == "--input")
+    else
     {
-        if (i + 1 < args.Length)
-        {
-            inputFile = args[i + 1];
-            i++;
-        }
+        System.Console.Error.WriteLine("Error: Debes indicar un delimitador después de -d o --delimiter.");
+        System.Environment.Exit(1);
     }
-    else if (args[i] == "-o" || args[i] == "--output")
+}else if (args[i] == "-i" || args[i] == "--input")
+{
+    if (i + 1 < args.Length)
     {
-        if (i + 1 < args.Length)
-        {
-            outputFile = args[i + 1];
-            i++;
-        }
+        inputFile = args[i + 1];
+        i++;
     }
+    else
+    {
+        System.Console.Error.WriteLine("Error: Debes indicar un archivo después de -i o --input.");
+        System.Environment.Exit(1);
+    }
+}
+   else if (args[i] == "-o" || args[i] == "--output")
+{
+    if (i + 1 < args.Length)
+    {
+        outputFile = args[i + 1];
+        i++;
+    }
+    else
+    {
+        System.Console.Error.WriteLine("Error: Debes indicar un archivo después de -o o --output.");
+        System.Environment.Exit(1);
+    }
+}
     else if (args[i] == "-b" || args[i] == "--by")
+{
+    if (i + 1 < args.Length)
     {
-        if (i + 1 < args.Length)
-        {
-            sortFields.Add(args[i + 1]);
-            i++;
-        }
+        sortFields.Add(args[i + 1]);
+        i++;
     }
+    else
+    {
+        System.Console.Error.WriteLine("Error: Debes indicar un campo después de -b o --by.");
+        System.Environment.Exit(1);
+    }
+}
     else
     {
         posicionales.Add(args[i]);
