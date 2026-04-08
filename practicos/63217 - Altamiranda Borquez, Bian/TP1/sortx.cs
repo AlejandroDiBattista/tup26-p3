@@ -1,7 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Text;
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
-
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+try
+{ var config= Parse(args);
+  var input= ReadInput(config);
+  var rows= ParseDelimited(TextReader,config);
+  var sorted = SortedRows(rows,config);
+  var output= Serialize(sorted,config);
+   WriteOutput(output, config);
+}
+catch(Exception ex)
+{
+    Console.Error.WriteLine($"Error:{ex.Message}");
+    Environment.Exit(1);
+}
