@@ -190,7 +190,17 @@ for (int i = sortFields.Count - 1; i >= 0; i--)
             System.Environment.Exit(1);
         }
     }
+if (tipo != "alpha" && tipo != "num")
+{
+    System.Console.Error.WriteLine("Error: El tipo debe ser 'alpha' o 'num'.");
+    System.Environment.Exit(1);
+}
 
+if (orden != "asc" && orden != "desc")
+{
+    System.Console.Error.WriteLine("Error: El orden debe ser 'asc' o 'desc'.");
+    System.Environment.Exit(1);
+}
     bool numerico = (tipo == "num");
     bool descendente = (orden == "desc");
 
