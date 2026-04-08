@@ -1,7 +1,23 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
+try
+{
+    Console.WriteLine("Inicio del programa");
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine(ex.Message);
+}
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+record Criterio(string Columna, bool EsNumero, bool EsDesc);
+
+record Opciones(
+    string? Entrada,
+    string? Salida,
+    string Separador,
+    bool SinCabecera,
+    List<Criterio> Criterios
+);
