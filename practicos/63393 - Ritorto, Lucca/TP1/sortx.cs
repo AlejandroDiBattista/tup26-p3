@@ -285,7 +285,7 @@ void MostrarAyuda()
     System.Console.WriteLine("-o  | --output     Archivo de salida");
   System.Console.WriteLine("-d  | --delimiter  Delimitador. Por defecto: ,");
     System.Console.WriteLine("-nh | --no-header  Indica que no hay encabezado");
-    System.Console.WriteLine("-h  | --help       Muestra la ayuda");
+  System.Console.WriteLine("-h  | --help       Muestra esta ayuda");
 }
 
 void EscribirSalida(string archivoSalida, string contenido)
