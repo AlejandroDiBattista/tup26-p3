@@ -270,7 +270,7 @@ void MostrarAyuda()
 {
 
 
-    
+
     System.Console.WriteLine("Uso:");
     System.Console.WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...");
     System.Console.WriteLine("      [-i|--input input] [-o|--output output]");
@@ -283,7 +283,7 @@ void MostrarAyuda()
     System.Console.WriteLine("-b  | --by         Campo por el que ordenar. Formato: campo[:alpha|num[:asc|desc]]");
     System.Console.WriteLine("-i  | --input      Archivo de entrada");
     System.Console.WriteLine("-o  | --output     Archivo de salida");
-    System.Console.WriteLine("-d  | --delimiter  Delimitador. Default: ,");
+  System.Console.WriteLine("-d  | --delimiter  Delimitador. Por defecto: ,");
     System.Console.WriteLine("-nh | --no-header  Indica que no hay encabezado");
     System.Console.WriteLine("-h  | --help       Muestra la ayuda");
 }
