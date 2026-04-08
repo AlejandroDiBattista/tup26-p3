@@ -259,16 +259,17 @@ for (int i = 0; i < filas.Count; i++)
 
 EscribirSalida(outputFile, sb.ToString());
 
-void MostrarAyuda()
-{
+void MostrarAyuda(){
     System.Console.WriteLine("Uso:");
     System.Console.WriteLine("sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...");
     System.Console.WriteLine("      [-i|--input input] [-o|--output output]");
     System.Console.WriteLine("      [-d|--delimiter delimitador]");
     System.Console.WriteLine("      [-nh|--no-header] [-h|--help]");
     System.Console.WriteLine("");
+    System.Console.WriteLine("Ejemplos:");
+    System.Console.WriteLine("sortx datos.csv -b edad:num:desc -b nombre:alpha:asc");
     System.Console.WriteLine("Opciones:");
-    System.Console.WriteLine("-b  | --by         Campo por el que ordenar");
+    System.Console.WriteLine("-b  | --by         Campo por el que ordenar. Formato: campo[:alpha|num[:asc|desc]]");
     System.Console.WriteLine("-i  | --input      Archivo de entrada");
     System.Console.WriteLine("-o  | --output     Archivo de salida");
     System.Console.WriteLine("-d  | --delimiter  Delimitador. Default: ,");
@@ -277,6 +278,7 @@ void MostrarAyuda()
 }
 
 void EscribirSalida(string archivoSalida, string contenido)
+
 {
     if (archivoSalida != null)
     {
