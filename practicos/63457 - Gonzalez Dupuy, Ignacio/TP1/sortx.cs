@@ -39,11 +39,26 @@ List<string[]> Ordenar(List<string[]> filas, Opciones op)
 {
     var cabecera = filas[0];
     var datos = filas.Skip(1).ToList();
-    int col = Array.IndexOf(cabecera, op.Criterios[0].Columna);
+    int col = Array.FindIndex(cabecera, c => c.Trim() == op.Criterios[0].Columna);
+    if (col == -1)
+    {
+        throw new Exception("La columna no existe");
+    }
     var ordenadas = datos.OrderBy(f => f[col]).ToList();
     var resultado = new List<string[]> { cabecera };
     resultado.AddRange(ordenadas);
     return resultado;
+}
+string ArmarTexto(List<string[]> filas, Opciones op)
+{
+    return string.Join("\n", filas.Select(f => string.Join(op.Separador, f)));
+}
+void MostrarResultado(string texto, Opciones op)
+{
+    if (op.Salida != null)
+        File.WriteAllText(op.Salida, texto);
+    else
+        Console.WriteLine(texto);
 }
 try
 {
@@ -51,8 +66,8 @@ try
     var texto = LeerTexto(opciones);
     var filas = SepararFilas(texto, opciones);
     var ordenadas = Ordenar(filas, opciones);
-    foreach (var fila in ordenadas)
-        Console.WriteLine(string.Join(",", fila));
+    var salida = ArmarTexto(ordenadas, opciones);
+    MostrarResultado(salida, opciones);
 }
 catch (Exception ex)
 {
