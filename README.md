@@ -3,7 +3,7 @@
 **Materia:** Programación III  
 **Profesor:** Alejandro Di Battista
 **Modalidad:** Individual  
-**Entrega:**  8 de ABRIL de 2025 a las 23:59hs
+**Entrega:** 8 de ABRIL de 2026 a las 23:59hs
 
 ---
 
