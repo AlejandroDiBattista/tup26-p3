@@ -44,7 +44,19 @@ List<string[]> Ordenar(List<string[]> filas, Opciones op)
     {
         throw new Exception("La columna no existe");
     }
-    var ordenadas = datos.OrderBy(f => f[col]).ToList();
+    List<string[]> ordenadas;
+    if (op.Criterios[0].Columna == "salario")
+    {
+        ordenadas = datos
+            .OrderBy(f => int.Parse(f[col]))
+            .ToList();
+    }
+    else
+    {
+        ordenadas = datos
+            .OrderBy(f => f[col])
+            .ToList();
+    }
     var resultado = new List<string[]> { cabecera };
     resultado.AddRange(ordenadas);
     return resultado;
