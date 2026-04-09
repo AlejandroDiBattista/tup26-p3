@@ -12,8 +12,11 @@ Opciones LeerArgumentos(string[] args)
     {
         if (args[i] == "-b")
         {
-            var col = args[++i];
-            criterios.Add(new Criterio(col, false, false));
+            var partes = args[++i].Split(':');
+            string columna = partes[0];
+            bool esNumero = partes.Length > 1 && partes[1] == "num";
+            bool esDesc = partes.Length > 2 && partes[2] == "desc";
+            criterios.Add(new Criterio(columna, esNumero, esDesc));
         }
         else if (entrada == null)
             entrada = args[i];
@@ -39,26 +42,45 @@ List<string[]> Ordenar(List<string[]> filas, Opciones op)
 {
     var cabecera = filas[0];
     var datos = filas.Skip(1).ToList();
-    int col = Array.FindIndex(cabecera, c => c.Trim() == op.Criterios[0].Columna);
-    if (col == -1)
+    IOrderedEnumerable<string[]>? ordenadas = null;
+    foreach (var criterio in op.Criterios)
     {
-        throw new Exception("La columna no existe");
-    }
-    List<string[]> ordenadas;
-    if (op.Criterios[0].Columna == "salario")
-    {
-        ordenadas = datos
-            .OrderBy(f => int.Parse(f[col]))
-            .ToList();
-    }
-    else
-    {
-        ordenadas = datos
-            .OrderBy(f => f[col])
-            .ToList();
+        int col = Array.FindIndex(cabecera, c => c.Trim() == criterio.Columna);
+        if (col == -1)
+            throw new Exception($"La columna '{criterio.Columna}' no existe");
+        if (criterio.EsNumero)
+        {
+            if (ordenadas == null)
+            {
+                ordenadas = criterio.EsDesc
+                    ? datos.OrderByDescending(f => int.Parse(f[col]))
+                    : datos.OrderBy(f => int.Parse(f[col]));
+            }
+            else
+            {
+                ordenadas = criterio.EsDesc
+                    ? ordenadas.ThenByDescending(f => int.Parse(f[col]))
+                    : ordenadas.ThenBy(f => int.Parse(f[col]));
+            }
+        }
+        else
+        {
+            if (ordenadas == null)
+            {
+                ordenadas = criterio.EsDesc
+                    ? datos.OrderByDescending(f => f[col])
+                    : datos.OrderBy(f => f[col]);
+            }
+            else
+            {
+                ordenadas = criterio.EsDesc
+                    ? ordenadas.ThenByDescending(f => f[col])
+                    : ordenadas.ThenBy(f => f[col]);
+            }
+        }
     }
     var resultado = new List<string[]> { cabecera };
-    resultado.AddRange(ordenadas);
+    resultado.AddRange(ordenadas != null ? ordenadas.ToList() : datos);
     return resultado;
 }
 string ArmarTexto(List<string[]> filas, Opciones op)
