@@ -40,3 +40,18 @@ class Integer
     }
     public bool EsCero() => listaDigitos.Count == 1 && listaDigitos[0] == 0;
     
+    public static Integer operator +(Integer valorA, Integer valorB)
+    {
+        if (valorA.esNegativo == valorB.esNegativo)
+            return new Integer(SumarListas(valorA.listaDigitos, valorB.listaDigitos), valorA.esNegativo);
+
+        if (CompararAbsoluto(valorA, valorB) >= 0)
+            return new Integer(RestarListas(valorA.listaDigitos, valorB.listaDigitos), valorA.esNegativo);
+
+        return new Integer(RestarListas(valorB.listaDigitos, valorA.listaDigitos), valorB.esNegativo);
+    }
+
+    public static Integer operator -(Integer valorA, Integer valorB) => valorA + (-valorB);
+
+    public static Integer operator -(Integer valor)
+        => new Integer(new List<int>(valor.listaDigitos), !valor.esNegativo);
