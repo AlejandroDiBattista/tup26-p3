@@ -49,3 +49,11 @@ class Calculadora
 
         return listaTokens;
     }
+    private static int ObtenerPrioridad(ElementoToken tokenActual)
+    {
+        if (tokenActual.Tipo == TipoToken.OperadorSuma || tokenActual.Tipo == TipoToken.OperadorResta) return 1;
+        if (tokenActual.Tipo == TipoToken.OperadorMultiplicacion || tokenActual.Tipo == TipoToken.OperadorDivision || tokenActual.Tipo == TipoToken.OperadorModulo) return 2;
+        return 0;
+    }
+    
+
