@@ -105,3 +105,55 @@ class Integer
 
         return dividendo;
     }
+
+    private static List<int> SumarListas(List<int> listaA, List<int> listaB)
+    {
+        List<int> resultado = new List<int>();
+        int acarreo = 0;
+
+        for (int i = 0; i < Math.Max(listaA.Count, listaB.Count) || acarreo > 0; i++)
+        {
+            int suma = acarreo;
+            if (i < listaA.Count) suma += listaA[i];
+            if (i < listaB.Count) suma += listaB[i];
+
+            resultado.Add(suma % 10);
+            acarreo = suma / 10;
+        }
+
+        return resultado;
+    }
+
+    private static List<int> RestarListas(List<int> listaA, List<int> listaB)
+    {
+        List<int> resultado = new List<int>();
+        int prestamo = 0;
+
+        for (int i = 0; i < listaA.Count; i++)
+        {
+            int diferencia = listaA[i] - prestamo - (i < listaB.Count ? listaB[i] : 0);
+
+            if (diferencia < 0)
+            {
+                diferencia += 10;
+                prestamo = 1;
+            }
+            else prestamo = 0;
+
+            resultado.Add(diferencia);
+        }
+
+        return resultado;
+    }
+
+    private static int CompararAbsoluto(Integer valorA, Integer valorB)
+    {
+        if (valorA.listaDigitos.Count != valorB.listaDigitos.Count)
+            return valorA.listaDigitos.Count.CompareTo(valorB.listaDigitos.Count);
+
+        for (int i = valorA.listaDigitos.Count - 1; i >= 0; i--)
+            if (valorA.listaDigitos[i] != valorB.listaDigitos[i])
+                return valorA.listaDigitos[i].CompareTo(valorB.listaDigitos[i]);
+
+        return 0;
+    }
