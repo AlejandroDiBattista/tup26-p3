@@ -55,5 +55,42 @@ class Calculadora
         if (tokenActual.Tipo == TipoToken.OperadorMultiplicacion || tokenActual.Tipo == TipoToken.OperadorDivision || tokenActual.Tipo == TipoToken.OperadorModulo) return 2;
         return 0;
     }
-    
+    private static List<ElementoToken> ConvertirAPostfijo(List<ElementoToken> listaTokens)
+    {
+        List<ElementoToken> salida = new List<ElementoToken>();
+        Stack<ElementoToken> pilaOperadores = new Stack<ElementoToken>();
+
+        foreach (var tokenActual in listaTokens)
+        {
+            if (tokenActual.Tipo == TipoToken.Numero)
+                salida.Add(tokenActual);
+
+            else if (tokenActual.Tipo == TipoToken.ParentesisApertura)
+                pilaOperadores.Push(tokenActual);
+
+            else if (tokenActual.Tipo == TipoToken.ParentesisCierre)
+            {
+                while (pilaOperadores.Peek().Tipo != TipoToken.ParentesisApertura)
+                    salida.Add(pilaOperadores.Pop());
+
+                pilaOperadores.Pop();
+            }
+            else
+            {
+                while (pilaOperadores.Count > 0 && ObtenerPrioridad(pilaOperadores.Peek()) >= ObtenerPrioridad(tokenActual))
+                    salida.Add(pilaOperadores.Pop());
+
+                pilaOperadores.Push(tokenActual);
+            }
+        }
+
+        while (pilaOperadores.Count > 0)
+            salida.Add(pilaOperadores.Pop());
+
+        return salida;
+    }
+
+
+
+
 
