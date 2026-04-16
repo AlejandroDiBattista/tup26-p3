@@ -22,4 +22,45 @@ class Program
                 return;
             }
 
+            try
+            {
+                Console.WriteLine(Calculadora.Evaluar(argumentos[0]));
+            }
+            catch (DivideByZeroException)
+            {
+                Console.WriteLine("Error: división por cero");
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine("Error: " + error.Message);
+            }
+        }
+        else
+        {
+            while (true)
+            {
+                Console.Write("> ");
+                string? expresionUsuario = Console.ReadLine();
+
+                if (expresionUsuario == null) continue;
+
+                expresionUsuario = expresionUsuario.Trim().ToLower();
+
+                if (expresionUsuario == "salir" || expresionUsuario == "fin")
+                    break;
+
+                try
+                {
+                    Console.WriteLine(Calculadora.Evaluar(expresionUsuario));
+                }
+                catch (Exception error)
+                {
+                    Console.WriteLine("Error: " + error.Message);
+                }
+            }
+        }
+    }
+}
+
+
             
