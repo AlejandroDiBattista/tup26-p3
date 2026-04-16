@@ -55,7 +55,7 @@ class Integer
 
     public static Integer operator -(Integer valor)
         => new Integer(new List<int>(valor.listaDigitos), !valor.esNegativo);
-        
+
     public static Integer operator *(Integer valorA, Integer valorB)
     {
         var resultado = new int[valorA.listaDigitos.Count + valorB.listaDigitos.Count];
@@ -71,4 +71,37 @@ class Integer
         }
 
         return new Integer(new List<int>(resultado), valorA.esNegativo ^ valorB.esNegativo);
+    }
+
+    public static Integer operator /(Integer valorA, Integer valorB)
+    {
+        if (valorB.EsCero()) throw new DivideByZeroException();
+
+        Integer dividendo = new Integer(valorA.ToString());
+        Integer divisor = new Integer(valorB.ToString());
+        Integer contador = new Integer("0");
+
+        while (CompararAbsoluto(dividendo, divisor) >= 0)
+        {
+            dividendo = dividendo - divisor;
+            contador = contador + new Integer("1");
+        }
+
+        return new Integer(contador.ToString())
+        {
+            esNegativo = valorA.esNegativo ^ valorB.esNegativo
+        };
+    }
+
+    public static Integer operator %(Integer valorA, Integer valorB)
+    {
+        if (valorB.EsCero()) throw new DivideByZeroException();
+
+        Integer dividendo = new Integer(valorA.ToString());
+        Integer divisor = new Integer(valorB.ToString());
+
+        while (CompararAbsoluto(dividendo, divisor) >= 0)
+            dividendo = dividendo - divisor;
+
+        return dividendo;
     }
