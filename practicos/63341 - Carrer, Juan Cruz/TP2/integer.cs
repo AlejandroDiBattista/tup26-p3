@@ -157,3 +157,15 @@ class Integer
 
         return 0;
     }
+
+    public override string ToString()
+    {
+        StringBuilder resultadoTexto = new StringBuilder();
+        if (esNegativo) resultadoTexto.Append('-');
+
+        for (int i = listaDigitos.Count - 1; i >= 0; i--)
+            resultadoTexto.Append(listaDigitos[i]);
+
+        return resultadoTexto.ToString();
+    }
+}

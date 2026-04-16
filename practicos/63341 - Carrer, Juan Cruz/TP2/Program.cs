@@ -24,7 +24,7 @@ class Program
 
             try
             {
-                Console.WriteLine(Calculadora.Evaluar(argumentos[0]));
+                Console.WriteLine(Calculadora.Resolver(argumentos[0]));
             }
             catch (DivideByZeroException)
             {
@@ -51,7 +51,7 @@ class Program
 
                 try
                 {
-                    Console.WriteLine(Calculadora.Evaluar(expresionUsuario));
+                    Console.WriteLine(Calculadora.Resolver(expresionUsuario));
                 }
                 catch (Exception error)
                 {
