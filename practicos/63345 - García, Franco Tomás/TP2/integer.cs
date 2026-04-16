@@ -116,6 +116,39 @@ using System.Text;
         return new Integer(new List<int>(resultado), primero.esNegativo ^ segundo.esNegativo);
     }
 
+    public static Integer operator /(Integer primero, Integer segundo)
+    {
+        if (segundo.EsCero()) throw new DivideByZeroException();
+
+        Integer dividendo = new Integer(primero.ToString());
+        Integer divisor = new Integer(segundo.ToString());
+        Integer contador = new Integer("0");
+
+        while (CompararAbsolutos(dividendo, divisor) >= 0)
+        {
+            dividendo = dividendo - divisor;
+            contador = contador + new Integer("1");
+        }
+
+        return new Integer(contador.ToString())
+        {
+            esNegativo = primero.esNegativo ^ segundo.esNegativo
+        };
+    }
+
+    public static Integer operator %(Integer primero, Integer segundo)
+    {
+        if (segundo.EsCero()) throw new DivideByZeroException();
+
+        Integer dividendo = new Integer(primero.ToString());
+        Integer divisor = new Integer(segundo.ToString());
+
+        while (CompararAbsolutos(dividendo, divisor) >= 0)
+            dividendo = dividendo - divisor;
+
+        return dividendo;
+    }
+
     private static List<int> SumarListas(List<int> listaA, List<int> listaB)
     {
         List<int> resultado = new List<int>();
