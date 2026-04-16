@@ -30,3 +30,11 @@ class Integer
         this.esNegativo = signoNegativo;
         Normalizar();
     }
+    private void Normalizar()
+    {
+        while (listaDigitos.Count > 1 && listaDigitos[^1] == 0)
+            listaDigitos.RemoveAt(listaDigitos.Count - 1);
+
+        if (listaDigitos.Count == 1 && listaDigitos[0] == 0)
+            esNegativo = false;
+    }
