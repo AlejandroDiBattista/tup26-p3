@@ -38,3 +38,5 @@ class Integer
         if (listaDigitos.Count == 1 && listaDigitos[0] == 0)
             esNegativo = false;
     }
+    public bool EsCero() => listaDigitos.Count == 1 && listaDigitos[0] == 0;
+    
