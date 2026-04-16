@@ -89,6 +89,34 @@ class Calculadora
 
         return salida;
     }
+    private static Integer CalcularRPN(List<ElementoToken> listaTokens)
+    {
+        Stack<Integer> pilaValores = new Stack<Integer>();
+
+        foreach (var tokenActual in listaTokens)
+        {
+            if (tokenActual.Tipo == TipoToken.Numero)
+            {
+                pilaValores.Push(new Integer(tokenActual.Contenido));
+            }
+            else
+            {
+                var valorB = pilaValores.Pop();
+                var valorA = pilaValores.Pop();
+
+                switch (tokenActual.Tipo)
+                {
+                    case TipoToken.OperadorSuma: pilaValores.Push(valorA + valorB); break;
+                    case TipoToken.OperadorResta: pilaValores.Push(valorA - valorB); break;
+                    case TipoToken.OperadorMultiplicacion: pilaValores.Push(valorA * valorB); break;
+                    case TipoToken.OperadorDivision: pilaValores.Push(valorA / valorB); break;
+                    case TipoToken.OperadorModulo: pilaValores.Push(valorA % valorB); break;
+                }
+            }
+        }       
+        return pilaValores.Pop();
+    }
+}
 
 
 
