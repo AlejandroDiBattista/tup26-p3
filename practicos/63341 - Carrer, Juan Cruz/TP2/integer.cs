@@ -39,7 +39,7 @@ class Integer
             esNegativo = false;
     }
     public bool EsCero() => listaDigitos.Count == 1 && listaDigitos[0] == 0;
-    
+
     public static Integer operator +(Integer valorA, Integer valorB)
     {
         if (valorA.esNegativo == valorB.esNegativo)
@@ -55,3 +55,20 @@ class Integer
 
     public static Integer operator -(Integer valor)
         => new Integer(new List<int>(valor.listaDigitos), !valor.esNegativo);
+        
+    public static Integer operator *(Integer valorA, Integer valorB)
+    {
+        var resultado = new int[valorA.listaDigitos.Count + valorB.listaDigitos.Count];
+
+        for (int i = 0; i < valorA.listaDigitos.Count; i++)
+        {
+            for (int j = 0; j < valorB.listaDigitos.Count; j++)
+            {
+                resultado[i + j] += valorA.listaDigitos[i] * valorB.listaDigitos[j];
+                resultado[i + j + 1] += resultado[i + j] / 10;
+                resultado[i + j] %= 10;
+            }
+        }
+
+        return new Integer(new List<int>(resultado), valorA.esNegativo ^ valorB.esNegativo);
+    }
