@@ -3,8 +3,8 @@ class Calculadora
     public static Integer Resolver(string expresion)
     {
         var listaTokens = GenerarTokens(expresion);
-
-        return new Integer();
+        var salidaRPN = ConvertirAPostfijo(listaTokens);
+        return CalcularRPN(salidaRPN);
     }
 
     private static List<Token> GenerarTokens(string texto)
@@ -46,5 +46,76 @@ class Calculadora
         }
 
         return lista;
+    }
+
+    private static int ObtenerPrecedencia(Token tokenActual)
+    {
+        if (tokenActual.Tipo == TipoToken.Suma || tokenActual.Tipo == TipoToken.Resta) return 1;
+        if (tokenActual.Tipo == TipoToken.Multiplicacion || tokenActual.Tipo == TipoToken.Division || tokenActual.Tipo == TipoToken.Modulo) return 2;
+        return 0;
+    }
+
+    private static List<Token> ConvertirAPostfijo(List<Token> listaTokens)
+    {
+        List<Token> salida = new List<Token>();
+        Stack<Token> operadores = new Stack<Token>();
+
+        foreach (var tokenActual in listaTokens)
+        {
+            if (tokenActual.Tipo == TipoToken.Numero)
+                salida.Add(tokenActual);
+
+            else if (tokenActual.Tipo == TipoToken.ParentesisIzquierdo)
+                operadores.Push(tokenActual);
+
+            else if (tokenActual.Tipo == TipoToken.ParentesisDerecho)
+            {
+                while (operadores.Peek().Tipo != TipoToken.ParentesisIzquierdo)
+                    salida.Add(operadores.Pop());
+
+                operadores.Pop();
+            }
+            else
+            {
+                while (operadores.Count > 0 && ObtenerPrecedencia(operadores.Peek()) >= ObtenerPrecedencia(tokenActual))
+                    salida.Add(operadores.Pop());
+
+                operadores.Push(tokenActual);
+            }
+        }
+
+        while (operadores.Count > 0)
+            salida.Add(operadores.Pop());
+
+        return salida;
+    }
+
+    private static Integer CalcularRPN(List<Token> listaTokens)
+    {
+        Stack<Integer> pila = new Stack<Integer>();
+
+        foreach (var tokenActual in listaTokens)
+        {
+            if (tokenActual.Tipo == TipoToken.Numero)
+            {
+                pila.Push(new Integer(tokenActual.Contenido));
+            }
+            else
+            {
+                var segundo = pila.Pop();
+                var primero = pila.Pop();
+
+                switch (tokenActual.Tipo)
+                {
+                    case TipoToken.Suma: pila.Push(primero + segundo); break;
+                    case TipoToken.Resta: pila.Push(primero - segundo); break;
+                    case TipoToken.Multiplicacion: pila.Push(primero * segundo); break;
+                    case TipoToken.Division: pila.Push(primero / segundo); break;
+                    case TipoToken.Modulo: pila.Push(primero % segundo); break;
+                }
+            }
+        }
+
+        return pila.Pop();
     }
 }
