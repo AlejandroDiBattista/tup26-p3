@@ -34,3 +34,15 @@ class NegativoNodo : NodoUnario {
     public override int Evaluar(int x = 0) => -Operando.Evaluar(x);
 }
 
+//-----------------------------------
+abstract class NodoBinario : Nodo {
+    protected Nodo Izq;
+    protected Nodo Der;
+
+    public NodoBinario(Nodo izq, Nodo der) {
+        Izq = izq;
+        Der = der;
+    }
+}
+
+
