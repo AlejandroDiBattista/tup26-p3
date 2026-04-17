@@ -157,24 +157,7 @@ string Serialize(List<Dictionary<string, string>> rows, List<string> headers, st
 {
     using var writer = new StringWriter();
 
-    if (!noHeader)
-    {
-        writer.WriteLine(string.Join(delimiter, headers));
-    }
-
-    foreach (var row in rows)
-    {
-        var lineValues = headers.Select(h => row.ContainsKey(h) ? row[h] : string.Empty);
-        writer.WriteLine(string.Join(delimiter, lineValues));
-    }
-
-    return writer.ToString();
-}
-void WriteOutput(string? outputFile, string content)
-{
-    if (!string.IsNullOrWhiteSpace(outputFile))
-    {
-        File.WriteAllText(outputFile, content);
+    if (!noHeader)sdsdada
     }
     else
     {
