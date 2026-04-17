@@ -54,3 +54,20 @@ class RestaNodo : NodoBinario {
     public RestaNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izq.Evaluar(x) - Der.Evaluar(x);
 }
+
+//----------------MULTIPLICATION-------------------
+class MultiplicacionNodo : NodoBinario {
+    public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) { }
+    public override int Evaluar(int x = 0) => Izq.Evaluar(x) * Der.Evaluar(x);
+}
+//---------------DIVISION--------------------
+class DivisionNodo : NodoBinario {
+    public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0) {
+        var denom = Der.Evaluar(x);
+        if (denom == 0) throw new DivideByZeroException("División por cero");
+        return Izq.Evaluar(x) / denom;
+    }
+}
+
