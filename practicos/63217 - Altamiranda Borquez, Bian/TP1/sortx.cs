@@ -131,4 +131,47 @@ Ejemplos:
         using var reader = Console.In;
         return reader.ReadToEnd();
     }
+   static List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+    {
+        var rows = new List<Dictionary<string, string>>();
+        var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
+        if (lines.Length == 0)
+            return rows;
+
+        string[] headers;
+
+        if (!config.NoHeader)
+        {
+            headers = lines[0].Split(config.Delimiter);
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var values = lines[i].Split(config.Delimiter);
+                var dict = new Dictionary<string, string>();
+
+                for (int j = 0; j < headers.Length; j++)
+                    dict[headers[j]] = values[j];
+
+                rows.Add(dict);
+            }
+        }
+        else
+        {
+            var first = lines[0].Split(config.Delimiter);
+            headers = Enumerable.Range(0, first.Length).Select(i => i.ToString()).ToArray();
+
+            foreach (var line in lines)
+            {
+                var values = line.Split(config.Delimiter);
+                var dict = new Dictionary<string, string>();
+
+                for (int j = 0; j < headers.Length; j++)
+                    dict[headers[j]] = values[j];
+
+                rows.Add(dict);
+            }
+        }
+
+        return rows;
+    }
