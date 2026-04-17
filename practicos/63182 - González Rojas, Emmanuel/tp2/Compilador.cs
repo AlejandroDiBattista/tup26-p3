@@ -81,6 +81,54 @@ class Compilador {
 
             return nodo;
         }
+
+        private Nodo ParseFactor() {
+            SaltarBlancos();
+
+            var c = Peek();
+
+            if (c == '+') {
+                Next();
+                return new PositivoNodo(ParseFactor());
+            }
+
+            if (c == '-') {
+                Next();
+                return new NegativoNodo(ParseFactor());
+            }
+
+            if (c == '(') {
+                Next();
+                var interior = ParseExpression();
+                SaltarBlancos();
+                if (Peek() != ')') {
+                    // Paréntesis sin cerrar: mensaje específico esperado por las pruebas.
+                    throw new FormatException("Se esperaba ')'");
+                }
+
+                Next(); // consumir ')'
+                return interior;
+            }
+
+            // Número: secuencia de dígitos
+            if (char.IsDigit(c)) {
+                var inicio = pos;
+                while (char.IsDigit(Peek())) Next();
+                var textoNumero = texto.Substring(inicio, pos - inicio);
+                var valor = int.Parse(textoNumero);
+                return new NumeroNodo(valor);
+            }
+
+            // Variable 'x' o 'X'
+            if (c == 'x' || c == 'X') {
+                Next();
+                return new VariableNodo();
+            }
+
+            // Si llegamos al final o encontramos un carácter no reconocido, es un token inesperado.
+            if (EOF) throw new FormatException("Token inesperado");
+            throw new FormatException("Token inesperado");
+        }
     }
     
 }
