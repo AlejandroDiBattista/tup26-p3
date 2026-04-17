@@ -175,3 +175,109 @@ Ejemplos:
 
         return rows;
     }
+     static List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+    {
+        if (rows.Count == 0)
+            return rows;
+
+        IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+        foreach (var field in config.SortFields)
+        {
+            Func<Dictionary<string, string>, object> key = row =>
+            {
+                if (!row.ContainsKey(field.Name))
+                    throw new Exception($"Columna inexistente: {field.Name}");
+
+                var value = row[field.Name];
+
+                if (field.Numeric)
+                {
+                    if (!double.TryParse(value, out var num))
+                        throw new Exception($"Valor no numérico: {value}");
+
+                    return num;
+                }
+
+                return value;
+            };
+
+            if (ordered == null)
+            {
+                ordered = field.Descending ? rows.OrderByDescending(key) : rows.OrderBy(key);
+            }
+            else
+            {
+                ordered = field.Descending ? ordered.ThenByDescending(key) : ordered.ThenBy(key);
+            }
+        }
+
+        return (ordered ?? Enumerable.Empty<Dictionary<string, string>>()).ToList();
+    }
+
+    static string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+    {
+        if (rows.Count == 0)
+            return "";
+
+        var sb = new StringBuilder();
+        var headers = rows[0].Keys.ToList();
+
+        if (!config.NoHeader)
+            sb.AppendLine(string.Join(config.Delimiter, headers));
+
+        foreach (var row in rows)
+        {
+            var values = headers.Select(h => row[h]);
+            sb.AppendLine(string.Join(config.Delimiter, values));
+        }
+
+        return sb.ToString();
+    }
+
+    static void WriteOutput(string output, AppConfig config)
+    {
+        Console.WriteLine(output);
+
+        if (!string.IsNullOrEmpty(config.OutputFile))
+        {
+            File.WriteAllText(config.OutputFile, output);
+        }
+    }
+
+    static SortField ParseSortField(string spec)
+    {
+        var parts = spec.Split(':');
+        var name = parts[0];
+        bool numeric = false;
+        bool desc = false;
+
+        if (parts.Length > 1)
+        {
+            numeric = parts[1] switch
+            {
+                "num" => true,
+                "alpha" => false,
+                _ => throw new Exception($"Tipo inválido: {parts[1]}")
+            };
+        }
+
+        if (parts.Length > 2)
+        {
+            desc = parts[2] switch
+            {
+                "desc" => true,
+                "asc" => false,
+                _ => throw new Exception($"Orden inválido: {parts[2]}")
+            };
+        }
+
+        return new SortField(name, numeric, desc);
+    }
+}
+ // RECORDS
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(string? InputFile, string? OutputFile, string Delimiter, bool NoHeader, List<SortField> SortFields);
+
+
+ 
