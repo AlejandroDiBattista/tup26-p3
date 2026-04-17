@@ -150,27 +150,7 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
         {
             if (!a.TryGetValue(field.Name, out string? valA)) throw new Exception($"Columna inexistente: {field.Name}");
             if (!b.TryGetValue(field.Name, out string? valB)) throw new Exception($"Columna inexistente: {field.Name}");
-
-            int cmp;
-            if (field.Numeric)
-            {
-                double numA = double.TryParse(valA, out double da) ? da : 0;
-                double numB = double.TryParse(valB, out double db) ? db : 0;
-                cmp = numA.CompareTo(numB);
-            }
-            else
-            {
-                cmp = string.Compare(valA, valB, StringComparison.OrdinalIgnoreCase);
-            }
-
-            if (cmp != 0)
-            {
-                return field.Descending ? -cmp : cmp;
-            }
-        }
-        return 0;
-    });
-
+¿
     return rows;
 }
 string Serialize(List<Dictionary<string, string>> rows, List<string> headers, string delimiter, bool noHeader)
