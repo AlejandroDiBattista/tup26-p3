@@ -5,7 +5,7 @@ class Compilador {
         }
 
         var analizador = new Analizador (expression);
-        var raiz = analizador.ParseExpresion();
+        var raiz = analizador.ParseExpression();
         analizador.SaltarBlancos();
 
         if (!analizador.EOF) throw new FormatException("Token inesperado");
@@ -34,5 +34,53 @@ class Compilador {
         public void SaltarBlancos() {
             while (!EOF && char.IsWhiteSpace(Peek())) pos++;
         }
+         public Nodo ParseExpression() {
+            var nodo = ParseTermino();
+            while (true) {
+                SaltarBlancos();
+                if (Peek() == '+') {
+                    Next();
+                    var derecho = ParseTermino();
+                    nodo = new SumarNodo(nodo, derecho);
+                    continue;
+                }
+
+                if (Peek() == '-') {
+                    Next();
+                    var derecho = ParseTermino();
+                    nodo = new RestaNodo(nodo, derecho);
+                    continue;
+                }
+
+                break;
+            }
+
+            return nodo;
+        }
+
+        private Nodo ParseTermino() {
+            var nodo = ParseFactor();
+            while (true) {
+                SaltarBlancos();
+                if (Peek() == '*') {
+                    Next();
+                    var derecho = ParseFactor();
+                    nodo = new MultiplicacionNodo(nodo, derecho);
+                    continue;
+                }
+
+                if (Peek() == '/') {
+                    Next();
+                    var derecho = ParseFactor();
+                    nodo = new DivisionNodo(nodo, derecho);
+                    continue;
+                }
+
+                break;
+            }
+
+            return nodo;
+        }
     }
+    
 }
