@@ -42,7 +42,7 @@ namespace CalculadoraAST
         {
             Console.WriteLine("--- Modo Interactivo ---");
             Console.Write("Ingrese la expresión matemática (con x): ");
-            string entrada = Console.ReadLine();
+            string entrada = Console.ReadLine() ?? "";
 
             if (string.IsNullOrWhiteSpace(entrada) || entrada.ToLower() == "fin") return;
 
@@ -54,7 +54,7 @@ namespace CalculadoraAST
                 while (true)
                 {
                     Console.Write("Ingrese valor de x (o 'fin' para salir): ");
-                    string inputX = Console.ReadLine();
+                    string inputX = Console.ReadLine() ?? "";
 
                     if (string.IsNullOrWhiteSpace(inputX) || inputX.ToLower() == "fin") break;
 
