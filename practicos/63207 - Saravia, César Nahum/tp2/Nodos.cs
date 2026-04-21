@@ -29,3 +29,11 @@ class NegativoNodo : Nodo {
         return -nodo.Evaluar(x);
     }
 }
+abstract class NodoBinario : Nodo {
+    protected Nodo izquierdo;
+    protected Nodo derecho;
+    public NodoBinario(Nodo izquierdo, Nodo derecho) {
+        this.izquierdo = izquierdo;
+        this.derecho = derecho;
+    }
+}
