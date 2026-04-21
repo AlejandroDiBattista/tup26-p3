@@ -62,3 +62,13 @@ class SumaNodo : NodoBinario
         return izquierda.Evaluar(x) + derecha.Evaluar(x);
     }
 }
+// Nodo para la resta
+class RestaNodo : NodoBinario
+{
+    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) {}
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierda.Evaluar(x) - derecha.Evaluar(x);
+    }
+}
