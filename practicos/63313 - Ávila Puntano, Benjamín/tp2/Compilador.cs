@@ -7,9 +7,31 @@ class Compilador {
         }
 
         var recorrer = new recorrer(expresion);
-        var raiz = recorrer.ParsearExpresion();
+        var raiz = recorrer.ParsearExpresion(); 
+        recorrer.saltarespacios();
+     
+         if(!recorrer.eof)  
+         {
+            throw new ArgumentException("Expresión no válidad");
 
+         }
+         return raiz;
+         
         
-        throw new NotImplementedException("Implementar el parser para convertir la expresión en un AST.");
+    }
+    private class recorrer
+    {
+        private readonly string expresion;
+        private int posicion;
+
+        public recorrer(string expresion,int posicion)
+        {
+            this.expresion = expresion;
+            this.posicion = 0;
+        }
+
+    public bool eof => posicion >= expresion.Length;
+
+    private char 
     }
 }
