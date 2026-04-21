@@ -10,3 +10,7 @@ class VariableNodo : Nodo {
 class NegativoNodo(Nodo operando) : Nodo {
     public override int Evaluar(int x = 0) => -operando.Evaluar(x);
 }
+abstract class NodoBinario(Nodo izquierda, Nodo derecha) : Nodo {
+    protected readonly Nodo Izquierda = izquierda;
+    protected readonly Nodo Derecha = derecha;
+}
