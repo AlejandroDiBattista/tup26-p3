@@ -1,4 +1,5 @@
 using System.ComponentModel.Design.Serialization;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 class Compilador {
@@ -13,7 +14,7 @@ class Compilador {
             pos = 0
         };
 
-        var nodo = p.ParseSumaResta();
+        var nodo = p.ParseExpresion();
 
         p.SaltarEspacios();
         if (p.pos < p.input.Length) throw new FormatException("Token inesperado");
@@ -44,17 +45,17 @@ class Compilador {
     }
     private Nodo ParseTermino()
     {
-        var nodo = ParseFActor();
+        var nodo = ParseFactor();
         while (true)
         {
-            SAltarEspacios();
+            SaltarEspacios();
             if (Match('*'))
             {
-                nodo = new Multiplicacion(nodo, ParseFActor());
+                nodo = new Multiplicacion(nodo, ParseFactor());
             }
             else if (Match('/'))
             {
-                nodo = new Division(nodo, ParseFActor());
+                nodo = new Division(nodo, ParseFactor());
             }
             else
             {
@@ -86,6 +87,30 @@ class Compilador {
         }
 
         throw new FormatException("Token inesperado");
+    }
+
+    private char Peek() => pos < input.Length ? input[pos] : '\0';
+    private bool Match(char c)
+    {
+        if (Peek() == c)
+        {
+            pos++;
+            return true;
+        }
+        return false;
+    }
+
+    private void SaltarEspacios()
+    {
+        while (char.IsWhiteSpace(Peek())) pos++;
+    }
+
+    private Nodo ParseNumero()
+    {
+        int inicio= pos;
+        while (char.IsDigit(Peek())) pos++;
+        var texto = input[inicio..pos];
+        return new Numero(int.Parse(texto));
     }
 }
 
