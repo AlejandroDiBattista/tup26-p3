@@ -19,3 +19,13 @@ class VariableNodo : Nodo {
         return x;
     }
 }
+
+class NegativoNodo : Nodo {
+    private Nodo nodo;
+    public NegativoNodo(Nodo nodo) {
+        this.nodo = nodo;
+    }
+    public override int Evaluar(int x = 0) {
+        return -nodo.Evaluar(x);
+    }
+}
