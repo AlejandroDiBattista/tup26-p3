@@ -7,3 +7,6 @@ class NumeroNodo(int valor) : Nodo {
 class VariableNodo : Nodo {
     public override int Evaluar(int x = 0) => x;
 }
+class NegativoNodo(Nodo operando) : Nodo {
+    public override int Evaluar(int x = 0) => -operando.Evaluar(x);
+}
