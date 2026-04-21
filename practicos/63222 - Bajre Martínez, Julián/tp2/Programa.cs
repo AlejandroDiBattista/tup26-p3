@@ -1,29 +1,19 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
+namespace TP2.Calculadora;
+
+public class Programa
+{
+    public static void Main(string[] args)
+    {
+        Console.Title = "TP2 - Calculadora";
+        Console.WriteLine("=== Calculadora de Expresiones Aritméticas ===");
+
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Modo interactivo activo. Ingresá 'fin' para salir.");
         }
-
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
-            }
-
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+        else
+        {
+            Console.WriteLine($"Se recibieron {args.Length} argumento(s). Procesando...");
         }
     }
 }
