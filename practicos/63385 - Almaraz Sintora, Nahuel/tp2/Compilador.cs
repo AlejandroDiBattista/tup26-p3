@@ -10,4 +10,33 @@ class Compilador {
         }
         return nodo;
     }
+    private Compilador(string expresion) {
+        _expresion = expresion;
+    }
+    private Nodo ParseExpresion() {
+        SaltarEspacios();
+
+        if (_pos >= _expresion.Length) {
+            throw new FormatException("Token inesperado: entrada vacía.");
+        }
+
+        var izquierda = ParseTermino();
+
+        while (true) {
+            SaltarEspacios();
+            if (_pos >= _expresion.Length) break;
+
+            var op = _expresion[_pos];
+            if (op != '+' && op != '-') break;
+
+            _pos++;
+            var derecha = ParseTermino();
+
+            izquierda = op == '+'
+                ? new SumaNodo(izquierda, derecha)
+                : new RestaNodo(izquierda, derecha);
+        }
+
+        return izquierda;
+    }
 }
