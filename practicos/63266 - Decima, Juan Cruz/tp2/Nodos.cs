@@ -21,3 +21,10 @@ class NumeroNodo : Nodo
 
 }
 
+class VariableNodo : Nodo
+{
+    public override int Evaluar(int x = 0)
+    {
+        return x;
+    }
+}
