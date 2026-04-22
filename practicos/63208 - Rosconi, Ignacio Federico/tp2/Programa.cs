@@ -1,29 +1,56 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+class Program
+{
+    static void Main(string[] args)
+    {
+        try
+        {
+            if (Comandos.EsAyuda(args))
+            {
+                Comandos.MostrarAyuda();
+                return;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (Comandos.EsTest(args))
+            {
+                Pruebas.Ejecutar();
+                return;
+            }
+
+            if (args.Length == 2)
+            {
+                var nodo = Compilador.Compilar(args[0]);
+                int x = int.Parse(args[1]);
+                Console.WriteLine(nodo.Evaluar(x));
+            }
+            else
+            {
+                Console.Write("Expresión: ");
+                string expr = Console.ReadLine();
+                var nodo = Compilador.Compilar(expr);
+
+                while (true)
+                {
+                    Console.Write("x = ");
+                    string entrada = Console.ReadLine();
+
+                    if (string.IsNullOrWhiteSpace(entrada) || entrada.ToLower() == "fin")
+                        break;
+
+                    if (!int.TryParse(entrada, out int x))
+                    {
+                        Console.WriteLine("Valor inválido");
+                        continue;
+                    }
+
+                    Console.WriteLine(nodo.Evaluar(x));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
         }
     }
 }
