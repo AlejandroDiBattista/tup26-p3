@@ -1,3 +1,7 @@
+abstract class Nodo {
+    public abstract int Evaluar(int x = 0);
+}
+
 class Numero : Nodo
 {
     private int valor;
@@ -9,12 +13,14 @@ class Variable : Nodo
 {
     public override int Evaluar(int x = 0) => x;
 }
+
 class Negativo : Nodo
 {
     private Nodo nodo;
     public Negativo(Nodo nodo) => this.nodo = nodo;
     public override int Evaluar(int x = 0) => -nodo.Evaluar(x);
 }
+
 abstract class Binario : Nodo
 {
     protected Nodo izq, der;
@@ -24,6 +30,7 @@ abstract class Binario : Nodo
         this.der = der;
     }
 }
+
 class Suma : Binario
 {
     public Suma(Nodo i, Nodo d) : base(i, d) { }
