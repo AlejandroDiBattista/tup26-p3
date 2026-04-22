@@ -44,4 +44,55 @@ class Compilador {
 
         return nodo;
     }
+     private Nodo ParseFactor() {
+        SkipEspacios();
+        if (Match('+')) {
+            return ParseFactor();
+        }
+        if (Match('-')) {
+            return new NegativoNodo(ParseFactor());
+        }
+        if (Match('(')) {
+            var nodo = ParseExpresion();
+            SkipEspacios();
+            if (!Match(')'))
+                throw new FormatException("Se esperaba ')'");
+            return nodo;
+        }
+        if (Peek() == 'x' || Peek() == 'X') {
+            pos++;
+            return new VariableNodo();
+        }
+        if (char.IsDigit(Peek())) {
+            return new NumeroNodo(ParseNumero());
+        }
+        throw new FormatException("Token inesperado");
     }
+    private int ParseNumero() {
+        SkipEspacios();
+        int start = pos;
+        while (pos < input.Length && char.IsDigit(input[pos])) {
+            pos++;
+        }
+        string num = input.Substring(start, pos - start);
+        return int.Parse(num);
+    }
+    private void SkipEspacios() {
+        while (pos < input.Length && char.IsWhiteSpace(input[pos])) {
+            pos++;
+        }
+    }
+    private char Peek() {
+        if (pos >= input.Length) return '\0';
+        return input[pos];
+    }
+    private bool Match(char c) {
+        SkipEspacios();
+        if (Peek() == c) {
+            pos++;
+            return true;
+        }
+        return false;
+    }
+}
+
