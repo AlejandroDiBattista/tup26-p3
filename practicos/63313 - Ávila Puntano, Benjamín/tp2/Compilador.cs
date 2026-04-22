@@ -1,3 +1,5 @@
+using System.Reflection.Metadata.Ecma335;
+
 class Compilador {
     public static Nodo Parse(string expresion) {
 
@@ -6,8 +8,8 @@ class Compilador {
             throw new ArgumentException("La expresión no puede estar vacía.");
         }
 
-        var recorrer = new recorrer(expresion);
-        var raiz = recorrer.ParsearExpresion(); 
+        var recorrer  = new Recorrer(expresion);
+        var raiz = recorrer.ParseExpresion(); 
         recorrer.saltarespacios();
      
          if(!recorrer.eof)  
@@ -19,12 +21,12 @@ class Compilador {
          
         
     }
-    private class recorrer
+    private class Recorrer
     {
         private readonly string expresion;
         private int posicion;
 
-        public recorrer(string expresion)
+        public Recorrer(string expresion)
         {
             this.expresion = expresion;
             this.posicion = 0;
@@ -42,38 +44,92 @@ class Compilador {
         }
     }
 
-    private Nodo parsexpresion(){
+    public Nodo ParseExpresion(){
         saltarespacios();
-        if (posicion >= expresion.Length)
+        if (eof)
         {
             throw new ArgumentException("Expresión incompleta.");
         }
 
-var izquierda = parseTermino();
+var izquierda = ParseTermino();
 while (true){
     saltarespacios();
-    if (posicion >= expresion.Length){break;}
- var operador = expresion[posicion];
+     var operador = peek();
     if (operador != '+' && operador != '-'){break;}
     posicion++;
-    var derecho = parseTermino();
+    var derecho = ParseTermino();
     izquierda = operador == '+' ? new Suma(izquierda, derecho) : new Resta(izquierda, derecho);
- return izquierda;
-}}
-private Nodo parseTermino(){
+}
+return izquierda;}
+private Nodo ParseTermino(){
     saltarespacios();
-    var izquierda = parseFactor();
+    var izquierda = ParseFactor();
     while (true)
             {
-                if(posicion >= expresion.Length){break;}
-                var operador = expresion[posicion];
+                saltarespacios();
+                var operador = peek();
                 if (operador != '*' && operador != '/'){break;}
                 posicion++;
-                var derecho = parseFactor();
+                var derecho = ParseFactor();
                 izquierda = operador == '*' ? new Multiplicacionprod(izquierda, derecho) : new Division(izquierda, derecho);
-
-                return izquierda;
             }
+        return izquierda;
         }
-    }}
-    
+
+        private Nodo ParseFactor()
+        {
+            saltarespacios();
+            if (eof)
+            {
+                throw new ArgumentException("Expresión incompleta.");
+            }
+            
+            var caracter = peek();
+
+            if (caracter == '(')
+            {
+                posicion++;
+                var nodo = ParseExpresion();
+
+                saltarespacios();
+
+                if (eof || peek() != ')')
+                {
+                    throw new ArgumentException("Falta un paréntesis de cierre.");
+                }
+
+                posicion++;
+                return nodo;
+            } 
+            
+                if (caracter == '+') 
+                {
+                    posicion++;
+                    return ParseFactor();
+                }
+            
+            
+            if (caracter == '-') 
+            {
+                posicion++;
+                return new N_negativos(ParseFactor());
+            }
+            if (caracter == 'x' || caracter == 'X')
+            {
+                posicion++;
+                return new Variable();
+            }
+             if (char.IsDigit(caracter)) 
+            {
+                return ParseNumero();
+            }
+            throw new ArgumentException($"Carácter inesperado: '{caracter}'");
+        }
+        private Nodo ParseNumero()
+        {
+            var inicio = posicion;
+            while (posicion < expresion.Length && char.IsDigit(expresion[posicion])) posicion++;
+            return new Numero(int.Parse(expresion.Substring(inicio, posicion - inicio)));
+        }
+    }
+}

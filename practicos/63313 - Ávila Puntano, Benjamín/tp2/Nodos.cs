@@ -6,12 +6,12 @@ abstract class Nodo {
 
 // creamos una clase en base a nodo y se re define el comportamiento de evaluar
 // usamos el override para que se use la version de evaluar de esta clase y no de nodo
-class numero (int valor) : Nodo{
+class Numero (int valor) : Nodo{
     public override int Evaluar ( int x = 0) => valor; 
 }
 
 //similar a la anterior clase, se devuelve directamente el valor que toma X
-class variable : Nodo
+class Variable : Nodo
 {
     public override int Evaluar(int x = 0) => x;
 }
@@ -24,27 +24,27 @@ abstract class Binario(Nodo izquierdo, Nodo derecho) : Nodo
 }
 
 // suma es un binario donde se usa los nodos izq,der para hacer una suma entre las dos
-class Suma(Nodo izquierdo, Nodo derecho) : binario(izquierdo,derecho)
+class Suma(Nodo izquierdo, Nodo derecho) : Binario(izquierdo,derecho)
 {
     public override int Evaluar (int x=0) => izquierdo.Evaluar(x) + derecho.Evaluar(x);
 }
 
 //resta es un bionario que al igual que suma usa los nodos en una resta
-class Resta(Nodo izquierdo, Nodo derecho) : binario(izquierdo, derecho)
+class Resta(Nodo izquierdo, Nodo derecho) : Binario(izquierdo, derecho)
 {
     public override int Evaluar (int x=0) => izquierdo.Evaluar(x) - derecho.Evaluar(x);
 
 }
 
 // el producto es un binario que multiplica los dos nodos entre si
-class Multiplicacionprod(Nodo izquierdo, Nodo derecho) : binario(izquierdo, derecho)
+class Multiplicacionprod(Nodo izquierdo, Nodo derecho) : Binario(izquierdo, derecho)
 {
     public override int Evaluar (int x=0) => izquierdo.Evaluar(x) * derecho.Evaluar(x);
 
 }
 
 // divison es un binario que divide los dos  resultados de los nodos, si el divisor(nodo derecho) es 0 genera un error y si no retorna la division de los dos nodos 
-class Division(Nodo izquierdo, Nodo derecho) : binario(izquierdo, derecho)
+class Division(Nodo izquierdo, Nodo derecho) : Binario(izquierdo, derecho)
 {
     public override int Evaluar(int x = 0)
     {
