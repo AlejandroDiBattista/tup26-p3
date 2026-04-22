@@ -1,44 +1,76 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+namespace TP2.Calculadora;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
-
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
-
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
-
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
-
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
-
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
-""");
-                return true;
-
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
-
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+public static class Comandos
+{
+    public static void Ejecutar(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            ModoInteractivo();
+        }
+        else if (args.Length == 2)
+        {
+            ModoDirecto(args[0], args[1]);
+        }
+        else
+        {
+            MostrarAyuda();
         }
     }
-}
 
+    private static void ModoDirecto(string expresion, string valorX)
+    {
+        try 
+        {
+            var nodo = Compilador.Parse(expresion);
+            int x = int.Parse(valorX);
+            Console.WriteLine(nodo.Evaluar(x));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private static void ModoInteractivo()
+    {
+        Console.Write("Ingrese la expresión matemática: ");
+        string? expresion = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(expresion)) return;
+
+        try
+        {
+            var nodoRaiz = Compilador.Parse(expresion);
+            Console.WriteLine("Expresión aceptada. Ingrese valores para 'x' (o 'exit' para salir):");
+
+            while (true)
+            {
+                Console.Write("x = ");
+                string? entrada = Console.ReadLine();
+
+                if (entrada?.ToLower() == "exit") break;
+
+                if (int.TryParse(entrada, out int x))
+                {
+                    Console.WriteLine($"Resultado: {nodoRaiz.Evaluar(x)}");
+                }
+                else
+                {
+                    Console.WriteLine("Por favor, ingrese un número válido.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error de sintaxis: {ex.Message}");
+        }
+    }
+
+    private static void MostrarAyuda()
+    {
+        Console.WriteLine("Uso de la Calculadora:");
+        Console.WriteLine("  Modo Directo: dotnet run -- \"expresion\" valorX");
+        Console.WriteLine("  Modo Interactivo: dotnet run");
+    }
+}
