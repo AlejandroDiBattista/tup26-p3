@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Xml;
 
 
 public class Compilador {
@@ -35,5 +36,26 @@ public Nodo Parsear()
 
         return ast;
     }
+
+private Nodo ParsearExpresion()
+    {
+        var nodo = ParsearTermino();
+        SaltarEspacios();
+
+        while (CaracterActual == "+" || CaracterActual == "-")
+        {
+            Char operador = CaracterActual;
+            Avanzar();
+            var derecho = ParsearTermino();
+
+            if(operador == "+") nodo = new SumaNodo(nodo , derecho);
+            else nodo = new RestaNodo(nodo, derecho);
+
+            SaltarEspacios();
+        }
+        return nodo;
+    }
     
+    
+
 }
