@@ -1,4 +1,4 @@
-# Trabajo Práctico 2 — Compilador de Expresiones Aritméticas con Variable: `calculadora`
+ # Trabajo Práctico 2 — Compilador de Expresiones Aritméticas con Variable: `calculadora`
 
 **Entrega:** 22 de ABRIL de 2026 a las 23:59hs
 
