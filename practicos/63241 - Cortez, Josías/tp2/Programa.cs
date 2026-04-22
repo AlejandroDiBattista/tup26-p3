@@ -363,3 +363,10 @@ public static class Comandos
         }
     }
 }
+class Programa
+{
+    static void Main(string[] args)
+    {
+        Comandos.Procesar(args);
+    }
+}
