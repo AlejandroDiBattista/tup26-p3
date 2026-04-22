@@ -30,3 +30,15 @@ abstract class Binario : Nodo
         this.der = der;
     }
 }
+
+class Suma : Binario
+{
+    public Suma(Nodo i, Nodo d) : base(i, d) { }
+    public override int Evaluar(int x = 0) => izq.Evaluar(x) + der.Evaluar(x);
+}
+
+class Resta : Binario
+{
+    public Resta(Nodo i, Nodo d) : base(i, d) { }
+    public override int Evaluar(int x = 0) => izq.Evaluar(x) - der.Evaluar(x);
+}
