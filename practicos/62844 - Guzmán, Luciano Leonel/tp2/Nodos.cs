@@ -30,3 +30,12 @@ class PositivoNodo : NodoUnario {
     public PositivoNodo(Nodo operando) : base(operando) { }
     public override int Evaluar(int x = 0) => Operando.Evaluar(x);
 }
+//--clase NodoBinario--------------------------------
+abstract class NodoBinario : Nodo {
+    protected Nodo Izq;
+    protected Nodo Der;
+    public NodoBinario(Nodo izq, Nodo der) {
+        Izq = izq;
+        Der = der;
+    }
+}
