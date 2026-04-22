@@ -217,7 +217,7 @@ La solución puede dividirse en archivos similares a:
 
 ## Entrega
 
-- Proyecto completo en la carpeta `enunciados/tp2`.
+- Proyecto completo en la carpeta `/tp2`.
 
 > [!NOTE]
 > A pesar de que en el enunciado se muestra `calculadora --help`

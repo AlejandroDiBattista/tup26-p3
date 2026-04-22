@@ -3,18 +3,18 @@ using System.Globalization;
 namespace VisiCalc;
 
 internal sealed class FormulaParser {
-    private readonly List<Token> _tokens;
-    private readonly Func<CellAddress, double> _resolveCell;
-    private readonly Func<CellAddress, CellAddress, IEnumerable<double>> _resolveRange;
-    private int _position;
+    private readonly List<Token> tokens;
+    private readonly Func<CellAddress, double> resolveCell;
+    private readonly Func<CellAddress, CellAddress, IEnumerable<double>> resolveRange;
+    private int position;
 
     public FormulaParser(
         string formula,
         Func<CellAddress, double> resolveCell,
         Func<CellAddress, CellAddress, IEnumerable<double>> resolveRange) {
-        _tokens = Tokenize(formula);
-        _resolveCell = resolveCell;
-        _resolveRange = resolveRange;
+        tokens = Tokenize(formula);
+        this.resolveCell = resolveCell;
+        this.resolveRange = resolveRange;
     }
 
     public double Parse() {
@@ -78,7 +78,7 @@ internal sealed class FormulaParser {
             }
 
             if (CellAddress.TryParse(identifier.Text, out CellAddress address)) {
-                return _resolveCell(address);
+                return resolveCell(address);
             }
 
             throw new FormulaException($"Identificador desconocido: {identifier.Text}.");
@@ -108,7 +108,7 @@ internal sealed class FormulaParser {
                         throw new FormulaException($"Rango invalido: {start}:{endToken.Text}.");
                     }
 
-                    values.AddRange(_resolveRange(start, end));
+                    values.AddRange(resolveRange(start, end));
                 } else {
                     values.Add(ParseExpression());
                 }
@@ -132,20 +132,20 @@ internal sealed class FormulaParser {
         };
     }
 
-    private Token Current => _tokens[_position];
+    private Token Current => tokens[position];
 
-    private Token Peek() => _position + 1 < _tokens.Count ? _tokens[_position + 1] : _tokens[^1];
+    private Token Peek() => position + 1 < tokens.Count ? tokens[position + 1] : tokens[^1];
 
     private bool Check(TokenKind kind) => Current.Kind == kind;
 
-    private Token Consume() => _tokens[_position++];
+    private Token Consume() => tokens[position++];
 
     private bool Match(TokenKind kind) {
         if (!Check(kind)) {
             return false;
         }
 
-        _position++;
+        position++;
         return true;
     }
 
@@ -155,7 +155,7 @@ internal sealed class FormulaParser {
             return false;
         }
 
-        token = _tokens[_position++];
+        token = tokens[position++];
         return true;
     }
 
@@ -228,16 +228,11 @@ internal sealed class FormulaParser {
     }
 
     private enum TokenKind {
-        Number,
-        Identifier,
-        Plus,
-        Minus,
-        Star,
-        Slash,
-        LeftParen,
-        RightParen,
-        Comma,
-        Colon,
+        Number, Identifier,
+        Plus, Minus,
+        Star, Slash,
+        LeftParen, RightParen,
+        Comma, Colon,
         End
     }
 
@@ -245,6 +240,5 @@ internal sealed class FormulaParser {
 }
 
 internal sealed class FormulaException : Exception {
-    public FormulaException(string message) : base(message) {
-    }
+    public FormulaException(string message) : base(message) { }
 }

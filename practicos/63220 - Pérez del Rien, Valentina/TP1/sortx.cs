@@ -2,54 +2,68 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 
 // sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
 //       [-i|--input input] [-o|--output output]
 //       [-d|--delimiter delimitador]
 //       [-nh|--no-header] [-h|--help]
+
 try
 {
-    Console.WriteLine($"sortx {string.Join(" ", args)}");
-    
+    //CORRECCIÓN: Se borró el Console.WriteLine que ensuciaba la salida.
     AppConfig config = ParseArgs(args);
+
     string texto = ReadInput(config);
-    var datos = ParseDelimited(texto,config);
+
+    var datos = ParseDelimited(texto, config);
+
     List<Dictionary<string, string>> filasOrdenadas = SortRows(datos.Rows, datos.Headers, config);
-    string salida = Serialize(filasOrdenadas,datos.Headers,config);
-    WriteOutput(salida,config);
+
+    string salida = Serialize(filasOrdenadas, datos.Headers, config);
+
+    WriteOutput(salida, config);
 }
 catch (Exception ex)
 {
-    Console.Error.WriteLine("error: "+ ex.Message);
+    Console.Error.WriteLine("Error: " + ex.Message);
+
     Environment.Exit(1);
 }
+
 
 // 1. ParseArgs
 
 AppConfig ParseArgs(string[] argumentos)
-{
+{ 
     string? input = null;
+
     string? output = null;
+
     string separador = ",";
+
     bool sinHeader = false;
+
     List<SortField> reglas = new List<SortField>();
+
     List<string> posicionales = new List<string>();
 
-      for (int i = 0; i < argumentos.Length; i++)
+    for (int i = 0; i < argumentos.Length; i++)
     {
+
         string actual = argumentos[i].ToLower();
 
         switch (actual)
         {
             case "-h":
             case "--help":
+                
                 MostrarAyuda();
                 Environment.Exit(0);
                 break;
 
             case "-i":
             case "--input":
+
                 if (i + 1 >= argumentos.Length)
                     throw new Exception("Falta el archivo de entrada.");
 
@@ -58,6 +72,7 @@ AppConfig ParseArgs(string[] argumentos)
 
             case "-o":
             case "--output":
+
                 if (i + 1 >= argumentos.Length)
                     throw new Exception("Falta el archivo de salida.");
 
@@ -66,6 +81,7 @@ AppConfig ParseArgs(string[] argumentos)
 
             case "-d":
             case "--delimiter":
+
                 if (i + 1 >= argumentos.Length)
                     throw new Exception("Falta el delimitador.");
 
@@ -78,11 +94,13 @@ AppConfig ParseArgs(string[] argumentos)
 
             case "-nh":
             case "--no-header":
+
                 sinHeader = true;
                 break;
 
             case "-b":
             case "--by":
+
                 if (i + 1 >= argumentos.Length)
                     throw new Exception("Falta el valor para -b / --by.");
 
@@ -90,6 +108,7 @@ AppConfig ParseArgs(string[] argumentos)
                 break;
 
             default:
+
                 if (!argumentos[i].StartsWith("-"))
                 {
                     posicionales.Add(argumentos[i]);
@@ -100,10 +119,9 @@ AppConfig ParseArgs(string[] argumentos)
                 }
                 break;
         }
-    } 
+    }
 
-
- if (input == null && posicionales.Count > 0)
+    if (input == null && posicionales.Count > 0)
         input = posicionales[0];
 
     if (output == null && posicionales.Count > 1)
@@ -132,7 +150,6 @@ AppConfig ParseArgs(string[] argumentos)
     }
 }
 
-
 SortField ParseSortField(string texto)
 {
     string[] partes = texto.Split(':');
@@ -141,6 +158,7 @@ SortField ParseSortField(string texto)
         throw new Exception("Campo inválido en --by.");
 
     string nombre = partes[0];
+
     bool esNumerico = false;
     bool esDescendente = false;
 
@@ -201,6 +219,7 @@ string ReadInput(AppConfig config)
         return (new List<string>(), new List<Dictionary<string, string>>());
 
     List<string> headers = new List<string>();
+
     List<Dictionary<string, string>> filas = new List<Dictionary<string, string>>();
 
     if (config.NoHeader == false)
@@ -271,6 +290,7 @@ List<Dictionary<string, string>> SortRows(
 
     resultado.Sort((a, b) =>
     {
+
         for (int i = 0; i < config.SortFields.Count; i++)
         {
             SortField regla = config.SortFields[i];
@@ -278,17 +298,13 @@ List<Dictionary<string, string>> SortRows(
 
             if (regla.Numeric)
             {
-                decimal valorA;
-                decimal valorB;
-
-                if (!decimal.TryParse(a[regla.Name], out valorA))
-                    throw new Exception("El valor '" + a[regla.Name] + "' no es numérico.");
-
-                if (!decimal.TryParse(b[regla.Name], out valorB))
-                    throw new Exception("El valor '" + b[regla.Name] + "' no es numérico.");
+                // CORRECCIÓN: Se intenta convertir. Si falla (ej: celda vacía), asumimos que es 0 en vez de explotar.
+                decimal valorA = decimal.TryParse(a[regla.Name], out decimal resA) ? resA : 0;
+                decimal valorB = decimal.TryParse(b[regla.Name], out decimal resB) ? resB : 0;
 
                 comparacion = valorA.CompareTo(valorB);
             }
+
             else
             {
                 comparacion = string.Compare(a[regla.Name], b[regla.Name], true);
@@ -333,7 +349,6 @@ string Serialize(List<Dictionary<string, string>> rows, List<string> headers, Ap
     return string.Join(Environment.NewLine, lineas);
 }
 
-
 // 6. WriteOutput
 
 void WriteOutput(string texto, AppConfig config)
@@ -349,7 +364,6 @@ void WriteOutput(string texto, AppConfig config)
 }
 
 record SortField(string Name, bool Numeric, bool Descending);
-
 record AppConfig(
     string? InputFile,
     string? OutputFile,

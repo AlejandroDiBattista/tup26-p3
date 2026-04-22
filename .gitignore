@@ -48,3 +48,5 @@ artifacts/
 .hintrc
 /material-docente
 /apuntes/presentacion/02.050-tipos-compuestos_files/libs
+/scripts
+/.obsidian

@@ -16,6 +16,7 @@ catch (Exception ex)
 AppConfig ParseArgs(string[] args)
 {
     string? input = null;
+    string? output = null;
     var sortFields = new List<SortField>();
 
     for (int i = 0; i < args.Length; i++)
@@ -29,7 +30,11 @@ AppConfig ParseArgs(string[] args)
             bool desc = parts.Length > 2 && parts[2] == "desc";
 
             sortFields.Add(new SortField(name, numeric, desc));
-
+            i++;
+        }
+        else if (args[i] == "-o" || args[i] == "--output")
+        {
+            output = args[i + 1];
             i++;
         }
         else
@@ -40,7 +45,7 @@ AppConfig ParseArgs(string[] args)
 
     return new AppConfig(
         InputFile: input,
-        OutputFile: null,
+        OutputFile: output,
         Delimiter: ",",
         NoHeader: false,
         SortFields: sortFields
@@ -107,35 +112,45 @@ List<Dictionary<string, string>> ParseDelimited(string input, AppConfig config)
     return rows;
 }
 
-List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+List<Dictionary<string, string>> SortRows(
+    List<Dictionary<string, string>> rows,
+    AppConfig config)
 {
     if (config.SortFields.Count == 0)
         return rows;
 
-    var field = config.SortFields[0];
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
 
-    if (field.Numeric)
+    for (int i = 0; i < config.SortFields.Count; i++)
     {
-        if (field.Descending)
+        var field = config.SortFields[i];
+
+        Func<Dictionary<string, string>, object> keySelector;
+
+        if (field.Numeric)
         {
-            return rows.OrderByDescending(r => double.Parse(r[field.Name])).ToList();
+            keySelector = r => double.Parse(r[field.Name]);
         }
         else
         {
-            return rows.OrderBy(r => double.Parse(r[field.Name])).ToList();
+            keySelector = r => r[field.Name];
         }
-    }
-    else
-    {
-        if (field.Descending)
+
+        if (i == 0)
         {
-            return rows.OrderByDescending(r => r[field.Name]).ToList();
+            ordered = field.Descending
+                ? rows.OrderByDescending(keySelector)
+                : rows.OrderBy(keySelector);
         }
         else
         {
-            return rows.OrderBy(r => r[field.Name]).ToList();
+            ordered = field.Descending
+                ? ordered!.ThenByDescending(keySelector)
+                : ordered!.ThenBy(keySelector);
         }
     }
+
+    return ordered!.ToList();
 }
 
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
@@ -163,7 +178,14 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
 void WriteOutput(string output, AppConfig config)
 {
-    Console.WriteLine(output);
+    if (!string.IsNullOrEmpty(config.OutputFile))
+    {
+        File.WriteAllText(config.OutputFile, output);
+    }
+    else
+    {
+        Console.WriteLine(output);
+    }
 }
 
 record SortField(string Name, bool Numeric, bool Descending);

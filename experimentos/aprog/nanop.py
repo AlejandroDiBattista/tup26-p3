@@ -51,7 +51,7 @@ def run_shell(request) -> str:
 
 agent = Agent(
     name="NanoProg",
-    model="gpt-5.4",
+    model="gpt-5.4-mini",
     instructions=cargar_instrucciones(),
     tools=[ShellTool(executor=run_shell), read_file, write_file],
 )

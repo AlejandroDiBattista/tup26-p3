@@ -355,4 +355,44 @@ record AppConfig(
     bool NoHeader,
     bool ShowHelp,
     List<SortField> SortFields
-);
+);          
+//Testeo  T2 con el comando "dotnet run empleados.csv -b apellido" y devuelve los datos: //ordena por apellido
+//nombre,apellido,edad,salario,departamento
+//Carlos,García,35,85000,Ingeniería
+//Laura,González,38,95000,Gerencia
+//María,López,31,88000,Ingeniería
+//Ana,Martínez,28,72000,Diseño
+//Luis,Rodríguez,42,120000,Gerencia
+//Pedro,Sánchez,25,65000,Diseño
+
+//Testeo T3 con el comando "dotnet run empleados.csv -b salario:num:asc" y devuelve los datos: ordena por salario ascendente
+//nombre,apellido,edad,salario,departamento
+//Pedro,Sánchez,25,65000,Diseño
+//Ana,Martínez,28,72000,Diseño
+//Carlos,García,35,85000,Ingeniería
+//María,López,31,88000,Ingeniería
+//Laura,González,38,95000,Gerencia
+//Luis,Rodríguez,42,120000,Gerencia
+
+//Testeo T4 con el comando "dotnet run empleados.csv -b departamento -b salario:num:desc" y devuelve los datos: ordena por depto y salario asc
+//nombre,apellido,edad,salario,departamento
+//Ana,Martínez,28,72000,Diseño
+//Pedro,Sánchez,25,65000,Diseño
+//Luis,Rodríguez,42,120000,Gerencia
+//Laura,González,38,95000,Gerencia
+//María,López,31,88000,Ingeniería
+//Carlos,García,35,85000,Ingeniería
+
+//Testeo T6 COn el comando "dotnet run -- -b salario:num:desc" permite escribir en la consola puse los sig datos:
+//nombre,salario
+//Laura,1500
+//Luis,3000
+//Maria,1000
+//Pablo,5000
+
+//Y devuelve:
+//nombre,salario
+//Pablo,5000
+//Luis,3000
+//Laura,1500
+//Maria,1000

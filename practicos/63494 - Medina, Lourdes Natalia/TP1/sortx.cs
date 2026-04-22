@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 
 try
 {
@@ -70,7 +71,7 @@ AppConfig ParseArgs(string[] args)
         }
     }
 
-    if (sortFields.Any())
+    if (!sortFields.Any())
         throw new Exception("Debe especificar al menos un criterio de orden (-b)");
 
     return new AppConfig(input, output, delimiter, noHeader, sortFields);
@@ -78,15 +79,15 @@ AppConfig ParseArgs(string[] args)
 
 string ReadInput(AppConfig config)
 {
-    if (string.IsNullOrEmpty(config.InputFile))
+    if (!string.IsNullOrEmpty(config.InputFile))
     {
-        if (File.Exists(config.InputFile))
+        if (!File.Exists(config.InputFile))
             throw new Exception("El archivo de entrada no existe");
 
         return File.ReadAllText(config.InputFile);
     }
 
-    if (Console.IsInputRedirected)
+    if (!Console.IsInputRedirected)
         throw new Exception("No hay entrada por stdin");
 
     return Console.In.ReadToEnd();
@@ -102,7 +103,7 @@ List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
     var table = new List<Dictionary<string, string>>();
     string[] headers;
 
-    if (config.NoHeader)
+    if (!config.NoHeader)
     {
         headers = lines[0].Split(config.Delimiter);
 
@@ -139,57 +140,78 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
     foreach (var field in config.SortFields)
     {
-        Func<Dictionary<string, string>, object> keySelector = row =>
+        if (field.Numeric)
         {
-            if (row.ContainsKey(field.Name))
-                throw new Exception($"Campo inválido: {field.Name}");
-
-            var value = row[field.Name];
-
-            if (field.Numeric)
+            if (ordered == null)
             {
-                if (!double.TryParse(value, out var number))
-                    throw new Exception($"Valor no numérico en campo {field.Name}");
-
-                return number;
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    })
+                    : rows.OrderBy(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    });
             }
-
-            return value;
-        };
-
-        if (ordered == null)
-        {
-            ordered = field.Descending
-                ? rows.OrderByDescending(keySelector)
-                : rows.OrderBy(keySelector);
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    })
+                    : ordered.ThenBy(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    });
+            }
         }
         else
         {
-            ordered = field.Descending
-                ? ordered.ThenByDescending(keySelector)
-                : ordered.ThenBy(keySelector);
+            if (ordered == null)
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r => r[field.Name])
+                    : rows.OrderBy(r => r[field.Name]);
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r => r[field.Name])
+                    : ordered.ThenBy(r => r[field.Name]);
+            }
         }
     }
 
     return ordered?.ToList() ?? rows;
 }
 
-    string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
-    {
-        if (!rows.Any())
-            return "";
+string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (!rows.Any())
+        return "";
 
-        var sb = new StringBuilder();
-        var headers = rows.First().Keys.ToList();
+    var sb = new StringBuilder();
+    var headers = rows.First().Keys.ToList();
 
-        if (!config.NoHeader)
-            sb.AppendLine(string.Join(config.Delimiter, headers));
+    if (!config.NoHeader)
+        sb.AppendLine(string.Join(config.Delimiter, headers));
 
-        foreach (var row in rows)
-            sb.AppendLine(string.Join(config.Delimiter, headers.Select(h => row[h])));
+    foreach (var row in rows)
+        sb.AppendLine(string.Join(config.Delimiter, headers.Select(h => row[h])));
 
-        return sb.ToString();
-    }
+    return sb.ToString();
+}
+
 void WriteOutput(string content, AppConfig config)
 {
     if (!string.IsNullOrEmpty(config.OutputFile))
@@ -221,6 +243,7 @@ void PrintHelp()
     Console.WriteLine("  -nh, --no-header   Sin encabezado");
     Console.WriteLine("  -h, --help         Mostrar ayuda");
 }
+
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
@@ -229,5 +252,4 @@ record AppConfig(
     string Delimiter,
     bool NoHeader,
     List<SortField> SortFields
-
 );
