@@ -43,4 +43,25 @@ class Compilador {
         }
         return nodo;
     }
+    private Nodo ParseTermino()
+    {
+        var nodo = ParseFactor();
+        while (true)
+        {
+            SaltarEspacios();
+            if (Match('*'))
+            {
+                nodo = new Multiplicacion(nodo, ParseFactor());
+            }
+            else if (Match('/'))
+            {
+                nodo = new Division(nodo, ParseFactor());
+            }
+            else
+            {
+                break;
+            }
+        }
+        return nodo;
+    }
 }
