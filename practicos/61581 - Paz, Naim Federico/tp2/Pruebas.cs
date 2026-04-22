@@ -29,6 +29,21 @@ class Pruebas {
             AfirmarExcepcion<DivideByZeroException>(() => Compilador.Parse("10 / (x - 2)").Evaluar(2), null, "división por cero");
         });
 
+        Probar(ref numero, "Precedencia y unarios encadenados", () => {
+            AfirmarEvaluacion("--x", 4, 4);
+            AfirmarEvaluacion("+-x", 4, -4);
+            AfirmarEvaluacion("-+x", 4, -4);
+            AfirmarEvaluacion("2 * (3 + 4)", 0, 14);
+            AfirmarEvaluacion("2 + 3 * 4", 0, 14);
+            AfirmarEvaluacion("(2 + 3) * 4", 0, 20);
+        });
+
+        Probar(ref numero, "Errores de parsing adicionales", () => {
+            AfirmarExcepcion<FormatException>(() => Compilador.Parse("1 +"), "fin de entrada", "operador sin operando");
+            AfirmarExcepcion<FormatException>(() => Compilador.Parse("()"), "Token inesperado", "paréntesis vacíos");
+            AfirmarExcepcion<FormatException>(() => Compilador.Parse("1 2"), "Token inesperado", "tokens consecutivos sin operador");
+        });
+
         Console.WriteLine($"Todas las pruebas pasaron correctamente. Total: {numero - 1} grupos.");
     }
 

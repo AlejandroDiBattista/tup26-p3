@@ -86,6 +86,12 @@ class Compilador {
             }
 
             if (Coincide('(')) {
+                SaltarEspacios();
+
+                if (Coincide(')')) {
+                    throw new FormatException("Token inesperado: ')'.");
+                }
+
                 var expresion = ParseExpresion();
                 SaltarEspacios();
 
@@ -116,9 +122,7 @@ class Compilador {
             }
 
             var textoNumero = texto.Substring(inicio, posicion - inicio);
-            var valor = int.Parse(textoNumero);
-
-            return new NumeroNodo(valor);
+            return new NumeroNodo(int.Parse(textoNumero));
         }
 
         private void SaltarEspacios() {
