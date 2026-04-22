@@ -247,3 +247,119 @@ public static class Pruebas
         }
     }
 }
+public static class Comandos
+{
+    public static void Procesar(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            IniciarModoInteractivo();
+            return;
+        }
+
+        string arg1 = args[0].ToLower();
+
+        if (arg1 == "--help" || arg1 == "-h")
+        {
+            MostrarAyuda();
+            Environment.Exit(0);
+        }
+
+        if (arg1 == "--test" || arg1 == "-t" || arg1 == "-p")
+        {
+            Pruebas.Ejecutar();
+            return;
+        }
+
+        if (args.Length == 2)
+        {
+            EjecutarModoDirecto(args[0], args[1]);
+            return;
+        }
+
+        Console.WriteLine("Error: Argumentos inválidos. Usa --help para más información.");
+        Environment.Exit(1);
+    }
+
+    private static void MostrarAyuda()
+    {
+        Console.WriteLine("Calculadora AST");
+        Console.WriteLine("Uso:");
+        Console.WriteLine("  calculadora [expresion valor]");
+        Console.WriteLine("  calculadora --help | -h");
+        Console.WriteLine("  calculadora --test | -t");
+        Console.WriteLine("\nModo directo:");
+        Console.WriteLine("  Evalúa una expresión reemplazando 'x' por el valor indicado.");
+        Console.WriteLine("  Ejemplo: dotnet run -- \"(x - 1) * 2\" 10");
+        Console.WriteLine("\nModo interactivo:");
+        Console.WriteLine("  Ejecuta sin argumentos. Permite ingresar una expresión y evaluarla múltiples veces.");
+    }
+
+    private static void EjecutarModoDirecto(string expresion, string valorStr)
+    {
+        try
+        {
+            if (!int.TryParse(valorStr, out int x))
+                throw new Exception("Valor de x inválido. Debe ser un número entero.");
+
+            Compilador compilador = new Compilador(expresion);
+            Nodo ast = compilador.Parsear();
+            int resultado = ast.Evaluar(x);
+            Console.WriteLine(resultado);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            Environment.Exit(1);
+        }
+    }
+
+    private static void IniciarModoInteractivo()
+    {
+        Console.WriteLine("--- MODO INTERACTIVO ---");
+        Console.Write("Ingrese la expresión matemática: ");
+        string expresion = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(expresion))
+        {
+            Console.WriteLine("Entrada vacía. Finalizando.");
+            return;
+        }
+
+        try
+        {
+            Compilador compilador = new Compilador(expresion);
+            Nodo ast = compilador.Parsear(); // Compila una sola vez
+            Console.WriteLine("Expresión compilada con éxito. Ingrese valores para 'x' (o 'fin' para salir).");
+
+            while (true)
+            {
+                Console.Write("x = ");
+                string input = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(input) || input.ToLower() == "fin")
+                    break;
+
+                if (int.TryParse(input, out int x))
+                {
+                    try
+                    {
+                        Console.WriteLine($"Resultado: {ast.Evaluar(x)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error de evaluación: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Valor inválido. Ingrese un entero o 'fin'.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+}
