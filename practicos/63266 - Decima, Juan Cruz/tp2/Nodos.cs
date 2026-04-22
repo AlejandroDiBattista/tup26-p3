@@ -28,3 +28,19 @@ class VariableNodo : Nodo
         return x;
     }
 }
+
+
+class NegativoNodo : Nodo
+{
+    private readonly Nodo operando;
+
+    public NegativoNodo(Nodo operando)
+    {
+        this.operando = operando;
+    }
+
+    public override int Evaluar(int x = 0)
+    {
+        return -operando.Evaluar(x);
+    }
+}
