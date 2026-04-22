@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 namespace TP2.Calculadora;
 
+public class ErrorDeParsingException : FormatException
+{
+    public ErrorDeParsingException(string mensaje) : base(mensaje) { }
+}
 public class Compilador
 {
     private string _expresion = "";
@@ -18,7 +22,7 @@ public class Compilador
 
         if (_posicion < _expresion.Length)
             throw new Exception($"Token inesperado '{CharActual}' en posición {_posicion}.");
-            
+
         return ParsearExpresion();
     }
 
