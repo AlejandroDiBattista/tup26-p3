@@ -63,6 +63,17 @@ public class Compilador {
         if (Actual == '-') { 
             _posicion++; return new NegativoNodo(ParseFactor()); 
         }
-        
+
+        if (Actual == '(') {
+            _posicion++; 
+            Nodo nodo = ParseExpresion();
+         
+            if (Actual != ')') {
+                throw new FormatException("Se esperaba ')'");
+            }
+
+            _posicion++; 
+            return nodo;
+        }
     }
 }
