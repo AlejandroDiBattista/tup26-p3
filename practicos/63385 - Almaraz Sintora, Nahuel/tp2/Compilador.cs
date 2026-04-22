@@ -59,4 +59,47 @@ class Compilador {
 
         return izquierda;
     }
+     private Nodo ParseFactor() {
+        SaltarEspacios();
+
+        if (_pos >= _expresion.Length) {
+            throw new FormatException("Token inesperado: se esperaba un factor pero se llegó al final de la expresión.");
+        }
+
+        var c = _expresion[_pos];
+
+        if (c == '+') {
+            _pos++;
+            return ParseFactor();
+        }
+
+        if (c == '-') {
+            _pos++;
+            return new NegativoNodo(ParseFactor());
+        }
+
+        if (c == '(') {
+            _pos++; 
+            var nodo = ParseExpresion();
+            SaltarEspacios();
+
+            if (_pos >= _expresion.Length || _expresion[_pos] != ')') {
+                throw new FormatException("Se esperaba ')'");
+            }
+
+            _pos++; 
+            return nodo;
+        }
+
+        if (c == 'x' || c == 'X') {
+            _pos++;
+            return new VariableNodo();
+        }
+
+        if (char.IsDigit(c)) {
+            return ParseNumero();
+        }
+
+        throw new FormatException($"Token inesperado: '{c}'");
+    }
 }
