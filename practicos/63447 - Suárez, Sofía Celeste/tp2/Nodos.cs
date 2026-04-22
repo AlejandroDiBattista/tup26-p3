@@ -19,3 +19,12 @@ class NegativoNodo : Nodo {
     public NegativoNodo(Nodo hijo) => _hijo = hijo;
     public override int Evaluar(int x = 0) => -_hijo.Evaluar(x);
 }
+
+public abstract class NodoBinario : Nodo {
+    protected readonly Nodo Izquierda;
+    protected readonly Nodo Derecha;
+    protected NodoBinario(Nodo izq, Nodo der) {
+        Izquierda = izq;
+        Derecha = der;
+    }
+}
