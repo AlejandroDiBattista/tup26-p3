@@ -38,6 +38,21 @@ class Compilador {
 
         return ParseNumero();
     }
+    private Nodo ParseTermino() {
+        Nodo resultado = ParseFactor();
+
+        IgnorarEspacios();
+        while (_cursor < _input.Length && (_input[_cursor] == '*' || _input[_cursor] == '/')) {
+            char op = _input[_cursor++];
+            Nodo derecha = ParseFactor();
+            resultado = op == '*'
+                ? new MultiplicacionNodo(resultado, derecha)
+                : new DivisionNodo(resultado, derecha);
+            IgnorarEspacios();
+        }
+
+        return resultado;
+    }
 }
 
 
