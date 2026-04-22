@@ -104,12 +104,11 @@ class Compilador {
             return new NumeroNodo(numero);
         }
 
-        if (Actual == 'x' || Actual == 'x'){
-             Avanzar();
-                return new VariableNodo();
+        if (Actual == 'x' || Actual == 'X')
+        {
+            Avanzar();
+            return new VariableNodo();
         }
-
-        throw new FormatException($"Token inesperado: '{Actual}'");
+        throw new FormatException("Token inesperado");
     }
 }
-    
