@@ -1,218 +1,226 @@
-# Trabajo Práctico 1 — Herramienta CLI: `sortx`
+# TP2 — Compilador de Expresiones Aritméticas con Variable: `calculadora`
 
-**Materia:** Programación III  
-**Profesor:** Alejandro Di Battista
-**Modalidad:** Individual  
-**Entrega:**  8 de ABRIL de 2025 a las 23:59hs
+**Entrega:** 22 de ABRIL de 2026 a las 23:59hs
 
 ---
 
 ## Descripción
 
-Desarrollar una herramienta de línea de comandos llamada **`sortx`** que lea un archivo de texto delimitado (CSV, TSV, PSV u otro), ordene sus filas según los criterios indicados, y escriba el resultado.
+Desarrollar una aplicación de consola llamada **`calculadora`** que permita **parsear y evaluar expresiones aritméticas enteras** con soporte para la variable **`x`**.
 
-La herramienta debe ser un único archivo `sortx.cs`, implementado como *file-based program* de C# sin clases auxiliares, usando `record` para la configuración y funciones locales para cada paso del proceso.
+La herramienta debe poder trabajar de dos maneras:
+
+- **Modo directo**, recibiendo una expresión y un valor para `x` por línea de comandos.
+- **Modo interactivo**, permitiendo ingresar una expresión una vez y luego evaluarla varias veces con distintos valores de `x`.
+
+El objetivo del trabajo es modelar un **árbol de sintaxis abstracta (AST)** y construir un **parser de descenso recursivo** que respete precedencia de operadores, paréntesis y operadores unarios.
 
 ---
 
 ## Sintaxis
 
-```
-sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-      [-i|--input input] [-o|--output output]
-      [-d|--delimiter delimitador]
-      [-nh|--no-header] [-h|--help]
+```bash
+calculadora [expresion valor] [--help] [--test]
 ```
 
 ---
 
 ## Opciones
 
-| Opción larga    | Corta  | Descripción |
-|-----------------|--------|-------------|
-| `--by`          | `-b`   | Campo por el que ordenar. Se puede repetir para ordenamiento múltiple. |
-| `--input`       | `-i`   | Archivo de entrada. |
-| `--output`      | `-o`   | Archivo de salida. |
-| `--delimiter`   | `-d`   | Carácter delimitador. Default: `,`. Usar `\t` para tabulación. |
-| `--no-header`   | `-nh`  | Indica que el archivo no tiene fila de encabezado. En ese caso los campos se identifican por su índice numérico (0, 1, 2...). |
-| `--help`        | `-h`   | Muestra la ayuda y termina. |
+| Opción larga | Corta | Descripción                  |
+| ------------ | ----- | ---------------------------- |
+| `--help`     | `-h`  | Muestra la ayuda y termina.  |
+| `--test`     | `-t`  | Ejecuta pruebas automáticas. |
 
-### Especificación de campo: `campo[:tipo[:orden]]`
+### Argumentos posicionales
 
-Cada valor de `--by` tiene el formato `campo[:tipo[:orden]]`, donde:
-
-- **`campo`** — nombre de la columna (si hay encabezado) o índice numérico desde 0 (si no hay encabezado).
-- **`tipo`** — criterio de comparación:
-  - `alpha` — comparación alfabética (default).
-  - `num` — comparación numérica.
-- **`orden`** — dirección:
-  - `asc` — ascendente (default).
-  - `desc` — descendente.
-
-**Ejemplos de especificación:**
-
-| Expresión            | Significado |
-|----------------------|-------------|
-| `apellido`           | Por `apellido`, alfabético, ascendente |
-| `salario:num`        | Por `salario`, numérico, ascendente |
-| `salario:num:desc`   | Por `salario`, numérico, descendente |
-| `2:num:asc`          | Por columna índice 2, numérico, ascendente (sin encabezado) |
+| Argumento   | Descripción                                                                           |
+| ----------- | ------------------------------------------------------------------------------------- |
+| `expresion` | Fórmula a evaluar. Incluir números enteros, operadores, paréntesis y la variable `x`. |
+| `valor`     | Valor entero con el que se reemplaza la variable `x` al evaluar la expresión.         |
 
 ---
 
-## Archivos de entrada y salida
+## Expresiones soportadas
 
-- El archivo de entrada puede especificarse como **primer argumento posicional** o con `-i|--input`.
-- El archivo de salida puede especificarse como **segundo argumento posicional** o con `-o|--output`.
-- Si el archivo de entrada **no se especifica**, la herramienta debe leer desde **stdin**.
-- Si el archivo de salida **no se especifica**, la herramienta debe escribir en **stdout**.
-- Esto permite encadenar la herramienta con otros comandos:
+La calculadora debe aceptar expresiones formadas por:
 
-```bash
-cat datos.csv | sortx -b apellido > ordenado.csv
-```
+- **Números enteros**: `0`, `15`, `123`
+- **Variable**: `x` o `X`
+- **Operadores binarios**:
+  - `+` suma
+  - `-` resta
+  - `*` multiplicación
+  - `/` división entera
+- **Operadores unarios**:
+  - `+` positivo
+  - `-` negación
+- **Paréntesis**: `(` y `)`
+
+### Precedencia
+
+El parser debe respetar el siguiente orden de precedencia:
+
+1. Paréntesis `(` y `)`
+2. Operadores unarios `+` y `-`
+3. Multiplicación y división `*` y `/`
+4. Suma y resta `+` y `-`
 
 ---
 
 ## Comportamiento esperado
 
-### Ordenamiento múltiple
+### Modo directo
 
-Cuando se especifican varios `--by`, se ordenan por el primer campo; en caso de empate, por el segundo, y así sucesivamente.
-
-```bash
-sortx empleados.csv -b departamento -b salario:num:desc
-```
-
-Ordena por `departamento` alfabéticamente; dentro de cada departamento, por `salario` de mayor a menor.
-
-### Sin encabezado
-
-Con `--no-header`, no se toma la primera fila como encabezado y los campos se referencian por índice:
+Si se invoca con dos argumentos posicionales:
 
 ```bash
-sortx datos.csv -nh -b 2:num:desc
+calculadora "(x - 1) * 2" 10
 ```
 
-La primera fila es un dato más y se ordena junto con el resto. La salida tampoco incluye encabezado.
+el programa debe:
 
-### Con encabezado (comportamiento default)
+1. Parsear la expresión.
+2. Reemplazar `x` por el valor indicado.
+3. Evaluar el AST resultante.
+4. Mostrar el resultado por `stdout`.
 
-La primera fila se preserva en la salida como encabezado, independientemente del ordenamiento.
+### Modo interactivo
 
-### Delimitador
+Si se ejecuta sin argumentos, el programa debe:
 
-```bash
-sortx datos.tsv -d "\t" -b nombre
-sortx datos.psv -d "|"  -b nombre
-```
+1. Pedir una expresión matemática con la variable `x`.
+2. Compilar esa expresión una sola vez.
+3. Pedir sucesivamente valores para `x`.
+4. Mostrar el resultado de cada evaluación.
+5. Finalizar cuando el usuario ingrese `fin` o una entrada vacía.
+
+### Ayuda
+
+Si se invoca con `--help`, `-h` debe mostrar una ayuda breve y terminar con código de salida `0`.
+
+### Pruebas
+
+Si se invoca con `--test`, `-p` o `-t`, debe ejecutar un conjunto de pruebas automáticas y reportar si pasaron correctamente.
+
+### Errores
+
+Ante expresiones inválidas, el programa debe informar el error con un mensaje claro. Algunos casos esperables:
+
+- Token inesperado
+- Paréntesis sin cerrar
+- Entrada vacía
+- División por cero
+- Valor de `x` inválido
 
 ---
 
 ## Ejemplos de uso
 
 ```bash
-# Ordenar por apellido (alfabético, ascendente)
-sortx empleados.csv -b apellido
+# Evaluación directa
+calculadora "1 + 2 * 3" 0
+# Salida: 7
 
-# Ordenar por salario descendente y guardar en archivo
-sortx empleados.csv resultado.csv -b salario:num:desc
+# Uso de la variable x
+calculadora "1 + 2 * x" 10
+# Salida: 21
 
-# Múltiples criterios
-sortx empleados.csv -b departamento -b salario:num:desc -o resultado.csv
+# Paréntesis y precedencia
+calculadora "(x - 1) * (x - 8 / 4) + 3" 5
+# Salida: 15
 
-# Con opciones explícitas
-sortx -i empleados.csv -o resultado.csv -b apellido
-
-# TSV sin encabezado, ordenar por columna 1 (segunda columna)
-sortx datos.tsv -d "\t" -nh -b 1:alpha:asc
-
-# Usando redirección
-cat empleados.csv | sortx -b apellido > ordenado.csv
+# Modo interactivo
+calculadora
 
 # Ayuda
-sortx --help
+calculadora --help
+
+# Ejecutar pruebas
+calculadora --test
 ```
 
 ---
 
 ## Diseño requerido
 
-El programa debe seguir el siguiente pipeline, implementando cada paso como una función local independiente:
+El programa debe separar claramente las siguientes responsabilidades:
 
+```text
+1. Procesar comandos      → interpretar args y decidir el modo de ejecución
+2. Parsear expresión      → convertir texto en un AST
+3. Representar nodos      → modelar números, variable, unarios y binarios
+4. Evaluar AST            → calcular el resultado para un valor de x
+5. Ejecutar pruebas       → verificar precedencia y evaluación
 ```
-1. ParseArgs      → leer la configuración desde los argumentos
-2. ReadInput      → leer el texto desde el archivo o stdin
-3. ParseDelimited → convertir el texto en una lista de filas (lista de diccionarios)
-4. SortRows       → ordenar las filas según los criterios configurados
-5. Serialize      → convertir las filas ordenadas de vuelta a texto
-6. WriteOutput    → escribir en el archivo de salida o stdout
-```
 
-El punto de entrada (`try/catch` principal) debe limitarse a invocar estas funciones en orden, sin lógica adicional.
+### Modelo de nodos
 
-### Modelo de configuración
-
-Se debe definir un `record` con al menos los siguientes datos:
+Se espera un árbol abstracto de tipos (AST) similar al siguiente:
 
 ```csharp
-record SortField(string Name, bool Numeric, bool Descending);
+abstract class Nodo {
+    public abstract int Evaluar(int x);
+}
 
-record AppConfig(
-    string?         InputFile,
-    string?         OutputFile,
-    string          Delimiter,
-    bool            NoHeader,
-    List<SortField> SortFields
-);
+class NumeroNodo : Nodo;
+class VariableNodo : Nodo;
+class NegativoNodo : Nodo;
+
+abstract class NodoBinario : Nodo;
+class SumaNodo : NodoBinario;
+class RestaNodo : NodoBinario;
+class MultiplicacionNodo : NodoBinario;
+class DivisionNodo : NodoBinario;
 ```
+
+### Parser
+
+El parser debe implementarse mediante **descenso recursivo (DRP)**, con una estructura equivalente a:
+
+```text
+Expresion := Termino { ('+' | '-') Termino }
+Termino   := Factor  { ('*' | '/') Factor }
+Factor    := '+' Factor
+          | '-' Factor
+          | '(' Expresion ')'
+          | numero
+          | x
+```
+
+### Organización sugerida
+
+La solución puede dividirse en archivos similares a:
+
+- `Programa.cs` para el punto de entrada y el modo interactivo
+- `Compilador.cs` para el parser
+- `Nodos.cs` para la jerarquía del AST
+- `Comandos.cs` para el procesamiento de argumentos
+- `Pruebas.cs` para las pruebas automáticas
 
 ---
 
-## Archivo de prueba
+## Casos de prueba mínimos
 
-Para verificar el funcionamiento, utilizar el siguiente `empleados.csv`:
-
-```csv
-nombre,apellido,edad,salario,departamento
-Carlos,García,35,85000,Ingeniería
-Ana,Martínez,28,72000,Diseño
-Luis,Rodríguez,42,120000,Gerencia
-María,López,31,88000,Ingeniería
-Pedro,Sánchez,25,65000,Diseño
-Laura,González,38,95000,Gerencia
-```
-
-### Casos de prueba mínimos
-
-| Comando | Resultado esperado |
-|---|---|
-| `sortx empleados.csv -b apellido` | Filas ordenadas por apellido A→Z |
-| `sortx empleados.csv -b salario:num:desc` | De mayor a menor salario |
-| `sortx empleados.csv -b departamento -b salario:num:desc` | Por depto, dentro por salario desc |
-| `sortx empleados.csv -b apellido:alpha:asc -o salida.csv` | Genera `salida.csv` |
-| `cat empleados.csv \| sortx -b apellido` | Mismo resultado, leyendo desde stdin |
-| `sortx empleados.csv -b columnaInexistente` | Error en stderr, código de salida ≠ 0 |
-| `sortx --help` | Muestra ayuda y termina con código 0 |
+| Comando                                        | Resultado esperado                    |
+| ---------------------------------------------- | ------------------------------------- |
+| `calculadora "1 + 2 * 3" 0`                    | `7`                                   |
+| `calculadora "1 + 2 * x" 10`                   | `21`                                  |
+| `calculadora "(x - 1) * (x - 8 / 4) + 3" 10`   | `75`                                  |
+| `calculadora "-(3 + 2)" 0`                     | `-5`                                  |
+| `calculadora "10 / 2" 0`                       | `5`                                   |
+| `calculadora --help`                           | Muestra ayuda y termina con código 0  |
+| `calculadora --test`                           | Ejecuta pruebas automáticas           |
+| `calculadora "(1 + 2" 0`                       | Error de parsing                      |
 
 ---
 
 ## Entrega
 
-- Archivo `sortx.cs` completo.
+- Proyecto completo en la carpeta `/tp2`.
 
 > [!NOTE]
-> Si bien el comando `sortx` se menciona para ilustrar el uso, la entrega es un archivo `sortx.cs` que se compila y ejecuta con `dotnet run sortx.cs -- [args]`. 
-> No es necesario generar un ejecutable separado.
-
-> [!TIP]
-> Como se crea el ambiente de desarrollo:
-> [Ver Instrucciones de creacion del ambiente de desarrollo](./como-crear-entorno-desarrollo.md)
-
-> [!TIP]
-> Como entregar el trabajo:
-> [Ver Instrucciones de entrega](./como-entregar-practico.md)
-
-> [!TIP]
-> Como conseguir GitHub Copilot:
-> [Ver Instrucciones para conseguir GitHub Copilot](./como-conseguir-github-copilot.md)
+> A pesar de que en el enunciado se muestra `calculadora --help`
+> durante el desarroll se recomienda ejecutar el proyecto directamente con `dotnet run`
+> desde la carpeta del proyecto, pasando los argumentos después de `tp2`:
+> `dotnet run -- --help` o `dotnet run -- "(x - 1) * 2" 10`. Esto facilita la depuración y el desarrollo iterativo.

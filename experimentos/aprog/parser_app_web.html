@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planilla estilo VisiCalc</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f4f6;
+      --panel: #ffffff;
+      --surface: #ffffff;
+      --soft: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --border: #d1d5db;
+      --header: #f9fafb;
+      --active: #dbeafe;
+      --formula: #f8fafc;
+    }
+
+    body.dark {
+      color-scheme: dark;
+      --bg: #111827;
+      --panel: #1f2937;
+      --surface: #0f172a;
+      --soft: #374151;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --border: #4b5563;
+      --header: #1f2937;
+      --active: #1d4ed8;
+      --formula: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .topbar, .toolbar, .formula-bar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 4px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button, select, input {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .formula-bar {
+      display: grid;
+      grid-template-columns: 80px 1fr 120px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .name-box, .formula-input, .value-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--formula);
+      color: var(--text);
+      min-height: 40px;
+    }
+
+    .formula-input {
+      width: 100%;
+    }
+
+    .sheet-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      overflow: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 100%;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--header);
+      color: var(--text);
+      font-weight: 700;
+      text-align: center;
+      padding: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    th.corner {
+      left: 0;
+      z-index: 2;
+    }
+
+    td.row-header {
+      background: var(--header);
+      text-align: center;
+      width: 48px;
+      font-weight: 700;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+    }
+
+    td.cell {
+      min-width: 110px;
+      width: 110px;
+      height: 34px;
+      padding: 0;
+      background: var(--surface);
+    }
+
+    td.cell.active {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      background: var(--active);
+    }
+
+    td.cell input {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 6px 8px;
+      outline: none;
+    }
+
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 800px) {
+      .formula-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <h1>Planilla estilo VisiCalc</h1>
+        <div class="hint">Fórmulas con =, referencias como A1, B2 y operaciones + - * / con paréntesis.</div>
+      </div>
+      <div class="controls">
+        <label for="themeSelect">Tema</label>
+        <select id="themeSelect">
+          <option value="light">Claro</option>
+          <option value="dark">Oscuro</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="controls">
+        <button id="fillExampleBtn" class="primary">Cargar ejemplo</button>
+        <button id="clearBtn">Limpiar planilla</button>
+      </div>
+    </div>
+
+    <div class="formula-bar">
+      <div id="nameBox" class="name-box">A1</div>
+      <input id="formulaInput" class="formula-input" type="text" placeholder="Escribí un valor o fórmula, por ejemplo =A1+B1*2" />
+      <div id="valueBox" class="value-box"></div>
+    </div>
+
+    <div class="sheet-wrap">
+      <table id="sheet"></table>
+      <div id="status" class="status">Listo.</div>
+    </div>
+  </div>
+
+  <script>
+    const ROWS = 20;
+    const COLS = 10;
+    const state = {};
+    let activeCell = "A1";
+    let editMode = false;
+
+    const sheetEl = document.getElementById("sheet");
+    const formulaInputEl = document.getElementById("formulaInput");
+    const nameBoxEl = document.getElementById("nameBox");
+    const valueBoxEl = document.getElementById("valueBox");
+    const statusEl = document.getElementById("status");
+    const fillExampleBtn = document.getElementById("fillExampleBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const themeSelect = document.getElementById("themeSelect");
+
+    function applyTheme(theme) {
+      document.body.classList.toggle("dark", theme === "dark");
+      themeSelect.value = theme;
+      localStorage.setItem("spreadsheet-theme", theme);
+    }
+
+    function colLabel(index) {
+      let n = index + 1;
+      let label = "";
+      while (n > 0) {
+        const rem = (n - 1) % 26;
+        label = String.fromCharCode(65 + rem) + label;
+        n = Math.floor((n - 1) / 26);
+      }
+      return label;
+    }
+
+    function cellId(row, col) {
+      return `${colLabel(col)}${row + 1}`;
+    }
+
+    function parseCellId(id) {
+      const match = id.match(/^([A-Z]+)(\d+)$/);
+      if (!match) return null;
+      const [, colPart, rowPart] = match;
+      let col = 0;
+      for (const ch of colPart) col = col * 26 + (ch.charCodeAt(0) - 64);
+      return { row: Number(rowPart) - 1, col: col - 1 };
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function ensureCell(id) {
+      if (!state[id]) state[id] = { raw: "" };
+      return state[id];
+    }
+
+    function tokenize(expr) {
+      const tokens = [];
+      let i = 0;
+      while (i < expr.length) {
+        const ch = expr[i];
+        if (/\s/.test(ch)) {
+          i += 1;
+        } else if (/[A-Za-z]/.test(ch)) {
+          let ref = "";
+          while (i < expr.length && /[A-Za-z]/.test(expr[i])) ref += expr[i++];
+          while (i < expr.length && /\d/.test(expr[i])) ref += expr[i++];
+          tokens.push({ type: "REF", value: ref.toUpperCase() });
+        } else if (/\d|\./.test(ch)) {
+          let num = "";
+          let dotCount = 0;
+          while (i < expr.length && /[\d.]/.test(expr[i])) {
+            if (expr[i] === ".") dotCount += 1;
+            num += expr[i++];
+          }
+          if (dotCount > 1 || num === ".") throw new Error("Número inválido");
+          tokens.push({ type: "NUMBER", value: parseFloat(num) });
+        } else if ("+-*/()".includes(ch)) {
+          tokens.push({ type: ch, value: ch });
+          i += 1;
+        } else {
+          throw new Error(`Carácter inválido: ${ch}`);
+        }
+      }
+      tokens.push({ type: "EOF" });
+      return tokens;
+    }
+
+    function parseFormula(expr, visited = new Set()) {
+      const tokens = tokenize(expr);
+      let pos = 0;
+
+      function current() {
+        return tokens[pos];
+      }
+
+      function eat(type) {
+        if (current().type === type) pos += 1;
+        else throw new Error(`Se esperaba ${type}`);
+      }
+
+      function exprRule() {
+        let value = termRule();
+        while (["+", "-"].includes(current().type)) {
+          const op = current().type;
+          eat(op);
+          const right = termRule();
+          value = op === "+" ? value + right : value - right;
+        }
+        return value;
+      }
+
+      function termRule() {
+        let value = factorRule();
+        while (["*", "/"].includes(current().type)) {
+          const op = current().type;
+          eat(op);
+          const right = factorRule();
+          if (op === "*") value *= right;
+          else {
+            if (right === 0) throw new Error("División por cero");
+            value /= right;
+          }
+        }
+        return value;
+      }
+
+      function factorRule() {
+        const token = current();
+
+        if (token.type === "+") {
+          eat("+");
+          return factorRule();
+        }
+        if (token.type === "-") {
+          eat("-");
+          return -factorRule();
+        }
+        if (token.type === "NUMBER") {
+          eat("NUMBER");
+          return token.value;
+        }
+        if (token.type === "REF") {
+          eat("REF");
+          return numericValue(token.value, visited);
+        }
+        if (token.type === "(") {
+          eat("(");
+          const value = exprRule();
+          eat(")");
+          return value;
+        }
+
+        throw new Error("Fórmula inválida");
+      }
+
+      const result = exprRule();
+      if (current().type !== "EOF") throw new Error("Expresión inválida");
+      return result;
+    }
+
+    function numericValue(id, visited = new Set()) {
+      if (visited.has(id)) throw new Error("Referencia circular");
+      visited.add(id);
+      const raw = ensureCell(id).raw.trim();
+      let result = 0;
+
+      if (!raw) result = 0;
+      else if (raw.startsWith("=")) result = parseFormula(raw.slice(1), visited);
+      else {
+        const num = Number(raw);
+        if (Number.isNaN(num)) throw new Error(`Valor no numérico en ${id}`);
+        result = num;
+      }
+
+      visited.delete(id);
+      return result;
+    }
+
+    function displayValue(id) {
+      const raw = ensureCell(id).raw.trim();
+      if (!raw) return "";
+      if (raw.startsWith("=")) {
+        try {
+          return String(parseFormula(raw.slice(1), new Set([id])));
+        } catch {
+          return "#ERR";
+        }
+      }
+      return raw;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderSheet() {
+      let html = "<thead><tr><th class='corner'></th>";
+      for (let col = 0; col < COLS; col++) html += `<th>${colLabel(col)}</th>`;
+      html += "</tr></thead><tbody>";
+
+      for (let row = 0; row < ROWS; row++) {
+        html += `<tr><td class='row-header'>${row + 1}</td>`;
+        for (let col = 0; col < COLS; col++) {
+          const id = cellId(row, col);
+          const isActive = id === activeCell;
+          const value = editMode && isActive ? ensureCell(id).raw : displayValue(id);
+          html += `<td class='cell ${isActive ? "active" : ""}' data-cell='${id}'><input data-input='${id}' value="${escapeHtml(value)}" /></td>`;
+        }
+        html += "</tr>";
+      }
+
+      html += "</tbody>";
+      sheetEl.innerHTML = html;
+      bindCellEvents();
+      updateFormulaBar();
+    }
+
+    function updateFormulaBar() {
+      nameBoxEl.textContent = activeCell;
+      formulaInputEl.value = ensureCell(activeCell).raw;
+      valueBoxEl.textContent = displayValue(activeCell);
+    }
+
+    function getCellInput(id = activeCell) {
+      return sheetEl.querySelector(`[data-input='${id}']`);
+    }
+
+    function focusCell(selectContent = true) {
+      const input = getCellInput();
+      if (!input) return;
+      input.focus();
+      if (editMode) {
+        const end = input.value.length;
+        input.setSelectionRange(end, end);
+      } else if (selectContent) {
+        input.select();
+      }
+    }
+
+    function setActiveCell(id) {
+      activeCell = id;
+      editMode = false;
+      renderSheet();
+      focusCell(true);
+    }
+
+    function beginEdit(replaceText = null) {
+      editMode = true;
+      if (replaceText !== null) {
+        ensureCell(activeCell).raw = replaceText;
+      }
+      renderSheet();
+      focusCell(false);
+    }
+
+    function commitEdit(moveRow = 0, moveCol = 0) {
+      const input = getCellInput();
+      if (input) {
+        ensureCell(activeCell).raw = input.value;
+        statusEl.textContent = `Actualizada ${activeCell}`;
+      }
+      editMode = false;
+      const pos = parseCellId(activeCell);
+      const nextRow = clamp(pos.row + moveRow, 0, ROWS - 1);
+      const nextCol = clamp(pos.col + moveCol, 0, COLS - 1);
+      activeCell = cellId(nextRow, nextCol);
+      renderSheet();
+      focusCell(true);
+    }
+
+    function cancelEdit() {
+      editMode = false;
+      renderSheet();
+      focusCell(true);
+    }
+
+    function moveSelection(rowDelta, colDelta) {
+      const pos = parseCellId(activeCell);
+      if (!pos) return;
+      const nextRow = clamp(pos.row + rowDelta, 0, ROWS - 1);
+      const nextCol = clamp(pos.col + colDelta, 0, COLS - 1);
+      activeCell = cellId(nextRow, nextCol);
+      editMode = false;
+      renderSheet();
+      focusCell(true);
+    }
+
+    function bindCellEvents() {
+      sheetEl.querySelectorAll("[data-input]").forEach((input) => {
+        const id = input.dataset.input;
+
+        input.addEventListener("focus", () => {
+          activeCell = id;
+          renderSheet();
+          focusCell(!editMode);
+        });
+
+        input.addEventListener("dblclick", () => {
+          activeCell = id;
+          beginEdit();
+        });
+
+        input.addEventListener("keydown", (event) => {
+          if (id !== activeCell) return;
+
+          if (!editMode) {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+              event.preventDefault();
+              if (event.key === "ArrowUp") moveSelection(-1, 0);
+              if (event.key === "ArrowDown") moveSelection(1, 0);
+              if (event.key === "ArrowLeft") moveSelection(0, -1);
+              if (event.key === "ArrowRight") moveSelection(0, 1);
+              return;
+            }
+
+            if (event.key === "Enter" || event.key === "F2") {
+              event.preventDefault();
+              beginEdit();
+              return;
+            }
+
+            if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key.length === 1) {
+              event.preventDefault();
+              beginEdit(event.key);
+            }
+
+            return;
+          }
+
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commitEdit(1, 0);
+            return;
+          }
+
+          if (event.key === "Tab") {
+            event.preventDefault();
+            commitEdit(0, event.shiftKey ? -1 : 1);
+            return;
+          }
+
+          if (event.key === "Escape") {
+            event.preventDefault();
+            cancelEdit();
+          }
+        });
+
+        input.addEventListener("input", () => {
+          if (id === activeCell && editMode) {
+            formulaInputEl.value = input.value;
+            valueBoxEl.textContent = input.value.startsWith("=")
+              ? (() => {
+                  try {
+                    return String(parseFormula(input.value.slice(1), new Set([activeCell])));
+                  } catch {
+                    return "#ERR";
+                  }
+                })()
+              : input.value;
+          }
+        });
+      });
+    }
+
+    formulaInputEl.addEventListener("focus", () => {
+      editMode = true;
+      formulaInputEl.value = ensureCell(activeCell).raw;
+    });
+
+    formulaInputEl.addEventListener("input", () => {
+      valueBoxEl.textContent = formulaInputEl.value.startsWith("=")
+        ? (() => {
+            try {
+              return String(parseFormula(formulaInputEl.value.slice(1), new Set([activeCell])));
+            } catch {
+              return "#ERR";
+            }
+          })()
+        : formulaInputEl.value;
+    });
+
+    formulaInputEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        ensureCell(activeCell).raw = formulaInputEl.value;
+        editMode = false;
+        statusEl.textContent = `Actualizada ${activeCell}`;
+        renderSheet();
+        focusCell(true);
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        editMode = false;
+        renderSheet();
+        focusCell(true);
+      }
+    });
+
+    fillExampleBtn.addEventListener("click", () => {
+      state.A1 = { raw: "10" };
+      state.A2 = { raw: "20" };
+      state.A3 = { raw: "=A1+A2" };
+      state.B1 = { raw: "5" };
+      state.B2 = { raw: "=A3*B1" };
+      state.C1 = { raw: "Ventas" };
+      state.C2 = { raw: "=A1*2" };
+      statusEl.textContent = "Ejemplo cargado.";
+      editMode = false;
+      renderSheet();
+      focusCell(true);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      Object.keys(state).forEach((key) => delete state[key]);
+      statusEl.textContent = "Planilla limpiada.";
+      editMode = false;
+      renderSheet();
+      focusCell(true);
+    });
+
+    themeSelect.addEventListener("change", () => applyTheme(themeSelect.value));
+
+    applyTheme(localStorage.getItem("spreadsheet-theme") || "light");
+    renderSheet();
+    focusCell(true);
+  </script>
+</body>
+</html>
