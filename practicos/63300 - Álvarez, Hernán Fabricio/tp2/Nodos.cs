@@ -28,3 +28,36 @@ abstract class NegativoNodo : Nodo
 
     public override int Evaluar (int x = 0) => -Hijo.Evaluar(x);
 }
+
+public abstract class NodoBinario : Nodo
+{
+    public Nodo izquierdo {get;}
+    public Nodo derecho {get;}
+    protected NodoBinario(Nodo izquierdo , Nodo derecho)
+    {
+        Izquierdo = izquierdo;
+        Derecho = derecho;
+    }
+}
+
+public class SumaNodo : NodoBinario
+{
+    public SumaNodo(Nodo izq , Nodo der) : base(izq, der) {}
+    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) + derecho.Evaluar(x);
+}
+public class RestaNodo : NodoBinario
+{
+    public RestaNodo(Nodo izq , Nodo der) : base(izq, der) {}
+    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) - derecho.Evaluar(x);
+}
+public class MultiplicacionNodo : NodoBinario
+{
+    public MultiplicacionNodo(Nodo izq , Nodo der) : base(izq, der) {}
+    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) * derecho.Evaluar(x);
+}
+
+public class DivisionNodo : NodoBinario
+{
+    public DivisionNodo(Nodo izq , Nodo der) : base(izq, der) {}
+    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) / derecho.Evaluar(x);
+}
