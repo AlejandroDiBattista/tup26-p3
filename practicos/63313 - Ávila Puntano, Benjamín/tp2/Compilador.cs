@@ -42,4 +42,19 @@ class Compilador {
         }
     }
 
-}
+    private Nodo parsexpresion(){
+        saltarespacios();
+        if (posicion >= expresion.Length)
+        {
+            throw new ArgumentException("Expresión incompleta.");
+        }
+
+var izquierda = parseTermino();
+while (true){
+    saltarespacios();
+
+    if (posicion >= expresion.Length){break;}
+
+    if
+}}
+    }}
