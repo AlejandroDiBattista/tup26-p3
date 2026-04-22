@@ -22,6 +22,8 @@ class Compilador
 
         while (true)
         {
+            SaltarEspacios();
+
             if (Match('+'))
                 nodo = new SumaNodo(nodo, ParseTermino());
             else if (Match('-'))
@@ -39,6 +41,8 @@ class Compilador
 
         while (true)
         {
+            SaltarEspacios();
+
             if (Match('*'))
                 nodo = new MultiplicacionNodo(nodo, ParseFactor());
             else if (Match('/'))
@@ -52,6 +56,8 @@ class Compilador
 
     private Nodo ParseFactor()
     {
+        SaltarEspacios();
+
         if (Match('+'))
             return ParseFactor();
 
@@ -104,5 +110,11 @@ class Compilador
             return true;
         }
         return false;
+    }
+
+    private void SaltarEspacios()
+    {
+        while (pos < texto.Length && char.IsWhiteSpace(texto[pos]))
+            pos++;
     }
 }
