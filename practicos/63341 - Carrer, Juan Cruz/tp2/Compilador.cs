@@ -18,4 +18,28 @@ class Compilador {
 
         return nodo;
     }
+
+    private Nodo ParseExpresion()
+{
+    var nodo = ParseTermino();
+    while (true)
+    {
+        SaltarEspacios();
+        
+        if(Match('+'))
+        {
+            nodo = new Suma(nodo, ParseTermino());
+        }
+        else if (Match('-'))
+        {
+            nodo = new Resta(nodo, ParseTermino());
+        }
+        else
+        {
+            break;
+        }           
+    }
+    return nodo;
 }
+}
+
