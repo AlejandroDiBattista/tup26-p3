@@ -19,7 +19,7 @@ Ejemplo: `dotnet run -- "(x + 2) * 3" 10`
 ### Pruebas Automáticas
 `dotnet run -- --test`
 
-## 🏗️ Estructura del Proyecto
+## Estructura del Proyecto
 - **Nodos.cs**: Representación del Árbol de Sintaxis Abstracta (AST).
 - **Compilador.cs**: Lógica del Parser y Tokenizer.
 - **Programa.cs**: Punto de entrada y gestión de modos.

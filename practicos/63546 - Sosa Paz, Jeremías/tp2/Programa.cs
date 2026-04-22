@@ -16,7 +16,7 @@ namespace CalculadoraAST
             // Caso 2: Pruebas Automáticas
             if (args.Length > 0 && (args[0] == "--test" || args[0] == "-t" || args[0] == "-p"))
             {
-                // Nota: Pruebas.Ejecutar() lo crearemos en el Paso 5
+                // Nota: Pruebas.Ejecutar() lo creo en el Paso 5
                 Console.WriteLine("Ejecutando pruebas automáticas...");
                 Pruebas.Ejecutar();
                 return;

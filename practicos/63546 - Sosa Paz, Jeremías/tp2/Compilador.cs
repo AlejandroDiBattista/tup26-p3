@@ -10,7 +10,7 @@ namespace CalculadoraAST
 
         public Compilador(string input)
         {
-            _input = input.Replace(" ", ""); // Limpiamos espacios
+            _input = input.Replace(" ", ""); // Limpio espacios
             _pos = 0;
         }
 

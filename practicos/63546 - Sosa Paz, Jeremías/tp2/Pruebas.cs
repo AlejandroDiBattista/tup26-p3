@@ -10,7 +10,7 @@ namespace CalculadoraAST
             int exitosas = 0;
             int fallidas = 0;
 
-            // Definimos los casos de prueba: {Expresión, ValorX, ResultadoEsperado}
+            // Defino los casos de prueba: {Expresión, ValorX, ResultadoEsperado}
             var casos = new (string Exp, int X, int Esperado)[]
             {
                 ("1 + 2 * 3", 0, 7),
