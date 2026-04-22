@@ -9,3 +9,9 @@ class Variable : Nodo
 {
     public override int Evaluar(int x = 0) => x;
 }
+class Negativo : Nodo
+{
+    private Nodo nodo;
+    public Negativo(Nodo nodo) => this.nodo = nodo;
+    public override int Evaluar(int x = 0) => -nodo.Evaluar(x);
+}
