@@ -96,4 +96,6 @@ public class Compilador {
         }
         return new NumeroNodo(int.Parse(n));
     }
+
+    private char Actual => _posicion < _texto.Length ? _texto[_posicion] : '\0';
 }
