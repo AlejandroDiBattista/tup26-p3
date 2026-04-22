@@ -25,10 +25,23 @@ static class Comandos {
     }
     private static void EjecutarModoDirecto(string expresion, string valor)
     {
-        int x = int.Parse(valor);
-        var compilador = new Compilador();
-        Nodo arbol = compilador.Parsear(expresion);
-        Console.WriteLine(arbol.Evaluar(x));
+        try
+        {
+            if (!int.TryParse(valor, out int x))
+                throw new Exception($"Error: '{valor}' no es un valor entero válido para x.");
+
+            var compilador = new Compilador();
+            Nodo arbol = compilador.Parsear(expresion);
+            Console.WriteLine(arbol.Evaluar(x));
+        }
+        catch (DivideByZeroException)
+        {
+            Console.WriteLine("Error: división por cero.");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
     }
 
     private static void MostrarAyuda()

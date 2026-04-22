@@ -9,8 +9,16 @@ public class Compilador
 
     public Nodo Parsear(string expresion)
     {
+        if (string.IsNullOrWhiteSpace(expresion))
+            throw new Exception("Error: la expresión no puede estar vacía.");
+
         _expresion = expresion.Replace(" ", "");
         _posicion = 0;
+        Nodo resultado = ParsearExpresion();
+
+        if (_posicion < _expresion.Length)
+            throw new Exception($"Token inesperado '{CharActual}' en posición {_posicion}.");
+            
         return ParsearExpresion();
     }
 

@@ -22,27 +22,49 @@ public class Programa
 
     private static void EjecutarModoInteractivo()
     {
+        
         Console.WriteLine("Modo interactivo. Ingresá 'fin' o dejá vacío para salir.\n");
 
-        Console.Write("Expresión: ");
-        string? entrada = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(entrada) || entrada == "fin")
-            return;
-
-        var compilador = new Compilador();
-        Nodo arbol = compilador.Parsear(entrada);
-
-        while (true)
+        try
         {
-            Console.Write("Valor de x: ");
-            string? valorEntrada = Console.ReadLine();
+            Console.Write("Expresión: ");
+            string? entrada = Console.ReadLine();
 
-            if (string.IsNullOrWhiteSpace(valorEntrada) || valorEntrada == "fin")
-                break;
+            if (string.IsNullOrWhiteSpace(entrada) || entrada == "fin")
+                return;
 
-            int x = int.Parse(valorEntrada);
-            Console.WriteLine($"Resultado: {arbol.Evaluar(x)}");
+            var compilador = new Compilador();
+            Nodo arbol = compilador.Parsear(entrada);
+
+            while (true)
+            {
+                Console.Write("Valor de x: ");
+                string? valorEntrada = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(valorEntrada) || valorEntrada == "fin")
+                    break;
+
+                try
+                {
+                    if (!int.TryParse(valorEntrada, out int x))
+                        throw new Exception($"Error: '{valorEntrada}' no es un valor entero válido para x.");
+
+                    Console.WriteLine($"Resultado: {arbol.Evaluar(x)}");
+                }
+                catch (DivideByZeroException)
+                {
+                    Console.WriteLine("Error: división por cero.");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
         }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        
     }
 }
