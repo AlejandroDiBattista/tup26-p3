@@ -55,6 +55,32 @@ class Compilador
         return izquierda;
     }
 
+
+    private Nodo ParseTermino()
+
+    {
+        Nodo izquierda = ParseFactor();
+
+        while (!Fin())
+        {
+            SaltarEspacios();
+            if (Fin()) break;
+
+            char op = Actual();
+            if (op != '*' && op != '/') break;
+
+            _pos++;
+            Nodo derecha = ParseFactor();
+
+            izquierda = op == '*'
+                ? new MultiplicacionNodo(izquierda, derecha)
+                : new DivisionNodo(izquierda, derecha);
+        }
+
+        return izquierda;
+    }
+
+    
 }
 
 
