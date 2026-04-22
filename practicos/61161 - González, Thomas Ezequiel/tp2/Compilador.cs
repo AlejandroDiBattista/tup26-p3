@@ -90,13 +90,13 @@ class Compilador
         var nodo = ParsearExpresion();
 
         if (Actual() != ')')
-            throw new Exception("Paréntesis sin cerrar");
-
+            throw new FormatException("Se esperaba ')'");
+            
         Avanzar(); // consumir ')'
         return nodo;
     }
 
-    throw new Exception("Token inesperado");
+    throw new FormatException("Token inesperado");
 }
 private Nodo ParsearTermino()
 {

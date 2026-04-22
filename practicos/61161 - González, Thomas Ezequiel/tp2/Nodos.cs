@@ -92,7 +92,7 @@ class DivisionNodo : NodoBinario
         int divisor = derecha.Evaluar(x);
 
         if (divisor == 0)
-            throw new Exception("División por cero");
+    throw new DivideByZeroException();
 
         return izquierda.Evaluar(x) / divisor;
     }
