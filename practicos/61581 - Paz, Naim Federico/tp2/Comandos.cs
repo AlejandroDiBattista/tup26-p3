@@ -21,7 +21,7 @@ Expresiones válidas:
 
 Opciones:
     --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
+    --test, -t, --probar, -p            Ejecuta pruebas automáticas.
 
 """);
                 return true;
@@ -31,9 +31,21 @@ Opciones:
                 return true;
 
             case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
+                if (!int.TryParse(valor, out var x)) {
+                    Console.WriteLine("Valor de x inválido.");
+                    return true;
+                }
+
+                try {
+                    var funcion = Compilador.Parse(expresion);
+                    Console.WriteLine(funcion.Evaluar(x));
+                } catch (Exception ex) when (
+                    ex is FormatException ||
+                    ex is DivideByZeroException
+                ) {
+                    Console.WriteLine(ex.Message);
+                }
+
                 return true;
 
             default:
@@ -41,4 +53,3 @@ Opciones:
         }
     }
 }
-
