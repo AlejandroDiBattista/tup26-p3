@@ -80,11 +80,15 @@ class MultiplicacionNodo : NodoBinario
 }
 
 class DivisionNodo : NodoBinario
-{
-    public DivisionNodo(Nodo i, Nodo d) : base(i, d) { }
+{ public DivisionNodo(Nodo i, Nodo d) : base(i, d) { }
 
     public override int Evaluar(int x = 0)
     {
-        return izq.Evaluar(x) / der.Evaluar(x);
+        int divisor = der.Evaluar(x);
+
+        if (divisor == 0)
+            throw new DivideByZeroException("División por cero");
+
+        return izq.Evaluar(x) / divisor;
     }
 }
