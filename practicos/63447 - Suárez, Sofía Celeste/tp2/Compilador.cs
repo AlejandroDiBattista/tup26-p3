@@ -37,4 +37,22 @@ public class Compilador {
         }
         return izq;
     }
+
+    private Nodo ParseTermino() {
+        Nodo izq = ParseFactor();
+
+        while (Actual == '*' || Actual == '/') {
+            char op = Actual;
+            _posicion++; 
+            Nodo der = ParseFactor();
+
+            if (op == '*') {
+                izq = new MultiplicacionNodo(izq, der);
+            } 
+            else {
+                izq = new DivisionNodo(izq, der);
+            }
+        }
+        return izq;
+    }
 }
