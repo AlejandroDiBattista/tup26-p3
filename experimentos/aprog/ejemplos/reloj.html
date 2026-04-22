@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reloj Analógico</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #111827;
+      font-family: Arial, sans-serif;
+    }
+
+    .clock {
+      width: 300px;
+      height: 300px;
+      border: 12px solid #e5e7eb;
+      border-radius: 50%;
+      position: relative;
+      background: radial-gradient(circle, #ffffff 0%, #f3f4f6 100%);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .center {
+      width: 14px;
+      height: 14px;
+      background: #111827;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .hand {
+      position: absolute;
+      left: 50%;
+      bottom: 50%;
+      transform-origin: bottom center;
+      transform: translateX(-50%) rotate(0deg);
+      border-radius: 999px;
+    }
+
+    .hour {
+      width: 8px;
+      height: 70px;
+      background: #111827;
+      z-index: 3;
+    }
+
+    .minute {
+      width: 6px;
+      height: 100px;
+      background: #374151;
+      z-index: 2;
+    }
+
+    .second {
+      width: 2px;
+      height: 115px;
+      background: #ef4444;
+      z-index: 1;
+    }
+
+    .mark {
+      position: absolute;
+      width: 4px;
+      height: 14px;
+      background: #6b7280;
+      left: 50%;
+      top: 0;
+      transform-origin: center 150px;
+    }
+
+    .minute-mark {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: #9ca3af;
+      left: 50%;
+      top: 0;
+      transform-origin: center 150px;
+    }
+
+    .number {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 26px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .num-12 { transform: translate(-50%, -50%) translateY(-118px); }
+    .num-3  { transform: translate(-50%, -50%) translateX(118px); }
+    .num-6  { transform: translate(-50%, -50%) translateY(118px); }
+    .num-9  { transform: translate(-50%, -50%) translateX(-118px); }
+
+    .mark:nth-child(1)  { transform: translateX(-50%) rotate(0deg); }
+    .mark:nth-child(2)  { transform: translateX(-50%) rotate(30deg); }
+    .mark:nth-child(3)  { transform: translateX(-50%) rotate(60deg); }
+    .mark:nth-child(4)  { transform: translateX(-50%) rotate(90deg); }
+    .mark:nth-child(5)  { transform: translateX(-50%) rotate(120deg); }
+    .mark:nth-child(6)  { transform: translateX(-50%) rotate(150deg); }
+    .mark:nth-child(7)  { transform: translateX(-50%) rotate(180deg); }
+    .mark:nth-child(8)  { transform: translateX(-50%) rotate(210deg); }
+    .mark:nth-child(9)  { transform: translateX(-50%) rotate(240deg); }
+    .mark:nth-child(10) { transform: translateX(-50%) rotate(270deg); }
+    .mark:nth-child(11) { transform: translateX(-50%) rotate(300deg); }
+    .mark:nth-child(12) { transform: translateX(-50%) rotate(330deg); }
+  </style>
+</head>
+<body>
+  <div class="clock" id="clock">
+    <div class="number num-12">12</div>
+    <div class="number num-3">3</div>
+    <div class="number num-6">6</div>
+    <div class="number num-9">9</div>
+
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(6deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(12deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(18deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(24deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(36deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(42deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(48deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(54deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(66deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(72deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(78deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(84deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(96deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(102deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(108deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(114deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(126deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(132deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(138deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(144deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(156deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(162deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(168deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(174deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(186deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(192deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(198deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(204deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(216deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(222deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(228deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(234deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(246deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(252deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(258deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(264deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(276deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(282deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(288deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(294deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(306deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(312deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(318deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(324deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(336deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(342deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(348deg);"></div>
+    <div class="minute-mark" style="transform: translateX(-50%) rotate(354deg);"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+    <div class="mark"></div>
+
+    <div class="hand hour" id="hourHand"></div>
+    <div class="hand minute" id="minuteHand"></div>
+    <div class="hand second" id="secondHand"></div>
+    <div class="center"></div>
+  </div>
+
+  <script>
+    const hourHand = document.getElementById("hourHand");
+    const minuteHand = document.getElementById("minuteHand");
+    const secondHand = document.getElementById("secondHand");
+
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours() % 12;
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+
+      const hourDeg = (hours * 30) + (minutes * 0.5);
+      const minuteDeg = (minutes * 6) + (seconds * 0.1);
+      const secondDeg = seconds * 6;
+
+      hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+      minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+      secondHand.style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
