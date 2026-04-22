@@ -13,3 +13,8 @@ class NumeroNodo : Nodo {
 
     public override int Evaluar(int x) => valor;
 }
+
+class VariableNodo : Nodo {
+    public override int Evaluar(int x) => x;
+}
+
