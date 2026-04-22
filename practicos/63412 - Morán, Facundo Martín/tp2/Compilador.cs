@@ -14,6 +14,8 @@ class Compilador {
         var comp = new Compilador(expresion);
         Nodo arbol = comp.ParseExpresion();
         comp.IgnorarEspacios();
+        if (comp._cursor < comp._input.Length)
+            throw new FormatException($"Token inesperado: '{comp._input[comp._cursor]}'");
         return arbol;
     }
     private Nodo ParseNumero() {
@@ -24,6 +26,8 @@ class Compilador {
     }
     private Nodo ParseFactor() {
         IgnorarEspacios();
+        if (_cursor >= _input.Length)
+            throw new FormatException("Token inesperado: se esperaba un factor pero se llegó al final de la expresión.");
         char actual = _input[_cursor];
 
         if (actual == '-') { _cursor++; return new NegativoNodo(ParseFactor()); }
@@ -33,8 +37,11 @@ class Compilador {
             _cursor++;
             Nodo nodo = ParseExpresion();
             IgnorarEspacios();
-            _cursor++; // consume ')'
-            return nodo;
+            if (_cursor >= _input.Length || _input[_cursor] != ')')
+                throw new FormatException("Se esperaba ')'");
+            _cursor++;
+            if (char.IsDigit(actual)) return ParseNumero();
+        throw new FormatException($"Token inesperado: '{actual}'");
         }
 
         if (actual == 'x' || actual == 'X') { _cursor++; return new VariableNodo(); }
@@ -58,6 +65,8 @@ class Compilador {
     }
     private Nodo ParseExpresion() {
         IgnorarEspacios();
+        if (_cursor >= _input.Length)
+            throw new FormatException("Token inesperado: entrada vacía.");
         Nodo resultado = ParseTermino();
 
         IgnorarEspacios();
