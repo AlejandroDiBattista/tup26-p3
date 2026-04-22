@@ -48,6 +48,30 @@ public class Compilador
 
     private Nodo ParsearFactor()
     {
+        if (CharActual == '+')
+        {
+            Consumir();
+            return ParsearFactor();
+        }
+
+        if (CharActual == '-')
+        {
+            Consumir();
+            return new NodoNegacion(ParsearFactor());
+        }
+
+        if (CharActual == '(')
+        {
+            Consumir();
+            Nodo nodo = ParsearExpresion();
+
+            if (CharActual != ')')
+                throw new Exception($"Paréntesis sin cerrar en posición {_posicion}.");
+
+            Consumir();
+            return nodo;
+        }
+        
         if (CharActual == 'x' || CharActual == 'X')
         {
             Consumir();
