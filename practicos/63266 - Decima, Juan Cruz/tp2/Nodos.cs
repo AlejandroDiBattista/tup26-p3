@@ -44,3 +44,16 @@ class NegativoNodo : Nodo
         return -operando.Evaluar(x);
     }
 }
+
+abstract class NodoBinario : Nodo
+{
+    protected readonly Nodo izquierda;
+    protected readonly Nodo derecha;
+
+    protected NodoBinario(Nodo izquierda, Nodo derecha)
+    {
+        this.izquierda = izquierda;
+        this.derecha = derecha;
+    }
+}
+
