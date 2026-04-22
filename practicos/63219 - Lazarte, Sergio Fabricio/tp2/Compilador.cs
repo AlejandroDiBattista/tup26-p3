@@ -52,8 +52,24 @@ class Compilador
 
     private Nodo ParseFactor()
     {
+        if (Match('+'))
+            return ParseFactor();
+
+        if (Match('-'))
+            return new NegativoNodo(ParseFactor());
+
+        if (Match('('))
+        {
+            var nodo = ParseExpresion();
+
+            if (!Match(')'))
+                throw new FormatException("Se esperaba ')'");
+
+            return nodo;
+        }
+
         if (char.IsDigit(Peek()))
-            return ParseNumero();
+        return ParseNumero();
 
         if (Peek() == 'x' || Peek() == 'X')
         {
