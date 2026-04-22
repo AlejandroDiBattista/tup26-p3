@@ -1,3 +1,11 @@
-abstract class Nodo {
+namespace CalculadoraArimetica;
+
+public abstract class Nodo {
     public abstract int Evaluar(int x = 0);
+}
+
+class NumeroNodo : Nodo {
+    private readonly int _valor;
+    public NumeroNodo(int valor) => _valor = valor;
+    public override int Evaluar(int x = 0) => _valor;
 }
