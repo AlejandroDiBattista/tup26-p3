@@ -15,6 +15,9 @@ public class Compilador {
         return resultado;
     }
 
-
+    private Compilador(string texto) {
+        _texto = texto.Replace(" ", ""); 
+        _posicion = 0;
+    }
 
 }
