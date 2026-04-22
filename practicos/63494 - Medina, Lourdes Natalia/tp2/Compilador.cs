@@ -91,7 +91,7 @@ class Compilador {
             var nodo = ParseExpresion();
             SaltarEspacios();
             if (Actual != ')')
-                throw new FormatException("Se esperaba ')'");
+                throw new FormatException("Falta ')'");
             Avanzar();
             return nodo;
         }
