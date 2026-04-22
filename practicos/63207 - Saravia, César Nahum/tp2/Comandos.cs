@@ -46,6 +46,8 @@ Opciones:
                 Console.WriteLine($"Error:" + e.Message);
             }
                return true;
+               default:
+            return false;
         }
     }
 }
