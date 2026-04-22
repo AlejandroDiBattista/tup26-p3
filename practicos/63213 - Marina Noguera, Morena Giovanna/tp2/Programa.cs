@@ -1,20 +1,83 @@
 namespace TP2.Calculadora;
 
-public class Programa
+class Program
 {
-    public static void Main(string[] args)
+    static void Main(string[] args)
     {
-        Console.Title = "Calculadora de Expresiones - TP2";
-        Console.WriteLine("--- Intérprete de Expresiones Aritméticas ---");
-
+        if (args[0].ToLower() == "test")
+        {
+            Pruebas.Ejecutar();
+            return;
+        }
+        
+        // Si el usuario no pasó argumentos
         if (args.Length == 0)
         {
-            Console.WriteLine("Iniciando modo interactivo... (Escribe 'fin' para salir)");
+            EjecutarModoInteractivo();
+        }
+        
+        // Si el usuario pasó la expresión y el valor de x
+        else if (args.Length == 2)
+        {
+            EjecutarModoDirecto(args[0], args[1]);
         }
         else
         {
-            // Aquí procesaremos los flags --help, --test o el modo directo
-            Console.WriteLine($"Procesando {args.Length} argumentos de entrada...");
+            Console.WriteLine("Uso incorrecto.");
+            Console.WriteLine("Modo interactivo: dotnet run");
+            Console.WriteLine("Modo directo: dotnet run -- \"expresion\" valorX");
+        }
+    }
+
+    static void EjecutarModoDirecto(string expresion, string valorX)
+    {
+        try
+        {
+            var nodo = Compilador.Parse(expresion);
+            if (int.TryParse(valorX, out int x))
+            {
+                Console.WriteLine(nodo.Evaluar(x));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    static void EjecutarModoInteractivo()
+    {
+        Console.WriteLine("--- Calculadora Interactiva ---");
+        Console.Write("Ingrese la expresión (ej: x + 5 * 2): ");
+        string? entrada = Console.ReadLine();
+
+        if (string.IsNullOrEmpty(entrada)) return;
+
+        try
+        {
+            var arbol = Compilador.Parse(entrada);
+            Console.WriteLine("Expresión aceptada. Escriba valores para 'x' o 'salir' para terminar.");
+
+            while (true)
+            {
+                Console.Write("x = ");
+                string? inputX = Console.ReadLine();
+
+                if (inputX?.ToLower() == "salir") break;
+
+                if (int.TryParse(inputX, out int x))
+                {
+                    Console.WriteLine($"Resultado: {arbol.Evaluar(x)}");
+                }
+                else
+                {
+                    Console.WriteLine("Por favor, ingrese un número entero.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en la expresión: {ex.Message}");
         }
     }
 }
