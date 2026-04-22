@@ -20,4 +20,21 @@ public class Compilador {
         _posicion = 0;
     }
 
+    private Nodo ParseExpresion() {
+        Nodo izq = ParseTermino();
+
+        while (Actual == '+' || Actual == '-') {
+            char op = Actual;
+            _posicion++; 
+            Nodo der = ParseTermino();
+            
+            if (op == '+') {
+                izq = new SumaNodo(izq, der);
+            } 
+            else {
+                izq = new RestaNodo(izq, der);
+            }
+        }
+        return izq;
+    }
 }
