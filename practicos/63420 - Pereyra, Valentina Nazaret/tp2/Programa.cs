@@ -1,29 +1,69 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+class Programa
+{
+    static void Main(string[] args)
+    {
+        try
+        {
+            if (Comandos.EsAyuda(args))
+            {
+                Comandos.MostrarAyuda();
+                return;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (Comandos.EsTest(args))
+            {
+                Pruebas.Ejecutar();
+                return;
+            }
+
+            if (args.Length == 2)
+            {
+                string expr = args[0];
+                int x = int.Parse(args[1]);
+
+                var nodo = Compilador.Compilar(expr);
+                int resultado = nodo.Evaluar(x);
+
+                Console.WriteLine(resultado);
+            }
+            else
+            {
+                ModoInteractivo();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("Error: " + ex.Message);
+        }
+    }
+
+    static void ModoInteractivo()
+    {
+        Console.Write("Expresión: ");
+        string expr = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(expr))
+            return;
+
+        var nodo = Compilador.Compilar(expr);
+
+        while (true)
+        {
+            Console.Write("x = ");
+            string input = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(input) || input.ToLower() == "fin")
+                break;
+
+            if (!int.TryParse(input, out int x))
+            {
+                Console.WriteLine("Valor inválido");
+                continue;
+            }
+
+            Console.WriteLine(nodo.Evaluar(x));
         }
     }
 }
