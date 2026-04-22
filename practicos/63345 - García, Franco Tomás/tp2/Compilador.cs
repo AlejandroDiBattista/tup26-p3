@@ -87,4 +87,28 @@ class Compilador {
 
         throw new FormatException("Token inesperado");
     }
+    private char Peek() => pos < input.Length ? input[pos] : '\0';
+
+    private bool Match(char c)
+    {
+        if (Peek() == c)
+        {
+            pos++;
+            return true;
+        }
+        return false;
+    }
+
+    private void SaltarEspacios()
+    {
+        while (char.IsWhiteSpace(Peek())) pos++;
+    }
+
+    private Nodo ParseNumero()
+    {
+        int inicio= pos;
+        while (char.IsDigit(Peek())) pos++;
+        var texto = input[inicio..pos];
+        return new Numero(int.Parse(texto));
+    }
 }
