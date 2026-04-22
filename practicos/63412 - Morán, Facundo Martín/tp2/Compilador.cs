@@ -53,6 +53,22 @@ class Compilador {
 
         return resultado;
     }
+    private Nodo ParseExpresion() {
+        IgnorarEspacios();
+        Nodo resultado = ParseTermino();
+
+        IgnorarEspacios();
+        while (_cursor < _input.Length && (_input[_cursor] == '+' || _input[_cursor] == '-')) {
+            char op = _input[_cursor++];
+            Nodo derecha = ParseTermino();
+            resultado = op == '+'
+                ? new SumaNodo(resultado, derecha)
+                : new RestaNodo(resultado, derecha);
+            IgnorarEspacios();
+        }
+
+        return resultado;
+    }
 }
 
 
