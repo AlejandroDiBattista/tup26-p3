@@ -20,12 +20,12 @@ internal static class SelfTest {
         ExpectError(sheet.Evaluate(CellAddress.Parse("D1")), "D1");
         ExpectError(sheet.Evaluate(CellAddress.Parse("F1")), "F1");
 
-        string csv = sheet.ToCsv(',');
+        string text = sheet.ToText();
         Spreadsheet reloaded = new();
-        reloaded.LoadCsv(csv, ',');
+        reloaded.LoadText(text);
 
         ExpectRaw(reloaded, "B2", "=SUM(A1:A2)");
-        ExpectNumber(reloaded.Evaluate(CellAddress.Parse("B2")), 25d, "CSV B2");
+        ExpectNumber(reloaded.Evaluate(CellAddress.Parse("B2")), 25d, "TXT B2");
 
         Console.WriteLine("Self-test OK");
         return 0;

@@ -246,7 +246,12 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
 void WriteOutput(string output, AppConfig config)
 {
-    Console.WriteLine(output);
+    if (!string.IsNullOrEmpty(config.OutputFile))
+    {
+        File.WriteAllText(config.OutputFile, output);
+        return;
+    }
+    Console.Write(output);
 }
 
 // PARSE SORT FIELD

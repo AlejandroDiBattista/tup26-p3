@@ -236,11 +236,14 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
     return sb.ToString();
 }
-
-void WriteOutput(string output, AppConfig config)
+void WriteOutput(string content, AppConfig config)
 {
-    Console.WriteLine(output);
+    if (string.IsNullOrEmpty(config.OutputFile)) Console.Write(content);
+    else File.WriteAllText(config.OutputFile, content);
 }
+
+// PARSE SORT FIELD
+
 SortField ParseSortField(string spec)
 {
     var parts = spec.Split(':');
@@ -272,13 +275,13 @@ SortField ParseSortField(string spec)
 
     return new SortField(name, numeric, desc);
 }
-    
-record SortField(string Name, bool Numeric, bool Descending);
 
+// --- Modelos de Configuración ---
+record SortField(string Name, bool Numeric, bool Descending);
 record AppConfig(
-    string?         InputFile,
-    string?         OutputFile,
-    string          Delimiter,
-    bool            NoHeader,
-    List<SortField> SortFields
-);
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields);
+

@@ -26,14 +26,12 @@ internal static class SpreadsheetApp {
 
         Spreadsheet sheet = new();
         string? currentFile = null;
-        char delimiter = ',';
 
         if (args.Length > 0) {
             currentFile = args[0];
             if (File.Exists(currentFile)) {
-                string csvText = File.ReadAllText(currentFile);
-                delimiter = CsvFormat.DetectDelimiter(csvText);
-                sheet.LoadCsv(csvText, delimiter);
+                string text = File.ReadAllText(currentFile);
+                sheet.LoadText(text);
             } else {
                 Console.WriteLine($"No existe el archivo: {currentFile}");
                 return 1;
@@ -45,11 +43,11 @@ internal static class SpreadsheetApp {
             return 1;
         }
 
-        RunInteractive(sheet, ref currentFile, ref delimiter);
+        RunInteractive(sheet, ref currentFile);
         return 0;
     }
 
-    private static void RunInteractive(Spreadsheet sheet, ref string? currentFile, ref char delimiter) {
+    private static void RunInteractive(Spreadsheet sheet, ref string? currentFile) {
         int selectedRow = 0;
         int selectedColumn = 0;
         int topRow = 0;
@@ -61,7 +59,7 @@ internal static class SpreadsheetApp {
         while (running) {
             KeepSelectionInBounds(sheet, ref selectedRow, ref selectedColumn);
             KeepViewportVisible(sheet, selectedRow, selectedColumn, ref topRow, ref leftColumn);
-            Render(sheet, selectedRow, selectedColumn, topRow, leftColumn, currentFile, delimiter, showRawValues, status);
+            Render(sheet, selectedRow, selectedColumn, topRow, leftColumn, currentFile, showRawValues, status);
 
             ConsoleKeyInfo key = Console.ReadKey(intercept: true);
 
@@ -127,7 +125,7 @@ internal static class SpreadsheetApp {
                     break;
 
                 case ConsoleKey.O:
-                    OpenCsv(sheet, ref currentFile, ref delimiter, ref status);
+                    OpenSheet(sheet, ref currentFile, ref status);
                     selectedRow = 0;
                     selectedColumn = 0;
                     topRow = 0;
@@ -135,11 +133,7 @@ internal static class SpreadsheetApp {
                     break;
 
                 case ConsoleKey.S:
-                    SaveCsv(sheet, ref currentFile, delimiter, ref status);
-                    break;
-
-                case ConsoleKey.D:
-                    ChangeDelimiter(ref delimiter, ref status);
+                    SaveSheet(sheet, ref currentFile, ref status);
                     break;
 
                 case ConsoleKey.R:
@@ -158,7 +152,6 @@ internal static class SpreadsheetApp {
                     topRow = 0;
                     leftColumn = 0;
                     currentFile = null;
-                    delimiter = ',';
                     status = "Se cargo una planilla demo.";
                     break;
 
@@ -177,7 +170,7 @@ internal static class SpreadsheetApp {
         }
     }
 
-    private static void Render( Spreadsheet sheet, int selectedRow, int selectedColumn, int topRow, int leftColumn, string? currentFile, char delimiter, bool showRawValues, string status) {
+    private static void Render( Spreadsheet sheet, int selectedRow, int selectedColumn, int topRow, int leftColumn, string? currentFile, bool showRawValues, string status) {
         Console.Clear();
         Console.CursorVisible = false;
 
@@ -194,8 +187,8 @@ internal static class SpreadsheetApp {
         string fileLabel = currentFile ?? "(sin guardar)";
 
         Console.WriteLine("VisiCalc para consola");
-        Console.WriteLine("F2/Enter editar | Del borrar | G ir | O abrir CSV | S guardar | D delimitador | R tamano | T vista | N demo | ? ayuda | Q salir");
-        Console.WriteLine($"Archivo: {fileLabel} | Delimitador: {PrintableDelimiter(delimiter)} | Vista: {(showRawValues ? "formulas" : "resultados")}");
+        Console.WriteLine("F2/Enter editar | Del borrar | G ir | O abrir | S guardar | R tamano | T vista | N demo | ? ayuda | Q salir");
+        Console.WriteLine($"Archivo: {fileLabel} | Vista: {(showRawValues ? "formulas" : "resultados")}");
         Console.WriteLine();
 
         Console.Write("".PadLeft(rowHeaderWidth));
@@ -261,8 +254,8 @@ internal static class SpreadsheetApp {
         status = $"Ahora estas en {address}.";
     }
 
-    private static void OpenCsv(Spreadsheet sheet, ref string? currentFile, ref char delimiter, ref string status) {
-        string? input = Prompt("Ruta CSV para abrir");
+    private static void OpenSheet(Spreadsheet sheet, ref string? currentFile, ref string status) {
+        string? input = Prompt("Ruta de texto para abrir");
         if (string.IsNullOrWhiteSpace(input)) {
             status = "Apertura cancelada.";
             return;
@@ -273,16 +266,15 @@ internal static class SpreadsheetApp {
             return;
         }
 
-        string csvText = File.ReadAllText(input);
-        delimiter = CsvFormat.DetectDelimiter(csvText);
-        sheet.LoadCsv(csvText, delimiter);
+        string text = File.ReadAllText(input);
+        sheet.LoadText(text);
         currentFile = input;
         status = $"Archivo cargado: {input}.";
     }
 
-    private static void SaveCsv(Spreadsheet sheet, ref string? currentFile, char delimiter, ref string status) {
+    private static void SaveSheet(Spreadsheet sheet, ref string? currentFile, ref string status) {
         if (string.IsNullOrWhiteSpace(currentFile)) {
-            currentFile = Prompt("Ruta CSV para guardar");
+            currentFile = Prompt("Ruta de texto para guardar");
             if (string.IsNullOrWhiteSpace(currentFile)) {
                 status = "Guardado cancelado.";
                 currentFile = null;
@@ -290,24 +282,8 @@ internal static class SpreadsheetApp {
             }
         }
 
-        File.WriteAllText(currentFile, sheet.ToCsv(delimiter));
+        File.WriteAllText(currentFile, sheet.ToText());
         status = $"Guardado en {currentFile}.";
-    }
-
-    private static void ChangeDelimiter(ref char delimiter, ref string status) {
-        string? input = Prompt("Nuevo delimitador (, ; | tab)");
-        if (input is null) {
-            status = "Cambio de delimitador cancelado.";
-            return;
-        }
-
-        delimiter = input.Trim().ToLowerInvariant() switch {
-            "tab" => '\t',
-            "" => delimiter,
-            _ => input[0]
-        };
-
-        status = $"Delimitador actual: {PrintableDelimiter(delimiter)}.";
     }
 
     private static void ResizeSheet(Spreadsheet sheet, ref string status, ref int selectedRow, ref int selectedColumn) {
@@ -345,9 +321,8 @@ internal static class SpreadsheetApp {
         Console.WriteLine("  G             ir a una celda");
         Console.WriteLine();
         Console.WriteLine("Archivos");
-        Console.WriteLine("  O             abrir CSV (detecta , ; o tab)");
-        Console.WriteLine("  S             guardar CSV");
-        Console.WriteLine("  D             cambiar delimitador de guardado");
+        Console.WriteLine("  O             abrir archivo de texto (<direccion> : <texto>)");
+        Console.WriteLine("  S             guardar archivo de texto");
         Console.WriteLine();
         Console.WriteLine("Planilla");
         Console.WriteLine("  R             cambiar tamano filas,columnas");
@@ -398,8 +373,6 @@ internal static class SpreadsheetApp {
         CellValueKind.Error => $"ERROR: {value.Text}",
         _ => "?"
     };
-
-    private static string PrintableDelimiter(char delimiter) => delimiter == '\t' ? "tab" : delimiter.ToString();
 
     private static void KeepSelectionInBounds(Spreadsheet sheet, ref int selectedRow, ref int selectedColumn) {
         selectedRow = Math.Clamp(selectedRow, 0, sheet.RowCount - 1);
@@ -485,7 +458,7 @@ internal static class SpreadsheetApp {
     }
 
     private static void PrintUsage() {
-        Console.WriteLine("visicalc [archivo.csv]");
+        Console.WriteLine("visicalc [archivo.txt]");
         Console.WriteLine("visicalc --demo");
         Console.WriteLine("visicalc --self-test");
     }

@@ -252,19 +252,24 @@ for (int i = sortFields.Count - 1; i >= 0; i--)
     });
 }
 
-System.Text.StringBuilder sb = new System.Text.StringBuilder();
+System.Collections.Generic.List<string> lineasSalida = new System.Collections.Generic.List<string>();
 
+// Header solo si corresponde
 if (!noHeader)
 {
-    sb.AppendLine(header);
+    lineasSalida.Add(header);
 }
 
+// Filas
 for (int i = 0; i < filas.Count; i++)
 {
-    sb.AppendLine(string.Join(delimiter, filas[i]));
+    lineasSalida.Add(string.Join(delimiter, filas[i]));
 }
 
-EscribirSalida(outputFile, sb.ToString());
+// Unir SIN línea extra al final
+string resultado = string.Join("\n", lineasSalida);
+
+EscribirSalida(outputFile, resultado);
 
 void MostrarAyuda()
 {

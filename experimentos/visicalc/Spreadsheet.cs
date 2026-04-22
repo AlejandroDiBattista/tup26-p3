@@ -4,49 +4,45 @@ using System.Text;
 namespace VisiCalc;
 
 internal sealed class Spreadsheet {
-    private readonly Dictionary<CellAddress, string> _cells = [];
+    private readonly Dictionary<CellAddress, string> cells = [];
 
     public Spreadsheet(int rowCount = 20, int columnCount = 8) {
         RowCount = Math.Max(1, rowCount);
         ColumnCount = Math.Max(1, columnCount);
     }
 
-    public int RowCount {
-        get; private set;
-    }
+    public int RowCount { get; private set; }
 
-    public int ColumnCount {
-        get; private set;
-    }
+    public int ColumnCount { get; private set; }
 
-    public string GetRaw(CellAddress address) => _cells.TryGetValue(address, out string? raw) ? raw : string.Empty;
+    public string GetRaw(CellAddress address) => cells.TryGetValue(address, out string? raw) ? raw : string.Empty;
 
     public void SetRaw(CellAddress address, string? raw) {
         EnsureContains(address);
 
         raw = raw?.Trim() ?? string.Empty;
         if (raw.Length == 0) {
-            _cells.Remove(address);
+            cells.Remove(address);
             return;
         }
 
-        _cells[address] = raw;
+        cells[address] = raw;
     }
 
-    public void Clear(CellAddress address) => _cells.Remove(address);
+    public void Clear(CellAddress address) => cells.Remove(address);
 
-    public void ClearAll() => _cells.Clear();
+    public void ClearAll() => cells.Clear();
 
     public void Resize(int rows, int columns) {
         RowCount = Math.Max(1, rows);
         ColumnCount = Math.Max(1, columns);
 
-        List<CellAddress> outsideBounds = _cells.Keys
+        List<CellAddress> outsideBounds = cells.Keys
             .Where(address => address.Row >= RowCount || address.Column >= ColumnCount)
             .ToList();
 
         foreach (CellAddress address in outsideBounds) {
-            _cells.Remove(address);
+            cells.Remove(address);
         }
     }
 
@@ -86,43 +82,48 @@ internal sealed class Spreadsheet {
     }
 
     public (int Rows, int Columns) GetUsedSize() {
-        if (_cells.Count == 0) {
+        if (cells.Count == 0) {
             return (1, 1);
         }
 
-        int maxRow    = _cells.Keys.Max(address => address.Row) + 1;
-        int maxColumn = _cells.Keys.Max(address => address.Column) + 1;
+        int maxRow    = cells.Keys.Max(address => address.Row) + 1;
+        int maxColumn = cells.Keys.Max(address => address.Column) + 1;
         return (Math.Max(1, maxRow), Math.Max(1, maxColumn));
     }
 
-    public string ToCsv(char delimiter) {
-        (int rows, int columns) = GetUsedSize();
-        List<IReadOnlyList<string>> output = [];
+    public string ToText() {
+        IEnumerable<string> lines = cells
+            .OrderBy(entry => entry.Key.Row)
+            .ThenBy(entry => entry.Key.Column)
+            .Select(entry => $"{entry.Key}: {entry.Value}");
 
-        for (int row = 0; row < rows; row++) {
-            List<string> fields = [];
-            for (int column = 0; column < columns; column++) {
-                fields.Add(GetRaw(new CellAddress(row, column)));
-            }
-
-            output.Add(fields);
-        }
-
-        return CsvFormat.Write(output, delimiter);
+        return string.Join(Environment.NewLine, lines);
     }
 
-    public void LoadCsv(string csvText, char delimiter) {
-        List<List<string>> rows = CsvFormat.Parse(csvText, delimiter);
+    public void LoadText(string text) {
         ClearAll();
+        Resize(1, 1);
 
-        int rowCount    = Math.Max(1, rows.Count);
-        int columnCount = Math.Max(1, rows.Count == 0 ? 0 : rows.Max(row => row.Count));
-        Resize(rowCount, columnCount);
+        if (string.IsNullOrWhiteSpace(text)) {
+            return;
+        }
 
-        for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < rows[rowIndex].Count; columnIndex++) {
-                SetRaw(new CellAddress(rowIndex, columnIndex), rows[rowIndex][columnIndex]);
+        string[] separators = ["\r\n", "\n", "\r"];
+        string[] lines = text.Split(separators, StringSplitOptions.None);
+
+        foreach (string line in lines) {
+            if (string.IsNullOrWhiteSpace(line)) {
+                continue;
             }
+
+            int separatorIndex = line.IndexOf(':');
+            if (separatorIndex < 0) {
+                throw new FormatException($"Linea invalida: '{line}'.");
+            }
+
+            string addressText = line[..separatorIndex].Trim();
+            string rawText = line[(separatorIndex + 1)..].TrimStart();
+            SetRaw(CellAddress.Parse(addressText), rawText);
         }
     }
 

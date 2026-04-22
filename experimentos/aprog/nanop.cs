@@ -67,7 +67,7 @@ public static class NanoProg {
     public static void Main() {
         var agent = new Agent(
             name: "NanoProg",
-            model: "gpt-5.4",
+            model: "gpt-5.4-mini",
             instructions: $@"
         Eres un asistente de programación experto en Python.
         Trabajás en {Workspace}.

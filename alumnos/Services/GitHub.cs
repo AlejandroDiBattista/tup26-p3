@@ -1,3 +1,6 @@
+using System.Data.SqlTypes;
+using System.IO.Enumeration;
+
 namespace Tup26.AlumnosApp;
 
 class GitHub {
@@ -49,8 +52,8 @@ class GitHub {
         List<(int Numero, string Titulo)> prs = new();
         foreach (string linea in Lineas(salida, pasarAMinusculas: false)) {
             string[] partes = linea.Split('\t', 2);
-
             if (partes.Length != 2) { continue; }
+
             if (!int.TryParse(partes[0], out int numero)) { continue; }
 
             prs.Add((numero, partes[1]));
@@ -149,17 +152,63 @@ class GitHub {
         string? salida = Ejecutar( $"Error al consultar el estado del PR #{numeroPR}",
             $"/pulls/{numeroPR}", "--jq", @"""\(.state)\t\(.mergeable)""" );
 
-        if (salida is null) {
-            return (string.Empty, false);
-        }
+        if (salida is null) { return (string.Empty, false); }
 
         string[] partes = salida.Trim().Split('\t', 2);
-
         if (partes.Length != 2) { return (string.Empty, false); }
 
         return (partes[0].ToLower(), partes[1].ToLower() == "true");
     }
 
+
+    public List<string> ListarArchivos(int numeroPR) {
+        string? salida = Ejecutar( $"Error al listar archivos del PR #{numeroPR}",
+            $"/pulls/{numeroPR}/files", "--paginate", "--jq", @".[] | .filename" );
+
+        if (salida is null) { return new(); }
+
+        return Lineas(salida);
+    }
+
+    public void CerrarPR(int numeroPR) {
+        string? salida = Ejecutar( $"Error al cerrar el PR #{numeroPR}",
+            $"/pulls/{numeroPR}", "--method", "PATCH", "-f", "state=closed" );
+
+        if (salida is not null) {
+            Log.Info($"PR #{numeroPR} cerrado exitosamente.");
+        }
+    }
+
+    public void BajarArchivo(int numeroPR, string patron, string rutaDestino) {
+        string? salida = Ejecutar( $"Error al bajar archivos del PR #{numeroPR}",
+            $"/pulls/{numeroPR}/files", "--paginate", "--jq", ".[] | \"\\(.filename)\\t\\(.raw_url)\"" );
+
+        if (salida is null) { return; }
+
+        List<string> urls = Lineas(salida, pasarAMinusculas: false);
+
+        foreach (string linea in urls) {
+            try {
+                string[] partes = linea.Split('\t', 2);
+                if (partes.Length != 2) { continue; }
+
+                string nombreRemoto = partes[0];
+                string url = partes[1];
+
+                if (!FileSystemName.MatchesSimpleExpression(patron, nombreRemoto, ignoreCase: true)) { continue; }
+
+                using HttpClient client = new();
+                string nombreArchivo = Path.GetFileName(nombreRemoto);
+                string rutaArchivo   = Path.Combine(rutaDestino, nombreArchivo);
+
+                byte[] contenido = client.GetByteArrayAsync(url).Result;
+                File.WriteAllBytes(rutaArchivo, contenido);
+                Log.Warning($"Archivo '{nombreRemoto}'\n      {rutaArchivo} ");
+            } catch (Exception ex) {
+                Log.Error($"Error al descargar el archivo desde '{linea}': {ex.Message}");
+            }
+        }
+    }
 
     public bool Merge(int numeroPR) {
         var detalle = ObtenerEstado(numeroPR);
@@ -227,8 +276,8 @@ class GitHub {
 
         foreach (string linea in Lineas(salida, pasarAMinusculas: false)) {
             string[] partes = linea.Split('\t', 2);
-
             if (partes.Length != 2) { continue; }
+
             if (!DateTimeOffset.TryParse(partes[1], out DateTimeOffset fechaHora)) { continue; }
 
             commits.Add((partes[0], fechaHora));
@@ -278,20 +327,14 @@ class GitHub {
                     .ToList();
     }
 
-    static int ExtraerTP(string titulo) {
+    public static int ExtraerTP(string titulo) {
         Match match = Regex.Match(titulo, @"\bTP\s*\d+\b", RegexOptions.IgnoreCase);
         return match.Success ? int.Parse(match.Value[2..].Trim()) : 0;
     }
 
-
-    static int ExtraerLegajo(string titulo) {
+    public static int ExtraerLegajo(string titulo) {
         Match match = Regex.Match(titulo, @"\b\d{5}\b");
         return match.Success ? int.Parse(match.Value) : 0;
-    }
-
-
-    static bool EsPRDeTP(string titulo, int numeroTP) {
-        return ExtraerTP(titulo) == numeroTP;
     }
    
 }

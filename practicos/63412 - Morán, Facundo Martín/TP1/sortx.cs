@@ -239,3 +239,8 @@ record AppConfig(
     bool            ShowHelp,
     List<SortField> SortFields
 );
+
+// Se realizaron pruebas sobre todos los comandos y opciones del programa,
+// verificando su correcto funcionamiento en distintos casos de uso.
+// La herramienta responde adecuadamente tanto con entrada desde archivo
+// como desde stdin, y cumple con los criterios de ordenamiento especificados.

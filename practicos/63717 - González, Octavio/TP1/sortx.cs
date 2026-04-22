@@ -6,11 +6,23 @@ try
     AppConfig configuracion = ParseArgs(args);
     string texto = ReadInput(configuracion);
     List<Dictionary<string, string>> filas = ParseDelimited(texto, configuracion.Delimitador, configuracion.noheader);
+
+    if (filas.Count > 0)
+    {
+        foreach (var criterio in configuracion.sortfields)
+        {
+            if (!filas[0].ContainsKey(criterio.campo))
+            {
+                throw new Exception($"La columna '{criterio.campo}' no existe.");
+            }
+        }
+    }
+
     List<Dictionary<string, string>> orden = SortRow(filas, configuracion);
-    
+
     // Convertimos la lista ordenada de nuevo a texto
     string resultado = Serialize(orden, configuracion);
-    
+
     // Escribimos el resultado
     WriteOutput(resultado, configuracion);
 }
@@ -25,7 +37,7 @@ static AppConfig ParseArgs(string[] argumentos)
     //configuracion
     string? entrada = null;
     string? Salida = null;
-    string Delimitador = "," ?? "\t" ?? "|";
+    string Delimitador = ",";
     bool noheader = false;
     List<SortField> sortfields = [];
 
@@ -84,46 +96,51 @@ static string ReadInput(AppConfig configuracion)
     }
     else
     {
-        return In.ReadToEnd();
+        return Console.In.ReadToEnd();
     }
 }
 static List<Dictionary<string, string>> ParseDelimited(string texto, string? delimitador, bool noheader)
 {
     string[] linea = texto.Split('\n'); // Divido por fila
-    Dictionary<string, string> fila = [];
-    List<Dictionary<string, string>> filas = []; // Lista final 
+    List<Dictionary<string, string>> filas = []; // Lista final
 
     if (noheader == false)
     {
-        string[] encabezado = linea[0].Trim().Split(delimitador); // nombres columna 
+        string[] encabezado = linea[0].Trim().Split(delimitador); // nombres columna
 
         for (int i = 1; i < linea.Length; i++) //recorre las filas
         {
+ 
+            if (string.IsNullOrWhiteSpace(linea[i])) continue;
+
+            Dictionary<string, string> fila = []; 
             string[] valores = linea[i].Trim().Split(delimitador);
-            for (int j = 0; j < valores.Length; j++)
+            for (int j = 0; j < valores.Length && j < encabezado.Length; j++)
             {
-                fila.Add(encabezado[j], valores[j]); //agrego al diccionario 
+                fila.Add(encabezado[j], valores[j]); //agrego al diccionario
             }
             filas.Add(fila);
-            fila = []; // limpia la variable
         }
     }
     else
     {
         for (int i = 0; i < linea.Length; i++) //recorre las filas
         {
+            
+            if (string.IsNullOrWhiteSpace(linea[i])) continue;
+
+            Dictionary<string, string> fila = []; 
             string[] valores = linea[i].Trim().Split(delimitador);
             string[] encabezado = new string[valores.Length];
             for (int j = 0; j < valores.Length; j++)
             {
-                encabezado[j] = j.ToString(); //El indice pasa a ser nombre de la columna. 
+                encabezado[j] = j.ToString(); //El indice pasa a ser nombre de la columna.
             }
             for (int j = 0; j < valores.Length; j++)
             {
-                fila.Add(encabezado[j], valores[j]); //agrego al diccionario 
+                fila.Add(encabezado[j], valores[j]); //agrego al diccionario
             }
             filas.Add(fila);
-            fila = []; // limpia la variable para la siguiente fila
         }
     }
     return filas;
@@ -132,20 +149,26 @@ static List<Dictionary<string, string>> ParseDelimited(string texto, string? del
 
 static List<Dictionary<string, string>> SortRow(List<Dictionary<string, string>> filas, AppConfig configuracion)
 {
-    filas.Sort((a, b) => 
+    filas.Sort((a, b) =>
     {
         foreach (var criterio in configuracion.sortfields)
         {
             int resultado = 0;
             if (criterio.num)
             {
-                double valA = double.Parse(a[criterio.campo]);
-                double valB = double.Parse(b[criterio.campo]);
-                resultado = valA.CompareTo(valB);
+                if (a.ContainsKey(criterio.campo) && b.ContainsKey(criterio.campo))
+                {
+                    double valA = double.Parse(a[criterio.campo]);
+                    double valB = double.Parse(b[criterio.campo]);
+                    resultado = valA.CompareTo(valB);
+                }
             }
             else
             {
-                resultado = string.Compare(a[criterio.campo], b[criterio.campo]);
+                if (a.ContainsKey(criterio.campo) && b.ContainsKey(criterio.campo))
+                {
+                    resultado = string.Compare(a[criterio.campo], b[criterio.campo]);
+                }
             }
 
             if (criterio.desc) resultado *= -1;
@@ -156,7 +179,7 @@ static List<Dictionary<string, string>> SortRow(List<Dictionary<string, string>>
     });
     return filas;
 }
-    
+
 
 static string Serialize(List<Dictionary<string, string>> filas, AppConfig config)
 {
