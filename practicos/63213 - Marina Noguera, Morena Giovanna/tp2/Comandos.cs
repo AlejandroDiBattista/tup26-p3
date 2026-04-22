@@ -2,75 +2,25 @@ namespace TP2.Calculadora;
 
 public static class Comandos
 {
-    public static void Ejecutar(string[] args)
+    public static void EjecutarModoInteractivo()
     {
-        if (args.Length == 0)
-        {
-            ModoInteractivo();
-        }
-        else if (args.Length == 2)
-        {
-            ModoDirecto(args[0], args[1]);
-        }
-        else
-        {
-            MostrarAyuda();
-        }
-    }
+        Console.Write("Ingrese la expresión: ");
+        string? entrada = Console.ReadLine();
+        if (string.IsNullOrEmpty(entrada)) return;
 
-    private static void ModoDirecto(string expresion, string valorX)
-    {
-        try 
-        {
-            var nodo = Compilador.Parse(expresion);
-            int x = int.Parse(valorX);
-            Console.WriteLine(nodo.Evaluar(x));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
-    }
-
-    private static void ModoInteractivo()
-    {
-        Console.Write("Ingrese la expresión matemática: ");
-        string? expresion = Console.ReadLine();
-
-        if (string.IsNullOrWhiteSpace(expresion)) return;
-
-        try
-        {
-            var nodoRaiz = Compilador.Parse(expresion);
-            Console.WriteLine("Expresión aceptada. Ingrese valores para 'x' (o 'exit' para salir):");
-
-            while (true)
-            {
-                Console.Write("x = ");
-                string? entrada = Console.ReadLine();
-
-                if (entrada?.ToLower() == "exit") break;
-
-                if (int.TryParse(entrada, out int x))
-                {
-                    Console.WriteLine($"Resultado: {nodoRaiz.Evaluar(x)}");
-                }
+        try {
+            var arbol = Compilador.Parse(entrada);
+            while (true) {
+                Console.Write("Valor de x (o 'salir'): ");
+                string? input = Console.ReadLine()?.ToLower().Trim();
+                if (input == "salir") break;
+                if (int.TryParse(input, out int x))
+                    Console.WriteLine($"Resultado: {arbol.Evaluar(x)}");
                 else
-                {
-                    Console.WriteLine("Por favor, ingrese un número válido.");
-                }
+                    Console.WriteLine("Entrada no válida.");
             }
+        } catch (Exception e) {
+            Console.WriteLine($"Error: {e.Message}");
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error de sintaxis: {ex.Message}");
-        }
-    }
-
-    private static void MostrarAyuda()
-    {
-        Console.WriteLine("Uso de la Calculadora:");
-        Console.WriteLine("  Modo Directo: dotnet run -- \"expresion\" valorX");
-        Console.WriteLine("  Modo Interactivo: dotnet run");
     }
 }

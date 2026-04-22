@@ -1,52 +1,51 @@
 namespace TP2.Calculadora;
-// Clase base para todos los nodos del árbol
-public abstract class Nodo
-{
-    public abstract int Evaluar(int x);
+public abstract class Nodo 
+{ 
+    public abstract int Evaluar(int x); 
 }
 
-// Nodo para números enteros (usando constructor primario)
-public class NumeroNodo(int valor) : Nodo
-{
-    public override int Evaluar(int x) => valor;
+public class NumeroNodo(int valor) : Nodo 
+{ 
+    public override int Evaluar(int x) => valor; 
 }
 
-// Nodo para la variable x
-public class VariableNodo : Nodo
-{
-    public override int Evaluar(int x) => x;
+public class VariableNodo : Nodo 
+{ 
+    public override int Evaluar(int x) => x; 
 }
 
-// Clase base para operaciones binarias
-public abstract class NodoBinario(Nodo izquierdo, Nodo derecho) : Nodo
+public class NegativoNodo(Nodo interior) : Nodo
 {
-    protected readonly Nodo Izq = izquierdo;
-    protected readonly Nodo Der = derecho;
+    public override int Evaluar(int x) => -interior.Evaluar(x);
 }
 
-// Implementaciones de operaciones binarias simplificadas
-public class SumaNodo(Nodo i, Nodo d) : NodoBinario(i, d)
+public abstract class NodoBinario(Nodo izq, Nodo der) : Nodo 
+{
+    protected Nodo Izq = izq;
+    protected Nodo Der = der;
+}
+
+public class SumaNodo(Nodo i, Nodo d) : NodoBinario(i, d) 
 {
     public override int Evaluar(int x) => Izq.Evaluar(x) + Der.Evaluar(x);
 }
 
-public class RestaNodo(Nodo i, Nodo d) : NodoBinario(i, d)
+public class RestaNodo(Nodo i, Nodo d) : NodoBinario(i, d) 
 {
     public override int Evaluar(int x) => Izq.Evaluar(x) - Der.Evaluar(x);
 }
 
-public class MultiplicacionNodo(Nodo i, Nodo d) : NodoBinario(i, d)
+public class MultiplicacionNodo(Nodo i, Nodo d) : NodoBinario(i, d) 
 {
     public override int Evaluar(int x) => Izq.Evaluar(x) * Der.Evaluar(x);
 }
 
-public class DivisionNodo(Nodo i, Nodo d) : NodoBinario(i, d)
+public class DivisionNodo(Nodo i, Nodo d) : NodoBinario(i, d) 
 {
-    public override int Evaluar(int x) => Izq.Evaluar(x) / Der.Evaluar(x);
-}
-
-// Nodo para operador unario (negativo)
-public class NegativoNodo(Nodo contenido) : Nodo
-{
-    public override int Evaluar(int x) => -contenido.Evaluar(x);
+    public override int Evaluar(int x) 
+    {
+        int divisor = Der.Evaluar(x);
+        if (divisor == 0) throw new DivideByZeroException("División por cero");
+        return Izq.Evaluar(x) / divisor;
+    }
 }
