@@ -36,3 +36,27 @@ abstract class BinarioNodo : Nodo {
         this.derecha = derecha;
     }
 }
+
+class SumaNodo : BinarioNodo {
+    public SumaNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
+
+    public override int Evaluar(int x = 0) => izquierda.Evaluar(x) + derecha.Evaluar(x);
+}
+
+class RestaNodo : BinarioNodo {
+    public RestaNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
+
+    public override int Evaluar(int x = 0) => izquierda.Evaluar(x) - derecha.Evaluar(x);
+}
+
+class MultiplicacionNodo : BinarioNodo {
+    public MultiplicacionNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
+
+    public override int Evaluar(int x = 0) => izquierda.Evaluar(x) * derecha.Evaluar(x);
+}
+
+class DivisionNodo : BinarioNodo {
+    public DivisionNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
+
+    public override int Evaluar(int x = 0) => izquierda.Evaluar(x) / derecha.Evaluar(x);
+}
