@@ -16,9 +16,36 @@ static class Compilador
     }
 
     static Nodo ParseExpresion()
+{
+    var izquierda = ParseFactor();
+
+    while (true)
     {
-        return ParseFactor();
+        SaltarEspacios();
+
+        if (pos >= texto.Length)
+            break;
+
+        char op = texto[pos];
+
+        if (op == '+' || op == '-')
+        {
+            pos++;
+            var derecha = ParseFactor();
+
+            if (op == '+')
+                izquierda = new SumaNodo(izquierda, derecha);
+            else
+                izquierda = new RestaNodo(izquierda, derecha);
+        }
+        else
+        {
+            break;
+        }
     }
+
+    return izquierda;
+}
 
     static Nodo ParseFactor()
     {
