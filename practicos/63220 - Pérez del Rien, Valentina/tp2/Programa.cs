@@ -1,29 +1,80 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
+class Program
+{
+    static void Main(string[] args)
+    {
+        try
+        {
+            var cmd = new Comandos(args);
 
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+            if (cmd.EsHelp)
+            {
+                MostrarHelp();
+                return;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (cmd.EsTest)
+            {
+                Pruebas.Ejecutar();
+                return;
+            }
+
+            if (cmd.Expresion != null && cmd.ValorX.HasValue)
+            {
+                EjecutarDirecto(cmd.Expresion, cmd.ValorX.Value);
+                return;
+            }
+
+            ModoInteractivo();
         }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error: " + e.Message);
+        }
+    }
+
+    static void EjecutarDirecto(string expr, int x)
+    {
+        var comp = new Compilador();
+        var ast = comp.Parsear(expr);
+
+        Console.WriteLine(ast.Evaluar(x));
+    }
+
+    static void ModoInteractivo()
+    {
+        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
+        Console.Write("Ingrese una expresión matemática con la variable 'x': \n> ");
+
+        string expr = Console.ReadLine() ?? "";
+
+        if (string.IsNullOrWhiteSpace(expr))
+            throw new Exception("Entrada vacía");
+
+        var comp = new Compilador();
+        var ast = comp.Parsear(expr);
+
+        while (true)
+        {
+            Console.Write("x = ");
+            string input = Console.ReadLine() ?? "";
+
+            if (string.IsNullOrWhiteSpace(input) || input.ToLower() == "fin")
+                break;
+
+            if (!int.TryParse(input, out int x))
+                throw new Exception("Valor de x inválido");
+
+            Console.WriteLine(ast.Evaluar(x));
+        }
+    }
+
+    static void MostrarHelp()
+    {
+        Console.WriteLine("Uso:");
+        Console.WriteLine("calculadora \"expresion\" valor");
+        Console.WriteLine("--help | -h");
+        Console.WriteLine("--test | -t");
     }
 }
