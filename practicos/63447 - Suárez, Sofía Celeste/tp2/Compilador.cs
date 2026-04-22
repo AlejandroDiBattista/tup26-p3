@@ -84,7 +84,16 @@ public class Compilador {
         if (!char.IsDigit(Actual)) {
             throw new FormatException("Token inesperado");
         }
-        
+
         return ParseNumero();
+    }
+
+    private Nodo ParseNumero() {
+        string n = "";
+        while (_posicion < _texto.Length && char.IsDigit(_texto[_posicion])) {
+            n += _texto[_posicion];
+            _posicion++;
+        }
+        return new NumeroNodo(int.Parse(n));
     }
 }
