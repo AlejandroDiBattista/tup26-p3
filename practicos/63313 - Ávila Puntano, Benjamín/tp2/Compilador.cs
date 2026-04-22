@@ -88,6 +88,7 @@ private Nodo ParseTermino(){
 
             if (caracter == '(')
             {
+                
                 posicion++;
                 var nodo = ParseExpresion();
 
@@ -95,6 +96,7 @@ private Nodo ParseTermino(){
 
                 if (eof || peek() != ')')
                 {
+                    saltarespacios();
                     throw new ArgumentException("Falta un paréntesis de cierre.");
                 }
 
