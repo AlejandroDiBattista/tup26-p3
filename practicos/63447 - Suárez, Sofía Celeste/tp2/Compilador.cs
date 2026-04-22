@@ -9,6 +9,9 @@ public class Compilador {
         }
         var compilador = new Compilador(expresion);
         Nodo resultado = compilador.ParseExpresion();
+        if (compilador._posicion < compilador._texto.Length) {
+            throw new FormatException("Token inesperado");
+        }
         return resultado;
     }
 
