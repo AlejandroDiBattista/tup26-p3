@@ -13,7 +13,14 @@ class Compilador
         c.texto = entrada;
         c.pos = 0;
 
-        return c.ParseExpresion();
+        var nodo = c.ParseExpresion();
+
+        c.SaltarEspacios();
+
+        if (c.pos < c.texto.Length)
+            throw new FormatException("Token inesperado");
+
+        return nodo;
     }
 
     private Nodo ParseExpresion()
