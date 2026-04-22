@@ -11,7 +11,10 @@ class Compilador {
         }
     }
     public static Nodo Parse(string expresion) {
-        throw new NotImplementedException("Implementar el parser para convertir la expresión en un AST.");
+        var comp = new Compilador(expresion);
+        Nodo arbol = comp.ParseExpresion();
+        comp.IgnorarEspacios();
+        return arbol;
     }
     private Nodo ParseNumero() {
         int inicio = _cursor;
