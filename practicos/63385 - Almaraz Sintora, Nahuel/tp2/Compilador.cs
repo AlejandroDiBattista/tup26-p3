@@ -110,4 +110,9 @@ class Compilador {
         var numero = int.Parse(_expresion[inicio.._pos]);
         return new NumeroNodo(numero);
     }
+    private void SaltarEspacios() {
+        while (_pos < _expresion.Length && char.IsWhiteSpace(_expresion[_pos])) {
+            _pos++;
+        }
+    }
 }
