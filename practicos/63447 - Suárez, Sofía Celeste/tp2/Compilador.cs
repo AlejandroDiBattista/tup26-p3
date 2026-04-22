@@ -75,5 +75,11 @@ public class Compilador {
             _posicion++; 
             return nodo;
         }
+
+        if (Actual == 'x' || Actual == 'X') {
+            _posicion++;
+            return new VariableNodo();
+        }
+        
     }
 }
