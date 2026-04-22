@@ -5,7 +5,7 @@ class Compilador {
 
         if (string.IsNullOrEmpty(expresion))
         {
-            throw new ArgumentException("La expresión no puede estar vacía.");
+            throw new FormatException("Token inesperado");
         }
 
         var recorrer  = new Recorrer(expresion);
@@ -14,7 +14,7 @@ class Compilador {
      
          if(!recorrer.eof)  
          {
-            throw new ArgumentException("Expresión no válidad");
+            throw new FormatException("Token inesperado");
 
          }
          return raiz;
@@ -48,7 +48,7 @@ class Compilador {
         saltarespacios();
         if (eof)
         {
-            throw new ArgumentException("Expresión incompleta.");
+            throw new FormatException("Token inesperado");
         }
 
 var izquierda = ParseTermino();
@@ -81,7 +81,7 @@ private Nodo ParseTermino(){
             saltarespacios();
             if (eof)
             {
-                throw new ArgumentException("Expresión incompleta.");
+                throw new FormatException("Token inesperado");
             }
             
             var caracter = peek();
@@ -96,8 +96,7 @@ private Nodo ParseTermino(){
 
                 if (eof || peek() != ')')
                 {
-                    saltarespacios();
-                    throw new ArgumentException("Falta un paréntesis de cierre.");
+                    throw new FormatException("Se esperaba ')'");
                 }
 
                 posicion++;
@@ -125,7 +124,7 @@ private Nodo ParseTermino(){
             {
                 return ParseNumero();
             }
-            throw new ArgumentException($"Carácter inesperado: '{caracter}'");
+            throw new FormatException("Token inesperado");
         }
         private Nodo ParseNumero()
         {
