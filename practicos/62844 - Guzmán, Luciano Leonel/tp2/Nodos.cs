@@ -39,3 +39,16 @@ abstract class NodoBinario : Nodo {
         Der = der;
     }
 }
+
+//--clase SumaNodo--------------------------------
+
+class SumaNodo : NodoBinario {
+    public SumaNodo(Nodo izq, Nodo der) : base(izq, der) { }
+    public override int Evaluar(int x = 0) => Izq.Evaluar(x) + Der.Evaluar(x);
+}
+
+//--clase RestaNodo--------------------------------
+class RestaNodo : NodoBinario {
+    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) { }
+    public override int Evaluar(int x = 0) => Izq.Evaluar(x) - Der.Evaluar(x);
+}
