@@ -1,43 +1,70 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+using System;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
+namespace CalculadoraUTN
+{
+    class Comandos
+    {
+        public static void ModoDirecto(string exp, string valStr)
+        {
+            try
+            {
+                if (!int.TryParse(valStr, out int x)) 
+                    throw new Exception("Error: El valor de x debe ser un número entero.");
+                
+                var compilador = new Compilador();
+                var ast = compilador.Parsear(exp);
+                Console.WriteLine(ast.Evaluar(x));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
 
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
+        public static void ModoInteractivo()
+        {
+            Console.WriteLine("--- Calculadora Interactiva (Escriba 'fin' o deje vacío para salir) ---");
+            Console.Write("Ingrese expresión (ej: 1 + 2 * x): ");
+            string exp = Console.ReadLine();
+            
+            if (string.IsNullOrWhiteSpace(exp) || exp.ToLower() == "fin") return;
 
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
+            try
+            {
+                var compilador = new Compilador();
+                var ast = compilador.Parsear(exp);
+                Console.WriteLine("Expresión compilada con éxito.");
 
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
+                while (true)
+                {
+                    Console.Write("Valor de x: ");
+                    string input = Console.ReadLine();
+                    if (string.IsNullOrWhiteSpace(input) || input.ToLower() == "fin") break;
 
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
+                    if (int.TryParse(input, out int x))
+                    {
+                        try { Console.WriteLine($"Resultado: {ast.Evaluar(x)}"); }
+                        catch (DivideByZeroException) { Console.WriteLine("Error: División por cero."); }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: Ingrese un valor entero válido para x.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error de sintaxis: {ex.Message}");
+            }
+        }
 
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
-""");
-                return true;
-
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
-
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+        public static void MostrarAyuda()
+        {
+            Console.WriteLine("Uso: calculadora [expresion valor] [--help] [--test]");
+            Console.WriteLine("\nOpciones:");
+            Console.WriteLine("  expresion valor   Evalúa la fórmula reemplazando x.");
+            Console.WriteLine("  --help, -h        Muestra esta ayuda.");
+            Console.WriteLine("  --test, -t        Ejecuta las pruebas automáticas.");
         }
     }
 }
