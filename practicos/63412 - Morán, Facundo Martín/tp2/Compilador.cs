@@ -19,5 +19,25 @@ class Compilador {
             _cursor++;
         return new NumeroNodo(int.Parse(_input[inicio.._cursor]));
     }
+    private Nodo ParseFactor() {
+        IgnorarEspacios();
+        char actual = _input[_cursor];
+
+        if (actual == '-') { _cursor++; return new NegativoNodo(ParseFactor()); }
+        if (actual == '+') { _cursor++; return ParseFactor(); }
+
+        if (actual == '(') {
+            _cursor++;
+            Nodo nodo = ParseExpresion();
+            IgnorarEspacios();
+            _cursor++; // consume ')'
+            return nodo;
+        }
+
+        if (actual == 'x' || actual == 'X') { _cursor++; return new VariableNodo(); }
+
+        return ParseNumero();
+    }
 }
+
 
