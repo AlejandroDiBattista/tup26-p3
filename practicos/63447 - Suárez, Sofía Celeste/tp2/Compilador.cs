@@ -55,4 +55,14 @@ public class Compilador {
         }
         return izq;
     }
+
+    private Nodo ParseFactor() {
+        if (Actual == '+') { 
+            _posicion++; return ParseFactor(); 
+        }
+        if (Actual == '-') { 
+            _posicion++; return new NegativoNodo(ParseFactor()); 
+        }
+        
+    }
 }
