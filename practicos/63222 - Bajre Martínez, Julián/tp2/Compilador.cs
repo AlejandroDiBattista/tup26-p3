@@ -14,6 +14,8 @@ public class Compilador
         return ParsearExpresion();
     }
 
+    public static Nodo Parse(string expresion) => new Compilador().Parsear(expresion);
+
     private char CharActual => _posicion < _expresion.Length ? _expresion[_posicion] : '\0';
 
     private char Consumir() => _expresion[_posicion++];
@@ -71,7 +73,8 @@ public class Compilador
             Consumir();
             return nodo;
         }
-        
+
+
         if (CharActual == 'x' || CharActual == 'X')
         {
             Consumir();

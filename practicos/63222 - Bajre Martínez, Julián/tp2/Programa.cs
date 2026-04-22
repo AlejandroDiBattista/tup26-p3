@@ -11,11 +11,38 @@ public class Programa
 
         if (args.Length == 0)
         {
-            Console.WriteLine("Modo interactivo activo. Ingresá 'fin' para salir.");
+            EjecutarModoInteractivo();
         }
         else
         {
-            Console.WriteLine($"Se recibieron {args.Length} argumento(s). Procesando...");
+            if (!Comandos.Procesar(args))
+                Console.WriteLine("Argumentos inválidos. Usá --help para ver las opciones.");
+        }
+    }
+
+    private static void EjecutarModoInteractivo()
+    {
+        Console.WriteLine("Modo interactivo. Ingresá 'fin' o dejá vacío para salir.\n");
+
+        Console.Write("Expresión: ");
+        string? entrada = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(entrada) || entrada == "fin")
+            return;
+
+        var compilador = new Compilador();
+        Nodo arbol = compilador.Parsear(entrada);
+
+        while (true)
+        {
+            Console.Write("Valor de x: ");
+            string? valorEntrada = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(valorEntrada) || valorEntrada == "fin")
+                break;
+
+            int x = int.Parse(valorEntrada);
+            Console.WriteLine($"Resultado: {arbol.Evaluar(x)}");
         }
     }
 }
