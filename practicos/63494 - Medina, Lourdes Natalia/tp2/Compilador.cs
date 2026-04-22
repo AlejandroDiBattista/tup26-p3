@@ -20,8 +20,15 @@ class Compilador {
 
         return nodo;
     }
-}
 
+    private static char Actual => 
+        pos < texto.Length ? texto[pos] : '\0';
 
+    private static void Avanzar() => pos++;
 
+    private static void SaltarEspacios() {
+        while (char.IsWhiteSpace(Actual))
+            Avanzar();
+
+    }
     
