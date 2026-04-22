@@ -80,6 +80,11 @@ public class Compilador {
             _posicion++;
             return new VariableNodo();
         }
+
+        if (!char.IsDigit(Actual)) {
+            throw new FormatException("Token inesperado");
+        }
         
+        return ParseNumero();
     }
 }
