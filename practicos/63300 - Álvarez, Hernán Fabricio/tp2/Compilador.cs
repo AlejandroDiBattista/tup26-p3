@@ -56,6 +56,22 @@ private Nodo ParsearExpresion()
         return nodo;
     }
     
-    
+    private Nodo ParsearTermino()
+    {
+        var nodo = ParsearFactor();
+        SaltarEspacios();
+        while (CaracterActual == '*' || CaracterActual == '/')
+        {
+            char operador = CaracterActual;
+            Avanzar();
+            var derecho = ParsearFactor();
+
+            if (operador == "*") nodo = new MultiplicacionNodo(nodo, derecho);
+            else nodo = new DivisionNodo(nodo, derecho);
+
+            SaltarEspacios();
+        }
+        return nodo;
+    }
 
 }
