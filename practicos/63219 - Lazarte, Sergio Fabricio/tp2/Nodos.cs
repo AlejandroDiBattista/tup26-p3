@@ -70,3 +70,16 @@ class DivisionNodo : NodoBinario
         return izquierdo.Evaluar(x) / divisor;
     }
 }
+
+class NegativoNodo : Nodo
+{
+    private Nodo hijo;
+
+    public NegativoNodo(Nodo hijo)
+    {
+        this.hijo = hijo;
+    }
+
+    public override int Evaluar(int x = 0)
+        => -hijo.Evaluar(x);
+}
