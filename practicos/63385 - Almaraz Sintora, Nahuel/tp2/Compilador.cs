@@ -39,4 +39,24 @@ class Compilador {
 
         return izquierda;
     }
+     private Nodo ParseTermino() {
+        var izquierda = ParseFactor();
+
+        while (true) {
+            SaltarEspacios();
+            if (_pos >= _expresion.Length) break;
+
+            var op = _expresion[_pos];
+            if (op != '*' && op != '/') break;
+
+            _pos++;
+            var derecha = ParseFactor();
+
+            izquierda = op == '*'
+                ? new MultiplicacionNodo(izquierda, derecha)
+                : new DivisionNodo(izquierda, derecha);
+        }
+
+        return izquierda;
+    }
 }
