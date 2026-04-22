@@ -40,13 +40,13 @@ class Compilador {
             if (_cursor >= _input.Length || _input[_cursor] != ')')
                 throw new FormatException("Se esperaba ')'");
             _cursor++;
-            if (char.IsDigit(actual)) return ParseNumero();
-        throw new FormatException($"Token inesperado: '{actual}'");
-        }
+            return nodo;
+        }   
 
         if (actual == 'x' || actual == 'X') { _cursor++; return new VariableNodo(); }
 
-        return ParseNumero();
+        if (char.IsDigit(actual)) return ParseNumero();
+throw new FormatException($"Token inesperado: '{actual}'");
     }
     private Nodo ParseTermino() {
         Nodo resultado = ParseFactor();
