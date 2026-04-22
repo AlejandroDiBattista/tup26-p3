@@ -31,7 +31,8 @@ Opciones:
                 return true;
 
             case [var expresion, var valor]:
-                var x = int.Parse(valor);
+                if (!int.TryParse(valor, out int x))
+                throw new FormatException("Valor de x inválido");
                 var funcion = Compilador.Parse(expresion);
                 Console.WriteLine(funcion.Evaluar(x));
                 return true;
