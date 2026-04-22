@@ -1,0 +1,14 @@
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+
+# K&R: opening braces on the same line
+csharp_new_line_before_open_brace = none
+
+# Keep compact one-line constructs when the formatter can do so safely
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true

@@ -6,6 +6,7 @@
   <title>Examen Multiple Choice</title>
   <style>
     :root {
+      color-scheme: light;
       --paper: #f8f3ea;
       --paper-strong: #fffdf8;
       --ink: #1f1b16;
@@ -25,6 +26,168 @@
       --tok-command: #84a8ff;
       --tok-var: #ffd166;
       --shadow: 0 24px 80px rgba(47, 37, 24, 0.12);
+      --focus-ring: rgba(138, 90, 68, 0.4);
+      --bg-glow-a: rgba(138, 90, 68, 0.10);
+      --bg-glow-b: rgba(138, 90, 68, 0.08);
+      --bg-top: #efe3d3;
+      --bg-mid: #f7f2ea;
+      --bg-bottom: #efe7dc;
+      --hero-bg: linear-gradient(135deg, rgba(247, 243, 234, 0.9), rgba(255, 253, 248, 0.98));
+      --hero-border: rgba(138, 90, 68, 0.18);
+      --hero-shadow: var(--shadow);
+      --hero-compact-shadow: 0 18px 42px rgba(47, 37, 24, 0.14);
+      --secondary-bg: #ece3d6;
+      --secondary-ink: var(--ink);
+      --paper-bg: linear-gradient(180deg, rgba(255,253,248,0.96), rgba(248,243,234,0.98));
+      --paper-border: rgba(138, 90, 68, 0.14);
+      --paper-header-bg:
+        linear-gradient(90deg, rgba(138, 90, 68, 0.08), transparent 26%),
+        linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
+      --theme-title-ink: #34291f;
+      --question-bg: rgba(255,255,255,0.44);
+      --question-border: rgba(138, 90, 68, 0.12);
+      --inline-code-bg: rgba(138, 90, 68, 0.10);
+      --choice-bg: rgba(255,255,255,0.6);
+      --choice-bg-hover: rgba(255,255,255,0.92);
+      --choice-border: rgba(138, 90, 68, 0.14);
+      --choice-border-hover: rgba(138, 90, 68, 0.3);
+      --ok-soft: rgba(31, 122, 73, 0.06);
+      --ok-border: rgba(31, 122, 73, 0.45);
+      --ok-answer-border: rgba(31, 122, 73, 0.35);
+      --ok-answer-bg: rgba(31, 122, 73, 0.10);
+      --bad-soft: rgba(159, 45, 45, 0.05);
+      --bad-border: rgba(159, 45, 45, 0.35);
+      --bad-answer-border: rgba(159, 45, 45, 0.28);
+      --bad-answer-bg: rgba(159, 45, 45, 0.10);
+      --result-border: rgba(138, 90, 68, 0.16);
+      --result-bg: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(248,243,234,0.96));
+      --bottom-border: rgba(138, 90, 68, 0.18);
+      --bottom-bg: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(247, 243, 234, 0.96));
+      --bottom-shadow: 0 20px 55px rgba(47, 37, 24, 0.18);
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --paper: #1d1b1a;
+      --paper-strong: #262321;
+      --ink: #f2e6d7;
+      --muted: #c0ae9b;
+      --line: #4f4439;
+      --accent: #d3a98d;
+      --accent-soft: #4d362b;
+      --ok: #7ed6a0;
+      --bad: #f09090;
+      --code-bg: #14181f;
+      --code-fg: #ebf0f6;
+      --tok-comment: #9aa6b2;
+      --tok-string: #b8deb6;
+      --tok-number: #f6c177;
+      --tok-keyword: #f29d9d;
+      --tok-type: #9eb8ff;
+      --tok-command: #9eb8ff;
+      --tok-var: #f3d98a;
+      --shadow: 0 28px 90px rgba(5, 6, 8, 0.42);
+      --focus-ring: rgba(211, 169, 141, 0.55);
+      --bg-glow-a: rgba(211, 169, 141, 0.09);
+      --bg-glow-b: rgba(79, 58, 44, 0.14);
+      --bg-top: #131110;
+      --bg-mid: #1a1715;
+      --bg-bottom: #151311;
+      --hero-bg: linear-gradient(135deg, rgba(38, 35, 33, 0.92), rgba(28, 25, 23, 0.98));
+      --hero-border: rgba(211, 169, 141, 0.18);
+      --hero-shadow: var(--shadow);
+      --hero-compact-shadow: 0 18px 42px rgba(5, 6, 8, 0.45);
+      --secondary-bg: #2d2926;
+      --secondary-ink: var(--ink);
+      --paper-bg: linear-gradient(180deg, rgba(31, 28, 26, 0.98), rgba(24, 22, 20, 0.98));
+      --paper-border: rgba(211, 169, 141, 0.14);
+      --paper-header-bg:
+        linear-gradient(90deg, rgba(211, 169, 141, 0.10), transparent 26%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+      --theme-title-ink: #f0dcc7;
+      --question-bg: rgba(255,255,255,0.03);
+      --question-border: rgba(211, 169, 141, 0.14);
+      --inline-code-bg: rgba(211, 169, 141, 0.14);
+      --choice-bg: rgba(255,255,255,0.04);
+      --choice-bg-hover: rgba(255,255,255,0.07);
+      --choice-border: rgba(211, 169, 141, 0.14);
+      --choice-border-hover: rgba(211, 169, 141, 0.28);
+      --ok-soft: rgba(126, 214, 160, 0.10);
+      --ok-border: rgba(126, 214, 160, 0.45);
+      --ok-answer-border: rgba(126, 214, 160, 0.32);
+      --ok-answer-bg: rgba(126, 214, 160, 0.12);
+      --bad-soft: rgba(240, 144, 144, 0.08);
+      --bad-border: rgba(240, 144, 144, 0.35);
+      --bad-answer-border: rgba(240, 144, 144, 0.26);
+      --bad-answer-bg: rgba(240, 144, 144, 0.12);
+      --result-border: rgba(211, 169, 141, 0.14);
+      --result-bg: linear-gradient(180deg, rgba(37, 33, 30, 0.95), rgba(25, 23, 21, 0.98));
+      --bottom-border: rgba(211, 169, 141, 0.18);
+      --bottom-bg: linear-gradient(180deg, rgba(36, 33, 31, 0.94), rgba(24, 22, 20, 0.98));
+      --bottom-shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme]) {
+        color-scheme: dark;
+        --paper: #1d1b1a;
+        --paper-strong: #262321;
+        --ink: #f2e6d7;
+        --muted: #c0ae9b;
+        --line: #4f4439;
+        --accent: #d3a98d;
+        --accent-soft: #4d362b;
+        --ok: #7ed6a0;
+        --bad: #f09090;
+        --code-bg: #14181f;
+        --code-fg: #ebf0f6;
+        --tok-comment: #9aa6b2;
+        --tok-string: #b8deb6;
+        --tok-number: #f6c177;
+        --tok-keyword: #f29d9d;
+        --tok-type: #9eb8ff;
+        --tok-command: #9eb8ff;
+        --tok-var: #f3d98a;
+        --shadow: 0 28px 90px rgba(5, 6, 8, 0.42);
+        --focus-ring: rgba(211, 169, 141, 0.55);
+        --bg-glow-a: rgba(211, 169, 141, 0.09);
+        --bg-glow-b: rgba(79, 58, 44, 0.14);
+        --bg-top: #131110;
+        --bg-mid: #1a1715;
+        --bg-bottom: #151311;
+        --hero-bg: linear-gradient(135deg, rgba(38, 35, 33, 0.92), rgba(28, 25, 23, 0.98));
+        --hero-border: rgba(211, 169, 141, 0.18);
+        --hero-shadow: var(--shadow);
+        --hero-compact-shadow: 0 18px 42px rgba(5, 6, 8, 0.45);
+        --secondary-bg: #2d2926;
+        --secondary-ink: var(--ink);
+        --paper-bg: linear-gradient(180deg, rgba(31, 28, 26, 0.98), rgba(24, 22, 20, 0.98));
+        --paper-border: rgba(211, 169, 141, 0.14);
+        --paper-header-bg:
+          linear-gradient(90deg, rgba(211, 169, 141, 0.10), transparent 26%),
+          linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+        --theme-title-ink: #f0dcc7;
+        --question-bg: rgba(255,255,255,0.03);
+        --question-border: rgba(211, 169, 141, 0.14);
+        --inline-code-bg: rgba(211, 169, 141, 0.14);
+        --choice-bg: rgba(255,255,255,0.04);
+        --choice-bg-hover: rgba(255,255,255,0.07);
+        --choice-border: rgba(211, 169, 141, 0.14);
+        --choice-border-hover: rgba(211, 169, 141, 0.28);
+        --ok-soft: rgba(126, 214, 160, 0.10);
+        --ok-border: rgba(126, 214, 160, 0.45);
+        --ok-answer-border: rgba(126, 214, 160, 0.32);
+        --ok-answer-bg: rgba(126, 214, 160, 0.12);
+        --bad-soft: rgba(240, 144, 144, 0.08);
+        --bad-border: rgba(240, 144, 144, 0.35);
+        --bad-answer-border: rgba(240, 144, 144, 0.26);
+        --bad-answer-bg: rgba(240, 144, 144, 0.12);
+        --result-border: rgba(211, 169, 141, 0.14);
+        --result-bg: linear-gradient(180deg, rgba(37, 33, 30, 0.95), rgba(25, 23, 21, 0.98));
+        --bottom-border: rgba(211, 169, 141, 0.18);
+        --bottom-bg: linear-gradient(180deg, rgba(36, 33, 31, 0.94), rgba(24, 22, 20, 0.98));
+        --bottom-shadow: 0 20px 55px rgba(0, 0, 0, 0.45);
+      }
     }
 
     * { box-sizing: border-box; }
@@ -34,9 +197,9 @@
       color: var(--ink);
       font-family: Georgia, "Times New Roman", serif;
       background:
-        radial-gradient(circle at top left, rgba(138, 90, 68, 0.10), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(138, 90, 68, 0.08), transparent 24%),
-        linear-gradient(180deg, #efe3d3 0%, #f7f2ea 16%, #efe7dc 100%);
+        radial-gradient(circle at top left, var(--bg-glow-a), transparent 28%),
+        radial-gradient(circle at bottom right, var(--bg-glow-b), transparent 24%),
+        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 16%, var(--bg-bottom) 100%);
     }
 
     .shell {
@@ -46,10 +209,10 @@
     }
 
     .hero {
-      background: linear-gradient(135deg, rgba(247, 243, 234, 0.9), rgba(255, 253, 248, 0.98));
-      border: 1px solid rgba(138, 90, 68, 0.18);
+      background: var(--hero-bg);
+      border: 1px solid var(--hero-border);
       border-radius: 28px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--hero-shadow);
       padding: 28px;
       position: sticky;
       top: 0;
@@ -69,7 +232,7 @@
       padding-bottom: 14px;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
-      box-shadow: 0 18px 42px rgba(47, 37, 24, 0.14);
+      box-shadow: var(--hero-compact-shadow);
     }
 
     .eyebrow {
@@ -144,7 +307,7 @@
     .toolbar button:focus-visible,
     .result-box button:focus-visible,
     .bottom-bar button:focus-visible {
-      outline: 2px solid rgba(138, 90, 68, 0.4);
+      outline: 2px solid var(--focus-ring);
       outline-offset: 3px;
     }
 
@@ -160,8 +323,8 @@
     }
 
     .secondary {
-      background: #ece3d6;
-      color: var(--ink);
+      background: var(--secondary-bg);
+      color: var(--secondary-ink);
     }
 
     .meta {
@@ -201,8 +364,8 @@
 
     .exam-paper {
       margin-top: 26px;
-      background: linear-gradient(180deg, rgba(255,253,248,0.96), rgba(248,243,234,0.98));
-      border: 1px solid rgba(138, 90, 68, 0.14);
+      background: var(--paper-bg);
+      border: 1px solid var(--paper-border);
       border-radius: 28px;
       box-shadow: var(--shadow);
       overflow: hidden;
@@ -211,9 +374,7 @@
     .paper-header {
       padding: 28px 32px 16px;
       border-bottom: 1px solid var(--line);
-      background:
-        linear-gradient(90deg, rgba(138, 90, 68, 0.08), transparent 26%),
-        linear-gradient(180deg, rgba(255,255,255,0.45), transparent);
+      background: var(--paper-header-bg);
     }
 
     .paper-title {
@@ -238,14 +399,14 @@
     .theme-title {
       margin: 0 0 18px;
       font-size: 1.55rem;
-      color: #34291f;
+      color: var(--theme-title-ink);
       border-bottom: 2px solid var(--accent-soft);
       padding-bottom: 10px;
     }
 
     .question {
-      background: rgba(255,255,255,0.44);
-      border: 1px solid rgba(138, 90, 68, 0.12);
+      background: var(--question-bg);
+      border: 1px solid var(--question-border);
       border-radius: 22px;
       padding: 20px 20px 18px;
       margin: 0 0 20px;
@@ -265,7 +426,7 @@
     .question-body p em { font-style: italic; }
     .question-body code,
     .choice-text code {
-      background: rgba(138, 90, 68, 0.10);
+      background: var(--inline-code-bg);
       border-radius: 0.4em;
       padding: 0.08em 0.35em;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -314,16 +475,16 @@
       gap: 12px;
       align-items: start;
       padding: 12px 14px;
-      background: rgba(255,255,255,0.6);
-      border: 1px solid rgba(138, 90, 68, 0.14);
+      background: var(--choice-bg);
+      border: 1px solid var(--choice-border);
       border-radius: 16px;
       cursor: pointer;
       transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
     }
 
     .choice:hover {
-      background: rgba(255,255,255,0.92);
-      border-color: rgba(138, 90, 68, 0.3);
+      background: var(--choice-bg-hover);
+      border-color: var(--choice-border-hover);
       transform: translateY(-1px);
     }
 
@@ -349,24 +510,24 @@
     }
 
     .question.correct {
-      border-color: rgba(31, 122, 73, 0.45);
-      background: rgba(31, 122, 73, 0.06);
+      border-color: var(--ok-border);
+      background: var(--ok-soft);
     }
 
     .question.incorrect {
-      border-color: rgba(159, 45, 45, 0.35);
-      background: rgba(159, 45, 45, 0.05);
+      border-color: var(--bad-border);
+      background: var(--bad-soft);
     }
 
     .question.correct .choice.correct-answer,
     .question.incorrect .choice.correct-answer {
-      border-color: rgba(31, 122, 73, 0.35);
-      background: rgba(31, 122, 73, 0.10);
+      border-color: var(--ok-answer-border);
+      background: var(--ok-answer-bg);
     }
 
     .question.incorrect .choice.user-wrong {
-      border-color: rgba(159, 45, 45, 0.28);
-      background: rgba(159, 45, 45, 0.10);
+      border-color: var(--bad-answer-border);
+      background: var(--bad-answer-bg);
     }
 
     .result-box {
@@ -374,8 +535,8 @@
       margin: 24px 32px 32px;
       padding: 22px 24px;
       border-radius: 22px;
-      border: 1px solid rgba(138, 90, 68, 0.16);
-      background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(248,243,234,0.96));
+      border: 1px solid var(--result-border);
+      background: var(--result-bg);
       scroll-margin-top: 92px;
     }
 
@@ -418,9 +579,9 @@
       gap: 16px;
       padding: 14px 18px;
       border-radius: 24px;
-      border: 1px solid rgba(138, 90, 68, 0.18);
-      background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(247, 243, 234, 0.96));
-      box-shadow: 0 20px 55px rgba(47, 37, 24, 0.18);
+      border: 1px solid var(--bottom-border);
+      background: var(--bottom-bg);
+      box-shadow: var(--bottom-shadow);
       backdrop-filter: blur(14px);
       z-index: 35;
     }
@@ -477,6 +638,7 @@
 
       <div class="toolbar">
         <input id="fileInput" type="file" accept=".md,text/markdown" />
+        <button id="themeToggleButton" class="secondary" type="button" aria-pressed="false">🌙 Modo oscuro</button>
         <button id="filePickerButton" class="secondary" type="button">Seleccionar archivo</button>
       </div>
 
@@ -514,6 +676,7 @@
 
   <script>
     const DEFAULT_MARKDOWN_FILE = "preguntas-multiple-choice-02-al-05.md";
+    const THEME_STORAGE_KEY = "examinador-theme";
 
     const state = {
       exam: null,
@@ -531,6 +694,7 @@
     const heroTitle = document.getElementById("heroTitle");
     const examContainer = document.getElementById("examContainer");
     const fileInput = document.getElementById("fileInput");
+    const themeToggleButton = document.getElementById("themeToggleButton");
     const filePickerButton = document.getElementById("filePickerButton");
     const finishButton = document.getElementById("finishButton");
     const retryButton = document.getElementById("retryButton");
@@ -539,6 +703,9 @@
     const resultBox = document.getElementById("resultBox");
     const scoreText = document.getElementById("scoreText");
     const scoreDetail = document.getElementById("scoreDetail");
+    const preferredDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+    initTheme();
 
     fileInput.addEventListener("change", async (event) => {
       const [file] = event.target.files || [];
@@ -549,6 +716,13 @@
 
     filePickerButton.addEventListener("click", () => {
       fileInput.click();
+    });
+
+    themeToggleButton.addEventListener("click", () => {
+      const currentTheme = getEffectiveTheme();
+      applyTheme(currentTheme === "dark" ? "light" : "dark");
+      measureHeroHeights();
+      syncHeroState();
     });
 
     finishButton.addEventListener("click", () => {
@@ -573,6 +747,12 @@
     window.addEventListener("scroll", syncHeroState, { passive: true });
     window.addEventListener("resize", handleViewportChange, { passive: true });
 
+    if (typeof preferredDarkScheme.addEventListener === "function") {
+      preferredDarkScheme.addEventListener("change", handleSystemThemeChange);
+    } else if (typeof preferredDarkScheme.addListener === "function") {
+      preferredDarkScheme.addListener(handleSystemThemeChange);
+    }
+
     async function boot() {
       try {
         const response = await fetch(DEFAULT_MARKDOWN_FILE, { cache: "no-store" });
@@ -582,6 +762,65 @@
       } catch {
         // El selector de archivo queda como fallback.
       }
+    }
+
+    function initTheme() {
+      try {
+        const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (storedTheme === "light" || storedTheme === "dark") {
+          document.documentElement.dataset.theme = storedTheme;
+        }
+      } catch {
+        // Si localStorage no está disponible, usamos el tema del sistema.
+      }
+
+      updateThemeToggle();
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+      } catch {
+        // Ignoramos errores de persistencia y seguimos con el tema actual.
+      }
+
+      updateThemeToggle();
+    }
+
+    function getStoredTheme() {
+      try {
+        const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        return storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getEffectiveTheme() {
+      const explicitTheme = document.documentElement.dataset.theme;
+      if (explicitTheme === "light" || explicitTheme === "dark") {
+        return explicitTheme;
+      }
+
+      return preferredDarkScheme.matches ? "dark" : "light";
+    }
+
+    function updateThemeToggle() {
+      const isDark = getEffectiveTheme() === "dark";
+      themeToggleButton.textContent = isDark ? "☀️ Modo claro" : "🌙 Modo oscuro";
+      themeToggleButton.setAttribute("aria-pressed", String(isDark));
+    }
+
+    function handleSystemThemeChange() {
+      if (getStoredTheme()) {
+        return;
+      }
+
+      updateThemeToggle();
+      measureHeroHeights();
+      syncHeroState();
     }
 
     function syncHeroState() {

@@ -1,4 +1,4 @@
-# Verificacion del creacion de ambiente de desarrollo, terminal, Git
+# Verificación Creacion de Ambiente de Desarrollo, Terminal, Git
 
 ---
 
