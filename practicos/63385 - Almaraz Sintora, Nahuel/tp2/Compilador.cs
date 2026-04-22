@@ -102,4 +102,12 @@ class Compilador {
 
         throw new FormatException($"Token inesperado: '{c}'");
     }
+    private Nodo ParseNumero() {
+        var inicio = _pos;
+        while (_pos < _expresion.Length && char.IsDigit(_expresion[_pos])) {
+            _pos++;
+        }
+        var numero = int.Parse(_expresion[inicio.._pos]);
+        return new NumeroNodo(numero);
+    }
 }
