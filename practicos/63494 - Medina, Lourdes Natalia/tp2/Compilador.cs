@@ -31,4 +31,25 @@ class Compilador {
             Avanzar();
 
     }
-    
+
+    private static Nodo ParseExpresion() {
+        var nodo = ParseTermino();
+
+        while (true) {
+            SaltarEspacios();
+
+            if (Actual == '+') {
+                Avanzar();
+                nodo = new SumaNodo(nodo, ParseTermino());
+            } 
+            else if (Actual == '-') {
+                Avanzar();
+                nodo = new RestaNodo(nodo, ParseTermino());
+            } 
+            else {
+                break;
+            }
+        }
+
+        return nodo;
+    }
