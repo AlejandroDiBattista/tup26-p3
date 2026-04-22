@@ -57,3 +57,23 @@ abstract class NodoBinario : Nodo
     }
 }
 
+class SumaNodo : NodoBinario
+{
+    public SumaNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierda.Evaluar(x) + derecha.Evaluar(x);
+    }
+}
+
+class RestaNodo : NodoBinario
+{
+    public RestaNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierda.Evaluar(x) - derecha.Evaluar(x);
+    }
+}
+
