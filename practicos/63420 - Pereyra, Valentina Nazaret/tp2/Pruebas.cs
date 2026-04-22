@@ -21,4 +21,4 @@ static class Pruebas
         if (resultado != esperado)
             throw new Exception($"Error en test: {expr}");
     }
-}
+} 
