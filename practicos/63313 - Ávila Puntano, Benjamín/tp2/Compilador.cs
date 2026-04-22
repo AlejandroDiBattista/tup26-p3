@@ -24,7 +24,7 @@ class Compilador {
         private readonly string expresion;
         private int posicion;
 
-        public recorrer(string expresion,int posicion)
+        public recorrer(string expresion)
         {
             this.expresion = expresion;
             this.posicion = 0;
@@ -52,9 +52,28 @@ class Compilador {
 var izquierda = parseTermino();
 while (true){
     saltarespacios();
-
     if (posicion >= expresion.Length){break;}
-
-    if
+ var operador = expresion[posicion];
+    if (operador != '+' && operador != '-'){break;}
+    posicion++;
+    var derecho = parseTermino();
+    izquierda = operador == '+' ? new Suma(izquierda, derecho) : new Resta(izquierda, derecho);
+ return izquierda;
 }}
+private Nodo parseTermino(){
+    saltarespacios();
+    var izquierda = parseFactor();
+    while (true)
+            {
+                if(posicion >= expresion.Length){break;}
+                var operador = expresion[posicion];
+                if (operador != '*' && operador != '/'){break;}
+                posicion++;
+                var derecho = parseFactor();
+                izquierda = operador == '*' ? new Multiplicacionprod(izquierda, derecho) : new Division(izquierda, derecho);
+
+                return izquierda;
+            }
+        }
     }}
+    
