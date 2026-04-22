@@ -19,4 +19,42 @@ class Compilador
 
         return nodo;
     }
+
+    private Compilador(string expresion)
+    {
+        _expresion = expresion;
+    }
+
+    private Nodo ParseExpresion()
+    {
+        SaltarEspacios();
+
+        if (Fin())
+        {
+            throw new FormatException("Token inesperado: entrada vacía.");
+        }
+
+        Nodo izquierda = ParseTermino();
+
+        while (!Fin())
+        {
+            SaltarEspacios();
+            if (Fin()) break;
+
+            char op = Actual();
+            if (op != '+' && op != '-') break;
+
+            _pos++;
+            Nodo derecha = ParseTermino();
+
+            izquierda = op == '+'
+                ? new SumaNodo(izquierda, derecha)
+                : new RestaNodo(izquierda, derecha);
+        }
+
+        return izquierda;
+    }
+
 }
+
+
