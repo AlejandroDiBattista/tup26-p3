@@ -1,44 +1,50 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+// Comandos.cs
+using System;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
-
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
-
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
-
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
-
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
-
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
-""");
-                return true;
-
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
-
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+public static class Comandos {
+    public static void Procesar(string[] args) {
+        if (args.Length == 0) {
+            Programa.ModoInteractivo();
+            return;
         }
+
+        string arg1 = args[0].ToLower();
+
+        if (arg1 == "--help" || arg1 == "-h") {
+            MostrarAyuda();
+            Environment.Exit(0);
+        }
+
+        if (arg1 == "--test" || arg1 == "-t" || arg1 == "--probar" || arg1 == "-p") {
+            Pruebas.Ejecutar();
+            Environment.Exit(0);
+        }
+
+        if (args.Length >= 2) {
+            string expresion = args[0];
+            if (int.TryParse(args[1], out int x)) {
+                Programa.ModoDirecto(expresion, x);
+            } else {
+                Console.WriteLine("Error: El valor de 'x' provisto es inválido. Debe ser un entero.");
+                Environment.Exit(1);
+            }
+            return;
+        }
+
+        Console.WriteLine("Error: Argumentos inválidos.");
+        MostrarAyuda();
+        Environment.Exit(1);
+    }
+
+    private static void MostrarAyuda() {
+        Console.WriteLine("Uso: calculadora [expresion valor] [--help] [--test]");
+        Console.WriteLine();
+        Console.WriteLine("Opciones:");
+        Console.WriteLine("  --help, -h      Muestra esta ayuda y termina.");
+        Console.WriteLine("  --test, -t      Ejecuta pruebas automáticas (--probar y -p también son válidos).");
+        Console.WriteLine();
+        Console.WriteLine("Ejemplos:");
+        Console.WriteLine("  Modo directo:      dotnet run -- \"(x - 1) * 2\" 10");
+        Console.WriteLine("  Modo interactivo:  dotnet run");
     }
 }
-
