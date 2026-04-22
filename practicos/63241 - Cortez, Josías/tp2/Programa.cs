@@ -189,3 +189,61 @@ public class Compilador
         throw new Exception($"Error: Token inesperado '{actual}' en la posición {_pos}.");
     }
 }
+public static class Pruebas
+{
+    public static void Ejecutar()
+    {
+        Console.WriteLine("Ejecutando pruebas automáticas...\n");
+
+        int exitos = 0;
+        int fallos = 0;
+
+        EvaluarPrueba("1 + 2 * 3", 0, 7, ref exitos, ref fallos);
+        EvaluarPrueba("1 + 2 * x", 10, 21, ref exitos, ref fallos);
+        EvaluarPrueba("(x - 1) * (x - 8 / 4) + 3", 10, 75, ref exitos, ref fallos);
+        EvaluarPrueba("-(3 + 2)", 0, -5, ref exitos, ref fallos);
+        EvaluarPrueba("10 / 2", 0, 5, ref exitos, ref fallos);
+
+        // Prueba de error (Paréntesis sin cerrar)
+        try
+        {
+            new Compilador("(1 + 2").Parsear();
+            Console.WriteLine("[FALLO] (1 + 2 con x=0 -> Se esperaba Error de análisis, pero no falló.");
+            fallos++;
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("[EXITO] (1 + 2 con x=0 -> Error de análisis capturado correctamente.");
+            exitos++;
+        }
+
+        Console.WriteLine($"\nResultados: {exitos} exitosas, {fallos} fallidas.");
+        Environment.Exit(fallos == 0 ? 0 : 1);
+    }
+
+    private static void EvaluarPrueba(string expresion, int x, int esperado, ref int exitos, ref int fallos)
+    {
+        try
+        {
+            Compilador compilador = new Compilador(expresion);
+            Nodo ast = compilador.Parsear();
+            int resultado = ast.Evaluar(x);
+
+            if (resultado == esperado)
+            {
+                Console.WriteLine($"[EXITO] {expresion} con x={x} -> {resultado}");
+                exitos++;
+            }
+            else
+            {
+                Console.WriteLine($"[FALLO] {expresion} con x={x} -> Se esperaba {esperado}, se obtuvo {resultado}");
+                fallos++;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[FALLO] {expresion} con x={x} -> Excepción inesperada: {ex.Message}");
+            fallos++;
+        }
+    }
+}
