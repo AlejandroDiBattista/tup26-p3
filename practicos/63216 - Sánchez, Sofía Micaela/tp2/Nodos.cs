@@ -25,3 +25,66 @@ class VariableNodo : Nodo
         return x;
     }
 }
+class NegativoNodo : Nodo
+{
+    private Nodo interno;
+
+    public NegativoNodo(Nodo nodo)
+    {
+        interno = nodo;
+    }
+
+    public override int Evaluar(int x = 0)
+    {
+        return -interno.Evaluar(x);
+    }
+}
+abstract class NodoBinario : Nodo
+{
+    protected Nodo izq;
+    protected Nodo der;
+
+    public NodoBinario(Nodo izq, Nodo der)
+    {
+        this.izq = izq;
+        this.der = der;
+    }
+}
+class SumaNodo : NodoBinario
+{
+    public SumaNodo(Nodo i, Nodo d) : base(i, d) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izq.Evaluar(x) + der.Evaluar(x);
+    }
+}
+
+class RestaNodo : NodoBinario
+{
+    public RestaNodo(Nodo i, Nodo d) : base(i, d) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izq.Evaluar(x) - der.Evaluar(x);
+    }
+}
+class MultiplicacionNodo : NodoBinario
+{
+    public MultiplicacionNodo(Nodo i, Nodo d) : base(i, d) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izq.Evaluar(x) * der.Evaluar(x);
+    }
+}
+
+class DivisionNodo : NodoBinario
+{
+    public DivisionNodo(Nodo i, Nodo d) : base(i, d) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izq.Evaluar(x) / der.Evaluar(x);
+    }
+}
