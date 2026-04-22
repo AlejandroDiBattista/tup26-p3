@@ -64,4 +64,27 @@ class Compilador {
         }
         return nodo;
     }
+    private Nodo ParseFactor()
+    {
+        SaltarEspacios();
+        if (Match('+')) return ParseFactor();
+        if (Match('-')) return new Negativo(ParseFactor());
+
+        if (Match('('))
+        {
+            var nodo = ParseExpresion();
+            if (!Match(')')) throw new FormatException("Se esperaba ')'");
+            return nodo;
+        }
+
+        if (char.IsDigit(Peek())) return ParseNumero();
+
+        if (char.ToLower(Peek()) == 'x')
+        {
+            pos++;
+            return new Variable();
+        }
+
+        throw new FormatException("Token inesperado");
+    }
 }
