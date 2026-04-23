@@ -73,5 +73,48 @@ class Compilador {
 
             return nodo;
         }
+        public Nodo ParseFactor() {
+            SaltarEspacios();
+            char c = VerActual();
+
+            // Gestión de operadores unarios
+            if (c == '+') {
+                Avanzar();
+                return new PositivoNodo(ParseFactor());
+            }
+            if (c == '-') {
+                Avanzar();
+                return new NegativoNodo(ParseFactor());
+            }
+
+            // Paréntesis
+            if (c == '(') {
+                Avanzar();
+                var interior = ParseExpresion();
+                SaltarEspacios();
+                if (Avanzar() != ')') {
+                    throw new FormatException("Se esperaba ')'");
+                }
+                return interior;
+            }
+
+            // Números enteros
+            if (char.IsDigit(c)) {
+                int inicio = indice;
+                while (char.IsDigit(VerActual())) {
+                    Avanzar();
+                }
+                string valorTexto = texto.Substring(inicio, indice - inicio);
+                return new NumeroNodo(int.Parse(valorTexto));
+            }
+
+            // Variable x o X
+            if (char.ToLower(c) == 'x') {
+                Avanzar();
+                return new VariableNodo();
+            }
+
+            throw new FormatException("Token inesperado");
+        }
     }
 }
