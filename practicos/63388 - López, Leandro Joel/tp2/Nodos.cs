@@ -87,5 +87,25 @@ class DivisionNodo : BinarioNodo {
     
 }
 
+private Nodo Numero() {
+
+    int inicio = Posicion;
+
+    while (Posicion < texto.Length && char.IsDigit(Peek()))
+        Posicion++;
+    
+    return new NumeroNodo(int.Parse(texto.Substring(inicio, Posicion - inicio)));
 }
 
+private char Peek() => Posicion < texto.Length ? texto[Posicion] : '\0';
+private bool Match(char expected) {
+    
+    if (Peek() == expected) {
+        Posicion++;
+        return true;
+    }
+    return false;
+
+}
+
+}
