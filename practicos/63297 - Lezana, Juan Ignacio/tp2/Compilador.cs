@@ -19,4 +19,39 @@ class Compilador
 
         return resultado;
     }
+private Nodo Expresion()
+{
+    Nodo izquierda = Termino();
+
+    while(posicion < texto.Length &&
+        (texto[posicion]=='+' || texto[posicion]=='-'))
+    {
+        char op = texto[posicion++];
+        Nodo derecha = Termino();
+
+        if(op=='+')
+            izquierda = new SumaNodo(izquierda,derecha);
+        else
+            izquierda = new RestaNodo(izquierda,derecha);
+        }
+
+    return izquierda;
+}
+private Nodo Termino()
+{
+    Nodo izquierda = Factor();
+
+    while(posicion < texto.Length &&
+         (texto[posicion]=='*' || texto[posicion]=='/'))
+    {
+        char op = texto[posicion++];
+        Nodo derecha = Factor();
+
+        if(op=='*')
+            izquierda = new MultiplicacionNodo(izquierda,derecha);
+        else
+            izquierda = new DivisionNodo(izquierda,derecha);
+    }
+
+    return izquierda;
 }
