@@ -6,7 +6,7 @@ class Compilador {
             throw new FormatException("Token inesperado");
         }
 
-        // Usamos la clase interna ConstructorAST para procesar la cadena
+        // Uso la clase ConstructorAST para procesar la cadena
         var constructor = new ConstructorAST(expresion);
         var arbolRaiz = constructor.ParseExpresion();
         constructor.SaltarEspacios();
@@ -37,6 +37,41 @@ class Compilador {
             while (!FinDeTexto && char.IsWhiteSpace(VerActual())) {
                 indice++;
             }
+        }
+        public Nodo ParseExpresion() {
+            var nodo = ParseTermino();
+            SaltarEspacios();
+
+            while (VerActual() == '+' || VerActual() == '-') {
+                char op = Avanzar();
+                var derecho = ParseTermino();
+                
+                nodo = (op == '+') 
+                    ? new SumaNodo(nodo, derecho) 
+                    : new RestaNodo(nodo, derecho);
+
+                SaltarEspacios();
+            }
+
+            return nodo;
+        }
+
+        public Nodo ParseTermino() {
+            var nodo = ParseFactor();
+            SaltarEspacios();
+
+            while (VerActual() == '*' || VerActual() == '/') {
+                char op = Avanzar();
+                var derecho = ParseFactor();
+
+                nodo = (op == '*') 
+                    ? new MultiplicacionNodo(nodo, derecho) 
+                    : new DivisionNodo(nodo, derecho);
+
+                SaltarEspacios();
+            }
+
+            return nodo;
         }
     }
 }
