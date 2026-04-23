@@ -6,14 +6,19 @@ static class Compilador
     static int pos = 0;
 
     public static Nodo Parse(string input)
-    {
-        texto = input;
-        pos = 0;
+{
+    texto = input;
+    pos = 0;
 
-        var nodo = ParseExpresion();
+    var nodo = ParseExpresion();
 
-        return nodo;
-    }
+    SaltarEspacios();
+
+    if (pos < texto.Length)
+        throw new Exception("Entrada invalida");
+
+    return nodo;
+}
 
 
     static Nodo ParseExpresion()
