@@ -72,3 +72,28 @@ class NoResta : NoBinario
         return izquierda.Evaluar(x) - derecha.Evaluar(x);
     }
 }
+
+class NoMultiplicacion : NoBinario
+{
+    public NoMultiplicacion(Nodo izq, Nodo der) : base(izq, der){}
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierda.Evaluar(x) * derecha.Evaluar(x);
+    }
+}
+
+class NoDivision : NoBinario
+{
+    public NoDivision(Nodo izq, Nodo der) : base(izq, der){}
+
+    public override int Evaluar(int x = 0)
+    {
+        int divisor = derecha.Evaluar(x);
+
+        if (divisor == 0)
+            throw new DivideByZeroException();
+
+        return izquierda.Evaluar(x) / divisor;
+    }
+}
