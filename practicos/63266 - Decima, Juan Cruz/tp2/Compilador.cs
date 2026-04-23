@@ -156,7 +156,15 @@ class Compilador
         }
     }
 
+        private bool Fin()
+    {
+        return _pos >= _expresion.Length;
+    }
 
+        private char Actual()
+    {
+        return _expresion[_pos];
+    }
 }
 
 
