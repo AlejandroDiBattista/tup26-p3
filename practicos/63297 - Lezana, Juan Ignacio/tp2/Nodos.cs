@@ -71,3 +71,17 @@ class MultiplicacionNodo : NodoBinario
         return izquierda.Evaluar(x)*derecha.Evaluar(x);
     }
 }
+class DivisionNodo : NodoBinario
+{
+    public DivisionNodo(Nodo izq, Nodo der): base(izq,der){}
+
+    public override int Evaluar(int x=0)
+    {
+        int divisor=derecha.Evaluar(x);
+
+        if(divisor==0)
+            throw new DivideByZeroException();
+
+        return izquierda.Evaluar(x)/divisor;
+    }
+}
