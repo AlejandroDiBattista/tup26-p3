@@ -1,3 +1,5 @@
+using System.Diagnostics.Contracts;
+
 abstract class Nodo {
     public abstract int Evaluar(int x = 0);
 }
@@ -33,3 +35,32 @@ public abstract class Binario : Expresion {
         Der = der;
     }
 }
+
+
+public class Suma : Binario {
+    public Suma(Expresion izq, Expresion der) : base(izq, der) { }
+    public override int Calcular(int x = 0) => Izq.Calcular(x) + Der.Calcular(x);
+}
+
+public class Resta : Binario {
+    public Resta(Expresion izq, Expresion der) : base(izq, der) { }
+    public override int Calcular(int x = 0) => Izq.Calcular(x) - Der.Calcular(x);
+}
+
+public class Multiplicacion : Binario {
+    public Multiplicacion(Expresion izq, Expresion der) : base(izq, der) { }
+    public override int Calcular(int x = 0) => Izq.Calcular(x) * Der.Calcular(x);
+}
+
+public class Division : Binario
+{
+    public Cociente (Expresion izq, Expresion der) : base(izq, der) { }
+    public override int Calcular(int x = 0) {
+        int divisor = Der.Calcular(x);
+        if (divisor == 0) {
+            throw new DivideByZeroException("No se puede dividir por cero.");
+        }
+        return Izq.Calcular(x) / divisor;
+    }
+}
+
