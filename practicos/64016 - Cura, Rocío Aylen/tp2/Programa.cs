@@ -9,7 +9,7 @@ static class Program {
 
         
         var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
+        if (string.IsNullOrWhiteSpace(expresion)) {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
@@ -19,11 +19,17 @@ static class Program {
             Console.Write("x = ");
             var x = Console.ReadLine() ?? "";
 
-            if (x.IsWhiteSpace() || x == "fin") {
+            if (string.IsNullOrWhiteSpace(x) || x == "fin") {
                 break;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (!int.TryParse(x, out int valorX))
+{
+    Console.WriteLine("Ingresá un número válido");
+    continue;
+}
+
+Console.WriteLine(funcion.Evaluar(valorX));
         }
     }
 }
