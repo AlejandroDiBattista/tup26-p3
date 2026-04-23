@@ -37,3 +37,21 @@ private Nodo Expresion()
 
     return izquierda;
 }
+private Nodo Termino()
+{
+    Nodo izquierda = Factor();
+
+    while (posicion < texto.Length &&
+          (texto[posicion] == '*' || texto[posicion] == '/'))
+    {
+        char op = texto[posicion++];
+        Nodo derecha = Factor();
+
+        if (op == '*')
+            izquierda = new NoMultiplicacion(izquierda, derecha);
+        else
+            izquierda = new NoDivision(izquierda, derecha);
+    }
+
+    return izquierda;
+}
