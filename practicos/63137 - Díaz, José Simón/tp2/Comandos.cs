@@ -31,9 +31,20 @@ Opciones:
                 return true;
 
             case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
+                if (!int.TryParse(valor, out int x)) {
+                    Console.Error.WriteLine($"Error: el valor '{valor}' no es un número entero válido.");
+                    Environment.Exit(1);
+                }
+                try {
+                    var funcion = Compilador.Parse(expresion);
+                    Console.WriteLine(funcion.Evaluar(x));
+                } catch (FormatException ex) {
+                    Console.Error.WriteLine($"Error de expresión: {ex.Message}");
+                    Environment.Exit(1);
+                } catch (DivideByZeroException ex) {
+                    Console.Error.WriteLine($"Error: {ex.Message}");
+                    Environment.Exit(1);
+                }
                 return true;
 
             default:
