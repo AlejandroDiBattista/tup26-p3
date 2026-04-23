@@ -17,8 +17,8 @@ public abstract class varNodo : Nodo
 }
 public abstract class PositivoNodo : Nodo
 {
-    public Nodo hijo {get;}
-    public PositivoNodo(Nodo hijo) => hijo = hijo;
+    public Nodo Hijo {get;}
+    public PositivoNodo(Nodo hijo) => Hijo = hijo;
     public override int Evaluar(int x = 0) => Hijo.Evaluar(x);
 }
 public abstract class NegativoNodo : Nodo
@@ -31,8 +31,8 @@ public abstract class NegativoNodo : Nodo
 
 public abstract class NodoBinario : Nodo
 {
-    public Nodo izquierdo {get;}
-    public Nodo derecho {get;}
+    public Nodo Izquierdo {get;}
+    public Nodo Derecho {get;}
     protected NodoBinario(Nodo izquierdo , Nodo derecho)
     {
         Izquierdo = izquierdo;
@@ -43,17 +43,17 @@ public abstract class NodoBinario : Nodo
 public class SumaNodo : NodoBinario
 {
     public SumaNodo(Nodo izq , Nodo der) : base(izq, der) {}
-    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) + derecho.Evaluar(x);
+    public override int Evaluar(int x = 0) => Izquierdo.Evaluar(x) + Derecho.Evaluar(x);
 }
 public class RestaNodo : NodoBinario
 {
     public RestaNodo(Nodo izq , Nodo der) : base(izq, der) {}
-    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) - derecho.Evaluar(x);
+    public override int Evaluar(int x = 0) => Izquierdo.Evaluar(x) - Derecho.Evaluar(x);
 }
 public class MultiplicacionNodo : NodoBinario
 {
     public MultiplicacionNodo(Nodo izq , Nodo der) : base(izq, der) {}
-    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) * derecho.Evaluar(x);
+    public override int Evaluar(int x = 0) => Izquierdo.Evaluar(x) * Derecho.Evaluar(x);
 }
 
 public class DivisionNodo : NodoBinario
