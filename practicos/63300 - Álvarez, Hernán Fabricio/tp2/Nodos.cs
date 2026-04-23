@@ -4,10 +4,10 @@ public abstract class Nodo {
     public abstract int Evaluar(int x = 0);
 }
 
-public abstract class NumNodo : Nodo
+public abstract class NumeroNodo : Nodo
 {
     public int Valor {get;}
-    public NumNodo(int valor) => Valor = valor;
+    public NumeroNodo(int valor) => Valor = valor;
 
     public override int Evaluar(int x = 0) => Valor;
 }

@@ -47,13 +47,13 @@ private Nodo ParsearExpresion()
         var nodo = ParsearTermino();
         SaltarEspacios();
 
-        while (CaracterActual == "+" || CaracterActual == "-")
+        while (CaracterActual == '+' || CaracterActual == '-')
         {
             Char operador = CaracterActual;
             Avanzar();
             var derecho = ParsearTermino();
 
-            if(operador == "+") nodo = new SumaNodo(nodo , derecho);
+            if(operador == '+') nodo = new SumaNodo(nodo , derecho);
             else nodo = new RestaNodo(nodo, derecho);
 
             SaltarEspacios();
@@ -71,7 +71,7 @@ private Nodo ParsearExpresion()
             Avanzar();
             var derecho = ParsearFactor();
 
-            if (operador == "*") nodo = new MultiplicacionNodo(nodo, derecho);
+            if (operador == '*') nodo = new MultiplicacionNodo(nodo, derecho);
             else nodo = new DivisionNodo(nodo, derecho);
 
             SaltarEspacios();
@@ -83,22 +83,22 @@ private Nodo ParsearExpresion()
     {
         SaltarEspacios();
 
-        if (CaracterActual == "+")
+        if (CaracterActual == '+')
         {
             Avanzar();
             return new PositivoNodo(ParsearFactor());
         }
-         if (CaracterActual == "-")
+         if (CaracterActual == '-')
         {
             Avanzar();
             return new NegativoNodo(ParsearFactor());
         }
-         if (CaracterActual == "(")
+         if (CaracterActual == '(')
         {
             Avanzar();
             var nodo = ParsearExpresion();
             SaltarEspacios();
-            if(CaracterActual != ")") throw new FormatException("Error: Parentesis sin cerrar.");
+            if(CaracterActual !=  ')' ) throw new FormatException("Error: Parentesis sin cerrar.");
             Avanzar();
             return nodo;
         }
