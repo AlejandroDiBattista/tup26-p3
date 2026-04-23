@@ -80,36 +80,59 @@ static Nodo ParseTermino()
     return izquierda;
 }
 
-    static Nodo ParseFactor()
+ static Nodo ParseFactor()
+{
+    SaltarEspacios();
+
+    if (pos >= texto.Length)
+        throw new Exception("Expresion vacia");
+
+    char actual = texto[pos];
+
+    // operador negativo
+    if (actual == '-')
     {
+        pos++;
+        var expr = ParseFactor();
+        return new NegativoNodo(expr);
+    }
+
+    // parentesis
+    if (actual == '(')
+    {
+        pos++;
+        var expr = ParseExpresion();
+
         SaltarEspacios();
 
-        if (pos >= texto.Length)
-            throw new Exception("Expresion vacia");
+        if (pos >= texto.Length || texto[pos] != ')')
+            throw new Exception("Falta cerrar parentesis");
 
-        char actual = texto[pos];
-
-        // numero
-        if (char.IsDigit(actual))
-        {
-            int inicio = pos;
-
-            while (pos < texto.Length && char.IsDigit(texto[pos]))
-                pos++;
-
-            string numero = texto.Substring(inicio, pos - inicio);
-            return new NumeroNodo(int.Parse(numero));
-        }
-
-        // variable x
-        if (actual == 'x' || actual == 'X')
-        {
-            pos++;
-            return new VariableNodo();
-        }
-
-        throw new Exception("Token inesperado");
+        pos++;
+        return expr;
     }
+
+    // numero
+    if (char.IsDigit(actual))
+    {
+        int inicio = pos;
+
+        while (pos < texto.Length && char.IsDigit(texto[pos]))
+            pos++;
+
+        string numero = texto.Substring(inicio, pos - inicio);
+        return new NumeroNodo(int.Parse(numero));
+    }
+
+    // variable x
+    if (actual == 'x' || actual == 'X')
+    {
+        pos++;
+        return new VariableNodo();
+    }
+
+    throw new Exception("Token inesperado");
+}
 
     static void SaltarEspacios()
     {
