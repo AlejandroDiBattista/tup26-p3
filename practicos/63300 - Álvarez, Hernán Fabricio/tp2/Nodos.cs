@@ -59,5 +59,10 @@ public class MultiplicacionNodo : NodoBinario
 public class DivisionNodo : NodoBinario
 {
     public DivisionNodo(Nodo izq , Nodo der) : base(izq, der) {}
-    public override int Evaluar(int x = 0) => izquierdo.Evaluar(x) / derecho.Evaluar(x);
+    public override int Evaluar(int x = 0)
+    {
+        int divisor = Derecho.Evaluar(x);
+        if (divisor == 0) throw new DivideByZeroException("Error: División por cero.");
+        return Izquierdo.Evaluar(x) / divisor;
+    }
 }

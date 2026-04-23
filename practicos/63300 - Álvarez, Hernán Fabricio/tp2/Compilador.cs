@@ -1,4 +1,5 @@
 using System;
+using System.Dynamic;
 using System.Runtime.CompilerServices;
 using System.Xml;
 
@@ -7,11 +8,15 @@ public class Compilador {
     
     private readonly string _texto;
     private int _posicion;
+    public static Nodo Parse (string expresion)
+    {
+        return new Compilador(expresion).Parsear();
+    }
     public Compilador(string texto)
     {
         if(string.IsNullOrWhiteSpace(texto))
          throw new Exception("Error: dato de entrada vacio.");
-         _texto = texto;
+         _texto = texto ?? "";
          _posicion = 0;
     }
  private char CaracterActual => _posicion < _texto.Length ? _texto[_posicion] : '\0';
@@ -26,13 +31,13 @@ public Nodo Parsear()
     {
         SaltarEspacios();
         if (CaracterActual == '\0')
-           throw new Exception("Error: Entrada vacia.");
+           throw new FormatException("Token inesperado :  Entrada vacia.");
         
         var ast = ParsearExpresion();
 
         SaltarEspacios();
         if(CaracterActual != '\0')
-            throw new Exception($"Error token Inesperado '{CaracterActual}' en la posicion {_posicion}.");
+            throw new FormatException($"Error token Inesperado '{CaracterActual}' en la posicion {_posicion}.");
 
         return ast;
     }
@@ -93,7 +98,7 @@ private Nodo ParsearExpresion()
             Avanzar();
             var nodo = ParsearExpresion();
             SaltarEspacios();
-            if(CaracterActual != ")") throw new Exception("Error: Parentesis sin cerrar.");
+            if(CaracterActual != ")") throw new FormatException("Error: Parentesis sin cerrar.");
             Avanzar();
             return nodo;
         }
