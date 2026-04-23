@@ -55,3 +55,32 @@ private Nodo Termino()
 
     return izquierda;
 }
+private Nodo Factor()
+{
+    if(posicion >= texto.Length)
+        throw new FormatException("Token inesperado");
+
+    if(texto[posicion]=='+')
+    {
+        posicion++;
+        return Factor();
+    }
+
+    if(texto[posicion]=='-')
+    {
+        posicion++;
+        return new NegativoNodo(Factor());
+    }
+
+    if(texto[posicion]=='(')
+    {
+        posicion++;
+
+        Nodo nodo = Expresion();
+
+        if(posicion >= texto.Length || texto[posicion]!=')')
+            throw new FormatException("Se esperaba ')'");
+
+        posicion++;
+        return nodo;
+    }
