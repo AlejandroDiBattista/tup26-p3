@@ -1,29 +1,41 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
+class Programa
+{
+    static void Main(string[] args)
+    {
+        try
+        {
+            // si hay comandos (help, test, directo)
+            if (Comandos.Procesar(args))
+                return;
 
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
+            // modo interactivo
+            Console.WriteLine("Ingrese una expresion con x:");
+            string expresion = Console.ReadLine();
 
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
+            if (string.IsNullOrWhiteSpace(expresion))
+                return;
 
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+            var funcion = Compilador.Parse(expresion);
+
+            while (true)
+            {
+                Console.Write("Ingrese valor de x (o fin): ");
+                string input = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(input) || input.ToLower() == "fin")
+                    break;
+
+                int x = int.Parse(input);
+                int resultado = funcion.Evaluar(x);
+
+                Console.WriteLine($"Resultado: {resultado}");
             }
-
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
         }
     }
 }
