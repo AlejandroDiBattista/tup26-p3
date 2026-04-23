@@ -81,7 +81,8 @@ class Compilador
     }
 
     private Nodo ParseFactor()
-    
+
+
     {
         SaltarEspacios();
 
@@ -133,6 +134,29 @@ class Compilador
 
         throw new FormatException($"Token inesperado: '{c}'");
     }
+
+    private Nodo ParseNumero()
+    {
+        int inicio = _pos;
+
+        while (!Fin() && char.IsDigit(Actual()))
+        {
+            _pos++;
+        }
+
+        int numero = int.Parse(_expresion[inicio.._pos]);
+        return new NumeroNodo(numero);
+    }
+
+    private void SaltarEspacios()
+    {
+        while (!Fin() && char.IsWhiteSpace(Actual()))
+        {
+            _pos++;
+        }
+    }
+
+
 }
 
 
