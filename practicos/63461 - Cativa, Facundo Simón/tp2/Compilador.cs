@@ -15,9 +15,10 @@ static class Compilador
         return nodo;
     }
 
+
     static Nodo ParseExpresion()
 {
-    var izquierda = ParseFactor();
+       var izquierda = ParseTermino();
 
     while (true)
     {
@@ -31,12 +32,44 @@ static class Compilador
         if (op == '+' || op == '-')
         {
             pos++;
-            var derecha = ParseFactor();
+         var derecha = ParseTermino();
 
             if (op == '+')
                 izquierda = new SumaNodo(izquierda, derecha);
             else
                 izquierda = new RestaNodo(izquierda, derecha);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return izquierda;
+}
+
+static Nodo ParseTermino()
+{
+    var izquierda = ParseFactor();
+
+    while (true)
+    {
+        SaltarEspacios();
+
+        if (pos >= texto.Length)
+            break;
+
+        char op = texto[pos];
+
+        if (op == '*' || op == '/')
+        {
+            pos++;
+            var derecha = ParseFactor();
+
+            if (op == '*')
+                izquierda = new MultiplicacionNodo(izquierda, derecha);
+            else
+                izquierda = new DivisionNodo(izquierda, derecha);
         }
         else
         {
