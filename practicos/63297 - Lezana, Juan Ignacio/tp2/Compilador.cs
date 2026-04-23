@@ -84,3 +84,29 @@ private Nodo Factor()
         posicion++;
         return nodo;
     }
+        if(char.ToLower(texto[posicion])=='x')
+    {
+        posicion++;
+        return new VariableNodo();
+    }
+
+    if(char.IsDigit(texto[posicion]))
+    {
+        int inicio = posicion;
+
+        while(posicion < texto.Length &&
+             char.IsDigit(texto[posicion]))
+        {
+            posicion++;
+        }
+
+        int valor = int.Parse(
+            texto.Substring(inicio,posicion-inicio)
+        );
+
+        return new NumeroNodo(valor);
+    }
+    
+    throw new FormatException("Token inesperado");
+}
+}
