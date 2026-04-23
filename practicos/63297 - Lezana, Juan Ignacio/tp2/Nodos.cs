@@ -44,3 +44,30 @@ abstract class NodoBinario : Nodo
         derecha = der;
     }
 }
+class SumaNodo : NodoBinario
+{
+    public SumaNodo(Nodo izq, Nodo der): base(izq,der){}
+
+    public override int Evaluar(int x=0)
+    {
+        return izquierda.Evaluar(x)+derecha.Evaluar(x);
+    }
+}
+class RestaNodo : NodoBinario
+{
+    public RestaNodo(Nodo izq, Nodo der): base(izq,der){}
+
+    public override int Evaluar(int x=0)
+    {
+        return izquierda.Evaluar(x)-derecha.Evaluar(x);
+    }
+}
+class MultiplicacionNodo : NodoBinario
+{
+    public MultiplicacionNodo(Nodo izq, Nodo der): base(izq,der){}
+
+    public override int Evaluar(int x=0)
+    {
+        return izquierda.Evaluar(x)*derecha.Evaluar(x);
+    }
+}
