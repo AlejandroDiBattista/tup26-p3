@@ -59,4 +59,33 @@ class DivisionNodo : BinarioNodo {
     public DivisionNodo(Nodo izquierda, Nodo derecha) : base(izquierda, derecha) { }
 
     public override int Evaluar(int x = 0) => izquierda.Evaluar(x) / derecha.Evaluar(x);
+
+    private Nodo Factor() {
+
+    if (Match('+')) return Factor();
+    if (Match('-')) return new negativoNodo(Factor());
+       
+    if (Match('(')) {
+        Nodo nodo = Expresion();
+        Expect(')');
+
+        return nodo;
+    }
+
+    if (Peek() == 'x' || Peek() == 'X') {
+        Posicion++;
+        return new VariableNodo();
+    }
+
+
+    if (char.IsDigit(Peek())) {
+        
+        return new NumeroNodo(valor);
+
+        throw new Exception($"Carácter inesperado: {Peek()}");
+    }
+    
 }
+
+}
+
