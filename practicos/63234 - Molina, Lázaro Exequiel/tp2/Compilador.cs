@@ -19,3 +19,21 @@ public static Nodo Parse(string expresion)
 
     return resultado;
 }
+private Nodo Expresion()
+{
+    Nodo izquierda = Termino();
+
+    while (posicion < texto.Length &&
+          (texto[posicion] == '+' || texto[posicion] == '-'))
+    {
+        char op = texto[posicion++];
+        Nodo derecha = Termino();
+
+        if (op == '+')
+            izquierda = new NoSuma(izquierda, derecha);
+        else
+            izquierda = new NoResta(izquierda, derecha);
+    }
+
+    return izquierda;
+}
