@@ -52,3 +52,23 @@ abstract class NoBinario : Nodo
         derecha = der;
     }
 }
+
+class NoSuma : NoBinario
+{
+    public NoSuma(Nodo izq, Nodo der) : base(izq, der){}
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierda.Evaluar(x) + derecha.Evaluar(x);
+    }
+}
+
+class NoResta : NoBinario
+{
+    public NoResta(Nodo izq, Nodo der) : base(izq, der){}
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierda.Evaluar(x) - derecha.Evaluar(x);
+    }
+}
