@@ -55,3 +55,62 @@ private Nodo Termino()
 
     return izquierda;
 }
+private Nodo Factor()
+{
+    if (posicion >= texto.Length)
+        throw new FormatException("Token inesperado");
+
+    if (texto[posicion] == '+')
+    {
+        posicion++;
+        return Factor();
+    }
+
+    if (texto[posicion] == '-')
+    {
+        posicion++;
+        return new NoNegativo(Factor());
+    }
+
+    if (texto[posicion] == '(')
+    {
+        posicion++;
+
+        Nodo nodo = Expresion();
+
+        if (posicion >= texto.Length || texto[posicion] != ')')
+            throw new FormatException("Se esperaba ')'");
+
+        posicion++;
+        return nodo;
+    }
+
+    if (char.ToLower(texto[posicion]) == 'x')
+    {
+        posicion++;
+        return new NoVariable();
+    }
+
+    if (char.IsDigit(texto[posicion]))
+    {
+        int inicio = posicion;
+
+        while (posicion < texto.Length &&
+               char.IsDigit(texto[posicion]))
+        {
+            posicion++;
+        }
+
+        int valor = int.Parse(
+            texto.Substring(
+                inicio,
+                posicion - inicio
+            )
+        );
+
+        return new NoNumero(valor);
+    }
+
+    throw new FormatException("Token inesperado");
+}
+}
