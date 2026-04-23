@@ -108,4 +108,20 @@ private bool Match(char expected) {
 
 }
 
+public Nodo Parse(string entrada) {
+    
+    if (string.IsNullOrWhiteSpace(entrada))
+        throw new ArgumentException("La expresión no puede estar vacía.");
+
+    texto = entrada;
+    Posicion = 0;
+
+    var resultado = Expresion();
+
+    if (Posicion < texto.Length)
+        throw new Exception($"Carácter inesperado al final de la expresión: {Peek()}");
+
+        return resultado;
+}
+
 }
