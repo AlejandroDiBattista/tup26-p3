@@ -1,44 +1,25 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+class Comandos
+{
+    public bool Help;
+    public bool Test;
+    public string? Expresion;
+    public string? Valor;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
+    public static Comandos Parse(string[] args)
+    {
+        var cmd = new Comandos();
 
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
-
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
-
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
-
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
-
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
-""");
-                return true;
-
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
-
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+        foreach (var a in args)
+        {
+            if (a == "--help" || a == "-h") cmd.Help = true;
+            else if (a == "--test" || a == "-t" || a == "--probar") cmd.Test = true;
         }
+
+        var pos = args.Where(a => !a.StartsWith("-")).ToArray();
+
+        if (pos.Length > 0) cmd.Expresion = pos[0];
+        if (pos.Length > 1) cmd.Valor = pos[1];
+
+        return cmd;
     }
 }
-
