@@ -1,25 +1,42 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
+using System;
+
+public static class Extensiones
+{
+    // Extensión para que .IsWhiteSpace() funcione directamente sobre los strings
+    public static bool IsWhiteSpace(this string str)
+    {
+        return string.IsNullOrWhiteSpace(str);
+    }
+}
+
+static class Program 
+{
+    static void Main(string[] args) 
+    {
+        if (Comandos.Procesar(args)) 
+        {
             return;
         }
 
         Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
         Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
 
-        
         var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
+        if(expresion.IsWhiteSpace()) 
+        {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
+        
         var funcion = Compilador.Parse(expresion);
 
-        while (true) {
+        while (true) 
+        {
             Console.Write("x = ");
             var x = Console.ReadLine() ?? "";
 
-            if (x.IsWhiteSpace() || x == "fin") {
+            if (x.IsWhiteSpace() || x == "fin") 
+            {
                 break;
             }
 
