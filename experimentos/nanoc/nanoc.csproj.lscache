@@ -13,25 +13,25 @@ primary
 lastDtbSucceeded
 
 [properties]
-AssemblyName=tp2
+AssemblyName=nanoc
 CommandLineArgsForDesignTimeEvaluation=-langversion:14.0 -define:TRACE
 CompilerGeneratedFilesOutputPath=
 MaxSupportedLangVersion=14.0
 ProjectAssetsFile=<PATH>obj/project.assets.json
-RootNamespace=tp2
+RootNamespace=nanoc
 RunAnalyzers=
 RunAnalyzersDuringLiveAnalysis=
 SolutionPath=*Undefined*
 TargetFrameworkIdentifier=.NETCoreApp
-TargetPath=<PATH>bin/Debug/net10.0/tp2.dll
-TargetRefPath=<PATH>obj/Debug/net10.0/ref/tp2.dll
+TargetPath=<PATH>bin/Debug/net10.0/nanoc.dll
+TargetRefPath=<PATH>obj/Debug/net10.0/ref/nanoc.dll
 TemporaryDependencyNodeTargetIdentifier=net10.0
 
 [commandLineArguments]
 /noconfig
 /unsafe-
 /checked-
-/nowarn:1701,1702,1701,1702,8002
+/nowarn:1701,1702,OPENAI001,1701,1702,8002
 /fullpaths
 /nostdlib+
 /errorreport:prompt
@@ -44,8 +44,8 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /debug:portable
 /filealign:512
 /optimize-
-/out:obj\Debug\net10.0\tp2.dll
-/refout:obj\Debug\net10.0\refint\tp2.dll
+/out:obj\Debug\net10.0\nanoc.dll
+/refout:obj\Debug\net10.0\refint\nanoc.dll
 /target:exe
 /warnaserror-
 /utf8output
@@ -54,15 +54,11 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
-Comandos.cs
-Compilador.cs
-Nodos.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
- tp2.AssemblyInfo.cs
- tp2.GlobalUsings.g.cs
-Programa.cs
-Pruebas.cs
+ nanoc.AssemblyInfo.cs
+ nanoc.GlobalUsings.g.cs
+Program.cs
 
 [metadataReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
@@ -233,6 +229,31 @@ Pruebas.cs
  System.Xml.XPath.dll
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
+<NUGET>/
+ google.protobuf/3.30.2/lib/net5.0/Google.Protobuf.dll
+ microsoft.agents.ai.abstractions/1.1.0/lib/net10.0/Microsoft.Agents.AI.Abstractions.dll
+ microsoft.agents.ai.openai/1.1.0/lib/net10.0/Microsoft.Agents.AI.OpenAI.dll
+ microsoft.agents.ai/1.1.0/lib/net10.0/Microsoft.Agents.AI.dll
+ microsoft.extensions.ai.abstractions/10.4.0/lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll
+ microsoft.extensions.ai.openai/10.4.0/lib/net10.0/Microsoft.Extensions.AI.OpenAI.dll
+ microsoft.extensions.ai/10.4.0/lib/net10.0/Microsoft.Extensions.AI.dll
+ microsoft.extensions.caching.abstractions/10.0.4/lib/net10.0/Microsoft.Extensions.Caching.Abstractions.dll
+ microsoft.extensions.compliance.abstractions/10.4.0/lib/net10.0/Microsoft.Extensions.Compliance.Abstractions.dll
+ microsoft.extensions.configuration.abstractions/10.0.3/lib/net10.0/Microsoft.Extensions.Configuration.Abstractions.dll
+ microsoft.extensions.dependencyinjection.abstractions/10.0.4/lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+ microsoft.extensions.diagnostics.abstractions/10.0.3/lib/net10.0/Microsoft.Extensions.Diagnostics.Abstractions.dll
+ microsoft.extensions.fileproviders.abstractions/10.0.3/lib/net10.0/Microsoft.Extensions.FileProviders.Abstractions.dll
+ microsoft.extensions.hosting.abstractions/10.0.3/lib/net10.0/Microsoft.Extensions.Hosting.Abstractions.dll
+ microsoft.extensions.logging.abstractions/10.0.4/lib/net10.0/Microsoft.Extensions.Logging.Abstractions.dll
+ microsoft.extensions.objectpool/10.0.4/lib/net10.0/Microsoft.Extensions.ObjectPool.dll
+ microsoft.extensions.options/10.0.3/lib/net10.0/Microsoft.Extensions.Options.dll
+ microsoft.extensions.primitives/10.0.4/lib/net10.0/Microsoft.Extensions.Primitives.dll
+ microsoft.extensions.vectordata.abstractions/9.7.0/lib/net8.0/Microsoft.Extensions.VectorData.Abstractions.dll
+ microsoft.ml.tokenizers/2.0.0/lib/net8.0/Microsoft.ML.Tokenizers.dll
+ openai/2.9.1/lib/net10.0/OpenAI.dll
+ system.clientmodel/1.10.0/lib/net10.0/System.ClientModel.dll
+ system.memory.data/10.0.3/lib/net10.0/System.Memory.Data.dll
+ system.numerics.tensors/10.0.4/lib/net10.0/System.Numerics.Tensors.dll
 
 [analyzerReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/analyzers/dotnet/cs/
@@ -245,8 +266,12 @@ Pruebas.cs
 <DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
+<NUGET>/
+ microsoft.extensions.logging.abstractions/10.0.4/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll
+ microsoft.extensions.options/10.0.3/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll
+ system.clientmodel/1.10.0/analyzers/dotnet/cs/System.ClientModel.SourceGeneration.dll
 
 [analyzerConfigFiles]
-../../../.editorconfig
+../../.editorconfig
 <DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
-obj/Debug/net10.0/tp2.GeneratedMSBuildEditorConfig.editorconfig
+obj/Debug/net10.0/nanoc.GeneratedMSBuildEditorConfig.editorconfig

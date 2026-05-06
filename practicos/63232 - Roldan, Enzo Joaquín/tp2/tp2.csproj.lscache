@@ -54,10 +54,15 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
+Comandos.cs
+Compilador.cs
+Nodos.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  tp2.AssemblyInfo.cs
  tp2.GlobalUsings.g.cs
+Programa.cs
+Pruebas.cs
 
 [metadataReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/

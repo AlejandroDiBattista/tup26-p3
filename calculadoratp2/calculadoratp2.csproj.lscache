@@ -13,18 +13,18 @@ primary
 lastDtbSucceeded
 
 [properties]
-AssemblyName=tp2
+AssemblyName=calculadoratp2
 CommandLineArgsForDesignTimeEvaluation=-langversion:14.0 -define:TRACE
 CompilerGeneratedFilesOutputPath=
 MaxSupportedLangVersion=14.0
 ProjectAssetsFile=<PATH>obj/project.assets.json
-RootNamespace=tp2
+RootNamespace=calculadoratp2
 RunAnalyzers=
 RunAnalyzersDuringLiveAnalysis=
 SolutionPath=*Undefined*
 TargetFrameworkIdentifier=.NETCoreApp
-TargetPath=<PATH>bin/Debug/net10.0/tp2.dll
-TargetRefPath=<PATH>obj/Debug/net10.0/ref/tp2.dll
+TargetPath=<PATH>bin/Debug/net10.0/calculadoratp2.dll
+TargetRefPath=<PATH>obj/Debug/net10.0/ref/calculadoratp2.dll
 TemporaryDependencyNodeTargetIdentifier=net10.0
 
 [commandLineArguments]
@@ -44,8 +44,8 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /debug:portable
 /filealign:512
 /optimize-
-/out:obj\Debug\net10.0\tp2.dll
-/refout:obj\Debug\net10.0\refint\tp2.dll
+/out:obj\Debug\net10.0\calculadoratp2.dll
+/refout:obj\Debug\net10.0\refint\calculadoratp2.dll
 /target:exe
 /warnaserror-
 /utf8output
@@ -54,15 +54,11 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
-Comandos.cs
-Compilador.cs
-Nodos.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
- tp2.AssemblyInfo.cs
- tp2.GlobalUsings.g.cs
-Programa.cs
-Pruebas.cs
+ calculadoratp2.AssemblyInfo.cs
+ calculadoratp2.GlobalUsings.g.cs
+Program.cs
 
 [metadataReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
@@ -247,6 +243,6 @@ Pruebas.cs
  Microsoft.CodeAnalysis.NetAnalyzers.dll
 
 [analyzerConfigFiles]
-../../../.editorconfig
+../.editorconfig
 <DOTNET>/sdk/10.0.203/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
-obj/Debug/net10.0/tp2.GeneratedMSBuildEditorConfig.editorconfig
+obj/Debug/net10.0/calculadoratp2.GeneratedMSBuildEditorConfig.editorconfig
