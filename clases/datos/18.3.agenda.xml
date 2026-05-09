@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Agenda xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Contactos>
+    <Persona>
+      <Id>0</Id>
+      <Nombre>María</Nombre>
+      <Apellido>González</Apellido>
+      <Edad>25</Edad>
+    </Persona>
+    <Persona>
+      <Id>0</Id>
+      <Nombre>Juan</Nombre>
+      <Apellido>Pérez</Apellido>
+      <Edad>40</Edad>
+    </Persona>
+  </Contactos>
+</Agenda>

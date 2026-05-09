@@ -2,11 +2,11 @@ namespace Tup26.AlumnosApp;
 
 static class MensajesService {
     public static void MensajeGithubErroneo() {
-        Alumnos alumnos = AlumnosManager.Cargar(AppPaths.ArchivoAlumnos);
+        Alumnos alumnos = AlumnosManager.Leer(AppPaths.ArchivoAlumnos);
 
         foreach (string comision in new[] { "C7", "C9" }) {
             Alumnos lista = alumnos.ConGithub(true).EnComision(comision).ConPractico(1, Estado.Revision);
-            if (lista.Count == 0) { continue; }
+            if (!lista.Any()) { continue; }
 
             Console.WriteLine("""
             *GitHub Erroreos ⁉️*
@@ -31,11 +31,11 @@ static class MensajesService {
     }
 
     public static void MensajeSinGithub() {
-        Alumnos alumnos = AlumnosManager.Cargar(AppPaths.ArchivoAlumnos);
+        Alumnos alumnos = AlumnosManager.Leer(AppPaths.ArchivoAlumnos);
 
         foreach (string comision in new[] { "C7", "C9" }) {
             Alumnos lista = alumnos.ConGithub(false).EnComision(comision);
-            if (lista.Count == 0) { continue; }
+            if (!lista.Any()) { continue; }
 
             Console.WriteLine($"""
             *{comision} - Sin Usuario GitHub*

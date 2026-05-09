@@ -17,12 +17,12 @@ from xml.sax.saxutils import escape
 WORKDIR = Path.cwd().resolve()
 OUTPUT = WORKDIR / "Apuntes-Tup26-P3.epub"
 BOOK_ID         = "Apuntes-TUP26-P3"
-BOOK_TITLE      = "Apuntes de Programacion III"
+BOOK_TITLE      = "Apuntes de Programación III"
 BOOK_LANGUAGE   = "es"
 BOOK_SUBTITLE   = "C#, .NET y herramientas de desarrollo"
-BOOK_AUTHOR     = "Alejandro Di Battista"
+BOOK_AUTHOR     = "Ing. Alejandro Di Battista"
 BOOK_COVER      = WORKDIR / "portada.jpg"
-EXCLUDED        = ["00.*.md", "05.*.md", "README.md", "CONTRIBUTING.md", "LICENSE.md"]
+EXCLUDED        = ["00.*.md", "05.*.md", "09.*.md", "README.md", "CONTRIBUTING.md", "LICENSE.md", "examen.md"]
 
 
 def is_excluded(path: Path) -> bool:
@@ -40,16 +40,28 @@ def first_heading(markdown_text: str, fallback: str) -> str:
     for line in markdown_text.splitlines():
         stripped = line.strip()
         if stripped.startswith("# "):
-            return stripped[2:].strip()
+            return normalize_heading_text(stripped[2:])
     return fallback
 
 
+def normalize_heading_text(text: str) -> str:
+    return re.sub(r"\s+#+\s*$", "", text.strip()).strip()
+
+
 def inline_markdown(text: str) -> str:
+    code_spans: list[str] = []
+
+    def stash_code(match: re.Match[str]) -> str:
+        code_spans.append(f"<code>{html.escape(match.group(1), quote=False)}</code>")
+        return f"@@CODE{len(code_spans) - 1}@@"
+
+    text = re.sub(r"`([^`]+)`", stash_code, text)
     text = html.escape(text, quote=False)
-    text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", text)
     text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', text)
+    for index, code_html in enumerate(code_spans):
+        text = text.replace(f"@@CODE{index}@@", code_html)
     return text
 
 
@@ -269,7 +281,7 @@ def build_cover_page() -> str:
     body = """
 <section epub:type="cover" class="cover-page">
   <div class="cover-frame">
-    <img src="portada.jpg" alt="Portada de Apuntes de Programacion III" />
+    <img src="portada.jpg" alt="Portada de Apuntes de Programación III" />
   </div>
 </section>
 """
@@ -387,7 +399,7 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
             flush_paragraph()
             close_lists()
             level = len(heading_match.group(1))
-            title = heading_match.group(2).strip()
+            title = normalize_heading_text(heading_match.group(2))
             if level == 1 and not skipped_first_h1:
                 skipped_first_h1 = True
                 i += 1
@@ -425,7 +437,7 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
     chapter_body = f"""
 <section epub:type="chapter">
   <header class="chapter-header">
-    <p class="chapter-kicker">Capitulo {chapter_number}</p>
+    <p class="chapter-kicker">Capítulo {chapter_number}</p>
     <h1>{inline_markdown(chapter_title)}</h1>
   </header>
   {body}
@@ -437,35 +449,125 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
 def build_epub(markdown_files: list[Path]) -> None:
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     css = """
-body { font-family: serif; line-height: 1.45; margin: 5%; }
-h1, h2, h3, h4, h5, h6 { line-height: 1.2; margin-top: 1.2em; }
-code { font-family: monospace; }
+body {
+  color: #202428;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1em;
+  line-height: 1.58;
+  margin: 6%;
+}
+p, ul, ol, table, blockquote, .code-block { margin-top: 0; margin-bottom: 1em; }
+h1, h2, h3, h4, h5, h6 {
+  color: #111820;
+  line-height: 1.18;
+  margin: 1.6em 0 0.55em;
+  page-break-after: avoid;
+}
+h1 { font-size: 2em; }
+h2 { font-size: 1.45em; }
+h3 { font-size: 1.15em; }
+h4, h5, h6 { font-size: 1em; }
+a { color: #245f73; }
+code {
+  background: #eef3ef;
+  border-radius: 0.25em;
+  color: #1e4037;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  padding: 0.05em 0.25em;
+}
 pre { margin: 0; white-space: pre-wrap; }
-pre code { display: block; line-height: 1.7; }
-.code-block { margin: 1.6em 0; border: 1px solid #d9dee7; border-radius: 8px; overflow: hidden; background: #fafbfc; }
-.code-block-header { padding: 1.05em 1.25em 0.35em; background: #fafbfc; }
-.code-block-language { font-family: Helvetica, Arial, sans-serif; font-size: 0.80em; font-weight: 200; color: #cccccc; letter-spacing: 0.01em; }
-.code-block pre { padding: 0.15em 1.25em 1.25em; background: transparent; }
-.code-block code { font-size: 1.02em; }
-table { width: 100%; border-collapse: collapse; margin: 1.25em 0; }
-th, td { border: 1px solid #d9dee7; padding: 0.55em 0.75em; vertical-align: top; }
-th { background: #f4f6f8; text-align: left; }
-.tok-comment { color: #0a7b34; }
-.tok-string, .tok-char { color: #0a7b34; }
-.tok-number { color: #8a3ffc; }
-.tok-keyword { color: #9a3412; font-weight: 600; }
-.tok-type { color: #0f5ea8; }
-.tok-var { color: #8b5e00; }
-.tok-command { color: #0f5ea8; font-weight: 600; }
-blockquote { border-left: 0.25em solid #999; margin-left: 0; padding-left: 1em; color: #444; }
-hr { border: none; border-top: 1px solid #bbb; margin: 1.5em 0; }
-.chapter-header { margin-bottom: 2.5em; padding-bottom: 0.8em; border-bottom: 1px solid #bbb; }
-.chapter-kicker { margin: 0; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8em; color: #666; }
-.book-title { text-align: center; margin-top: 20%; }
-.toc-list li { margin: 0.4em 0; }
+pre code {
+  background: transparent;
+  border-radius: 0;
+  color: inherit;
+  display: block;
+  line-height: 1.58;
+  padding: 0;
+}
+.code-block {
+  background: #f5f7f4;
+  border-left: 0.28em solid #5b7f6b;
+  margin: 1.35em 0;
+  page-break-inside: avoid;
+}
+.code-block-header { padding: 0.75em 1em 0; }
+.code-block-language {
+  color: #56625a;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.code-block pre { padding: 0.45em 1em 1em; }
+.code-block code { font-size: 0.9em; }
+table {
+  border-collapse: collapse;
+  font-size: 0.92em;
+  margin: 1.2em 0;
+  width: 100%;
+}
+th, td {
+  border-bottom: 1px solid #d8ddd8;
+  padding: 0.5em 0.65em;
+  vertical-align: top;
+}
+th {
+  color: #334137;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.82em;
+  text-align: left;
+}
+.tok-comment { color: #5c6f62; font-style: italic; }
+.tok-string, .tok-char { color: #27623f; }
+.tok-number { color: #7656a0; }
+.tok-keyword { color: #8a3b1d; font-weight: 700; }
+.tok-type { color: #245f73; }
+.tok-var { color: #755a1d; }
+.tok-command { color: #245f73; font-weight: 700; }
+blockquote {
+  border-left: 0.22em solid #8ea899;
+  color: #3a4640;
+  font-style: italic;
+  margin-left: 0;
+  padding-left: 1em;
+}
+hr { border: none; border-top: 1px solid #d8ddd8; margin: 1.5em 0; }
+.chapter-header {
+  border-bottom: 2px solid #111820;
+  margin-bottom: 2.2em;
+  padding-bottom: 1em;
+}
+.chapter-header h1 { margin: 0.25em 0 0; }
+.chapter-kicker {
+  color: #5b7f6b;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.76em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.book-title {
+  border-bottom: 2px solid #111820;
+  margin: 18% 0 2em;
+  padding-bottom: 1em;
+}
+.book-title h1 { margin-bottom: 0.2em; }
+.book-title p {
+  color: #5b7f6b;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.toc-list { padding-left: 1.4em; }
+.toc-list li { margin: 0.45em 0; padding-left: 0.2em; }
 .cover-page { margin: 0; padding: 0; }
 .cover-frame { margin: 0 auto; text-align: center; }
-.cover-frame img { display: block; width: 100%; height: auto; }
+.cover-frame img { display: block; height: auto; width: 100%; }
 """
 
     chapters: list[tuple[str, str, str]] = []
@@ -477,7 +579,7 @@ hr { border: none; border-top: 1px solid #bbb; margin: 1.5em 0; }
         chapters.append((chapter_file, title, xhtml))
 
     toc_items = "\n".join(
-        f'        <li><a href="{filename}">Capitulo {index}: {escape(title)}</a></li>'
+        f'        <li><a href="{filename}">Capítulo {index}: {inline_markdown(title)}</a></li>'
         for index, (filename, title, _) in enumerate(chapters, start=1)
     )
 
@@ -485,7 +587,7 @@ hr { border: none; border-top: 1px solid #bbb; margin: 1.5em 0; }
 <section epub:type="frontmatter toc">
   <div class="book-title">
     <h1>{escape(BOOK_TITLE)}</h1>
-    <p>Indice general</p>
+    <p>Índice general</p>
   </div>
   <nav epub:type="toc" id="toc">
     <ol class="toc-list">
@@ -494,7 +596,7 @@ hr { border: none; border-top: 1px solid #bbb; margin: 1.5em 0; }
   </nav>
 </section>
 """
-    nav_xhtml = wrap_xhtml_page("Indice", index_body, nav=True)
+    nav_xhtml = wrap_xhtml_page("Índice", index_body, nav=True)
     cover_xhtml = build_cover_page()
 
     manifest_items = [

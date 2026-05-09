@@ -5,15 +5,22 @@ static class Program {
         }
 
         Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
+        Console.WriteLine("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3):");
+        Console.Write("> ");
 
-        
         var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
+        if (expresion.IsWhiteSpace()) {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
-        var funcion = Compilador.Parse(expresion);
+
+        Nodo funcion;
+        try {
+            funcion = Compilador.Parse(expresion);
+        } catch (FormatException ex) {
+            Console.WriteLine($"Error en la expresión: {ex.Message}");
+            return;
+        }
 
         while (true) {
             Console.Write("x = ");
@@ -23,7 +30,16 @@ static class Program {
                 break;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (!int.TryParse(x, out int valorX)) {
+                Console.WriteLine("Valor inválido. Ingresá un número entero.");
+                continue;
+            }
+
+            try {
+                Console.WriteLine(funcion.Evaluar(valorX));
+            } catch (DivideByZeroException ex) {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
     }
 }

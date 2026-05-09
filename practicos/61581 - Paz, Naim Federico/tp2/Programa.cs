@@ -9,21 +9,37 @@ static class Program {
 
         
         var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
+        if (string.IsNullOrWhiteSpace(expresion)) {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
-        var funcion = Compilador.Parse(expresion);
+        Nodo funcion;
+        try {
+            funcion = Compilador.Parse(expresion);
+        } catch (FormatException ex) {
+            Console.WriteLine(ex.Message);
+            return;
+        }
 
         while (true) {
             Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
+            var entrada = Console.ReadLine() ?? "";
 
-            if (x.IsWhiteSpace() || x == "fin") {
+            if (string.IsNullOrWhiteSpace(entrada) ||
+                entrada.Equals("fin", StringComparison.OrdinalIgnoreCase)) {
                 break;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (!int.TryParse(entrada, out var x)) {
+                Console.WriteLine("Valor de x inválido.");
+                continue;
+            }
+
+            try {
+                Console.WriteLine(funcion.Evaluar(x));
+            } catch (DivideByZeroException ex) {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

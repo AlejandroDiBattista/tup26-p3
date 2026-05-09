@@ -1,44 +1,57 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+using System;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
+class Comandos
 
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
+{
+    
+  public bool Ayuda {get;}
+  public bool Test {get;}
+  public bool ModoDirecto {get;}
+  public string Expresion {get;}
+  public int Valor {get;}
 
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
+  public Comandos(string[] args)
+    {
+        if (args.Length == 0)
+        return;
+         
+         if (args[0] == "--help" || args[0] == "-h")
+        {
+            Ayuda = true;
+            return;
 
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
-
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
-
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
-""");
-                return true;
-
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
-
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+      
         }
-    }
-}
 
+    
+            if (args[0] == "--test" || args[0] == "-t")
+            {
+                Test = true;
+                return;
+            }
+    
+           if (args.Length == 2)
+            {
+                ModoDirecto = true;
+                Expresion = args[0];
+                if (!int.TryParse(args[1], out int v))
+                {
+                    Console.WriteLine("Valor inválido: " + args[1]);
+                    Environment.Exit(1);
+                }
+                Valor = v;
+            }
+            else
+            {
+                Console.WriteLine("Uso:");
+                Console.WriteLine("calculadora \"expresion\" valor");
+                Console.WriteLine("calculadora --help");
+                Console.WriteLine("calculadora --test");
+                Environment.Exit(1);
+            }
+    
+          
+    
+    }
+
+}

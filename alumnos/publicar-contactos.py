@@ -4,14 +4,14 @@ import json
 import re
 from pathlib import Path
 
-AGENDA = Path("/Users/adibattista/Documents/GitHub/tup25-p4/interno/directorio-alumno/deploy/alumnos.json")
-DESTINO_IMAGEN = Path("/Users/adibattista/Documents/GitHub/tup25-p4/interno/directorio-alumno/deploy/img")
-ORIGEN = Path("/Users/adibattista/Documents/GitHub/tup26-p3/alumnos/alumnos.md")
+AGENDA    = Path("/Users/adibattista/Documents/GitHub/tup25-p4/interno/directorio-alumno/deploy/alumnos.json")
+DESTINO   = Path("/Users/adibattista/Documents/GitHub/tup25-p4/interno/directorio-alumno/deploy/img")
+ORIGEN    = Path("/Users/adibattista/Documents/GitHub/tup26-p3/alumnos/alumnos.md")
 PRACTICOS = Path("/Users/adibattista/Documents/GitHub/tup26-p3/practicos")
 
-ANIO = 2026
+AÑO     = 2026
 MATERIA = "Programación 3"
-CODIGO = "P3"
+CODIGO  = "P3"
 
 ESTADOS = {
 	"🟢": "Promocionado",
@@ -134,7 +134,7 @@ def fusionar_agenda(agenda: dict, alumnos: list[dict]) -> dict:
 		actual = dict(resultado.get(legajo, {}))
 
 		curso_actual = {
-			"año": ANIO,
+			"año": AÑO,
 			"materia": MATERIA,
 			"comision": alumno["comision"],
 			"estado": alumno["estado"],
@@ -145,7 +145,7 @@ def fusionar_agenda(agenda: dict, alumnos: list[dict]) -> dict:
 		cursos = []
 		reemplazado = False
 		for curso in actual.get("cursos", []):
-			if curso.get("codigo") == CODIGO and curso.get("año") == ANIO:
+			if curso.get("codigo") == CODIGO and curso.get("año") == AÑO:
 				cursos.append(curso_actual)
 				reemplazado = True
 			else:
@@ -187,7 +187,7 @@ def main() -> None:
 
 	# print(f"Alumnos leídos: {len(alumnos)}")
 	# print(f"Agenda actualizada: {AGENDA}")
-	# print(f"Directorio de imágenes configurado: {DESTINO_IMAGEN}")
+	# print(f"Directorio de imágenes configurado: {DESTINO}")
 
 
 if __name__ == "__main__":

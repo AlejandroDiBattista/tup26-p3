@@ -1,0 +1,982 @@
+[
+  {
+    "legajo": 63456,
+    "comision": "C7",
+    "nombre": "Joaqu\u00EDn",
+    "apellido": "\u00C1vila Lahr",
+    "telefono": "(381) 527-6836",
+    "tieneFoto": true,
+    "gitHub": "joacoavila9",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63415,
+    "comision": "C7",
+    "nombre": "Lucas Francisco",
+    "apellido": "Ch\u00E1vez",
+    "telefono": "(381) 301-3490",
+    "tieneFoto": true,
+    "gitHub": "lucaschavez10lc-ai",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63268,
+    "comision": "C7",
+    "nombre": "Karina Edith",
+    "apellido": "Condori",
+    "telefono": "(381) 412-4723",
+    "tieneFoto": true,
+    "gitHub": "kariiedith9315",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63402,
+    "comision": "C7",
+    "nombre": "Nahuel Ariel",
+    "apellido": "Condori",
+    "telefono": "(381) 341-9689",
+    "tieneFoto": false,
+    "gitHub": "nahuelc19",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63419,
+    "comision": "C7",
+    "nombre": "Tom\u00E1s",
+    "apellido": "Coronel",
+    "telefono": "(381) 678-0335",
+    "tieneFoto": true,
+    "gitHub": "tomicor979-lgtm",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63241,
+    "comision": "C7",
+    "nombre": "Jos\u00EDas",
+    "apellido": "Cortez",
+    "telefono": "(381) 665-0808",
+    "tieneFoto": false,
+    "gitHub": "josias57455",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63330,
+    "comision": "C7",
+    "nombre": "Joel Alejandro",
+    "apellido": "Cuevas",
+    "telefono": "",
+    "tieneFoto": false,
+    "gitHub": "",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63776,
+    "comision": "C7",
+    "nombre": "Ulises Nahuel",
+    "apellido": "Fuensalida",
+    "telefono": "(381) 334-9851",
+    "tieneFoto": true,
+    "gitHub": "ulisesfuensalida-ui",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63396,
+    "comision": "C7",
+    "nombre": "Atal\u00EDa Trinidad",
+    "apellido": "Gil Garau",
+    "telefono": "(381) 456-4405",
+    "tieneFoto": true,
+    "gitHub": "ataliagg",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63457,
+    "comision": "C7",
+    "nombre": "Ignacio",
+    "apellido": "Gonz\u00E1lez Dupuy",
+    "telefono": "(381) 683-1233",
+    "tieneFoto": true,
+    "gitHub": "ignas11",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61577,
+    "comision": "C7",
+    "nombre": "Lucas Alfredo",
+    "apellido": "Gonz\u00E1lez",
+    "telefono": "(381) 669-4386",
+    "tieneFoto": true,
+    "gitHub": "lucasgonzaa",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63174,
+    "comision": "C7",
+    "nombre": "Luciano Germ\u00E1n",
+    "apellido": "Jerez",
+    "telefono": "(381) 550-7143",
+    "tieneFoto": true,
+    "gitHub": "luchex1525",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63700,
+    "comision": "C7",
+    "nombre": "Nelson Maximiliano",
+    "apellido": "Jim\u00E9nez",
+    "telefono": "(381) 639-2861",
+    "tieneFoto": false,
+    "gitHub": "maximilianojimnez",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63399,
+    "comision": "C7",
+    "nombre": "Gonzalo Romeo",
+    "apellido": "Lazarte",
+    "telefono": "(381) 576-0069",
+    "tieneFoto": false,
+    "gitHub": "tutu-04",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63211,
+    "comision": "C7",
+    "nombre": "Luca",
+    "apellido": "Montero",
+    "telefono": "(381) 528-7848",
+    "tieneFoto": false,
+    "gitHub": "monteroluca007",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63350,
+    "comision": "C7",
+    "nombre": "Santiago",
+    "apellido": "P\u00E1ez Carabajal",
+    "telefono": "(381) 572-4096",
+    "tieneFoto": true,
+    "gitHub": "santiagopaez-2",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61581,
+    "comision": "C7",
+    "nombre": "Naim Federico",
+    "apellido": "Paz",
+    "telefono": "(381) 353-0060",
+    "tieneFoto": true,
+    "gitHub": "naimp074",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63647,
+    "comision": "C7",
+    "nombre": "Valentina",
+    "apellido": "Paz",
+    "telefono": "(381) 599-6422",
+    "tieneFoto": true,
+    "gitHub": "valepaz11",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63389,
+    "comision": "C7",
+    "nombre": "Nicolas",
+    "apellido": "Pereyra Petroni",
+    "telefono": "(381) 332-4401",
+    "tieneFoto": true,
+    "gitHub": "nicopereyra255-ship-it",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63420,
+    "comision": "C7",
+    "nombre": "Valentina Nazaret",
+    "apellido": "Pereyra",
+    "telefono": "(381) 552-8065",
+    "tieneFoto": true,
+    "gitHub": "valentinapereyra03",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63354,
+    "comision": "C7",
+    "nombre": "Luciano",
+    "apellido": "Perondi",
+    "telefono": "(381) 350-0777",
+    "tieneFoto": true,
+    "gitHub": "lucho-bot",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63393,
+    "comision": "C7",
+    "nombre": "Lucca",
+    "apellido": "Ritorto",
+    "telefono": "(381) 627-2271",
+    "tieneFoto": false,
+    "gitHub": "luccardp",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63208,
+    "comision": "C7",
+    "nombre": "Ignacio Federico",
+    "apellido": "Rosconi",
+    "telefono": "(381) 533-1344",
+    "tieneFoto": true,
+    "gitHub": "ignaciorosconi",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63387,
+    "comision": "C7",
+    "nombre": "Luca",
+    "apellido": "Sosa Gonella",
+    "telefono": "(381) 355-5126",
+    "tieneFoto": true,
+    "gitHub": "lucasosag1",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63546,
+    "comision": "C7",
+    "nombre": "Jerem\u00EDas",
+    "apellido": "Sosa Paz",
+    "telefono": "(381) 200-7473",
+    "tieneFoto": false,
+    "gitHub": "jeerepazz",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63547,
+    "comision": "C7",
+    "nombre": "Jos\u00E9 Lisandro",
+    "apellido": "Sosa Paz",
+    "telefono": "(381) 675-3624",
+    "tieneFoto": false,
+    "gitHub": "lisandropaz",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63447,
+    "comision": "C7",
+    "nombre": "Sof\u00EDa Celeste",
+    "apellido": "Su\u00E1rez",
+    "telefono": "(381) 246-3725",
+    "tieneFoto": true,
+    "gitHub": "suarezsofia541-alt",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61490,
+    "comision": "C7",
+    "nombre": "Tom\u00E1s",
+    "apellido": "Valdez Bustamante",
+    "telefono": "(381) 303-1034",
+    "tieneFoto": false,
+    "gitHub": "tomas-valdez-bustamante",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63397,
+    "comision": "C7",
+    "nombre": "Tom\u00E1s",
+    "apellido": "Vercellone",
+    "telefono": "(381) 676-6267",
+    "tieneFoto": false,
+    "gitHub": "xtomi2456",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63696,
+    "comision": "C7",
+    "nombre": "Ram\u00F3n Ezequiel",
+    "apellido": "Yael",
+    "telefono": "(381) 326-4777",
+    "tieneFoto": true,
+    "gitHub": "",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63385,
+    "comision": "C9",
+    "nombre": "Nahuel",
+    "apellido": "Almaraz Sintora",
+    "telefono": "(381) 502-5082",
+    "tieneFoto": true,
+    "gitHub": "nahuelalmaraz957-ops",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63217,
+    "comision": "C9",
+    "nombre": "Bian",
+    "apellido": "Altamiranda Borquez",
+    "telefono": "(381) 581-3104",
+    "tieneFoto": true,
+    "gitHub": "sofiaaltamiranda22",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63300,
+    "comision": "C9",
+    "nombre": "Hern\u00E1n Fabricio",
+    "apellido": "\u00C1lvarez",
+    "telefono": "(381) 581-4086",
+    "tieneFoto": true,
+    "gitHub": "hernancarpalvarez28",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63313,
+    "comision": "C9",
+    "nombre": "Benjam\u00EDn",
+    "apellido": "\u00C1vila Puntano",
+    "telefono": "(381) 329-6643",
+    "tieneFoto": true,
+    "gitHub": "santiagobnj-avila-pun",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63222,
+    "comision": "C9",
+    "nombre": "Juli\u00E1n",
+    "apellido": "Bajre Mart\u00EDnez",
+    "telefono": "(381) 351-9652",
+    "tieneFoto": true,
+    "gitHub": "julianbajre-png",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61801,
+    "comision": "C9",
+    "nombre": "Maximiliano Abraham",
+    "apellido": "Benega",
+    "telefono": "(381) 505-9048",
+    "tieneFoto": true,
+    "gitHub": "abrahambenega",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63493,
+    "comision": "C9",
+    "nombre": "Bruno",
+    "apellido": "Busnelli",
+    "telefono": "(381) 366-0607",
+    "tieneFoto": false,
+    "gitHub": "brunobusnelli",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63150,
+    "comision": "C9",
+    "nombre": "Joaqu\u00EDn",
+    "apellido": "Carlino",
+    "telefono": "(381) 605-7383",
+    "tieneFoto": true,
+    "gitHub": "vincent-coffe",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63341,
+    "comision": "C9",
+    "nombre": "Juan Cruz",
+    "apellido": "Carrer",
+    "telefono": "(381) 632-5727",
+    "tieneFoto": true,
+    "gitHub": "juancarrer11",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63461,
+    "comision": "C9",
+    "nombre": "Facundo Sim\u00F3n",
+    "apellido": "Cativa",
+    "telefono": "(381) 391-4222",
+    "tieneFoto": true,
+    "gitHub": "cativafacundo9-gif",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63218,
+    "comision": "C9",
+    "nombre": "Guillermo Augusto",
+    "apellido": "Cort\u00E9s",
+    "telefono": "(381) 606-0586",
+    "tieneFoto": true,
+    "gitHub": "guillecortes01",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 64016,
+    "comision": "C9",
+    "nombre": "Roc\u00EDo Aylen",
+    "apellido": "Cura",
+    "telefono": "(381) 478-8799",
+    "tieneFoto": false,
+    "gitHub": "rocura26",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63266,
+    "comision": "C9",
+    "nombre": "Juan Cruz",
+    "apellido": "Decima",
+    "telefono": "(381) 558-9063",
+    "tieneFoto": true,
+    "gitHub": "devjuancruz003-com",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63137,
+    "comision": "C9",
+    "nombre": "Jos\u00E9 Sim\u00F3n",
+    "apellido": "D\u00EDaz",
+    "telefono": "(381) 617-9958",
+    "tieneFoto": true,
+    "gitHub": "josesimondiaz",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61641,
+    "comision": "C9",
+    "nombre": "Nahuel Ram\u00F3n",
+    "apellido": "Figueroa",
+    "telefono": "(381) 353-2589",
+    "tieneFoto": false,
+    "gitHub": "figueroanahuel16",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63737,
+    "comision": "C9",
+    "nombre": "Roc\u00EDo Julieta",
+    "apellido": "Galv\u00E1n",
+    "telefono": "(381) 647-5597",
+    "tieneFoto": false,
+    "gitHub": "rociogalvani",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63345,
+    "comision": "C9",
+    "nombre": "Franco Tom\u00E1s",
+    "apellido": "Garc\u00EDa",
+    "telefono": "(381) 207-5701",
+    "tieneFoto": true,
+    "gitHub": "francotms",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61057,
+    "comision": "C9",
+    "nombre": "Thomas",
+    "apellido": "Getar",
+    "telefono": "(381) 336-2147",
+    "tieneFoto": true,
+    "gitHub": "thomasgetar",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61489,
+    "comision": "C9",
+    "nombre": "Tom\u00E1s",
+    "apellido": "G\u00F3mez",
+    "telefono": "(381) 390-5024",
+    "tieneFoto": true,
+    "gitHub": "tomasgomez18",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63182,
+    "comision": "C9",
+    "nombre": "Emmanuel",
+    "apellido": "Gonz\u00E1lez Rojas",
+    "telefono": "(381) 612-5571",
+    "tieneFoto": true,
+    "gitHub": "emmanuelgr-web",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63717,
+    "comision": "C9",
+    "nombre": "Octavio",
+    "apellido": "Gonz\u00E1lez",
+    "telefono": "(381) 604-1868",
+    "tieneFoto": true,
+    "gitHub": "owning01",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61161,
+    "comision": "C9",
+    "nombre": "Thomas Ezequiel",
+    "apellido": "Gonz\u00E1lez",
+    "telefono": "(381) 369-9891",
+    "tieneFoto": true,
+    "gitHub": "kobinee",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 62844,
+    "comision": "C9",
+    "nombre": "Luciano Leonel",
+    "apellido": "Guzm\u00E1n",
+    "telefono": "(388) 665-1248",
+    "tieneFoto": false,
+    "gitHub": "lucianoleonelguzman",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63231,
+    "comision": "C9",
+    "nombre": "Roc\u00EDo Tatiana",
+    "apellido": "Herrera",
+    "telefono": "(381) 208-9907",
+    "tieneFoto": true,
+    "gitHub": "tatianaherrera-commits",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63425,
+    "comision": "C9",
+    "nombre": "Jeremy",
+    "apellido": "Holmquist",
+    "telefono": "(381) 522-4955",
+    "tieneFoto": true,
+    "gitHub": "jeremy-holmquist",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61907,
+    "comision": "C9",
+    "nombre": "Guadalupe",
+    "apellido": "Kargachin",
+    "telefono": "(381) 457-6547",
+    "tieneFoto": true,
+    "gitHub": "guadalupekargachin",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63219,
+    "comision": "C9",
+    "nombre": "Sergio Fabricio",
+    "apellido": "Lazarte",
+    "telefono": "(381) 589-1439",
+    "tieneFoto": true,
+    "gitHub": "fabriciolazarte27",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63297,
+    "comision": "C9",
+    "nombre": "Juan Ignacio",
+    "apellido": "Lezana",
+    "telefono": "(381) 555-5202",
+    "tieneFoto": true,
+    "gitHub": "ignaciolezana25",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63388,
+    "comision": "C9",
+    "nombre": "Leandro Joel",
+    "apellido": "L\u00F3pez",
+    "telefono": "(381) 360-4566",
+    "tieneFoto": true,
+    "gitHub": "leandro-progam",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63213,
+    "comision": "C9",
+    "nombre": "Morena Giovann",
+    "apellido": "Marina Noguera",
+    "telefono": "(381) 354-0133",
+    "tieneFoto": true,
+    "gitHub": "mmore-cloud",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63494,
+    "comision": "C9",
+    "nombre": "Lourdes Natalia",
+    "apellido": "Medina",
+    "telefono": "(381) 201-7153",
+    "tieneFoto": true,
+    "gitHub": "lumedina23",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63418,
+    "comision": "C9",
+    "nombre": "Gonzalo Emanuel",
+    "apellido": "Miranda",
+    "telefono": "(381) 208-1031",
+    "tieneFoto": false,
+    "gitHub": "gonzalomiranda456",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63234,
+    "comision": "C9",
+    "nombre": "L\u00E1zaro Exequiel",
+    "apellido": "Molina",
+    "telefono": "(381) 416-0720",
+    "tieneFoto": true,
+    "gitHub": "lazaro2005-ml",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63412,
+    "comision": "C9",
+    "nombre": "Facundo Mart\u00EDn",
+    "apellido": "Mor\u00E1n",
+    "telefono": "(381) 301-0206",
+    "tieneFoto": true,
+    "gitHub": "facumoran",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63205,
+    "comision": "C9",
+    "nombre": "Facundo",
+    "apellido": "Navarro Arag\u00F3n",
+    "telefono": "(381) 466-6665",
+    "tieneFoto": true,
+    "gitHub": "facundonavarroaragon",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63220,
+    "comision": "C9",
+    "nombre": "Valentina",
+    "apellido": "P\u00E9rez Del Rien",
+    "telefono": "(381) 360-2873",
+    "tieneFoto": true,
+    "gitHub": "vall19-git",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63232,
+    "comision": "C9",
+    "nombre": "Enzo Joaqu\u00EDn",
+    "apellido": "Roldan",
+    "telefono": "(381) 565-4292",
+    "tieneFoto": false,
+    "gitHub": "roldanebzo",
+    "practicos": [
+      "\uD83D\uDD34",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63216,
+    "comision": "C9",
+    "nombre": "Sof\u00EDa Micaela",
+    "apellido": "S\u00E1nchez",
+    "telefono": "(381) 342-9672",
+    "tieneFoto": true,
+    "gitHub": "sofisanchez126",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 63207,
+    "comision": "C9",
+    "nombre": "C\u00E9sar Nahum",
+    "apellido": "Saravia",
+    "telefono": "(381) 612-1173",
+    "tieneFoto": true,
+    "gitHub": "nahum-saravia",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDFE2"
+    ],
+    "examenes": []
+  },
+  {
+    "legajo": 61026,
+    "comision": "C9",
+    "nombre": "Mar\u00EDa Jos\u00E9",
+    "apellido": "Thompson",
+    "telefono": "(381) 448-3445",
+    "tieneFoto": true,
+    "gitHub": "mariajosethompson0-eng",
+    "practicos": [
+      "\uD83D\uDFE2",
+      "\uD83D\uDD34"
+    ],
+    "examenes": []
+  }
+]

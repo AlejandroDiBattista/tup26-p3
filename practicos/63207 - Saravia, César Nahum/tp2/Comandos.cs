@@ -31,13 +31,23 @@ Opciones:
                 return true;
 
             case [var expresion, var valor]:
+            try {
                 var x = int.Parse(valor);
                 var funcion = Compilador.Parse(expresion);
                 Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+            }
+            catch (FormatException ex) {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+            catch (DivideByZeroException) {
+                Console.WriteLine("Error: División por cero");
+            }
+            catch (Exception e) {
+                Console.WriteLine($"Error:" + e.Message);
+            }
+               return true;
+               default:
+            return false;
         }
     }
 }

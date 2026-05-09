@@ -1,29 +1,77 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+namespace CalculadoraAST
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Caso 1: Ayuda
+            if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
+            {
+                Comandos.MostrarAyuda();
+                return;
             }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            // Caso 2: Pruebas Automáticas
+            if (args.Length > 0 && (args[0] == "--test" || args[0] == "-t" || args[0] == "-p"))
+            {
+                // Nota: Pruebas.Ejecutar() lo creo en el Paso 5
+                Console.WriteLine("Ejecutando pruebas automáticas...");
+                Pruebas.Ejecutar();
+                return;
+            }
+
+            // Caso 3: Modo Directo (Expresión + Valor de X)
+            if (args.Length == 2)
+            {
+                Comandos.EjecutarDirecto(args[0], args[1]);
+            }
+            // Caso 4: Modo Interactivo (Sin argumentos)
+            else if (args.Length == 0)
+            {
+                EjecutarModoInteractivo();
+            }
+            else
+            {
+                Console.WriteLine("Argumentos no válidos. Use --help para ver las opciones.");
+            }
+        }
+
+        static void EjecutarModoInteractivo()
+        {
+            Console.WriteLine("--- Modo Interactivo ---");
+            Console.Write("Ingrese la expresión matemática (con x): ");
+            string entrada = Console.ReadLine() ?? "";
+
+            if (string.IsNullOrWhiteSpace(entrada) || entrada.ToLower() == "fin") return;
+
+            try
+            {
+                Compilador compilador = new Compilador(entrada);
+                Nodo ast = compilador.Parsear(); // Compila una sola vez
+
+                while (true)
+                {
+                    Console.Write("Ingrese valor de x (o 'fin' para salir): ");
+                    string inputX = Console.ReadLine() ?? "";
+
+                    if (string.IsNullOrWhiteSpace(inputX) || inputX.ToLower() == "fin") break;
+
+                    if (int.TryParse(inputX, out int x))
+                    {
+                        Console.WriteLine($"Resultado: {ast.Evaluar(x)}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: El valor de x debe ser un número entero.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error de compilación: {ex.Message}");
+            }
         }
     }
 }

@@ -1,29 +1,42 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
-        
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+namespace CalculadoraUTN
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                Comandos.ModoInteractivo();
             }
-
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            else
+            {
+                switch (args[0].ToLower())
+                {
+                    case "--help":
+                    case "-h":
+                        Comandos.MostrarAyuda();
+                        break;
+                    case "--test":
+                    case "-t":
+                    case "--probar":
+                    case "-p":
+                        Pruebas.EjecutarPruebas();
+                        break;
+                    default:
+                        if (args.Length == 2)
+                        {
+                            Comandos.ModoDirecto(args[0], args[1]);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Error: Argumentos insuficientes. Use --help para ayuda.");
+                        }
+                        break;
+                }
+            }
         }
     }
 }
+

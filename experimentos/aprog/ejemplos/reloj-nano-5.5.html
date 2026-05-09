@@ -1,0 +1,279 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reloj analógico en tiempo real</title>
+  <style>
+    :root {
+      --bg-1: #0f172a;
+      --bg-2: #1e293b;
+      --dial: #f8fafc;
+      --dial-edge: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --hour: #0f172a;
+      --minute: #334155;
+      --second: #ef4444;
+      --pin: #111827;
+      --glow: rgba(255, 255, 255, .18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, .22), transparent 30%),
+        radial-gradient(circle at 80% 30%, rgba(168, 85, 247, .22), transparent 34%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      color: white;
+      overflow: hidden;
+    }
+
+    main {
+      width: min(92vmin, 560px);
+      display: grid;
+      gap: 1.2rem;
+      place-items: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 4vmin, 2.4rem);
+      letter-spacing: .04em;
+      font-weight: 800;
+      text-shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+
+    .clock {
+      position: relative;
+      width: min(82vmin, 460px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 48%, var(--dial) 0 58%, #e2e8f0 100%);
+      border: clamp(8px, 2vmin, 14px) solid rgba(255,255,255,.78);
+      box-shadow:
+        0 30px 80px rgba(0,0,0,.42),
+        inset 0 0 0 2px var(--dial-edge),
+        inset 0 0 38px rgba(15, 23, 42, .12),
+        0 0 70px var(--glow);
+    }
+
+    .clock::before {
+      content: "";
+      position: absolute;
+      inset: 4.8%;
+      border-radius: 50%;
+      border: 1px solid rgba(15, 23, 42, .1);
+      pointer-events: none;
+    }
+
+    .mark {
+      position: absolute;
+      inset: 0;
+      transform: rotate(calc(var(--i) * 6deg));
+    }
+
+    .mark::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 2.4%;
+      width: 2px;
+      height: 3.8%;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .28);
+      transform: translateX(-50%);
+    }
+
+    .mark.hour::before {
+      width: 5px;
+      height: 7%;
+      background: rgba(15, 23, 42, .68);
+    }
+
+    .number {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 2rem;
+      height: 2rem;
+      margin: -1rem;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      font-size: clamp(1.05rem, 4.3vmin, 1.8rem);
+      font-weight: 800;
+      transform:
+        rotate(calc(var(--n) * 30deg))
+        translateY(-38.5vmin)
+        rotate(calc(var(--n) * -30deg));
+    }
+
+    @media (min-width: 562px) {
+      .number {
+        transform:
+          rotate(calc(var(--n) * 30deg))
+          translateY(-193px)
+          rotate(calc(var(--n) * -30deg));
+      }
+    }
+
+    .brand {
+      position: absolute;
+      left: 50%;
+      top: 34%;
+      transform: translate(-50%, -50%);
+      color: var(--muted);
+      font-size: clamp(.72rem, 2vmin, .95rem);
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .hand {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 50% 100%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      border-radius: 999px;
+      will-change: transform;
+    }
+
+    .hour-hand {
+      width: 3.1%;
+      height: 27%;
+      background: linear-gradient(var(--hour), #1f2937);
+      box-shadow: 0 3px 8px rgba(0,0,0,.22);
+    }
+
+    .minute-hand {
+      width: 2.2%;
+      height: 37%;
+      background: linear-gradient(var(--minute), #475569);
+      box-shadow: 0 3px 8px rgba(0,0,0,.18);
+    }
+
+    .second-hand {
+      width: .9%;
+      height: 41%;
+      background: var(--second);
+      box-shadow: 0 0 10px rgba(239, 68, 68, .45);
+    }
+
+    .second-hand::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -20%;
+      width: 100%;
+      height: 24%;
+      border-radius: 999px;
+      background: var(--second);
+      transform: translateX(-50%);
+    }
+
+    .center-pin {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 5.8%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--pin);
+      border: 4px solid #f8fafc;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      z-index: 10;
+    }
+
+    .digital {
+      padding: .65rem 1rem;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .36);
+      backdrop-filter: blur(8px);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .08em;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Reloj analógico</h1>
+
+    <section class="clock" aria-label="Reloj analógico en tiempo real">
+      <div class="brand">Tiempo real</div>
+
+      <div class="number" style="--n:1">1</div>
+      <div class="number" style="--n:2">2</div>
+      <div class="number" style="--n:3">3</div>
+      <div class="number" style="--n:4">4</div>
+      <div class="number" style="--n:5">5</div>
+      <div class="number" style="--n:6">6</div>
+      <div class="number" style="--n:7">7</div>
+      <div class="number" style="--n:8">8</div>
+      <div class="number" style="--n:9">9</div>
+      <div class="number" style="--n:10">10</div>
+      <div class="number" style="--n:11">11</div>
+      <div class="number" style="--n:12">12</div>
+
+      <div id="marks" aria-hidden="true"></div>
+
+      <div class="hand hour-hand" id="hourHand"></div>
+      <div class="hand minute-hand" id="minuteHand"></div>
+      <div class="hand second-hand" id="secondHand"></div>
+      <div class="center-pin"></div>
+    </section>
+
+    <div class="digital" id="digital" aria-live="polite">--:--:--</div>
+  </main>
+
+  <script>
+    const marks = document.getElementById('marks');
+    const hourHand = document.getElementById('hourHand');
+    const minuteHand = document.getElementById('minuteHand');
+    const secondHand = document.getElementById('secondHand');
+    const digital = document.getElementById('digital');
+
+    for (let i = 0; i < 60; i++) {
+      const mark = document.createElement('div');
+      mark.className = 'mark' + (i % 5 === 0 ? ' hour' : '');
+      mark.style.setProperty('--i', i);
+      marks.appendChild(mark);
+    }
+
+    const pad = n => String(n).padStart(2, '0');
+
+    function updateClock() {
+      const now = new Date();
+      const ms = now.getMilliseconds();
+      const seconds = now.getSeconds() + ms / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const secondDeg = seconds * 6;
+      const minuteDeg = minutes * 6;
+      const hourDeg = hours * 30;
+
+      secondHand.style.transform = `translate(-50%, -100%) rotate(${secondDeg}deg)`;
+      minuteHand.style.transform = `translate(-50%, -100%) rotate(${minuteDeg}deg)`;
+      hourHand.style.transform = `translate(-50%, -100%) rotate(${hourDeg}deg)`;
+
+      digital.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      requestAnimationFrame(updateClock);
+    }
+
+    updateClock();
+  </script>
+</body>
+</html>

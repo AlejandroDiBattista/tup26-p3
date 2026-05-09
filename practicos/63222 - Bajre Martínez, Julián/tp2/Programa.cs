@@ -1,29 +1,70 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
+using System;
+using System.Collections.Generic;
+namespace TP2.Calculadora;
+
+public class Programa
+{
+    public static void Main(string[] args)
+    {
+        Console.Title = "TP2 - Calculadora";
+        Console.WriteLine("=== Calculadora de Expresiones Aritméticas ===");
+
+        if (args.Length == 0)
+        {
+            EjecutarModoInteractivo();
         }
+        else
+        {
+            if (!Comandos.Procesar(args))
+                Console.WriteLine("Argumentos inválidos. Usá --help para ver las opciones.");
+        }
+    }
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
+    private static void EjecutarModoInteractivo()
+    {
         
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
+        Console.WriteLine("Modo interactivo. Ingresá 'fin' o dejá vacío para salir.\n");
 
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
+        try
+        {
+            Console.Write("Expresión: ");
+            string? entrada = Console.ReadLine();
 
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+            if (string.IsNullOrWhiteSpace(entrada) || entrada == "fin")
+                return;
+
+            var compilador = new Compilador();
+            Nodo arbol = compilador.Parsear(entrada);
+
+            while (true)
+            {
+                Console.Write("Valor de x: ");
+                string? valorEntrada = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(valorEntrada) || valorEntrada == "fin")
+                    break;
+
+                try
+                {
+                    if (!int.TryParse(valorEntrada, out int x))
+                        throw new Exception($"Error: '{valorEntrada}' no es un valor entero válido para x.");
+
+                    Console.WriteLine($"Resultado: {arbol.Evaluar(x)}");
+                }
+                catch (DivideByZeroException)
+                {
+                    Console.WriteLine("Error: división por cero.");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
-
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
         }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        
     }
 }

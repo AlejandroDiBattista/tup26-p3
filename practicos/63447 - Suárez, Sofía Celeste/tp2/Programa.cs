@@ -1,29 +1,41 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using CalculadoraArimetica;
+if (!Comandos.Procesar(args))
+{
+    
+    Console.WriteLine("Modo Interactivo");
+    Console.WriteLine("Ingresa una expresión con x o presiona Enter para salir:");
+    
+    string? entrada = Console.ReadLine();
+    
+    if (string.IsNullOrWhiteSpace(entrada) || entrada.ToLower() == "fin") 
+        return;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
-
+    try 
+    {
         
-        var expresion = Console.ReadLine() ?? "";
-        if(expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
+        Nodo arbol = Compilador.Parse(entrada);
 
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
+        while (true)
+        {
+            Console.Write("Ingresa el valor de x: ");
+            string? valorTexto = Console.ReadLine();
 
-            if (x.IsWhiteSpace() || x == "fin") {
+            if (string.IsNullOrWhiteSpace(valorTexto) || valorTexto.ToLower() == "fin") 
                 break;
-            }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+            if (int.TryParse(valorTexto, out int x))
+            {
+                int resultado = arbol.Evaluar(x);
+                Console.WriteLine($"Resultado: {resultado}");
+            }
+            else
+            {
+                Console.WriteLine("Error: Por favor ingresa un número entero válido.");
+            }
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error de compilación: {ex.Message}");
     }
 }

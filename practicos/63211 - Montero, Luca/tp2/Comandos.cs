@@ -1,44 +1,110 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+using System;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
+public class Comandos
+{
+    public static void Procesar(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            ModoInteractivo();
+            return;
+        }
 
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
+        string arg1 = args[0].ToLower();
 
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
+        if (arg1 == "--help" || arg1 == "-h")
+        {
+            MostrarAyuda();
+            Environment.Exit(0);
+        }
 
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
+        if (arg1 == "--test" || arg1 == "-t" || arg1 == "-p")
+        {
+            Pruebas.Ejecutar();
+            return;
+        }
 
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
+        if (args.Length == 2)
+        {
+            ModoDirecto(args[0], args[1]);
+            return;
+        }
 
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
+        Console.WriteLine("Error: Argumentos inválidos.");
+        MostrarAyuda();
+    }
 
-""");
-                return true;
+    private static void MostrarAyuda()
+    {
+        Console.WriteLine("calculadora [expresion valor] [--help] [--test]");
+        Console.WriteLine("Opciones:");
+        Console.WriteLine("  --help, -h   Muestra la ayuda y termina.");
+        Console.WriteLine("  --test, -t   Ejecuta pruebas automáticas.");
+        Console.WriteLine("Argumentos posicionales:");
+        Console.WriteLine("  expresion    Fórmula a evaluar.");
+        Console.WriteLine("  valor        Valor entero con el que se reemplaza la variable x.");
+    }
 
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
+    private static void ModoDirecto(string expresion, string valorStr)
+    {
+        try
+        {
+            if (!int.TryParse(valorStr, out int x))
+                throw new Exception("Error: Valor de x inválido.");
 
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
+            Compilador compilador = new Compilador();
+            Nodo ast = compilador.Parsear(expresion);
+            int resultado = ast.Evaluar(x);
+            Console.WriteLine(resultado);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
 
-            default:
-                return false;
+    private static void ModoInteractivo()
+    {
+        Console.Write("Ingrese la expresión a evaluar: ");
+        string expresion = Console.ReadLine();
+
+        if (string.IsNullOrWhiteSpace(expresion)) return;
+
+        Compilador compilador = new Compilador();
+        Nodo ast;
+        try
+        {
+            ast = compilador.Parsear(expresion);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return;
+        }
+
+        while (true)
+        {
+            Console.Write("Ingrese valor para x (o 'fin' para salir): ");
+            string entrada = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(entrada) || entrada.ToLower() == "fin")
+                break;
+
+            if (!int.TryParse(entrada, out int x))
+            {
+                Console.WriteLine("Error: Valor de x inválido.");
+                continue;
+            }
+
+            try
+            {
+                int resultado = ast.Evaluar(x);
+                Console.WriteLine($"Resultado: {resultado}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
-

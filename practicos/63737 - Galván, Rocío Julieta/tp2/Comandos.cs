@@ -3,7 +3,6 @@ static class Comandos {
         switch (args) {
             case ["--help"] or ["-h"] or ["--ayuda"]:
                 Console.WriteLine("""
-
 Uso: dotnet run -- [opciones] [<expresión> <valor>]
 
     Este programa permite analizar y evaluar expresiones matemáticas
@@ -16,13 +15,12 @@ Uso: dotnet run -- [opciones] [<expresión> <valor>]
     ingresar una expresión y evaluarla con distintos valores de 'x'.
 
 Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
+Pueden contener expresiones matemáticas básicas y la variable 'x'.
+Ejemplo: (x - 1) * (x - 8/4) + 3
 
 Opciones:
     --help, -h, --ayuda                  Muestra esta ayuda.
     --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
 """);
                 return true;
 
@@ -31,9 +29,20 @@ Opciones:
                 return true;
 
             case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
+                try {
+                    var x = int.Parse(valor);
+                    var funcion = Compilador.Parse(expresion);
+                    Console.WriteLine(funcion.Evaluar(x));
+                } 
+                catch (FormatException e) {
+                    Console.WriteLine("Error: " + e.Message);
+                }
+                catch (DivideByZeroException) {
+                    Console.WriteLine("Error: División por cero");
+                }
+                catch (Exception e) {
+                    Console.WriteLine("Error: " + e.Message);
+                }
                 return true;
 
             default:
@@ -41,4 +50,3 @@ Opciones:
         }
     }
 }
-

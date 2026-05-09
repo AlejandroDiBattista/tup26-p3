@@ -1,44 +1,76 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+namespace calculadora;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
+// ─── Resultado del análisis de argumentos ────────────────────────────────────
 
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
+enum ModoEjecucion
+{
+    Directo,
+    Interactivo,
+    Ayuda,
+    Pruebas
+}
 
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
+record ComandoParsed(
+    ModoEjecucion Modo,
+    string? Expresion = null,
+    int? Valor = null
+);
 
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
+// ─── Procesador de argumentos ────────────────────────────────────────────────
 
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
+static class Comandos
+{
+    public static ComandoParsed Parsear(string[] args)
+    {
+        if (args.Length == 0)
+            return new ComandoParsed(ModoEjecucion.Interactivo);
 
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
+        // Flags de una sola opción
+        if (args.Length == 1)
+        {
+            string flag = args[0].ToLower();
+            if (flag is "--help" or "-h")
+                return new ComandoParsed(ModoEjecucion.Ayuda);
 
-""");
-                return true;
-
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
-
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
-
-            default:
-                return false;
+            if (flag is "--test" or "--probar" or "-t" or "-p")
+                return new ComandoParsed(ModoEjecucion.Pruebas);
         }
+
+        // Modo directo: expresion + valor
+        if (args.Length == 2)
+        {
+            string expresion = args[0];
+
+            if (!int.TryParse(args[1], out int valor))
+                throw new ArgumentException($"Error: el valor '{args[1]}' no es un entero válido.");
+
+            return new ComandoParsed(ModoEjecucion.Directo, expresion, valor);
+        }
+
+        throw new ArgumentException(
+            "Error: argumentos inválidos. Use --help para ver las opciones disponibles.");
+    }
+
+    public static void MostrarAyuda()
+    {
+        Console.WriteLine("""
+            calculadora — Evalúa expresiones aritméticas con la variable x
+
+            Uso:
+              calculadora                     Modo interactivo
+              calculadora "expresion" valor   Evalúa la expresión con el valor dado
+              calculadora --help              Muestra esta ayuda
+              calculadora --test              Ejecuta pruebas automáticas
+
+            Expresiones soportadas:
+              Números enteros, variable x, operadores + - * /
+              Paréntesis y operadores unarios + y -
+
+            Ejemplos:
+              calculadora "1 + 2 * 3" 0
+              calculadora "(x - 1) * 2" 10
+              calculadora --test
+            """);
     }
 }
 
