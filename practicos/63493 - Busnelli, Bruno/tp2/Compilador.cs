@@ -7,14 +7,61 @@ class Compilador {
         compilador.expresion = expresion;
         compilador.posicion = 0;
 
-        return compilador.ParseFactor();
+        var nodo = compilador.ParseExpresion();
+        compilador.SaltarEspacios();
+
+        if (!compilador.Fin()) {
+            throw new FormatException($"Token inesperado: '{compilador.Actual()}'");
+        }
+
+        return nodo;
+    }
+
+    private Nodo ParseExpresion() {
+        Nodo izquierda = ParseTermino();
+
+        while (true) {
+            SaltarEspacios();
+
+            if (Coincidir('+')) {
+                Nodo derecha = ParseTermino();
+                izquierda = new NodoBinario(izquierda, '+', derecha);
+            } else if (Coincidir('-')) {
+                Nodo derecha = ParseTermino();
+                izquierda = new NodoBinario(izquierda, '-', derecha);
+            } else {
+                break;
+            }
+        }
+
+        return izquierda;
+    }
+
+    private Nodo ParseTermino() {
+        Nodo izquierda = ParseFactor();
+
+        while (true) {
+            SaltarEspacios();
+
+            if (Coincidir('*')) {
+                Nodo derecha = ParseFactor();
+                izquierda = new NodoBinario(izquierda, '*', derecha);
+            } else if (Coincidir('/')) {
+                Nodo derecha = ParseFactor();
+                izquierda = new NodoBinario(izquierda, '/', derecha);
+            } else {
+                break;
+            }
+        }
+
+        return izquierda;
     }
 
     private Nodo ParseFactor() {
         SaltarEspacios();
 
         if (Coincidir('(')) {
-            Nodo nodo = ParseFactor();
+            Nodo nodo = ParseExpresion();
 
             if (!Coincidir(')')) {
                 throw new FormatException("Se esperaba ')'");
@@ -32,7 +79,7 @@ class Compilador {
             return new NodoVariable();
         }
 
-        throw new FormatException("Token inesperado");
+        throw new FormatException(Fin() ? "Token inesperado" : $"Token inesperado: '{Actual()}'");
     }
 
     private Nodo ParseNumero() {
