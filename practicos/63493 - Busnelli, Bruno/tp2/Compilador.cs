@@ -57,30 +57,38 @@ class Compilador {
         return izquierda;
     }
 
-    private Nodo ParseFactor() {
-        SaltarEspacios();
+private Nodo ParseFactor() {
+    SaltarEspacios();
 
-        if (Coincidir('(')) {
-            Nodo nodo = ParseExpresion();
-
-            if (!Coincidir(')')) {
-                throw new FormatException("Se esperaba ')'");
-            }
-
-            return nodo;
-        }
-
-        if (!Fin() && char.IsDigit(Actual())) {
-            return ParseNumero();
-        }
-
-        if (!Fin() && (Actual() == 'x' || Actual() == 'X')) {
-            posicion++;
-            return new NodoVariable();
-        }
-
-        throw new FormatException(Fin() ? "Token inesperado" : $"Token inesperado: '{Actual()}'");
+    if (Coincidir('+')) {
+        return new NodoUnario('+', ParseFactor());
     }
+
+    if (Coincidir('-')) {
+        return new NodoUnario('-', ParseFactor());
+    }
+
+    if (Coincidir('(')) {
+        Nodo nodo = ParseExpresion();
+
+        if (!Coincidir(')')) {
+            throw new FormatException("Se esperaba ')'");
+        }
+
+        return nodo;
+    }
+
+    if (!Fin() && char.IsDigit(Actual())) {
+        return ParseNumero();
+    }
+
+    if (!Fin() && (Actual() == 'x' || Actual() == 'X')) {
+        posicion++;
+        return new NodoVariable();
+    }
+
+    throw new FormatException(Fin() ? "Token inesperado" : $"Token inesperado: '{Actual()}'");
+}
 
     private Nodo ParseNumero() {
         SaltarEspacios();
