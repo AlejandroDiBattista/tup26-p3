@@ -91,3 +91,43 @@ Dictionary<string, string> CreateRow(string[] headers, string[] values)
 
     return row;
 }
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+    foreach (var field in config.SortFields)
+    {
+        if (field.Numeric)
+        {
+            if (ordered == null)
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r => double.Parse(r[field.Name], CultureInfo.InvariantCulture))
+                    : rows.OrderBy(r => double.Parse(r[field.Name], CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r => double.Parse(r[field.Name], CultureInfo.InvariantCulture))
+                    : ordered.ThenBy(r => double.Parse(r[field.Name], CultureInfo.InvariantCulture));
+            }
+        }
+        else
+        {
+            if (ordered == null)
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r => r[field.Name])
+                    : rows.OrderBy(r => r[field.Name]);
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r => r[field.Name])
+                    : ordered.ThenBy(r => r[field.Name]);
+            }
+        }
+    }
+
+    return ordered?.ToList() ?? rows;
+}
