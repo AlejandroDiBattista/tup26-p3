@@ -17,15 +17,14 @@ using Dapper;
 using Dapper.Contrib.Extensions;
 using Terminal.Gui;
 
-// --- PUNTO DE ENTRADA (Top-level code temporal para probar) ---
 var dbFile = args.Length > 0 ? args[0] : "agenda.db";
 var store = new SqliteAgendaStore(dbFile);
 store.Initialize();
 
 Console.WriteLine($"Cimientos listos. Base de datos conectada en: {dbFile}");
-return; // Frenamos la ejecución acá por ahora
+Console.WriteLine("Motor JSON en linea.");
+return;
 
-// --- MODELO DE DATOS ---
 [Table("Contactos")]
 public sealed class Contacto
 {
@@ -51,7 +50,6 @@ public sealed class Contacto
     }
 }
 
-// --- PERSISTENCIA (Base de Datos SQLite) ---
 public sealed class SqliteAgendaStore
 {
     private readonly string _connectionString;
@@ -97,5 +95,33 @@ public sealed class SqliteAgendaStore
     {
         using var connection = new SqliteConnection(_connectionString);
         return connection.Delete(new Contacto { Id = id });
+    }
+}
+
+public static class JsonAgendaIO
+{
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    public static List<Contacto> Import(string path)
+    {
+        var json = File.ReadAllText(path, Encoding.UTF8);
+        var records = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+        if (records == null) return new List<Contacto>();
+        
+        foreach (var r in records)
+        {
+            r.Id = 0;
+        }
+        return records;
+    }
+
+    public static void Export(string path, List<Contacto> contactos)
+    {
+        var json = JsonSerializer.Serialize(contactos, Options);
+        File.WriteAllText(path, json, Encoding.UTF8);
     }
 }
