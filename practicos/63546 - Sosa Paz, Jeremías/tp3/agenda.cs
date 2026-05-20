@@ -46,6 +46,7 @@ public sealed class AgendaWindow : Window
     private TextField _searchField;
     private ListView _listView;
     private TextView _detailsView;
+    private bool _filterFavoritesOnly = false;
 
     public AgendaWindow(SqliteAgendaStore store)
     {
@@ -56,21 +57,47 @@ public sealed class AgendaWindow : Window
         Width = Dim.Fill();
         Height = Dim.Fill();
 
+        InitMenus();
         InitControls();
         LoadData();
     }
 
+    private void InitMenus()
+    {
+        var menu = new MenuBar(new MenuBarItem[] {
+            new MenuBarItem("_Archivo", new MenuItem[] {
+                new MenuItem("_Importar JSON", "", OnImportJson),
+                new MenuItem("_Exportar JSON", "", OnExportJson),
+                new MenuItem("_Salir", "", () => Application.RequestStop())
+            }),
+            new MenuBarItem("_Contactos", new MenuItem[] {
+                new MenuItem("_Nuevo", "", OnNewContact),
+                new MenuItem("_Editar", "", OnEditContact),
+                new MenuItem("_Eliminar", "", OnDeleteContact)
+            }),
+            new MenuBarItem("_Ver", new MenuItem[] {
+                new MenuItem("_Alternar Favoritos", "", OnToggleFavorites)
+            }),
+            new MenuBarItem("A_yuda", new MenuItem[] {
+                new MenuItem("_Acerca de", "", () => MessageBox.Query((IApplication)null!, "Acerca de", "AgendaT V1.0\nDesarrollado por Jeremías Sosa Paz", "OK"))
+            })
+        });
+        Add(menu);
+    }
+
     private void InitControls()
     {
-        Add(new Label { Text = "Buscar:", X = 1, Y = 1 });
-        _searchField = new TextField { Text = "", X = 9, Y = 1, Width = Dim.Fill(2) };
+        Add(new Label { Text = "Buscar:", X = 1, Y = 2 });
+        _searchField = new TextField { Text = "", X = 9, Y = 2, Width = Dim.Fill(2) };
+        _searchField.TextChanged += (s, e) => ApplyFilters();
         Add(_searchField);
 
-        var listFrame = new FrameView { Title = " Contactos ", X = 1, Y = 3, Width = Dim.Percent(40), Height = Dim.Fill(1) };
+        var listFrame = new FrameView { Title = " Contactos ", X = 1, Y = 4, Width = Dim.Percent(40), Height = Dim.Fill(1) };
         _listView = new ListView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
+        _listView.Accepting += (s, e) => { OnEditContact(); e.Handled = true; };
         listFrame.Add(_listView);
 
-        var detailsFrame = new FrameView { Title = " Detalle de Contacto ", X = Pos.Right(listFrame) + 1, Y = 3, Width = Dim.Fill(1), Height = Dim.Fill(1) };
+        var detailsFrame = new FrameView { Title = " Detalle de Contacto ", X = Pos.Right(listFrame) + 1, Y = 4, Width = Dim.Fill(1), Height = Dim.Fill(1) };
         _detailsView = new TextView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(), ReadOnly = true };
         detailsFrame.Add(_detailsView);
 
@@ -82,16 +109,161 @@ public sealed class AgendaWindow : Window
         try
         {
             _allContacts = _store.GetAll().ToList();
-            _filteredContacts = _allContacts;
-            
-            // Adaptación para la v2: ObservableCollection
-            var listItems = _filteredContacts.Select(c => $"{(c.Favorito ? "[X]" : "[ ]")} {c.Nombre}").ToList();
-            _listView.SetSource(new ObservableCollection<string>(listItems));
+            ApplyFilters();
         }
         catch (Exception ex)
         {
-            MessageBox.ErrorQuery((IApplication)null!, "Error", $"No se pudo cargar la base de datos: {ex.Message}", "OK");
+            MessageBox.ErrorQuery((IApplication)null!, "Error", $"Base de datos: {ex.Message}", "OK");
         }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _searchField.Text?.ToString()?.Trim().ToLower() ?? "";
+        var records = _allContacts.AsEnumerable();
+
+        if (_filterFavoritesOnly) records = records.Where(c => c.Favorito);
+
+        if (!string.IsNullOrEmpty(query))
+        {
+            records = records.Where(c => 
+                (c.Nombre != null && c.Nombre.ToLower().Contains(query)) || 
+                (c.Telefonos != null && c.Telefonos.ToLower().Contains(query)) || 
+                (c.Email != null && c.Email.ToLower().Contains(query)));
+        }
+
+        _filteredContacts = records.ToList();
+        var listItems = _filteredContacts.Select(c => $"{(c.Favorito ? "[X]" : "[ ]")} {c.Nombre}").ToList();
+        _listView.SetSource(new ObservableCollection<string>(listItems));
+        UpdateDetails();
+    }
+
+    private void UpdateDetails()
+    {
+        int selectedIndex = _listView.SelectedItem ?? -1;
+        
+        if (selectedIndex >= 0 && selectedIndex < _filteredContacts.Count)
+        {
+            var c = _filteredContacts[selectedIndex];
+            var sb = new StringBuilder();
+            sb.AppendLine($"Nombre: {c.Nombre}");
+            sb.AppendLine($"Email: {c.Email}");
+            sb.AppendLine($"Favorito: {(c.Favorito ? "Sí" : "No")}");
+            sb.AppendLine();
+            sb.AppendLine("Teléfonos:");
+            if (c.Telefonos != null)
+            {
+                foreach (var t in c.Telefonos.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sb.AppendLine($"  - {t.Trim()}");
+                }
+            }
+            sb.AppendLine();
+            sb.AppendLine("Notas:");
+            sb.AppendLine(c.Notas);
+            _detailsView.Text = sb.ToString();
+        }
+        else
+        {
+            _detailsView.Text = "";
+        }
+    }
+
+    private void OnToggleFavorites()
+    {
+        _filterFavoritesOnly = !_filterFavoritesOnly;
+        ApplyFilters();
+    }
+
+    private void OnNewContact()
+    {
+        var dialog = new ContactDialog(new Contacto());
+        Application.Run(dialog);
+        if (dialog.SaveConfirmed)
+        {
+            _store.Insert(dialog.ContactResult);
+            LoadData();
+        }
+    }
+
+    private void OnEditContact()
+    {
+        int selectedIndex = _listView.SelectedItem ?? -1;
+        if (selectedIndex < 0 || selectedIndex >= _filteredContacts.Count) return;
+        
+        var selected = _filteredContacts[selectedIndex];
+        var dialog = new ContactDialog(selected.Clone());
+        Application.Run(dialog);
+        if (dialog.SaveConfirmed)
+        {
+            _store.Update(dialog.ContactResult);
+            LoadData();
+        }
+    }
+
+    private void OnDeleteContact()
+    {
+        int selectedIndex = _listView.SelectedItem ?? -1;
+        if (selectedIndex < 0 || selectedIndex >= _filteredContacts.Count) return;
+        
+        var selected = _filteredContacts[selectedIndex];
+        var n = MessageBox.Query((IApplication)null!, "Eliminar", $"¿Eliminar a {selected.Nombre}?", "Sí", "No");
+        if (n == 0)
+        {
+            _store.Delete(selected.Id);
+            LoadData();
+        }
+    }
+
+    private void OnImportJson()
+    {
+        var d = new Dialog { Title = "Importar JSON", Width = 50, Height = 10 };
+        var lbl = new Label { Text = "Ruta del archivo:", X = 1, Y = 1 };
+        var txt = new TextField { Text = "agenda.json", X = 1, Y = 2, Width = Dim.Fill(1) };
+        var btnOk = new Button { Text = "Importar", X = 10, Y = 4 };
+        var btnCancel = new Button { Text = "Cancelar", X = 25, Y = 4 };
+
+        btnCancel.Accepting += (s, e) => Application.RequestStop();
+        btnOk.Accepting += (s, e) => {
+            var path = txt.Text?.ToString() ?? "agenda.json";
+            if (File.Exists(path))
+            {
+                var imported = JsonAgendaIO.Import(path);
+                foreach (var c in imported) _store.Insert(c);
+                LoadData();
+                MessageBox.Query((IApplication)null!, "Éxito", $"Se importaron {imported.Count} contactos.", "OK");
+            }
+            else
+            {
+                MessageBox.ErrorQuery((IApplication)null!, "Error", "Archivo no encontrado.", "OK");
+            }
+            e.Handled = true;
+            Application.RequestStop();
+        };
+
+        d.Add(lbl, txt, btnOk, btnCancel);
+        Application.Run(d);
+    }
+
+    private void OnExportJson()
+    {
+        var d = new Dialog { Title = "Exportar JSON", Width = 50, Height = 10 };
+        var lbl = new Label { Text = "Ruta de destino:", X = 1, Y = 1 };
+        var txt = new TextField { Text = "exportacion.json", X = 1, Y = 2, Width = Dim.Fill(1) };
+        var btnOk = new Button { Text = "Exportar", X = 10, Y = 4 };
+        var btnCancel = new Button { Text = "Cancelar", X = 25, Y = 4 };
+
+        btnCancel.Accepting += (s, e) => Application.RequestStop();
+        btnOk.Accepting += (s, e) => {
+            var path = txt.Text?.ToString() ?? "exportacion.json";
+            JsonAgendaIO.Export(path, _allContacts);
+            e.Handled = true;
+            Application.RequestStop();
+            MessageBox.Query((IApplication)null!, "Éxito", $"Datos exportados a {path}.", "OK");
+        };
+
+        d.Add(lbl, txt, btnOk, btnCancel);
+        Application.Run(d);
     }
 }
 
@@ -180,13 +352,13 @@ public sealed class ContactDialog : Dialog
 
         if (string.IsNullOrEmpty(nombre))
         {
-            MessageBox.ErrorQuery((IApplication)null!, "Error de Validación", "El Nombre no puede estar vacío.", "OK");
+            MessageBox.ErrorQuery((IApplication)null!, "Error", "El Nombre no puede estar vacío.", "OK");
             return;
         }
 
         if (!string.IsNullOrEmpty(email) && !email.Contains("@"))
         {
-            MessageBox.ErrorQuery((IApplication)null!, "Error de Validación", "El Email debe contener un carácter '@'.", "OK");
+            MessageBox.ErrorQuery((IApplication)null!, "Error", "El Email debe contener un carácter '@'.", "OK");
             return;
         }
 
@@ -305,4 +477,4 @@ public sealed class Contacto
             Favorito = this.Favorito
         };
     }
-}   
+}
