@@ -170,30 +170,134 @@ public sealed class AgendaWindow : Runnable
 }
 
 
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title = "Diálogo de ejemplo";
-        Width = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog
+{
+    public bool WasAccepted { get; private set; } = false;
+    public Contacto? ContactResult { get; private set; }
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X = Pos.Center(),
-            Y = 1
+    private readonly TextField _nombreField;
+    private readonly TextField[] _telefonoFields = new TextField[5];
+    private readonly TextField _emailField;
+    private readonly TextView _notasField;
+    private readonly CheckBox _favoritoCheck;
+
+    public ContactDialog(string title, Contacto contacto)
+    {
+        Title = title;
+        Width = 62;
+        Height = 27;
+
+        int row = 0;
+
+        Add(new Label() { Text = "Nombre (*):", X = 1, Y = row });
+        row++;
+        _nombreField = new TextField()
+        {
+            Text = contacto.Nombre,
+            X = 1,
+            Y = row,
+            Width = Dim.Fill(1),
+        };
+        Add(_nombreField);
+        row++;
+
+        Add(new Label() { Text = "Teléfonos (hasta 5, uno por campo):", X = 1, Y = row });
+        row++;
+        string[] teleparts = contacto.Telefonos.Split(',',
+            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < 5; i++)
+        {
+            Add(new Label() { Text = $"  Tel {i + 1}:", X = 1, Y = row });
+            string val = i < teleparts.Length ? teleparts[i] : "";
+            _telefonoFields[i] = new TextField()
+            {
+                Text = val,
+                X = 10,
+                Y = row,
+                Width = Dim.Fill(1),
+            };
+            Add(_telefonoFields[i]);
+            row++;
+        }
+
+        Add(new Label() { Text = "Email:", X = 1, Y = row });
+        row++;
+        _emailField = new TextField()
+        {
+            Text = contacto.Email,
+            X = 1,
+            Y = row,
+            Width = Dim.Fill(1),
+        };
+        Add(_emailField);
+        row++;
+
+        _favoritoCheck = new CheckBox()
+        {
+            Text = "Favorito",
+            X = 1,
+            Y = row,
+            Value = contacto.Favorito
+                ? CheckState.Checked
+                : CheckState.UnChecked,
+        };
+        Add(_favoritoCheck);
+        row++;
+
+        Add(new Label() { Text = "Notas:", X = 1, Y = row });
+        row++;
+        _notasField = new TextView()
+        {
+            Text = contacto.Notas,
+            X = 1,
+            Y = row,
+            Width = Dim.Fill(1),
+            Height = 3,
+        };
+        Add(_notasField);
+
+        Button btnGuardar = new() { Text = "_Guardar", IsDefault = true };
+        btnGuardar.Accepting += (_, e) => { OnGuardar(); e.Handled = true; };
+
+        Button btnCancelar = new() { Text = "_Cancelar" };
+        btnCancelar.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+
+        AddButton(btnGuardar);
+        AddButton(btnCancelar);
+    }
+
+    private void OnGuardar()
+    {
+        string nombre = _nombreField.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(nombre))
+        {
+            MessageBox.ErrorQuery(App!, "Validación", "El nombre no puede estar vacío.", "Aceptar");
+            return;
+        }
+
+        string email = _emailField.Text?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(email) && !email.Contains('@'))
+        {
+            MessageBox.ErrorQuery(App!, "Validación", "El email debe contener '@'.", "Aceptar");
+            return;
+        }
+
+        var telefonos = _telefonoFields
+            .Select(f => f.Text?.Trim() ?? "")
+            .Where(t => !string.IsNullOrEmpty(t))
+            .ToList();
+
+        ContactResult = new Contacto
+        {
+            Nombre = nombre,
+            Telefonos = string.Join(", ", telefonos),
+            Email = email,
+            Notas = _notasField.Text?.ToString() ?? "",
+            Favorito = _favoritoCheck.Value == CheckState.Checked,
         };
 
-        Button closeButton = new() {
-            Text = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
-
-        Add(message);
-        AddButton(closeButton);
+        WasAccepted = true;
+        App!.RequestStop();
     }
 }
 
