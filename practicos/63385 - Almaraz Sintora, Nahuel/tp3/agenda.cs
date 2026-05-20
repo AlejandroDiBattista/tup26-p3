@@ -114,6 +114,37 @@ public sealed class EjemploDialog : Dialog {
     }
 }
 
+public sealed class PathDialog : Dialog
+{
+    private readonly IApplication _app;
+    private readonly TextField _ruta = new();
+    public bool Aceptado { get; private set; }
+    public string Ruta { get; private set; } = "";
+
+    public PathDialog(IApplication app, string titulo, string etiqueta, string sugerida)
+    {
+        _app = app;
+        Title = titulo; Width = 70; Height = 8;
+
+        Add(new Label { Text = etiqueta, X = 1, Y = 1 });
+        _ruta.X = 1; _ruta.Y = 2; _ruta.Width = Dim.Fill(1); _ruta.Text = sugerida;
+        Add(_ruta);
+
+        var aceptar = new Button { Text = "_Aceptar" };
+        aceptar.Accepting += (s, e) => {
+            string ruta = (_ruta.Text?.ToString() ?? "").Trim();
+            if (ruta.Length == 0) { MessageBox.ErrorQuery(_app, "Validacion", "La ruta no puede estar vacia.", "OK"); return; }
+            Ruta = ruta; Aceptado = true; e.Handled = true; _app.RequestStop();
+        };
+
+        var cancelar = new Button { Text = "_Cancelar" };
+        cancelar.Accepting += (s, e) => { Aceptado = false; e.Handled = true; _app.RequestStop(); };
+
+        AddButton(aceptar);
+        AddButton(cancelar);
+    }
+}
+
 public class SqliteAgendaStore
 {
     private readonly string _cs;
