@@ -39,10 +39,24 @@ using (store)
 return 0;
 
 
-public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
-        Title = "Agenda - Terminal.Gui";
+public sealed class AgendaWindow : Runnable 
+{
+    private readonly SqliteAgendaStore _store;
+    private List<Contacto> _contacts = new();
+    private List<Contacto> _filteredContacts = new();
+    private bool _soloFavoritos = false;
+
+    private TextField _searchField = null!;
+    private ListView _listView = null!;
+    private TextView _detailView = null!;
+    private Label _statusLabel = null!;
+    private MenuItem _soloFavoritosMenuItem = null!;
+
+    public AgendaWindow(SqliteAgendaStore store)
+    {
+        _store = store;
+        Title = "AgendaT";
         Width = Dim.Fill();
         Height = Dim.Fill();
 
@@ -50,48 +64,109 @@ public sealed class AgendaWindow : Runnable {
         BuildLayout();
     }
 
-    private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, 
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
+    private void BuildLayout()
+    {
+        _soloFavoritosMenuItem = new MenuItem("_Solo favoritos", "", MenuToggleFavoritos);
+
+        MenuBar menu = new()
+        {
+            Menus =
+            [
+                new MenuBarItem("_Archivo",
+                [
+                    new MenuItem("_Importar JSON", "Ctrl+I", MenuImportar),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", MenuExportar),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", MenuSalir),
+                ]),
+                new MenuBarItem("_Contactos",
+                [
+                    new MenuItem("_Nuevo",    "F2/Ctrl+N",  MenuNuevo),
+                    new MenuItem("_Editar",   "F3/Enter",   MenuEditar),
+                    new MenuItem("_Eliminar", "Del/Ctrl+D", MenuEliminar),
+                ]),
+                new MenuBarItem("_Ver",
+                [
+                    _soloFavoritosMenuItem,
+                ]),
+                new MenuBarItem("_Ayuda",
+                [
+                    new MenuItem("_Acerca de", "", MenuAcercaDe),
+                ]),
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X = Pos.Center(),
-            Y = Pos.Center()
+        Label searchLabel = new()
+        {
+            Text = "Buscar: ",
+            X = 0,
+            Y = 1,
         };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        _searchField = new TextField()
+        {
+            X = Pos.Right(searchLabel),
+            Y = 1,
+            Width = Dim.Fill(),
         };
 
-        Add(menu, openButton);
-    }
+        FrameView listFrame = new()
+        {
+            Title = "Contactos",
+            X = 0,
+            Y = 2,
+            Width = Dim.Percent(40),
+            Height = Dim.Fill(2),
+        };
 
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
-    }
+        _listView = new ListView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+        };
+        listFrame.Add(_listView);
 
-    private void SolicitarSalir() {
-        App!.RequestStop();
-    }
+        FrameView detailFrame = new()
+        {
+            Title = "Detalle",
+            X = Pos.Right(listFrame),
+            Y = 2,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(2),
+        };
 
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) {
-            SolicitarSalir();
-            return true;
-        }
+        _detailView = new TextView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ReadOnly = true,
+            WordWrap = true,
+        };
+        detailFrame.Add(_detailView);
 
-        return base.OnKeyDown(key);
+        _statusLabel = new Label()
+        {
+            Text = "F2/Ctrl+N:Nuevo  F3/Enter:Editar  Del/Ctrl+D:Eliminar  Ctrl+I/E:JSON  F4:Buscar  Ctrl+Q:Salir",
+            X = 0,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+        };
+
+        Add(menu, searchLabel, _searchField, listFrame, detailFrame, _statusLabel);
     }
+    
+    private void MenuToggleFavoritos() {}
+    private void MenuImportar() {}
+    private void MenuExportar() {}
+    private void MenuSalir() {}
+    private void MenuNuevo() {}
+    private void MenuEditar() {}
+    private void MenuEliminar() {}
+    private void MenuAcercaDe() {}
 }
 
 
