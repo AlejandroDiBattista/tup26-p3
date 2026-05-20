@@ -17,17 +17,12 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
 
-// Punto de entrada
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow());
 
 
-// Ventana principal
+
 public sealed class AgendaWindow : Runnable {
 
     public AgendaWindow() {
@@ -83,7 +78,7 @@ public sealed class AgendaWindow : Runnable {
     }
 }
 
-// Diálogo de ejemplo
+
 public sealed class EjemploDialog : Dialog {
     public EjemploDialog() {
         Title  = "Diálogo de ejemplo";
