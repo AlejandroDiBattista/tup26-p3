@@ -23,14 +23,30 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
+string dbPath = args.Length > 0 ? args[0] : "agenda.db";
+
+SqliteAgendaStore store;
+try
+{
+    store = new SqliteAgendaStore(dbPath);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error al abrir la base de datos: {ex.Message}");
+    return 1;
+}
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(store));
+return 0;
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
+    private readonly SqliteAgendaStore _store;
 
-    public AgendaWindow() {
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        _store = store;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -112,7 +128,34 @@ public sealed class EjemploDialog : Dialog {
 }
 
 
-public class SqliteAgendaStore {}
+public class SqliteAgendaStore 
+{
+    private readonly string _connectionString;
+
+    public SqliteAgendaStore(string dbPath)
+    {
+        _connectionString = $"Data Source={dbPath}";
+
+        using SqliteConnection con = Abrir();
+
+        con.Execute(@"
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre    TEXT    NOT NULL DEFAULT '',
+                Telefonos TEXT    NOT NULL DEFAULT '',
+                Email     TEXT    NOT NULL DEFAULT '',
+                Notas     TEXT    NOT NULL DEFAULT '',
+                Favorito  INTEGER NOT NULL DEFAULT 0
+            )
+        ");
+    }
+     private SqliteConnection Abrir()
+    {
+        SqliteConnection con = new(_connectionString);
+        con.Open();
+        return con;
+    }
+}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
