@@ -119,11 +119,26 @@ public class SqliteAgendaStore {}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
-public class Contacto {
-    [Key] public int    Id        { get; set; }
-          public string Nombre    { get; set; } = "";
-          public string Telefonos { get; set; } = "";
-          public string Email     { get; set; } = "";
-          public string Notas     { get; set; } = "";
-          public bool   Favorito  { get; set; }
+public sealed class Contacto
+{
+    [Key]
+    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string Telefonos { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Notas { get; set; } = "";
+    public bool Favorito { get; set; }
+
+    public Contacto Clone()
+    {
+        return new Contacto
+        {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
+        };
+    }
 }
