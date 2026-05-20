@@ -114,8 +114,61 @@ public sealed class EjemploDialog : Dialog {
     }
 }
 
+public class SqliteAgendaStore
+{
+    private readonly string _cs;
 
-public class SqliteAgendaStore {}
+    public SqliteAgendaStore(string dbPath)
+    {
+        _cs = $"Data Source={dbPath}";
+
+        using var conn = Abrir();
+        conn.Execute(@"
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL,
+                Email TEXT NOT NULL,
+                Notas TEXT NOT NULL,
+                Favorito INTEGER NOT NULL
+            )
+        ");
+    }
+
+    private SqliteConnection Abrir()
+    {
+        var conn = new SqliteConnection(_cs);
+        conn.Open();
+        return conn;
+    }
+
+    public IEnumerable<Contacto> ObtenerTodos()
+    {
+        using var conn = Abrir();
+        return conn.GetAll<Contacto>().ToList();
+    }
+
+    public void Insertar(Contacto c)
+    {
+        using var conn = Abrir();
+        long id = conn.Insert(c);
+        c.Id = (int)id;
+    }
+
+    public void Actualizar(Contacto c)
+    {
+        using var conn = Abrir();
+        conn.Update(c);
+    }
+
+    public void Eliminar(int id)
+    {
+        using var conn = Abrir();
+        conn.Delete(new Contacto { Id = id });
+    }
+}
+
+
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
