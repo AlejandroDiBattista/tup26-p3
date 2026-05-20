@@ -168,8 +168,43 @@ public class SqliteAgendaStore
     }
 }
 
+public static class JsonAgendaIO
+{
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 
-public class JsonAgendaIO {}
+    public static List<Contacto> Leer(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException("No existe el archivo JSON.", path);
+
+        string json = File.ReadAllText(path, Encoding.UTF8);
+        var contactos = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+
+        if (contactos is null)
+            throw new JsonException("El archivo no contiene una lista de contactos.");
+
+        foreach (var contacto in contactos)
+        {
+            contacto.Id = 0;
+            contacto.Nombre ??= "";
+            contacto.Telefonos ??= "";
+            contacto.Email ??= "";
+            contacto.Notas ??= "";
+        }
+
+        return contactos;
+    }
+
+    public static void Escribir(string path, IEnumerable<Contacto> contactos)
+    {
+        string json = JsonSerializer.Serialize(contactos, Options);
+        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+}
 
 [Table("Contactos")]
 public sealed class Contacto
