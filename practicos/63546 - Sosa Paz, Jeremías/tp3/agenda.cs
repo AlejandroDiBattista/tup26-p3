@@ -15,6 +15,7 @@ using System.Text;
 using System.Text.Json;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
@@ -31,10 +32,68 @@ var store = new SqliteAgendaStore(dbFile);
 store.Initialize();
 
 Application.Init();
-var testDialog = new ContactDialog(new Contacto());
-Application.Run(testDialog);
+var mainWindow = new AgendaWindow(store);
+Application.Run(mainWindow);
 Application.Shutdown();
 return;
+
+public sealed class AgendaWindow : Window
+{
+    private readonly SqliteAgendaStore _store;
+    private List<Contacto> _allContacts = new();
+    private List<Contacto> _filteredContacts = new();
+
+    private TextField _searchField;
+    private ListView _listView;
+    private TextView _detailsView;
+
+    public AgendaWindow(SqliteAgendaStore store)
+    {
+        _store = store;
+        Title = " AgendaT - Centro de Mando ";
+        X = 0;
+        Y = 0;
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        InitControls();
+        LoadData();
+    }
+
+    private void InitControls()
+    {
+        Add(new Label { Text = "Buscar:", X = 1, Y = 1 });
+        _searchField = new TextField { Text = "", X = 9, Y = 1, Width = Dim.Fill(2) };
+        Add(_searchField);
+
+        var listFrame = new FrameView { Title = " Contactos ", X = 1, Y = 3, Width = Dim.Percent(40), Height = Dim.Fill(1) };
+        _listView = new ListView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
+        listFrame.Add(_listView);
+
+        var detailsFrame = new FrameView { Title = " Detalle de Contacto ", X = Pos.Right(listFrame) + 1, Y = 3, Width = Dim.Fill(1), Height = Dim.Fill(1) };
+        _detailsView = new TextView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(), ReadOnly = true };
+        detailsFrame.Add(_detailsView);
+
+        Add(listFrame, detailsFrame);
+    }
+
+    private void LoadData()
+    {
+        try
+        {
+            _allContacts = _store.GetAll().ToList();
+            _filteredContacts = _allContacts;
+            
+            // Adaptación para la v2: ObservableCollection
+            var listItems = _filteredContacts.Select(c => $"{(c.Favorito ? "[X]" : "[ ]")} {c.Nombre}").ToList();
+            _listView.SetSource(new ObservableCollection<string>(listItems));
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery((IApplication)null!, "Error", $"No se pudo cargar la base de datos: {ex.Message}", "OK");
+        }
+    }
+}
 
 public sealed class ContactDialog : Dialog
 {
@@ -246,4 +305,4 @@ public sealed class Contacto
             Favorito = this.Favorito
         };
     }
-}
+}   
