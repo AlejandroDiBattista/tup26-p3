@@ -44,6 +44,17 @@ return 0;
 public sealed class AgendaWindow : Runnable {
     private readonly SqliteAgendaStore _store;
 
+    private List<Contacto> _contacts = [];
+    private List<Contacto> _filteredContacts = [];
+
+    private readonly ListView _listView;
+    private readonly Label _detailName;
+    private readonly Label _detailPhone;
+    private readonly Label _detailEmail;
+    private readonly Label _detailNotes;
+    private readonly Label _statusBar;
+    
+
 
     public AgendaWindow(SqliteAgendaStore store) {
 
@@ -57,29 +68,71 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
-        };
+         MenuBar menu = new() {
+        Menus = [
+            new MenuBarItem("_Archivo", [
+                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+            ])
+        ]
+    };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
-        };
+    FrameView listFrame = new() {
+        Title = "Contactos",
+        X = 0,
+        Y = 1,
+        Width = Dim.Percent(40),
+        Height = Dim.Fill(1)
+    };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
+    _listView = new ListView() {
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
 
-        Add(menu, openButton);
+    listFrame.Add(_listView);
+
+    FrameView detailFrame = new() {
+        Title = "Detalle",
+        X = Pos.Right(listFrame),
+        Y = 1,
+        Width = Dim.Fill(),
+        Height = Dim.Fill(1)
+    };
+
+    _detailName = new Label() { X = 0, Y = 0 };
+    _detailPhone = new Label() { X = 0, Y = 1 };
+    _detailEmail = new Label() { X = 0, Y = 2 };
+    _detailNotes = new Label() { X = 0, Y = 3 };
+
+    detailFrame.Add(
+        _detailName,
+        _detailPhone,
+        _detailEmail,
+        _detailNotes
+    );
+
+    _statusBar = new Label() {
+        Text = "Listo.",
+        X = 0,
+        Y = Pos.AnchorEnd(1),
+        Width = Dim.Fill()
+    };
+
+    Add(menu, listFrame, detailFrame, _statusBar);
+
+    CargarContactos();
     }
+    private void CargarContactos()
+{
+    _contacts = _store.GetAll().ToList();
+
+    _filteredContacts = _contacts;
+
+    _listView.SetSource(
+        _filteredContacts.Select(c => c.Nombre).ToList()
+    );
+}
+
 
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
@@ -98,7 +151,6 @@ public sealed class AgendaWindow : Runnable {
 
         return base.OnKeyDown(key);
     }
-}
 
 // Diálogo de ejemplo
 public sealed class EjemploDialog : Dialog {
