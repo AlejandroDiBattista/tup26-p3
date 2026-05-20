@@ -2,20 +2,28 @@
 #:property PublishAot=false
 
 #:package Terminal.Gui@2.0.1
-#:package Microsoft.Data.Sqlite@*
-#:package Dapper@*
-#:package Dapper.Contrib@*
+#:package Microsoft.Data.Sqlite@10.0.8
+#:package Dapper@2.1.79
+#:package Dapper.Contrib@2.0.78
 
-
+using Terminal.Gui;
 using Terminal.Gui.App;
-using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+
 using Microsoft.Data.Sqlite;
 using Dapper;
-using System.Data.Common;
 using Dapper.Contrib.Extensions;
+
+using System;
+using System.IO;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Linq;
 
 
 using IApplication app = Application.Create().Init();
