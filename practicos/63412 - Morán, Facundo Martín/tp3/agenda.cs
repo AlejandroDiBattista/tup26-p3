@@ -46,6 +46,7 @@ public sealed class AgendaWindow : Runnable {
 
 
     public AgendaWindow(SqliteAgendaStore store) {
+
         _store = store;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
@@ -154,6 +155,29 @@ public class SqliteAgendaStore
         SqliteConnection con = new(_connectionString);
         con.Open();
         return con;
+    }
+    public IEnumerable<Contacto> GetAll()
+    {
+        using SqliteConnection con = Abrir();
+        return con.GetAll<Contacto>().ToList();
+    }
+
+    public void Insert(Contacto c)
+    {
+        using SqliteConnection con = Abrir();
+        c.Id = (int)con.Insert(c);
+    }
+
+    public void Update(Contacto c)
+    {
+        using SqliteConnection con = Abrir();
+        con.Update(c);
+    }
+
+    public void Delete(Contacto c)
+    {
+        using SqliteConnection con = Abrir();
+        con.Delete(c);
     }
 }
 public class JsonAgendaIO {}
