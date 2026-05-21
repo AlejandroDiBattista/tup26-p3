@@ -450,3 +450,147 @@ public sealed class ConfirmarDialog : Dialog {
         AddButton(btnNo);
     }
 }
+
+public sealed class ContactoDialog : Dialog {
+    public Contacto? Resultado { get; private set; }
+    private TextField _txtNombre;
+    private TextField _txtEmail;
+    private TextField _txtTels;
+    private TextField _txtNotas;
+    public ContactoDialog(Contacto? original = null) {
+        Title = original == null
+            ? "Nuevo Contacto"
+            : "Editar Contacto";
+
+        Width = 50;
+        Height = 14;
+        Add(new Label() {
+            Text = "Nombre:",
+            X = 1,
+            Y = 1
+        });
+        _txtNombre = new TextField() {
+            X = 12,
+            Y = 1,
+            Width = Dim.Fill() - 1,
+            Text = original?.Nombre ?? ""
+        };
+        Add(new Label() {
+            Text = "Teléfonos:",
+            X = 1,
+            Y = 3
+        });
+        _txtTels = new TextField() {
+            X = 12,
+            Y = 3,
+            Width = Dim.Fill() - 1,
+            Text = original?.Telefonos ?? ""
+        };
+        Add(new Label() {
+            Text = "Email:",
+            X = 1,
+            Y = 5
+        });
+        _txtEmail = new TextField() {
+            X = 12,
+            Y = 5,
+            Width = Dim.Fill() - 1,
+            Text = original?.Email ?? ""
+        };
+        Add(new Label() {
+            Text = "Notas:",
+            X = 1,
+            Y = 7
+        });
+        _txtNotas = new TextField() {
+            X = 12,
+            Y = 7,
+            Width = Dim.Fill() - 1,
+            Text = original?.Notas ?? ""
+        };
+        Button btnGuardar = new() {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+        btnGuardar.Accepting += (_, e) => {
+            string nombreTxt = _txtNombre.Text.ToString().Trim();
+            string telsTxt = _txtTels.Text.ToString().Trim();
+            string emailTxt = _txtEmail.Text.ToString().Trim();
+            if (string.IsNullOrWhiteSpace(nombreTxt)) {
+
+                DialogErrorInterno("El nombre no puede estar vacío.");
+
+                e.Handled = true;
+                return;
+            }
+            if (emailTxt.Length > 0 && !emailTxt.Contains('@')) {
+
+                DialogErrorInterno("El email debe contener un '@'.");
+
+                e.Handled = true;
+                return;
+            }
+            int cantidadNumeros = telsTxt.Count(char.IsDigit);
+            if (cantidadNumeros < 5) {
+
+                DialogErrorInterno(
+                    "El teléfono debe tener al menos 5 números."
+                );
+
+                e.Handled = true;
+                return;
+            }
+            Resultado = new Contacto {
+
+                Id = original?.Id ?? 0,
+                Nombre = nombreTxt,
+                Telefonos = telsTxt,
+                Email = emailTxt,
+                Notas = _txtNotas.Text?.ToString() ?? "",
+                Favorito = original?.Favorito ?? false
+            };
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Button btnCancelar = new() {
+            Text = "_Cancelar"
+        };
+
+        btnCancelar.Accepting += (_, e) => {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Add(_txtNombre, _txtTels, _txtEmail, _txtNotas);
+        AddButton(btnGuardar);
+        AddButton(btnCancelar);
+    }
+    private void DialogErrorInterno(string mensaje) {
+
+        Dialog errorDlg = new() {
+            Title = "Error de Validación",
+            Width = 46,
+            Height = 8,
+            BorderStyle = LineStyle.Single
+        };
+
+        errorDlg.Add(new Label() {
+            Text = mensaje,
+            X = Pos.Center(),
+            Y = 1
+        });
+
+        Button btnAceptar = new() {
+            Text = "_Aceptar",
+            IsDefault = true
+        };
+
+        btnAceptar.Accepting += (_, ev) => {
+            App!.RequestStop();
+            ev.Handled = true;
+        };
+        errorDlg.AddButton(btnAceptar);
+        App!.Run(errorDlg);
+    }
+}
