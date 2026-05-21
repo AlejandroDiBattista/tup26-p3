@@ -144,5 +144,28 @@ public sealed class AgendaWindow : Runnable {
     _txtBusqueda.TextChanged += (_, _) => {
         AplicarFiltros();
     };
+
+    FrameView panelLista = new() {
+        Title = "Contactos",
+        X = 0,
+        Y = 4,
+        Width = Dim.Percent(40),
+        Height = Dim.Fill()
+    };
+
+    _listView = new ListView() {
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill(),
+        CanFocus = true
+    };
+
+    _listView.ValueChanged += (_, _) => {
+        MostrarDetalles();
+    };
+
+    panelLista.Add(_listView);
+
     
 }
