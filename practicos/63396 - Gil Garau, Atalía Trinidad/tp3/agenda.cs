@@ -24,14 +24,13 @@ using Dapper.Contrib.Extensions;
 
 // Punto de entrada
 var dbPath = args.FirstOrDefault() ?? "agenda.db";
-using IApplication app = Application.Create();
+AgendaWindow.DbPath = dbPath;
+using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow());
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
-    public sealed class AgendaWindow : Runnable
-{
     public static string DbPath = "agenda.db";
 
     readonly SqliteAgendaStore store;
@@ -44,36 +43,38 @@ public sealed class AgendaWindow : Runnable {
     readonly MenuItem favItem;
     bool onlyFav;
 
-        public AgendaWindow() {
-            Title  = "Agenda - Terminal.Gui";
-            Width  = Dim.Fill();
-            Height = Dim.Fill();
-            Menu.DefaultBorderStyle = LineStyle.Single;
-            store = new SqliteAgendaStore(DbPath);
-            try { store.Init(); contacts.AddRange(store.GetAll()); }
-            catch (Exception ex) { MessageBox.ErrorQuery(App!, "Base de datos", ex.Message, "OK"); }
+    public AgendaWindow() {
+        Title  = "Agenda - Terminal.Gui";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
 
-            favItem = new MenuItem("Solo favoritos", null, ToggleFav) { CheckType = MenuItemCheckStyle.Checked };
-            BuildLayout();
-            RefreshList();
-        }
+        Menu.DefaultBorderStyle = LineStyle.Single;
+        store = new SqliteAgendaStore(DbPath);
+        try { store.Init(); contacts.AddRange(store.GetAll()); }
+        catch (Exception ex) { MessageBox.ErrorQuery(App!, "Base de datos", ex.Message, "OK"); }
 
+        favItem = new MenuItem("Solo favoritos", null, ToggleFav) { CheckType = MenuItemCheckStyle.Checked };
+        BuildLayout();
+        RefreshList();
     }
 
     private void BuildLayout() {
-       
-        MenuBar menu = new() {
-             Menus = [
+       MenuBar menu = new()
+        {
+            Menus = [
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Importar JSON", null, ImportJson),
+                    null!,
                     new MenuItem("_Exportar JSON", null, ExportJson),
                     null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ]),
                 new MenuBarItem("_Contactos", [
-                    new MenuItem("_Nuevo contacto", "F2 / Ctrl+N", AbrirDialogo),
-                    new MenuItem("_Editar contacto", "F3 / Enter", EditSelected),
-                    new MenuItem("_Eliminar contacto", "Del / Ctrl+D", DeleteSelected)
+                    new MenuItem("_Nuevo contacto", null, AbrirDialogo),
+                    null!,
+                    new MenuItem("_Editar contacto", null, EditSelected),
+                    null!,
+                    new MenuItem("_Eliminar contacto", null, DeleteSelected)
                 ]),
                 new MenuBarItem("_Ver", [favItem]),
                 new MenuBarItem("_Ayuda", [new MenuItem("_Acerca de", null, () => MessageBox.Query(App!, "Acerca de", "Agenda TUI simple", "OK"))])
@@ -102,17 +103,8 @@ public sealed class AgendaWindow : Runnable {
         detail.Height = Dim.Fill(2);
         right.Add(detail);
 
-
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
-        };
-
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
+        Button openButton = new() { Text = "_Abrir diálogo", X = Pos.Center(), Y = Pos.Center() };
+        openButton.Accepting += (_, e) => { AbrirDialogo(); e.Handled = true; };
 
         status.Text = "F2 nuevo | F3 editar | Del borrar | Ctrl+I importar | Ctrl+E exportar | Ctrl+Q salir";
         status.X = 1;
@@ -120,19 +112,16 @@ public sealed class AgendaWindow : Runnable {
         status.Width = Dim.Fill();
 
         Add(menu, searchLabel, search, left, right, status, openButton);
-    
     }
 
-    private void AbrirDialogo()
-    {
-        EjemploDialog dialog = new("Nuevo contacto", new Contacto());
+    private void AbrirDialogo() {
+        EjemploDialog dialog = new();
         App!.Run(dialog);
         if (!dialog.Ok) return;
         contacts.Add(store.Insert(dialog.Result));
         status.Text = "Contacto creado.";
         RefreshList();
     }
-
     private void EditSelected()
     {
         var c = Current();
@@ -145,7 +134,6 @@ public sealed class AgendaWindow : Runnable {
         status.Text = "Contacto actualizado.";
         RefreshList();
     }
-
     private void DeleteSelected()
     {
         var c = Current();
@@ -156,7 +144,6 @@ public sealed class AgendaWindow : Runnable {
         status.Text = "Contacto eliminado.";
         RefreshList();
     }
-
     private void ToggleFav() { onlyFav = !onlyFav; favItem.Checked = onlyFav; RefreshList(); }
 
     private void ImportJson()
@@ -178,7 +165,6 @@ public sealed class AgendaWindow : Runnable {
         }
         catch (Exception ex) { MessageBox.ErrorQuery(App!, "Importar JSON", ex.Message, "OK"); }
     }
-
     private void ExportJson()
     {
         var path = AskPath("Exportar JSON", "agenda.json");
@@ -202,7 +188,6 @@ public sealed class AgendaWindow : Runnable {
         App!.Run(d);
         return result.Length == 0 ? null : result;
     }
-
     private void RefreshList()
     {
         var q = search.Text?.ToString()?.Trim() ?? "";
@@ -211,26 +196,18 @@ public sealed class AgendaWindow : Runnable {
         if (filtered.Count > 0) list.SelectedItem = 0;
         ShowDetail();
     }
-
     private Contacto? Current()
     {
         var i = list.SelectedItem;
         return i >= 0 && i < filtered.Count ? filtered[i] : null;
     }
-
     private void ShowDetail()
     {
         var c = Current();
         detail.Text = c is null ? "Sin contacto seleccionado." : $"Nombre: {c.Nombre}\nTelefonos: {c.Telefonos}\nEmail: {c.Email}\nFavorito: {(c.Favorito ? "Si" : "No")}\nNotas:\n{c.Notas}";
     }
-
-
-
-
-    private void SolicitarSalir() => App!.RequestStop();
-    
-
-    protected override bool OnKeyDown(Key key) {
+    protected override bool OnKeyDown(Key key)
+    {
         if (key == Key.Q.WithCtrl) { SolicitarSalir(); return true; }
         if (key == Key.F4) { search.SetFocus(); return true; }
         if (key == Key.F2 || key == Key.N.WithCtrl) { AbrirDialogo(); return true; }
@@ -239,6 +216,9 @@ public sealed class AgendaWindow : Runnable {
         if (key == Key.I.WithCtrl) { ImportJson(); return true; }
         if (key == Key.E.WithCtrl) { ExportJson(); return true; }
         return base.OnKeyDown(key);
+    }
+    private void SolicitarSalir() {
+        App!.RequestStop();
     }
 }
 
