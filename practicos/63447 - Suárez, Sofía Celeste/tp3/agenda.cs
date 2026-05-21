@@ -633,3 +633,26 @@ public class SqliteAgendaStore {
         conn.Delete(c);
     }
 }
+
+public class JsonAgendaIO {
+    public static void Exportar(
+        string path,
+        List<Contacto> lista
+       ) {
+        var json = JsonSerializer.Serialize(
+            lista,
+            new JsonSerializerOptions {
+                WriteIndented = true
+            }
+        );
+        File.WriteAllText(path, json);
+    }
+    public static List<Contacto> Importar(string path) {
+        if (!File.Exists(path))
+            throw new FileNotFoundException();
+
+        var json = File.ReadAllText(path);
+        return JsonSerializer.Deserialize<List<Contacto>>(json)
+        ?? new();
+    }
+}
