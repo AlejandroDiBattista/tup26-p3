@@ -369,7 +369,47 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void SolicitarSalir() {
-        App!.RequestStop();
-    }
+            App!.RequestStop();
+        }
+        protected override bool OnKeyDown(Key key) {
+        if (key == Key.CursorUp || key == Key.CursorDown) {
+            MostrarDetalles();
+        }
 
+        if (key == Key.X.WithCtrl) {
+            SolicitarSalir();
+            return true;
+        }
+
+        if (key == Key.F2) {
+            NuevoContacto();
+            return true;
+        }
+
+        if (key == Key.F3) {
+            EditarContacto();
+            return true;
+        }
+
+        if (key == Key.F4) {
+            _txtBusqueda.SetFocus();
+            return true;
+        }
+
+        if (key == Key.DeleteChar) {
+            EliminarContacto();
+            return true;
+        }
+
+        if (key == Key.I.WithCtrl) {
+            Importar();
+            return true;
+        }
+
+        if (key == Key.E.WithCtrl) {
+            Exportar();
+            return true;
+        }
+        return base.OnKeyDown(key);
+    }
 }
