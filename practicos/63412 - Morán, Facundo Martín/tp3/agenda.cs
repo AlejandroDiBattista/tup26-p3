@@ -65,6 +65,8 @@ public sealed class AgendaWindow : Runnable {
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        _listView.ValueChanged += (_, _) =>
+    MostrarDetalle(ContactoSeleccionado());
     }
 
     private void BuildLayout() {
@@ -131,6 +133,32 @@ public sealed class AgendaWindow : Runnable {
     _listView.SetSource(
         _filteredContacts.Select(c => c.Nombre).ToList()
     );
+    
+}
+private Contacto? ContactoSeleccionado()
+{
+    int idx = _listView.SelectedItem ?? -1;
+
+    return idx >= 0 && idx < _filteredContacts.Count
+        ? _filteredContacts[idx]
+        : null;
+}
+
+private void MostrarDetalle(Contacto? c)
+{
+    if (c is null)
+    {
+        _detailName.Text = "";
+        _detailPhone.Text = "";
+        _detailEmail.Text = "";
+        _detailNotes.Text = "";
+        return;
+    }
+
+    _detailName.Text = $"Nombre: {c.Nombre}";
+    _detailPhone.Text = $"Tel: {c.Telefonos}";
+    _detailEmail.Text = $"Email: {c.Email}";
+    _detailNotes.Text = $"Notas: {c.Notas}";
 }
 
 
