@@ -16,6 +16,10 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -285,17 +289,66 @@ public sealed class EjemploDialog : Dialog {
         App!.RequestStop();
     }
 }
+// Persistencia
+public class SqliteAgendaStore
+{
+    readonly string cs;
+    public SqliteAgendaStore(string path) => cs = $"Data Source={path}";
+    SqliteConnection Open() { var c = new SqliteConnection(cs); c.Open(); return c; }
 
+    public void Init()
+    {
+        using var db = Open();
+        db.Execute("""
+        CREATE TABLE IF NOT EXISTS Contactos(
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Nombre TEXT NOT NULL,
+            Telefonos TEXT NOT NULL DEFAULT '',
+            Email TEXT NOT NULL DEFAULT '',
+            Notas TEXT NOT NULL DEFAULT '',
+            Favorito INTEGER NOT NULL DEFAULT 0
+        );
+        """);
+    }
 
-public class SqliteAgendaStore {}
-public class JsonAgendaIO {}
+    public List<Contacto> GetAll()
+    {
+        using var db = Open();
+        return db.GetAll<Contacto>().OrderBy(x => x.Nombre, StringComparer.OrdinalIgnoreCase).ToList();
+    }
 
+    public Contacto Insert(Contacto c) { using var db = Open(); c.Id = (int)db.Insert(c); return c; }
+    public void Update(Contacto c) { using var db = Open(); db.Update(c); }
+    public void Delete(int id) { using var db = Open(); db.Delete(new Contacto { Id = id }); }
+}
+// JSON
+public class JsonAgendaIO
+{
+    static readonly JsonSerializerOptions Opts = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        PropertyNameCaseInsensitive = true
+    };
+
+    public static List<Contacto> Read(string path)
+    {
+        if (!File.Exists(path)) throw new FileNotFoundException($"No existe el archivo {path}.");
+        return JsonSerializer.Deserialize<List<Contacto>>(File.ReadAllText(path, Encoding.UTF8), Opts) ?? [];
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> items) =>
+        File.WriteAllText(path, JsonSerializer.Serialize(items, Opts), Encoding.UTF8);
+}
+// Modelo
 [Table("Contactos")]
-public class Contacto {
-    [Key] public int    Id        { get; set; }
-          public string Nombre    { get; set; } = "";
-          public string Telefonos { get; set; } = "";
-          public string Email     { get; set; } = "";
-          public string Notas     { get; set; } = "";
-          public bool   Favorito  { get; set; }
+public sealed class Contacto
+{
+    [Key] public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string Telefonos { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Notas { get; set; } = "";
+    public bool Favorito { get; set; }
+    public Contacto Clone() => (Contacto)MemberwiseClone();
 }
