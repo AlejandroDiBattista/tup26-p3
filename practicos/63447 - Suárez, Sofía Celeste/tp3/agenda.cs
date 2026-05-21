@@ -61,4 +61,72 @@ public sealed class AgendaWindow : Runnable {
         }
         
     }
+    private void BuildLayout() {
+        MenuBar menu = new() {
+        Menus = [
+           new MenuBarItem ("_Archivo", [
+              new MenuItem(
+                   "_Importar JSON",
+                   "Ctrl+I",
+                    () => Importar()
+                ),
+              new MenuItem(
+                   "_Exportar JSON",
+                   "Ctrl+E",
+                   () => Exportar()
+                ),
+               null!,
+             new MenuItem(
+                   "_Salir",
+                   "Ctrl+X",
+                   () => SolicitarSalir()
+                )
+            ]),
+
+            new MenuBarItem("_Contactos", [
+                new MenuItem(
+                 "_Nuevo",
+                  "F2",
+                  () => NuevoContacto()
+                ),
+                new MenuItem(
+                   "_Editar",
+                   "F3",
+                    () => EditarContacto()
+                ),
+                new MenuItem(
+                  "_Eliminar",
+                  "Del",
+                   () => EliminarContacto()
+                )
+            ]),
+
+            new MenuBarItem("_Ver", [
+              new MenuItem(
+                  "_Solo favoritos",
+                   "",
+                   () => {
+                      _soloFavoritos = !_soloFavoritos;
+                       AplicarFiltros();
+                    }
+                )
+            ]),
+
+            new MenuBarItem("_Ayuda", [
+                new MenuItem(
+                   "_Acerca de",
+                   "",
+                   () => {
+                       MessageBox.Query(
+                           App!,
+                           "Acerca de",
+                           "Agenda de Contactos",
+                           "OK"
+                       );
+                   }
+                )
+            ])
+        ]};
+    }
+    
 }
