@@ -98,3 +98,109 @@ public class JsonAgendaIO {
         return JsonSerializer.Deserialize<List<Contacto>>(json, Options) ?? [];
     }
 }
+// ==============================================================================
+// 3. Diálogo de edición (ContactDialog)
+// ==============================================================================
+public sealed class ContactDialog : Dialog {
+    private TextField _tfName;
+    private TextField[] _tfPhones = new TextField[5];
+    private TextField _tfEmail;
+    private TextView _tvNotes;
+    
+    private bool _isFav;
+    private Button _btnFav = null!;
+
+    public Contacto? ContactoResult { get; private set; }
+    public bool IsCanceled { get; private set; } = true;
+
+    public ContactDialog(Contacto? c = null) {
+        Title  = c == null ? "Nuevo Contacto" : "Editar Contacto";
+        Width  = 55;
+        Height = 22;
+
+        Add(new Label() { Text = "Nombre:", X = 1, Y = 1 });
+        _tfName = new TextField() { Text = c?.Nombre ?? "", X = 12, Y = 1, Width = Dim.Fill(1) };
+        Add(_tfName);
+
+        string[] phones = (c?.Telefonos ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < 5; i++) {
+            Add(new Label() { Text = $"Teléfono {i + 1}:", X = 1, Y = 3 + i });
+            _tfPhones[i] = new TextField() {
+                Text = i < phones.Length ? phones[i].Trim() : "",
+                X = 12, Y = 3 + i, Width = Dim.Fill(1)
+            };
+            Add(_tfPhones[i]);
+        }
+
+        Add(new Label() { Text = "Email:", X = 1, Y = 9 });
+        _tfEmail = new TextField() { Text = c?.Email ?? "", X = 12, Y = 9, Width = Dim.Fill(1) };
+        Add(_tfEmail);
+
+        Add(new Label() { Text = "Notas:", X = 1, Y = 11 });
+        _tvNotes = new TextView() { Text = c?.Notas ?? "", X = 12, Y = 11, Width = Dim.Fill(1), Height = 4 };
+        Add(_tvNotes);
+
+        _isFav = c?.Favorito ?? false;
+        Add(new Label() { Text = "Favorito:", X = 1, Y = 16 });
+        
+        _btnFav = new Button() { 
+            Text = _isFav ? "[★] Sí" : "[ ] No", 
+            X = 12, Y = 16 
+        };
+        
+        _btnFav.Accepting += (_, e) => {
+            _isFav = !_isFav; 
+            _btnFav.Text = _isFav ? "[★] Sí" : "[ ] No"; 
+            e.Handled = true;
+        };
+        Add(_btnFav);
+
+        Button btnOk = new() { Text = "Guardar", IsDefault = true };
+        Button btnCancel = new() { Text = "Cancelar" };
+
+        btnOk.Accepting += (_, e) => {
+            if (string.IsNullOrWhiteSpace(_tfName.Text)) {
+                MostrarErrorValidacion("El nombre no puede estar vacío.");
+                return; 
+            }
+
+            var email = _tfEmail.Text ?? "";
+            if (!string.IsNullOrWhiteSpace(email) && !email.Contains("@")) {
+                MostrarErrorValidacion("El email debe contener un '@'.");
+                return;
+            }
+
+            var phoneList = _tfPhones.Select(p => p.Text?.Trim()).Where(p => !string.IsNullOrEmpty(p));
+
+            ContactoResult = new Contacto {
+                Id = c?.Id ?? 0,
+                Nombre = _tfName.Text.Trim(),
+                Telefonos = string.Join(",", phoneList),
+                Email = email.Trim(),
+                Notas = _tvNotes.Text ?? "",
+                Favorito = _isFav
+            };
+            
+            IsCanceled = false;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        btnCancel.Accepting += (_, e) => {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        AddButton(btnOk);
+        AddButton(btnCancel);
+    }
+
+    private void MostrarErrorValidacion(string mensaje) {
+        Dialog d = new() { Title = "Validación", Width = 40, Height = 7 };
+        d.Add(new Label() { Text = mensaje, X = Pos.Center(), Y = 1 });
+        Button btn = new() { Text = "OK", IsDefault = true };
+        btn.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        d.AddButton(btn);
+        App!.Run(d);
+    }
+}
