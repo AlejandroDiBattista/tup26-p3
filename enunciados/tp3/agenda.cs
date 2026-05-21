@@ -16,6 +16,7 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Collections.ObjectModel;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -23,47 +24,57 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+var dbPath = "agenda.db";
+var store = new SqliteAgendaStore(dbPath);
 
+using IApplication app = Application.Create().Init();
+app.Run(new AgendaWindow(store));
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+    private readonly SqliteAgendaStore store;
+    private List<Contacto> contacts = [];
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
+
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
+
+        CargarContactos();
         BuildLayout();
     }
+    private void CargarContactos() {
+    contacts = store.GetAll();
+}
+   private void BuildLayout() {
+    MenuBar menu = new() {
+        Menus = [
+            new MenuBarItem("_Archivo", [
+                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+            ])
+        ]
+    };
 
-    private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
-        };
+    var listView = new ListView() {
+        X = 0,
+        Y = 1,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
-        };
+    listView.SetSource(
+        new ObservableCollection<string>(
+            contacts.Select(c => c.Nombre)
+        )
+    );
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
-
-        Add(menu, openButton);
-    }
-
+    Add(menu, listView);
+}
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
         App!.Run(dialog);
