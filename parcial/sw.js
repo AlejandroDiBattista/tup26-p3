@@ -1,4 +1,4 @@
-const CACHE_NAME = "primer-parcial-v5";
+const CACHE_NAME = "primer-parcial-v7";
 const APP_ASSETS = [
   "./",
   "./index.html",

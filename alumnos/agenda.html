@@ -16,6 +16,7 @@
       --line:     rgba(33, 25, 18, .13);
       --radius:   22px;
       --avatar:   88px;
+      --grid-gap: 16px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -127,6 +128,16 @@
       gap: 6px;
     }
 
+    .tabs-divider {
+      align-self: center;
+      color: rgba(33, 25, 18, .35);
+      font-size: .9rem;
+      font-weight: 700;
+      padding: 0 2px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     .tab {
       padding: .45rem .9rem;
       border: 1.5px solid rgba(33, 25, 18, .18);
@@ -160,8 +171,9 @@
     /* ── Grid ─────────────────────────────────────────── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(350px, calc((100% - (2 * var(--grid-gap))) / 3)));
+      justify-content: center;
+      gap: var(--grid-gap);
     }
 
     /* ── Card ─────────────────────────────────────────── */
@@ -198,6 +210,23 @@
         color-mix(in oklab, var(--accent, #8c3b2a) 16%, transparent), transparent 40%);
       pointer-events: none;
     }
+
+    /* ── Grade badge ─────────────────────────────────── */
+    .grade-badge {
+      position: absolute;
+      top: 4px;
+      right: 12px;
+      font-size: 2.0rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.05em;
+      z-index: 2;
+      pointer-events: none;
+      opacity: .88;
+    }
+    .grade-green  { color: #1f7a49; }
+    .grade-yellow { color: #a07b10; }
+    .grade-red    { color: #9f2d2d; }
 
     /* ── Card top ─────────────────────────────────────── */
     .card-top {
@@ -500,7 +529,7 @@
       :root { --avatar: 72px; }
       .page { padding: 16px 0 40px; }
       .header { padding: 18px 16px; }
-      .grid { gap: 12px; }
+      .grid { --grid-gap: 12px; }
       h1 { font-size: clamp(2rem, 10vw, 3rem); }
       .card-meta { grid-template-columns: 1fr; }
       .practicos-status {
@@ -518,12 +547,6 @@
       }
       .attendance-summary {
         justify-content: flex-start;
-      }
-    }
-
-    @media (min-width: 1040px) {
-      .grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     }
 
@@ -550,15 +573,14 @@
             <circle cx="6.5" cy="6.5" r="5.2"/>
             <line x1="10.3" y1="10.3" x2="14" y2="14"/>
           </svg>
-          <input type="search" id="search" placeholder="Buscar nombre, legajo, GitHub… o sin-foto/sin-github/sin-telefono" autocomplete="off">
+          <input type="search" id="search" placeholder="Buscar por nombre, legajo, GitHub o la clave sin-telefono" autocomplete="off">
         </div>
         <div class="tabs">
-          <button class="tab active" data-filter="todos" data-filter-type="scope">Todos</button>
-          <button class="tab" data-filter="C7" data-filter-type="scope">C7</button>
-          <button class="tab" data-filter="C9" data-filter-type="scope">C9</button>
-          <button class="tab" data-filter="sin-foto" data-filter-type="toggle">Sin Foto</button>
-          <button class="tab" data-filter="sin-github" data-filter-type="toggle">Sin GitHub</button>
-          <button class="tab" data-filter="presentes" data-filter-type="toggle">Presente 🔵</button>
+          <button class="tab active" data-filter="C7" data-filter-group="commission" data-label="C7">C7</button>
+          <button class="tab active" data-filter="C9" data-filter-group="commission" data-label="C9">C9</button>
+          <span class="tabs-divider" aria-hidden="true">|</span>
+          <button class="tab active" data-filter="presentes" data-filter-group="attendance" data-label="Presentes">Presentes</button>
+          <button class="tab active" data-filter="ausentes" data-filter-group="attendance" data-label="Ausentes">Ausentes</button>
         </div>
       </div>
     </header>
@@ -581,6 +603,18 @@
     const GITHUB_OWNER = 'AlejandroDiBattista';
     const GITHUB_REPO = 'tup26-p3';
     const GITHUB_BRANCH = 'main';
+    const FILTERS_STORAGE_KEY = 'agenda-filters-state';
+    const LEGACY_PRESENTES_FILTER_STORAGE_KEY = 'agenda-filter-presentes';
+    const COMMISSION_FILTER_DEFINITIONS = [
+      { value: 'C7', label: 'C7' },
+      { value: 'C9', label: 'C9' },
+    ];
+    const ATTENDANCE_FILTER_DEFINITIONS = [
+      { value: 'presentes', label: 'Presentes' },
+      { value: 'ausentes', label: 'Ausentes' },
+    ];
+    const VALID_COMMISSION_FILTERS = new Set(COMMISSION_FILTER_DEFINITIONS.map(filter => filter.value));
+    const VALID_ATTENDANCE_FILTERS = new Set(ATTENDANCE_FILTER_DEFINITIONS.map(filter => filter.value));
 
     function encodedRepoPath(...segmentos) {
       return segmentos.map(segmento => encodeURIComponent(segmento)).join('/');
@@ -664,21 +698,24 @@
         const practicosRaw   = cols[5].trim();
         const presenteRaw    = cols[7].trim();
         const asistenciasRaw = cols[8].trim();
+        const codigoRaw      = cols[9]?.trim() ?? '';
 
-        const comma    = apellidoNombre.indexOf(',');
-        const apellido = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;
-        const nombre   = comma >= 0 ? apellidoNombre.slice(comma + 1).trim() : '';
+        const comma     = apellidoNombre.indexOf(',');
+        const apellido  = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;
+        const nombre    = comma >= 0 ? apellidoNombre.slice(comma + 1).trim() : '';
 
-        const telefono = (telefonoRaw === '—' || telefonoRaw === '-') ? '' : telefonoRaw;
-        const gitHub   = (gitHubRaw   === '—' || gitHubRaw   === '-') ? '' : gitHubRaw;
+        const telefono  = (telefonoRaw === '—' || telefonoRaw === '-') ? '' : telefonoRaw;
+        const gitHub    = (gitHubRaw   === '—' || gitHubRaw   === '-') ? '' : gitHubRaw;
         const tieneFoto = /^(si|sí|true|yes)$/i.test(fotoRaw);
-        const presente = /^(si|sí|true|yes)$/i.test(presenteRaw);
+        const presente  = /^(si|sí|true|yes)$/i.test(presenteRaw);
         const asistencias = Number.parseInt(asistenciasRaw, 10);
 
         // CarpetaNombre exactly mirrors C# CarpetaNombre property
         const carpetaNombre = `${legajo} - ${apellido}, ${nombre}`;
         const fotoPaths     = tieneFoto ? fotoCandidates(carpetaNombre) : [];
-
+        const notaParts = codigoRaw.split('.');
+        const codigoLegajo = notaParts.length >= 1 ? Number.parseInt(notaParts[0], 10) : null;
+        const nota = notaParts.length >= 2 ? parseInt(notaParts[1].slice(-1), 10) + 1 : null;
         alumnos.push({
           legajo,
           apellido,
@@ -691,9 +728,11 @@
           practicosRaw,
           presente,
           asistencias: Number.isNaN(asistencias) ? 0 : asistencias,
+          codigoLegajo: Number.isNaN(codigoLegajo) ? null : codigoLegajo,
           carpetaNombre,
           fotoPath: '',
-          fotoPaths
+          fotoPaths,
+          nota
         });
       }
 
@@ -781,7 +820,7 @@
     }
 
     function renderAttendance(alumno) {
-      const presente = alumno.presente ? 'Sí' : 'No';
+      const presente      = alumno.presente ? 'Sí' : 'No';
       const presenteClass = alumno.presente ? 'is-present' : 'is-absent';
       const asistencias = Number.isFinite(alumno.asistencias) ? alumno.asistencias : 0;
 
@@ -792,10 +831,21 @@
         </div>`;
     }
 
+    function notaClass(nota) {
+      if (nota >= 9) return 'grade-green';
+      if (nota >= 5) return 'grade-yellow';
+      return 'grade-red';
+    }
+
     function renderCard(alumno, idx, totalPracticos) {
       const accent  = accentFor(alumno.legajo);
       const inits   = initials(alumno.apellido, alumno.nombre);
       const comBadge = `badge-comision-${alumno.comision.toLowerCase()}`;
+      const codigoLegajoNoCoincide = alumno.codigoLegajo != null && alumno.codigoLegajo !== alumno.legajo;
+      const codigoBadge = `${codigoLegajoNoCoincide ? "‼️" : alumno.nota > 8 ? "🎖️" : ""}`;
+      const notaHtml = alumno.nota != null
+        ? `<span class="grade-badge ${notaClass(alumno.nota)}">${alumno.nota}${codigoBadge}</span>`
+        : '';
 
       const phoneHtml = alumno.telefono
         ? `<span class="detail-value">${escHtml(alumno.telefono)}</span>`
@@ -816,12 +866,13 @@
 
       return `
         <article class="card" style="--accent:${accent};--i:${idx}" role="listitem">
+          ${notaHtml}
           <div class="card-top">
             <div class="avatar-wrap">
               ${avatarHtml}
             </div>
             <div class="identity">
-              <p class="card-eyebrow">Tarjeta personal</p>
+              <p class="card-eyebrow">Perfil del alumno</p>
               <h2 class="card-name">${escHtml(alumno.apellidoNombre)}</h2>
               <div class="badges">
                 <span class="badge">${alumno.legajo}</span>
@@ -877,7 +928,7 @@
       for (const candidate of alumno.fotoPaths) {
         const found = await imageExists(candidate);
         if (found) {
-          alumno.fotoPath = found;
+          alumno.fotoPath  = found;
           alumno.tieneFoto = true;
           return alumno;
         }
@@ -890,10 +941,69 @@
 
     // ── State ─────────────────────────────────────────────────────────────────
     let allAlumnos = [];
-    let activeScope = 'todos';
-    const activeToggles = new Set();
+    const activeCommissionFilters = new Set(COMMISSION_FILTER_DEFINITIONS.map(filter => filter.value));
+    const activeAttendanceFilters = new Set(ATTENDANCE_FILTER_DEFINITIONS.map(filter => filter.value));
     let searchQuery  = '';
     let totalPracticos = 0;
+
+    function restoreFiltersState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || 'null');
+
+        if (saved && typeof saved === 'object') {
+          if (Array.isArray(saved.commissions)) {
+            activeCommissionFilters.clear();
+            saved.commissions
+              .filter(filter => VALID_COMMISSION_FILTERS.has(filter))
+              .forEach(filter => activeCommissionFilters.add(filter));
+          } else if (saved.scope === 'C7' || saved.scope === 'C9') {
+            activeCommissionFilters.clear();
+            activeCommissionFilters.add(saved.scope);
+          }
+
+          if (Array.isArray(saved.attendance)) {
+            activeAttendanceFilters.clear();
+            saved.attendance
+              .filter(filter => VALID_ATTENDANCE_FILTERS.has(filter))
+              .forEach(filter => activeAttendanceFilters.add(filter));
+          } else if (Array.isArray(saved.toggles)) {
+            activeAttendanceFilters.clear();
+
+            if (saved.toggles.includes('presentes')) {
+              activeAttendanceFilters.add('presentes');
+            } else {
+              ATTENDANCE_FILTER_DEFINITIONS.forEach(filter => activeAttendanceFilters.add(filter.value));
+            }
+          }
+
+          if (typeof saved.searchQuery === 'string') {
+            searchQuery = saved.searchQuery;
+          }
+
+          return;
+        }
+
+        if (localStorage.getItem(LEGACY_PRESENTES_FILTER_STORAGE_KEY) === '1') {
+          activeAttendanceFilters.clear();
+          activeAttendanceFilters.add('presentes');
+        }
+      } catch {
+        // Si localStorage no está disponible, seguimos con el estado en memoria.
+      }
+    }
+
+    function persistFiltersState() {
+      try {
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify({
+          commissions: [...activeCommissionFilters].filter(filter => VALID_COMMISSION_FILTERS.has(filter)),
+          attendance: [...activeAttendanceFilters].filter(filter => VALID_ATTENDANCE_FILTERS.has(filter)),
+          searchQuery,
+        }));
+        localStorage.removeItem(LEGACY_PRESENTES_FILTER_STORAGE_KEY);
+      } catch {
+        // Si localStorage no está disponible, seguimos con el estado en memoria.
+      }
+    }
 
     function parseSearchQuery(query) {
       const normalized = query.toLowerCase();
@@ -901,84 +1011,98 @@
       const commissionTerms = ['c7', 'c9'].filter(term => terms.includes(term));
 
       return {
-        requireSinFoto: terms.includes('sin-foto'),
-        requireSinGithub: terms.includes('sin-github'),
         requireSinTelefono: terms.includes('sin-telefono'),
         commissions: commissionTerms,
         text: terms
-          .filter(term => term !== 'sin-foto' && term !== 'sin-github' && term !== 'sin-telefono' && term !== 'c7' && term !== 'c9')
+          .filter(term => term !== 'sin-telefono' && term !== 'c7' && term !== 'c9')
           .join(' ')
           .trim(),
       };
     }
 
-    function matchesScope(alumno, filter) {
-      switch (filter) {
-        case 'todos':
-          return true;
-        default:
-          return alumno.comision === filter;
-      }
+    function matchesSearch(alumno, parsed) {
+      if (parsed.commissions.length > 0 && !parsed.commissions.includes(alumno.comision.toLowerCase())) return false;
+      if (parsed.requireSinTelefono && !!alumno.telefono) return false;
+
+      if (!parsed.text) return true;
+
+      const q = parsed.text;
+      return (
+        alumno.apellido.toLowerCase().includes(q) ||
+        alumno.nombre.toLowerCase().includes(q) ||
+        alumno.apellidoNombre.toLowerCase().includes(q) ||
+        String(alumno.legajo).includes(q) ||
+        alumno.gitHub.toLowerCase().includes(q) ||
+        alumno.telefono.toLowerCase().includes(q)
+      );
     }
 
-    function matchesToggles(alumno) {
-      if (activeToggles.has('sin-foto') && alumno.tieneFoto) return false;
-      if (activeToggles.has('sin-github') && !!alumno.gitHub) return false;
-      if (activeToggles.has('presentes') && !alumno.presente) return false;
-      return true;
+    function matchesCommissionFilters(alumno, selectedFilters = activeCommissionFilters) {
+      return selectedFilters.has(alumno.comision);
     }
 
-    function updateTabStates() {
+    function matchesAttendanceFilters(alumno, selectedFilters = activeAttendanceFilters) {
+      return alumno.presente
+        ? selectedFilters.has('presentes')
+        : selectedFilters.has('ausentes');
+    }
+
+    function matchesFilters(alumno, parsed, commissionFilters = activeCommissionFilters, attendanceFilters = activeAttendanceFilters) {
+      return matchesCommissionFilters(alumno, commissionFilters)
+        && matchesAttendanceFilters(alumno, attendanceFilters)
+        && matchesSearch(alumno, parsed);
+    }
+
+    function countMatchingAlumnos(parsed, commissionFilters = activeCommissionFilters, attendanceFilters = activeAttendanceFilters) {
+      return allAlumnos.filter(alumno => matchesFilters(alumno, parsed, commissionFilters, attendanceFilters)).length;
+    }
+
+    function countBaseSelection() {
+      return allAlumnos.filter(alumno => (
+        matchesCommissionFilters(alumno)
+        && matchesAttendanceFilters(alumno)
+      )).length;
+    }
+
+    function updateTabStates(parsed) {
       document.querySelectorAll('.tab').forEach(btn => {
-        const type = btn.dataset.filterType;
+        const group = btn.dataset.filterGroup;
         const filter = btn.dataset.filter;
-        const isActive = type === 'scope'
-          ? filter === activeScope
-          : activeToggles.has(filter);
+        const isActive = group === 'commission'
+          ? activeCommissionFilters.has(filter)
+          : activeAttendanceFilters.has(filter);
+        const label = btn.dataset.label || filter;
+        const count = group === 'commission'
+          ? countMatchingAlumnos(parsed, new Set([filter]), activeAttendanceFilters)
+          : countMatchingAlumnos(parsed, activeCommissionFilters, new Set([filter]));
 
         btn.classList.toggle('active', isActive);
         btn.setAttribute('aria-pressed', String(isActive));
+        btn.textContent = `${label} (${count})`;
       });
     }
 
-    function getVisible() {
-      const parsed = parseSearchQuery(searchQuery);
-
-      return allAlumnos.filter(a => {
-        if (!matchesScope(a, activeScope)) return false;
-        if (!matchesToggles(a)) return false;
-        if (parsed.commissions.length > 0 && !parsed.commissions.includes(a.comision.toLowerCase())) return false;
-        if (parsed.requireSinFoto && a.tieneFoto) return false;
-        if (parsed.requireSinGithub && !!a.gitHub) return false;
-        if (parsed.requireSinTelefono && !!a.telefono) return false;
-
-        if (!parsed.text) return true;
-        const q = parsed.text;
-        return (
-          a.apellido.toLowerCase().includes(q) ||
-          a.nombre.toLowerCase().includes(q) ||
-          a.apellidoNombre.toLowerCase().includes(q) ||
-          String(a.legajo).includes(q) ||
-          a.gitHub.toLowerCase().includes(q) ||
-          a.telefono.toLowerCase().includes(q)
-        );
-      });
+    function getVisible(parsed) {
+      return allAlumnos.filter(alumno => matchesFilters(alumno, parsed));
     }
 
     function render() {
-      const visible = getVisible();
+      const parsed = parseSearchQuery(searchQuery);
+      const visible = getVisible(parsed);
       const grid    = document.getElementById('grid');
       const counter = document.getElementById('counter');
 
+      updateTabStates(parsed);
+
       if (visible.length === 0) {
         grid.innerHTML = '<div class="state">Sin resultados para la búsqueda.</div>';
-        counter.textContent = '';
+        counter.textContent = '0 alumnos';
         return;
       }
 
       grid.innerHTML = visible.map((a, i) => renderCard(a, i, totalPracticos)).join('');
 
-      const total = allAlumnos.filter(a => matchesScope(a, activeScope) && matchesToggles(a)).length;
+      const total = countBaseSelection();
 
       counter.textContent = visible.length === total
         ? `${total} alumno${total !== 1 ? 's' : ''}`
@@ -986,25 +1110,32 @@
     }
 
     // ── Event listeners ───────────────────────────────────────────────────────
-    document.getElementById('search').addEventListener('input', e => {
+    const searchInput = document.getElementById('search');
+
+    restoreFiltersState();
+    searchInput.value = searchQuery;
+
+    searchInput.addEventListener('input', e => {
       searchQuery = e.target.value.trim();
+      persistFiltersState();
       render();
     });
 
     document.querySelectorAll('.tab').forEach(btn => {
       btn.addEventListener('click', () => {
-        const type = btn.dataset.filterType;
+        const group = btn.dataset.filterGroup;
         const filter = btn.dataset.filter;
+        const activeFilters = group === 'commission'
+          ? activeCommissionFilters
+          : activeAttendanceFilters;
 
-        if (type === 'scope') {
-          activeScope = filter;
-        } else if (activeToggles.has(filter)) {
-          activeToggles.delete(filter);
+        if (activeFilters.has(filter)) {
+          activeFilters.delete(filter);
         } else {
-          activeToggles.add(filter);
+          activeFilters.add(filter);
         }
 
-        updateTabStates();
+        persistFiltersState();
         render();
       });
     });
@@ -1018,7 +1149,6 @@
       .then(async text => {
         allAlumnos = await Promise.all(parseAlumnos(text).map(resolveAlumnoPhoto));
         totalPracticos = calcularTotalPracticos(allAlumnos);
-        updateTabStates();
         render();
       })
       .catch(() => {

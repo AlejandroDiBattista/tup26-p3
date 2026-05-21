@@ -1,246 +1,237 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './App.css'
 
-const SIZE = 4
-const BEST_KEY = 'game-2048-best-score'
+const now = new Date()
 
-function createEmptyBoard() {
-  return Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
-}
+const eventosIniciales = [
+  {
+    id: 1,
+    hora: '08:30',
+    titulo: 'Revisar correo y prioridades',
+    tipo: 'Personal',
+    lugar: 'Casa',
+    detalle: 'Confirmar tareas críticas y responder mensajes urgentes.',
+    estado: 'En curso',
+  },
+  {
+    id: 2,
+    hora: '10:00',
+    titulo: 'Reunión con equipo de proyecto',
+    tipo: 'Trabajo',
+    lugar: 'Sala Naranja',
+    detalle: 'Definir entregables de la semana y revisar bloqueos.',
+    estado: 'Próximo',
+  },
+  {
+    id: 3,
+    hora: '12:30',
+    titulo: 'Almuerzo con Laura',
+    tipo: 'Social',
+    lugar: 'Café Central',
+    detalle: 'Poner al día la agenda y coordinar el viaje del viernes.',
+    estado: 'Confirmado',
+  },
+  {
+    id: 4,
+    hora: '16:00',
+    titulo: 'Llamada con proveedor',
+    tipo: 'Trabajo',
+    lugar: 'Videollamada',
+    detalle: 'Cerrar el presupuesto y validar fechas de entrega.',
+    estado: 'Pendiente',
+  },
+  {
+    id: 5,
+    hora: '19:15',
+    titulo: 'Gimnasio',
+    tipo: 'Bienestar',
+    lugar: 'Club Norte',
+    detalle: 'Entrenamiento de fuerza y estiramientos.',
+    estado: 'Agendado',
+  },
+]
 
-function cloneBoard(board) {
-  return board.map((row) => [...row])
-}
+const recordatorios = [
+  'Llevar cargador y documento',
+  'Comprar pan al volver',
+  'Responder presupuesto pendiente',
+]
 
-function getEmptyCells(board) {
-  const cells = []
-  for (let row = 0; row < SIZE; row += 1) {
-    for (let col = 0; col < SIZE; col += 1) {
-      if (board[row][col] === 0) cells.push([row, col])
-    }
-  }
-  return cells
-}
+const proximosDias = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-function addRandomTile(board) {
-  const emptyCells = getEmptyCells(board)
-  if (emptyCells.length === 0) return board
-
-  const [row, col] = emptyCells[Math.floor(Math.random() * emptyCells.length)]
-  board[row][col] = Math.random() < 0.9 ? 2 : 4
-  return board
-}
-
-function createInitialBoard() {
-  const board = createEmptyBoard()
-  addRandomTile(board)
-  addRandomTile(board)
-  return board
-}
-
-function slideLine(line) {
-  const values = line.filter((value) => value !== 0)
-  const merged = []
-  let score = 0
-
-  for (let index = 0; index < values.length; index += 1) {
-    if (values[index] === values[index + 1]) {
-      const combined = values[index] * 2
-      merged.push(combined)
-      score += combined
-      index += 1
-    } else {
-      merged.push(values[index])
-    }
-  }
-
-  while (merged.length < SIZE) merged.push(0)
-
-  const changed = merged.some((value, index) => value !== line[index])
-  return { line: merged, score, changed }
-}
-
-function moveLeft(board) {
-  const nextBoard = board.map((row) => {
-    const result = slideLine(row)
-    return result.line
-  })
-
-  const score = board.reduce((total, row) => total + slideLine(row).score, 0)
-  const changed = board.some((row, index) => row.some((value, col) => value !== nextBoard[index][col]))
-
-  return { board: nextBoard, score, changed }
-}
-
-function reverseRows(board) {
-  return board.map((row) => [...row].reverse())
-}
-
-function transpose(board) {
-  return board[0].map((_, col) => board.map((row) => row[col]))
-}
-
-function moveBoard(board, direction) {
-  let working = cloneBoard(board)
-
-  if (direction === 'right') {
-    working = reverseRows(working)
-    const result = moveLeft(working)
-    return { board: reverseRows(result.board), score: result.score, changed: result.changed }
-  }
-
-  if (direction === 'up') {
-    working = transpose(working)
-    const result = moveLeft(working)
-    return { board: transpose(result.board), score: result.score, changed: result.changed }
-  }
-
-  if (direction === 'down') {
-    working = transpose(working)
-    working = reverseRows(working)
-    const result = moveLeft(working)
-    return {
-      board: transpose(reverseRows(result.board)),
-      score: result.score,
-      changed: result.changed,
-    }
-  }
-
-  return moveLeft(working)
-}
-
-function hasWon(board) {
-  return board.some((row) => row.some((value) => value >= 2048))
-}
-
-function canMove(board) {
-  if (getEmptyCells(board).length > 0) return true
-
-  for (let row = 0; row < SIZE; row += 1) {
-    for (let col = 0; col < SIZE; col += 1) {
-      const value = board[row][col]
-      if (row + 1 < SIZE && board[row + 1][col] === value) return true
-      if (col + 1 < SIZE && board[row][col + 1] === value) return true
-    }
-  }
-
-  return false
-}
-
-function getTileClass(value) {
-  return `tile tile-${value || 0}`
+function formatoFecha(fecha) {
+  return new Intl.DateTimeFormat('es-AR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(fecha)
 }
 
 function App() {
-  const [board, setBoard] = useState(() => createInitialBoard())
-  const [score, setScore] = useState(0)
-  const [best, setBest] = useState(() => Number(localStorage.getItem(BEST_KEY) || 0))
-  const [gameOver, setGameOver] = useState(false)
-  const [won, setWon] = useState(false)
+  const [eventos, setEventos] = useState(eventosIniciales)
+  const [seleccionadoId, setSeleccionadoId] = useState(eventosIniciales[1].id)
+  const [nuevoTitulo, setNuevoTitulo] = useState('')
+  const [nuevaHora, setNuevaHora] = useState('09:00')
 
-  const status = useMemo(() => {
-    if (gameOver) return 'Perdiste. Probá otra vez.'
-    if (won) return '¡Llegaste a 2048! Podés seguir jugando.'
-    return 'Usá flechas o deslizá con WASD.'
-  }, [gameOver, won])
+  const seleccionado = useMemo(
+    () => eventos.find((evento) => evento.id === seleccionadoId) ?? eventos[0],
+    [eventos, seleccionadoId],
+  )
 
-  function resetGame() {
-    setBoard(createInitialBoard())
-    setScore(0)
-    setGameOver(false)
-    setWon(false)
-  }
+  const totalHoy = eventos.length
+  const proximos = eventos.filter((evento) => evento.estado !== 'En curso').length
 
-  function playMove(direction) {
-    if (gameOver) return
+  function agregarEvento(e) {
+    e.preventDefault()
+    const titulo = nuevoTitulo.trim()
+    if (!titulo) return
 
-    const result = moveBoard(board, direction)
-    if (!result.changed) return
-
-    const nextBoard = addRandomTile(cloneBoard(result.board))
-    const nextScore = score + result.score
-    const nextWon = won || hasWon(nextBoard)
-    const nextGameOver = !canMove(nextBoard)
-
-    setBoard(nextBoard)
-    setScore(nextScore)
-    setWon(nextWon)
-    setGameOver(nextGameOver)
-    setBest((currentBest) => {
-      const nextBest = Math.max(currentBest, nextScore)
-      localStorage.setItem(BEST_KEY, String(nextBest))
-      return nextBest
-    })
-  }
-
-  useEffect(() => {
-    function handleKeyDown(event) {
-      const map = {
-        ArrowLeft: 'left',
-        ArrowRight: 'right',
-        ArrowUp: 'up',
-        ArrowDown: 'down',
-        a: 'left',
-        d: 'right',
-        w: 'up',
-        s: 'down',
-      }
-
-      const direction = map[event.key]
-      if (!direction) return
-      event.preventDefault()
-      playMove(direction)
+    const nuevoEvento = {
+      id: Date.now(),
+      hora: nuevaHora,
+      titulo,
+      tipo: 'Personal',
+      lugar: 'Por definir',
+      detalle: 'Evento agregado desde la misma página.',
+      estado: 'Nuevo',
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [board, score, gameOver, won])
+    setEventos((actuales) => [nuevoEvento, ...actuales].sort((a, b) => a.hora.localeCompare(b.hora)))
+    setSeleccionadoId(nuevoEvento.id)
+    setNuevoTitulo('')
+    setNuevaHora('09:00')
+  }
 
   return (
-    <main className="app">
-      <section className="panel">
-        <div className="header">
-          <div>
-            <h1>2048</h1>
-            <p className="subtitle">Un juego web autocontenido en React.</p>
+    <main className="app-shell">
+      <section className="agenda-page" aria-label="Agenda del día">
+        <aside className="sidebar">
+          <div className="hero">
+            <p className="eyebrow">Agenda personal</p>
+            <h1>{formatoFecha(now)}</h1>
+            <p className="hero-copy">
+              Organizá tu jornada, revisá tus citas y sumá nuevos eventos sin salir de esta página.
+            </p>
           </div>
-          <button className="restart" onClick={resetGame}>
-            Nuevo juego
-          </button>
-        </div>
 
-        <div className="scoreboard">
-          <div className="score-card">
-            <span>Puntaje</span>
-            <strong>{score}</strong>
+          <div className="stats">
+            <article>
+              <span>Eventos</span>
+              <strong>{totalHoy}</strong>
+            </article>
+            <article>
+              <span>Próximos</span>
+              <strong>{proximos}</strong>
+            </article>
+            <article>
+              <span>Estado</span>
+              <strong>Activo</strong>
+            </article>
           </div>
-          <div className="score-card">
-            <span>Mejor</span>
-            <strong>{best}</strong>
+
+          <div className="mini-calendar" aria-label="Próximos días">
+            {proximosDias.map((dia, index) => {
+              const activo = index === 2
+              return (
+                <div className={`day-pill ${activo ? 'is-active' : ''}`} key={dia}>
+                  <span>{dia}</span>
+                  <strong>{index + 12}</strong>
+                </div>
+              )
+            })}
           </div>
-        </div>
 
-        <p className="status">{status}</p>
+          <form className="quick-add" onSubmit={agregarEvento}>
+            <h2>Agregar evento</h2>
+            <label>
+              Título
+              <input
+                value={nuevoTitulo}
+                onChange={(e) => setNuevoTitulo(e.target.value)}
+                placeholder="Ej. Estudio, reunión, gym"
+              />
+            </label>
+            <label>
+              Hora
+              <input value={nuevaHora} onChange={(e) => setNuevaHora(e.target.value)} type="time" />
+            </label>
+            <button type="submit">Sumar a la agenda</button>
+          </form>
+        </aside>
 
-        <div className="board" role="grid" aria-label="Tablero 2048">
-          {board.flatMap((row, rowIndex) =>
-            row.map((value, colIndex) => (
-              <div
-                key={`${rowIndex}-${colIndex}`}
-                className={getTileClass(value)}
-                role="gridcell"
-                aria-label={value === 0 ? 'Celda vacía' : `Ficha ${value}`}
-              >
-                {value !== 0 ? value : ''}
+        <section className="content">
+          <header className="content-header">
+            <div>
+              <p className="eyebrow">Día de hoy</p>
+              <h2>Eventos programados</h2>
+            </div>
+            <div className="legend" aria-label="Leyenda de estados">
+              <span><i className="dot dot-now" />En curso</span>
+              <span><i className="dot dot-next" />Próximo</span>
+              <span><i className="dot dot-new" />Nuevo</span>
+            </div>
+          </header>
+
+          <div className="timeline" role="list" aria-label="Lista de eventos">
+            {eventos.map((evento) => {
+              const activo = evento.id === seleccionado.id
+
+              return (
+                <button
+                  key={evento.id}
+                  className={`event-card ${activo ? 'is-selected' : ''}`}
+                  onClick={() => setSeleccionadoId(evento.id)}
+                  type="button"
+                  role="listitem"
+                  aria-current={activo ? 'true' : undefined}
+                >
+                  <span className="event-time">{evento.hora}</span>
+                  <div className="event-body">
+                    <div className="event-topline">
+                      <strong>{evento.titulo}</strong>
+                      <span>{evento.tipo}</span>
+                    </div>
+                    <p>{evento.lugar}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          <article className="detail-panel" aria-labelledby="detail-title">
+            <div className="detail-header">
+              <div className="detail-time">{seleccionado.hora}</div>
+              <div>
+                <p className="eyebrow">{seleccionado.estado}</p>
+                <h3 id="detail-title">{seleccionado.titulo}</h3>
               </div>
-            )),
-          )}
-        </div>
+            </div>
 
-        <div className="help">
-          <p>Controles: ↑ ↓ ← → o W A S D</p>
-          <p>Objetivo: combinar fichas hasta llegar a 2048.</p>
-        </div>
+            <div className="detail-grid">
+              <div className="info-box">
+                <span>Tipo</span>
+                <strong>{seleccionado.tipo}</strong>
+              </div>
+              <div className="info-box">
+                <span>Lugar</span>
+                <strong>{seleccionado.lugar}</strong>
+              </div>
+              <div className="info-box wide">
+                <span>Detalle</span>
+                <strong>{seleccionado.detalle}</strong>
+              </div>
+            </div>
+
+            <div className="notes">
+              <h4>Recordatorios</h4>
+              <ul>
+                {recordatorios.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </article>
+        </section>
       </section>
     </main>
   )

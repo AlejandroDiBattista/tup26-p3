@@ -23,6 +23,11 @@ Servicio estático para leer, transformar y exportar la información de alumnos.
 - `CrearCarpetas(alumnos)`: crea o normaliza las carpetas de prácticos de cada alumno.
     - `alumnos`: colección a procesar.
 
+- `PublicarPractico(alumnos, practico, forzar)`: normaliza carpetas de alumnos y copia el enunciado de un práctico.
+    - `alumnos`: colección a procesar.
+    - `practico`: nombre del práctico.
+    - `forzar`: sobrescribe el destino si ya existe.
+
 - `CopiarFotoPerfil(alumnos, rutaFotos)`: copia fotos de perfil a las carpetas de alumnos cuando corresponde.
     - `alumnos`: colección a procesar.
     - `rutaFotos`: carpeta base de fotos origen.
@@ -86,8 +91,8 @@ static class AlumnosManager {
     }
 
     public static void Escribir(IEnumerable<Alumno> alumnos, string rutaArchivo) {
-        string[] etiquetas = ["Legajo", "Nombre y Apellido", "Teléfono", "Foto", "GitHub", "Prácticos", "Ex", "Pr", "Nr"];
-        var guiones = etiquetas.Select(e => new string('-', 40)).ToArray();
+        string[] etiquetas = ["Legajo", "Nombre y Apellido", "Teléfono", "Foto", "GitHub", "Prácticos", "Ex", "Pr", "Nr", "Nota", "Código"];
+        var guiones = etiquetas.Select(e => new string('-', 80)).ToArray();
         try {
             List<Alumno> alumnosOrdenados = new(alumnos);
             alumnosOrdenados.Sort(Alumno.Comparar);
@@ -129,8 +134,8 @@ static class AlumnosManager {
     }
 
     public static void EscribirEstadoInformer(IEnumerable<Alumno> alumnos, string rutaArchivo) {
-        string[] etiquetas = ["Legajo", "Nombre y Apellido", "Prácticos", "Asistencias"];
-        var guiones = etiquetas.Select(_ => new string('-', 40)).ToArray();
+        string[] etiquetas = ["Legajo", "Nombre y Apellido", "Prácticos", "Asistencias", "Nota"];
+        var guiones = etiquetas.Select(_ => new string('-', 80)).ToArray();
 
         try {
             List<Alumno> alumnosOrdenados = new(alumnos);
@@ -173,7 +178,7 @@ static class AlumnosManager {
     }
 
     public static void Listar(IEnumerable<Alumno> alumnos, string titulo = "Listado de Alumnos") {
-        string[] campos = ["Legajo", "Nombre y Apellido", "Teléfono", "Foto", "GitHub", "Prácticos", "Ex", "Pr", "Nr"];
+        string[] campos = ["Legajo", "Nombre y Apellido", "Teléfono", "Foto", "GitHub", "Prácticos", "Ex", "Pr", "Nr", "Nota", "Codigo"];
         string[] guiones = campos.Select(c => new string('-', 40)).ToArray();
 
         string comision = "";
@@ -187,12 +192,12 @@ static class AlumnosManager {
         string encabezado = FormatearFilaTabla(campos);
 
         Log.WriteLine($"[blue]=== {titulo.ToUpper()} ===");
-        Log.WriteLine();
 
         foreach (var a in alumnosOrdenados) {
             if (a.Comision != comision) {
                 comision = a.Comision;
-                Log.WriteLine($"\n{FormatearFilaTabla(campos)}\n[blue]{FormatearFilaTabla(guiones)}");
+                Log.WriteLine($"\n[yellow]== {comision} ({alumnosOrdenados.Count(x => x.Comision == comision)}) ==");
+                Log.WriteLine($"{FormatearFilaTabla(campos)}\n[blue]{FormatearFilaTabla(guiones)}");
             }
             Log.WriteLine(FormatearFila(a));
         }
@@ -204,30 +209,25 @@ static class AlumnosManager {
         AppPaths.AsegurarDirectorioPracticos();
 
         foreach (Alumno alumno in alumnos) {
-            string nombreCarpeta = alumno.CarpetaNombre;
-            string rutaCarpeta = AppPaths.RutaCarpetaAlumnoEsperada(alumno);
-            try {
-                List<string> carpetasConLegajo = AppPaths.BuscarCarpetasMismoLegajo(alumno.Legajo);
+            AsegurarCarpetaAlumnoNormalizada(alumno);
+        }
+    }
 
-                if (!carpetasConLegajo.Any()) {
-                    AppPaths.AsegurarCarpetaAlumno(alumno);
-                    Log.Debug($" ➕ {rutaCarpeta,-40}");
-                } else if (carpetasConLegajo.Count == 1) {
-                    string rutaCarpetaExistente = carpetasConLegajo[0];
-                    string rutaRelativa = AppPaths.RutaRelativaDesdePracticos(rutaCarpetaExistente);
-                    if (string.Equals(rutaCarpetaExistente, rutaCarpeta, StringComparison.OrdinalIgnoreCase)) {
-                        Log.Info($" ✅ {rutaRelativa,-40}");
-                    } else {
-                        AppPaths.RenombrarCarpetaAlumno(rutaCarpetaExistente, alumno);
-                        Log.Warning($" 🔄 {rutaRelativa,-40} → {nombreCarpeta}");
-                    }
-                } else {
-                    Log.Warning($" ⚠️  {alumno.Legajo}. Revisar manualmente las duplicadas.");
-                }
-            } catch (Exception ex) {
-                Log.Error($"Error al crear la carpeta para {nombreCarpeta}: {ex.Message}");
+    public static void PublicarPractico(IEnumerable<Alumno> alumnos, string practico, bool forzar = false) {
+        string nombrePractico = practico.Trim();
+
+        if (!PuedeCopiarEnunciadoPractico(nombrePractico, crearBasePracticos: true)) {
+            return;
+        }
+
+        List<Alumno> alumnosPublicables = new();
+        foreach (Alumno alumno in alumnos) {
+            if (AsegurarCarpetaAlumnoNormalizada(alumno)) {
+                alumnosPublicables.Add(alumno);
             }
         }
+
+        CopiarEnunciadoPracticosEnCarpetasNormalizadas(alumnosPublicables, nombrePractico, forzar);
     }
 
     public static void CopiarFotoPerfil(IEnumerable<Alumno> alumnos, string rutaFotos) {
@@ -266,40 +266,95 @@ static class AlumnosManager {
     public static void CopiarEnunciadoPracticos(IEnumerable<Alumno> alumnos, string practico, bool forzar = false) {
         string nombrePractico = practico.Trim();
 
-        if (string.IsNullOrWhiteSpace(nombrePractico)) {
-            Log.Error("Debe indicar el nombre del práctico a copiar.");
-            return;
-        }
-
-        if (!AppPaths.ExisteEnunciadoPractico(nombrePractico)) {
-            Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(nombrePractico)}");
-            return;
-        }
-
-        if (!AppPaths.ExisteDirectorioPracticos()) {
-            Log.Error($"No existe la carpeta base de prácticos: {AppPaths.PracticosDirectory}");
+        if (!PuedeCopiarEnunciadoPractico(nombrePractico, crearBasePracticos: false)) {
             return;
         }
 
         foreach (Alumno alumno in alumnos) {
-            string rutaAlumno = AppPaths.RutaCarpetaAlumnoEsperada(alumno);
-
-            if (!AppPaths.ExisteDirectorio(rutaAlumno)) {
-                try {
-                    AppPaths.AsegurarCarpetaAlumno(alumno);
-                    Log.Debug($" ➕ {rutaAlumno,-40}");
-                } catch (Exception ex) {
-                    Log.Error($"No se pudo crear la carpeta del alumno {rutaAlumno}: {ex.Message}");
-                    continue;
-                }
+            if (!AsegurarCarpetaAlumnoNormalizada(alumno)) {
+                continue;
             }
 
+            CopiarEnunciadoPractico(alumno, nombrePractico, forzar);
+        }
+    }
+
+    static bool PuedeCopiarEnunciadoPractico(string nombrePractico, bool crearBasePracticos) {
+        if (string.IsNullOrWhiteSpace(nombrePractico)) {
+            Log.Error("Debe indicar el nombre del práctico a copiar.");
+            return false;
+        }
+
+        if (!AppPaths.ExisteEnunciadoPractico(nombrePractico)) {
+            Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(nombrePractico)}");
+            return false;
+        }
+
+        if (crearBasePracticos) {
             try {
-                CopiaRuta copia = AppPaths.CopiarEnunciadoPractico(alumno, nombrePractico, forzar);
-                Log.Info($"Enunciado copiado: {copia.Origen} -> {copia.Destino}");
+                AppPaths.AsegurarDirectorioPracticos();
             } catch (Exception ex) {
-                Log.Error($"Error al copiar el enunciado para {alumno.CarpetaNombre}: {ex.Message}");
+                Log.Error($"No se pudo crear la carpeta base de prácticos {AppPaths.PracticosDirectory}: {ex.Message}");
+                return false;
             }
+
+            return true;
+        }
+
+        if (!AppPaths.ExisteDirectorioPracticos()) {
+            Log.Error($"No existe la carpeta base de prácticos: {AppPaths.PracticosDirectory}");
+            return false;
+        }
+
+        return true;
+    }
+
+    static bool AsegurarCarpetaAlumnoNormalizada(Alumno alumno) {
+        string nombreCarpeta = alumno.CarpetaNombre;
+        string rutaCarpeta = AppPaths.RutaCarpetaAlumnoEsperada(alumno);
+
+        try {
+            List<string> carpetasConLegajo = AppPaths.BuscarCarpetasMismoLegajo(alumno.Legajo);
+
+            if (!carpetasConLegajo.Any()) {
+                AppPaths.AsegurarCarpetaAlumno(alumno);
+                Log.Debug($" ➕ {rutaCarpeta,-40}");
+                return true;
+            }
+
+            if (carpetasConLegajo.Count == 1) {
+                string rutaCarpetaExistente = carpetasConLegajo[0];
+                string rutaRelativa = AppPaths.RutaRelativaDesdePracticos(rutaCarpetaExistente);
+                if (string.Equals(rutaCarpetaExistente, rutaCarpeta, StringComparison.OrdinalIgnoreCase)) {
+                    Log.Info($" ✅ {rutaRelativa,-40}");
+                } else {
+                    AppPaths.RenombrarCarpetaAlumno(rutaCarpetaExistente, alumno);
+                    Log.Warning($" 🔄 {rutaRelativa,-40} → {nombreCarpeta}");
+                }
+
+                return true;
+            }
+
+            Log.Warning($" ⚠️  {alumno.Legajo}. Revisar manualmente las duplicadas.");
+            return false;
+        } catch (Exception ex) {
+            Log.Error($"Error al crear la carpeta para {nombreCarpeta}: {ex.Message}");
+            return false;
+        }
+    }
+
+    static void CopiarEnunciadoPracticosEnCarpetasNormalizadas(IEnumerable<Alumno> alumnos, string nombrePractico, bool forzar) {
+        foreach (Alumno alumno in alumnos) {
+            CopiarEnunciadoPractico(alumno, nombrePractico, forzar);
+        }
+    }
+
+    static void CopiarEnunciadoPractico(Alumno alumno, string nombrePractico, bool forzar) {
+        try {
+            CopiaRuta copia = AppPaths.CopiarEnunciadoPractico(alumno, nombrePractico, forzar);
+            Log.Info($"Enunciado copiado: {copia.Origen} -> {copia.Destino}");
+        } catch (Exception ex) {
+            Log.Error($"Error al copiar el enunciado para {alumno.CarpetaNombre}: {ex.Message}");
         }
     }
 
@@ -363,16 +418,22 @@ static class AlumnosManager {
                 alumno.Telefono,
                 TieneFoto = alumno.ConFoto,
                 GitHub = alumno.GitHub,
+                alumno.Nota,
+                alumno.Codigo,
                 Practicos = alumno.practicos.Select(e => e.ToEmoji()).ToList(),
-                Examenes = alumno.examenes.Select(e => e.ToEmoji()).ToList()
+                Examenes  = alumno.examenes.Select(e => e.ToEmoji()).ToList()
             });
 
             JsonSerializerOptions opciones = new() {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             };
 
-            AppPaths.EscribirAlumnosJson(JsonSerializer.Serialize(datos, opciones) + Environment.NewLine, rutaArchivo);
+            string json = JsonSerializer.Serialize(datos, opciones);
+            json = DesescaparUnicodeJsonLegible(json);
+
+            AppPaths.EscribirAlumnosJson(json + Environment.NewLine, rutaArchivo);
 
             Log.Info($"Alumnos guardados en JSON: {rutaArchivo}");
         } catch (Exception ex) {
@@ -418,8 +479,9 @@ static class AlumnosManager {
 
     static Alumno? ExtraerAlumnoFormatoMarkdown(string linea, string comisionActual) {
         List<string> columnas = Regex.Split(linea.TrimEnd(), @"\s{2,}").ToList();
+        bool incluyeP1 = columnas.Count >= 11;
 
-        while (columnas.Count < 9) {
+        while (columnas.Count < 11) {
             columnas.Add(string.Empty);
         }
 
@@ -428,22 +490,23 @@ static class AlumnosManager {
 
         (string apellido, string nombre) = ExtraerApellidoNombre(columnas[1]);
 
-        Alumno alumno = new(legajo, comisionActual, nombre, apellido, ExtraerTelefono(columnas[2]), ExtraerGitHub(columnas[4]), ExtraerBool(columnas[3]), ExtraerBool(columnas[7]), ExtraerInt(columnas[8]));
+        int nota = incluyeP1 ? ExtraerInt(columnas[9]) : 0;
+        string codigo = LimpiarCampo(columnas[incluyeP1 ? 10 : 9]);
+
+        Alumno alumno = new(legajo, comisionActual, nombre, apellido, ExtraerTelefono(columnas[2]), ExtraerGitHub(columnas[4]), ExtraerBool(columnas[3]), ExtraerBool(columnas[7]), ExtraerInt(columnas[8]), nota, codigo);
         CargarEstados(alumno.practicos, columnas[5]);
         CargarEstados(alumno.examenes, columnas[6]);
 
         return alumno;
     }
 
-
-    // static string FormatearFilaTabla(string legajo, string nombreApellido, string telefono, string foto, string gitHub, string comision, string pruebas, string examenes, string presente, string asistencias) {
     static string FormatearFilaTabla(params string?[] columnas) {
-        int[] anchos = [6, 30, 14, 4, 25, 20, 4, 4, 4];
+        int[] anchos = [6, 30, 13, 3, 25, 20, 4, 4, -4, -4, 32];
         return FormatearFilaConAnchos(anchos, columnas);
     }
 
     static string FormatearFilaTablaEstadoInformer(params string?[] columnas) {
-        int[] anchos = [6, 30, 12, 3];
+        int[] anchos = [6, 30, 13, -3, -4];
         return FormatearFilaConAnchos(anchos, columnas);
     }
 
@@ -455,21 +518,91 @@ static class AlumnosManager {
         return FormatearTexto(alumno.Comision);
     }
 
+    static string DesescaparUnicodeJsonLegible(string json) {
+        StringBuilder sb = new(json.Length);
+
+        for (int i = 0; i < json.Length; i++) {
+            if (!TryLeerCodigoUnicode(json, i, out int codePoint, out int consumed)) {
+                sb.Append(json[i]);
+                continue;
+            }
+
+            sb.Append(char.ConvertFromUtf32(codePoint));
+            i += consumed - 1;
+        }
+
+        return sb.ToString();
+    }
+
+    static bool TryLeerCodigoUnicode(string json, int indice, out int codePoint, out int consumed) {
+        codePoint = 0;
+        consumed = 0;
+
+        if (json[indice] != '\\' || indice + 5 >= json.Length || json[indice + 1] != 'u') {
+            return false;
+        }
+
+        if (CantidadBarrasInvertidasConsecutivas(json, indice) % 2 != 0) {
+            return false;
+        }
+
+        if (!TryParseHex(json.AsSpan(indice + 2, 4), out int primerValor)) {
+            return false;
+        }
+
+        if (char.IsHighSurrogate((char)primerValor)) {
+            if (indice + 11 >= json.Length || json[indice + 6] != '\\' || json[indice + 7] != 'u') {
+                return false;
+            }
+
+            if (!TryParseHex(json.AsSpan(indice + 8, 4), out int segundoValor) || !char.IsLowSurrogate((char)segundoValor)) {
+                return false;
+            }
+
+            codePoint = char.ConvertToUtf32((char)primerValor, (char)segundoValor);
+            consumed = 12;
+            return true;
+        }
+
+        if (primerValor < 0x20 || primerValor == '"' || primerValor == '\\' || char.IsSurrogate((char)primerValor)) {
+            return false;
+        }
+
+        codePoint = primerValor;
+        consumed = 6;
+        return true;
+    }
+
+    static int CantidadBarrasInvertidasConsecutivas(string texto, int indice) {
+        int cantidad = 0;
+
+        for (int i = indice - 1; i >= 0 && texto[i] == '\\'; i--) {
+            cantidad++;
+        }
+
+        return cantidad;
+    }
+
+    static bool TryParseHex(ReadOnlySpan<char> valor, out int resultado) =>
+        int.TryParse(valor, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out resultado);
+
     static string ToSiNo(this bool valor) => valor ? "Sí" : "No";
 
     static string FormatearFila(Alumno a) {
-        return FormatearFilaTabla(a.Legajo.ToString(), a.NombreCompleto, a.Telefono, a.TieneFoto.ToSiNo(), a.GitHub, a.practicos.ToString(10), a.examenes.ToString(10), a.Presente.ToSiNo(), a.Asistencias.ToString());
+        return FormatearFilaTabla(a.Legajo.ToString(), a.NombreCompleto, a.Telefono, a.TieneFoto.ToSiNo(), a.GitHub, a.practicos.ToString(10), a.examenes.ToString(10), a.Presente.ToSiNo(), a.Asistencias.ToString(), a.Nota.ToString(), a.Codigo);
     }
 
     static string FormatearFilaEstadoInformer(Alumno alumno) {
-        return FormatearFilaTablaEstadoInformer(alumno.Legajo.ToString(), alumno.NombreCompleto, alumno.practicos.ToString(10), alumno.Asistencias.ToString());
+        return FormatearFilaTablaEstadoInformer(alumno.Legajo.ToString(), alumno.NombreCompleto, alumno.practicos.ToString(10), alumno.Asistencias.ToString(), alumno.Nota.ToString());
     }
 
 
     static string AjustarColumna(string texto, int ancho = 20) {
         string valor = FormatearTexto(texto);
+        bool derecha = ancho < 0;
+        ancho = Math.Abs(ancho);
         if (valor.Length > ancho) { valor = valor[..ancho]; }
-        return valor.PadRight(ancho);
+        return derecha ? valor.PadLeft(ancho) : valor.PadRight(ancho);
     }
 
     static string FormatearTexto(string texto) {
@@ -527,18 +660,6 @@ static class AlumnosManager {
             valor += "⚪️";
         }
         return valor[..ancho];
-    }
-
-    static string FormatearEstados(List<Estado> estados, int ancho = 20) {
-        string valor = string.Empty;
-        if (estados?.Count > 0) {
-            valor = string.Join(string.Empty, estados.Select(e => e.ToEmoji()));
-        }
-        valor = valor.Replace(" ", "⚪️");
-        while (StringInfo.ParseCombiningCharacters(valor).Length < ancho) {
-            valor += "⚪️";
-        }
-        return valor;
     }
 
     static bool ExtraerBool(string texto) {

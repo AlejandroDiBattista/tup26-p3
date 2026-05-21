@@ -1,0 +1,34 @@
+@baseUrl = http://localhost:5001
+
+### Listar productos
+GET {{baseUrl}}/productos
+
+### Obtener producto 1
+GET {{baseUrl}}/productos/1
+
+### Crear producto
+POST {{baseUrl}}/productos
+Content-Type: application/json
+
+{
+  "nombre": "Monitor",
+  "precio": 250000
+}
+
+### Actualizar producto 3
+PUT {{baseUrl}}/productos/3
+Content-Type: application/json
+
+{
+  "nombre": "Monitor 27 pulgadas",
+  "precio": 275000
+}
+
+### Ver producto 3 actualizado
+GET {{baseUrl}}/productos/3
+
+### Borrar producto 3
+DELETE {{baseUrl}}/productos/3
+
+### Verificar borrado
+GET {{baseUrl}}/productos/3

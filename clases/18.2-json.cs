@@ -1,4 +1,5 @@
 #:property PublishAot=false
+
 using System.Text.Json;
 
 // === C# ===                               // === JavaScript ===

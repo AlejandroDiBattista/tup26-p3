@@ -44,8 +44,8 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /debug:portable
 /filealign:512
 /optimize-
-/out:obj\Debug\net10.0\Alumnos.dll
-/refout:obj\Debug\net10.0\refint\Alumnos.dll
+/out:obj/Debug/net10.0/Alumnos.dll
+/refout:obj/Debug/net10.0/refint/Alumnos.dll
 /target:exe
 /warnaserror-
 /utf8output
@@ -54,6 +54,10 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
+Cli/
+ AlumnosCliActions.cs
+ AlumnosCliApp.cs
+ AlumnosCliCommands.cs
 Domain/
  Alumno.cs
  Alumnos.cs
@@ -68,6 +72,7 @@ program.cs
 Services/
  AlumnosManager.cs
  GitHub.cs
+ Log.cs
  MensajesService.cs
  WAppService.cs
 
@@ -240,6 +245,10 @@ Services/
  System.Xml.XPath.dll
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
+<NUGET>/
+ spectre.console.ansi/0.55.2/lib/net10.0/Spectre.Console.Ansi.dll
+ spectre.console.cli/0.55.0/lib/net10.0/Spectre.Console.Cli.dll
+ spectre.console/0.55.2/lib/net10.0/Spectre.Console.dll
 
 [analyzerReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.5/analyzers/dotnet/cs/

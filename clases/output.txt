@@ -1,0 +1,6 @@
+Unhandled exception. System.ArgumentException: API key must either be provided or set in the environment variable GOOGLE_API_KEY.
+   at Google.GenAI.ApiClient..ctor(Nullable`1 enterprise, Nullable`1 vertexAI, String apiKey, String project, String location, ICredential credentials, HttpOptions customHttpOptions, ClientOptions clientOptions)
+   at Google.GenAI.HttpApiClient..ctor(Nullable`1 enterprise, Nullable`1 vertexAI, String apiKey, String project, String location, ICredential credentials, HttpOptions httpOptions, ClientOptions clientOptions)
+   at Google.GenAI.Client..ctor(Nullable`1 enterprise, Nullable`1 vertexAI, String apiKey, ICredential credential, String project, String location, HttpOptions httpOptions, ClientOptions clientOptions)
+   at Prueba.Main(String[] args) in /Users/adibattista/Documents/GitHub/tup26-p3/clases/ai-google.cs:line 16
+   at Prueba.<Main>(String[] args)

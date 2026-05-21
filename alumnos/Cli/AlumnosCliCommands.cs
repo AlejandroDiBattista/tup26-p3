@@ -29,6 +29,11 @@ sealed class BajarPrsSettings : TrabajoPracticoSettings {
     public bool Forzar { get; init; }
 }
 
+sealed class PublicarPracticoSettings : TrabajoPracticoSettings {
+    [CommandOption("--forzar")]
+    public bool Forzar { get; init; }
+}
+
 sealed class CerrarPrsSettings : CommandSettings {
     [CommandArgument(0, "[tp]")]
     public string? TrabajoPractico { get; init; }
@@ -64,6 +69,16 @@ sealed class Tp2NoPresentadoCommand : Command<VacioSettings> {
         AlumnosCliActions.ListarTp2NoPresentado();
 }
 
+sealed class TpNoPresentadoCommand : Command<TrabajoPracticoSettings> {
+    protected override int Execute(CommandContext context, TrabajoPracticoSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.ListarTpNoPresentado(settings.TrabajoPractico);
+}
+
+sealed class SinPracticosCommand : Command<VacioSettings> {
+    protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.ListarSinPracticosPresentados();
+}
+
 sealed class LimpiarProyectosPracticosCommand : Command<VacioSettings> {
     protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.LimpiarProyectosPracticos();
@@ -92,6 +107,11 @@ sealed class InformerEstadoCommand : Command<VacioSettings> {
 sealed class CrearCarpetasCommand : Command<VacioSettings> {
     protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.CrearCarpetas();
+}
+
+sealed class PublicarCommand : Command<PublicarPracticoSettings> {
+    protected override int Execute(CommandContext context, PublicarPracticoSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.PublicarPractico(settings.TrabajoPractico, settings.Forzar);
 }
 
 sealed class PrsCommand : Command<VacioSettings> {
@@ -134,7 +154,25 @@ sealed class WappGruposCommand : Command<VacioSettings> {
         AlumnosCliActions.WappGrupos();
 }
 
-sealed class WappRecuperarTp1Tp2Command : Command<SimularSettings> {
+sealed class RecuperarTpSettings : CommandSettings {
+    [CommandArgument(0, "[tp]")]
+    public string? TrabajoPractico { get; init; }
+
+    [CommandOption("--simular")]
+    public bool Simular { get; init; }
+}
+
+sealed class WappRecuperarTp1Tp2Command : Command<RecuperarTpSettings> {
+    protected override int Execute(CommandContext context, RecuperarTpSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.WappRecuperarPracticos(settings.TrabajoPractico, settings.Simular);
+}
+
+sealed class WappFotoParcialCommand : Command<SimularSettings> {
     protected override int Execute(CommandContext context, SimularSettings settings, CancellationToken cancellationToken) =>
-        AlumnosCliActions.WappRecuperarTp1Tp2(settings.Simular);
+        AlumnosCliActions.WappFotoParcial(settings.Simular);
+}
+
+sealed class RegistrarRespuestasCommand : Command<VacioSettings> {
+    protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.RegistrarRespuestas();
 }

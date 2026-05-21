@@ -44,8 +44,8 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /debug:portable
 /filealign:512
 /optimize-
-/out:obj\Debug\net10.0\tp2.dll
-/refout:obj\Debug\net10.0\refint\tp2.dll
+/out:obj/Debug/net10.0/tp2.dll
+/refout:obj/Debug/net10.0/refint/tp2.dll
 /target:exe
 /warnaserror-
 /utf8output

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>1er Parcial</title>
+  <title>1er Parcial(b)</title>
   <meta name="application-name" content="1er Parcial" />
   <meta id="themeColorMeta" name="theme-color" content="#efe3d3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -470,12 +470,13 @@
     }
 
     .tok-comment { color: var(--tok-comment); }
-    .tok-string, .tok-char { color: var(--tok-string); }
-    .tok-number { color: var(--tok-number); }
+    .tok-string  { color: var(--tok-string);  }
+    .tok-char    { color: var(--tok-string);  }
+    .tok-number  { color: var(--tok-number);  }
     .tok-keyword { color: var(--tok-keyword); font-weight: 700; }
-    .tok-type { color: var(--tok-type); }
+    .tok-type    { color: var(--tok-type);    }
     .tok-command { color: var(--tok-command); font-weight: 700; }
-    .tok-var { color: var(--tok-var); }
+    .tok-var     { color: var(--tok-var);     }
 
     .choices {
       display: grid;
@@ -541,6 +542,50 @@
     .result-panel h3 {
       margin: 0 0 12px;
       font-size: clamp(1.4rem, 3vw, 2rem);
+    }
+
+    .result-nav {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin: 0 0 16px;
+    }
+
+    .result-nav h3 {
+      margin: 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .result-nav-button {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--choice-border);
+      border-radius: 8px;
+      background: var(--choice-bg);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .result-nav-button img {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .result-nav-button.next img {
+      transform: rotate(180deg);
+    }
+
+    .result-nav-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.32;
     }
 
     .welcome-message {
@@ -658,15 +703,22 @@
 
     .result-code {
       width: 100%;
-      min-height: 58px;
+      height: 58px;
       margin-top: 10px;
       border: 2px solid var(--accent);
       border-radius: 8px;
-      padding: 14px;
+      padding: 0 14px;
       background: var(--paper-strong);
       color: var(--ink);
-      font: 700 1.15rem/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      resize: vertical;
+      font: 700 1.15rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: hidden;
+      -webkit-user-select: all;
+      user-select: all;
+      cursor: text;
     }
 
     .empty-state {
@@ -720,7 +772,7 @@
       background: transparent;
       color: var(--ink);
       font-size: clamp(1.45rem, 3vw, 2.1rem);
-      font-weight: 800;
+      font-weight: 700;
       line-height: 1;
       cursor: pointer;
     }
@@ -1164,7 +1216,7 @@
     .secondary-button {
       border-radius: 6px;
       min-height: 48px;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: 0.01em;
     }
 
@@ -1321,6 +1373,11 @@
     .start-panel h3,
     .result-panel h3 {
       max-width: 14ch;
+    }
+
+    .result-panel h3 {
+      max-width: none;
+      width: 100%;
     }
 
     .field-row {
@@ -1711,7 +1768,7 @@
   <div class="shell">
     <section id="hero" class="hero">
       <button id="themeToggleButton" class="theme-toggle" type="button" aria-label="Cambiar tema" aria-pressed="false">🌙</button>
-      <p class="eyebrow">1er Parcial</p>
+      <p class="eyebrow">1<sup>er</sup> Parcial</p>
       <h1 id="heroTitle">TUP26 - P3 : 1<sup>er</sup> Parcial</h1>
       <div id="heroTimer" class="hero-timer" aria-live="polite">60:00</div>
       <p class="lead">
@@ -1720,7 +1777,7 @@
 
     <main class="exam-paper">
       <header class="paper-header">
-        <h2 class="paper-title">1er Parcial de Programación III</h2>
+        <h2 class="paper-title">1<sup>er</sup> Parcial de Programación III</h2>
       </header>
 
       <div id="examContainer" class="empty-state">
@@ -1738,19 +1795,26 @@
 
   <script src="./generador.js"></script>
   <script>
-    const APP_NAME = "1er Parcial";
+    const APP_NAME = "1er Parcial(b)";
     const DEFAULT_MARKDOWN_FILE = "examen.md";
     const STUDENTS_FILE = "alumnos.md";
     const THEME_STORAGE_KEY = "examinador-theme";
     const SESSION_STORAGE_KEY = "primer-parcial-sesion";
-    const EXAM_QUESTION_COUNT = 10;
+    const PRACTICE_QUESTION_COUNT = 60;
+    const FULL_EXAM_QUESTION_COUNT = 60;
+    const FULL_EXAM_START_DATE = new Date(2026, 4, 12);
     const MAX_ATTEMPTS = 5;
     const EXAM_DURATION_MS = 60 * 60 * 1000;
     const EXIT_DEDUPE_MS = 1500;
     const INTEGRITY_MESSAGE_TIMEOUT_MS = 6500;
-    const EXIT_WARNING_MESSAGE = "Se detectó que saliste de la pantalla. Si vuelve a ocurrir, se anulará este intento y comenzará uno nuevo.";
-    const EXIT_RESET_MESSAGE = "El intento anterior fue anulado por salir de la pantalla. Se inició un nuevo intento.";
-    const EXIT_BLOCKED_MESSAGE = "El intento fue anulado por salir de la pantalla y no quedan intentos disponibles.";
+    const EXIT_WARNING_MESSAGE = "Detectamos que saliste de la pantalla. Si vuelve a pasar, este intento se anulará y comenzará uno nuevo.";
+    const EXIT_RESET_MESSAGE = "El intento anterior se anuló porque saliste de la pantalla. Se inició un nuevo intento.";
+    const EXIT_BLOCKED_MESSAGE = "El intento se anuló porque saliste de la pantalla y ya no quedan intentos disponibles.";
+    const CHEVRON_LEFT_ICON = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tbGVmdC1pY29uIGx1Y2lkZS1jaGV2cm9uLWxlZnQiPjxwYXRoIGQ9Im0xNSAxOC02LTYgNi02Ii8+PC9zdmc+";
+
+    function getExamQuestionCount(now = new Date()) {
+      return now >= FULL_EXAM_START_DATE ? FULL_EXAM_QUESTION_COUNT : PRACTICE_QUESTION_COUNT;
+    }
 
     const state = {
       exam: null,
@@ -1762,6 +1826,7 @@
       currentQuestions: [],
       answers: new Map(),
       result: null,
+      resultHistory: [],
       screen: "loading",
       currentFileName: DEFAULT_MARKDOWN_FILE,
       exitWarnings: 0,
@@ -1786,7 +1851,7 @@
     const preferredDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
     const THEME_COLORS = {
       light: "#efe3d3",
-      dark: "#131110",
+      dark:  "#131110",
     };
     let integrityMessageTimer = 0;
 
@@ -1979,6 +2044,9 @@
         state.attempt = clampInteger(saved.attempt, 1, MAX_ATTEMPTS);
         state.deadlineAt = Number.isFinite(saved.deadlineAt) ? saved.deadlineAt : null;
         state.attemptBlocked = Boolean(saved.attemptBlocked);
+        state.resultHistory = Array.isArray(saved.resultHistory)
+          ? saved.resultHistory.map(normalizeResultSnapshot).filter(isValidResultSnapshot).slice(-MAX_ATTEMPTS)
+          : [];
       } catch {
         // Si no hay sesión guardada, se arranca desde la validación de legajo.
       }
@@ -1991,11 +2059,36 @@
           attempt: state.attempt,
           deadlineAt: state.deadlineAt,
           attemptBlocked: state.attemptBlocked,
+          resultHistory: state.resultHistory.map(normalizeResultSnapshot).filter(isValidResultSnapshot),
         };
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
       } catch {
         // Si falla localStorage, la app sigue funcionando en memoria.
       }
+    }
+
+    function isValidResultSnapshot(result) {
+      return result
+        && Number.isInteger(result.attempt)
+        && result.attempt >= 1
+        && result.attempt <= MAX_ATTEMPTS
+        && typeof result.code === "string";
+    }
+
+    function normalizeResultSnapshot(result) {
+      if (!result || typeof result !== "object") {
+        return result;
+      }
+
+      const snapshot = { ...result };
+      const codeParts = String(snapshot.code || "").split(".");
+      if ((codeParts.length === 3 || codeParts.length === 4) && Number.isFinite(snapshot.grade)) {
+        const encodedAttemptAndGrade = snapshot.attempt * 10 + (getCodeGrade(snapshot.grade) - 1);
+        const base = `${codeParts[0]}.${encodedAttemptAndGrade}.${codeParts[2]}`;
+        snapshot.code = `${base}.${calcularSumaDeControl(base)}`;
+      }
+
+      return snapshot;
     }
 
     function clampInteger(value, min, max) {
@@ -2145,7 +2238,7 @@
             <p id="legajoMessage" class="form-message">${escapeHtml(message)}</p>
             <div id="welcomeBox"></div>
             <div class="actions">
-              <button id="startButton" class="primary-button" type="submit" disabled>Comenzar examen</button>
+              <button id="startButton" class="primary-button" type="submit" disabled>Comenzar el examen</button>
             </div>
           </form>
         </section>
@@ -2164,6 +2257,7 @@
       legajoForm.addEventListener("submit", (event) => {
         event.preventDefault();
         if (validateLegajo(legajoInput.value)) {
+          resetExamRun();
           beginExam();
         }
       });
@@ -2200,28 +2294,34 @@
           state.attemptBlocked = false;
         }
 
-        if (state.attemptBlocked) {
-          messageNode.textContent = EXIT_BLOCKED_MESSAGE;
-          welcomeBox.innerHTML = "";
-          startButton.disabled = true;
-          persistSession();
-          updateMeta();
-          return false;
-        }
-
         messageNode.textContent = "";
         welcomeBox.innerHTML = `
           <div class="welcome-message">
-            Hola <strong>${escapeHtml(student.nombreSaludo)}</strong>. Tenés 1 hora para realizar el examen.<br><br>
-            Al finalizar, vas a ver un código. Copialo y compartilo por WhatsApp en el grupo de la comisión.<br><br>
-            Podés repetir el examen para mejorar la nota, hasta 5 intentos dentro del tiempo disponible.
+            Hola, <strong>${escapeHtml(student.nombreSaludo)}</strong>.<br><br>
+            Tenés 1 hora para completar el examen.<br><br>
+            Al finalizar, vas a recibir un código para compartir por WhatsApp en el grupo de la comisión.<br><br>
+            <small>Podés repetir el examen mientras siga disponible el tiempo. Se tomará tu mejor resultado.</small>
           </div>
         `;
-        startButton.disabled = state.attempt > MAX_ATTEMPTS || isTimeExpired() || state.attemptBlocked;
+        startButton.disabled = false;
         persistSession();
         updateMeta();
         return !startButton.disabled;
       }
+    }
+
+    function resetExamRun() {
+      state.attempt = 1;
+      state.deadlineAt = null;
+      state.currentQuestions = [];
+      state.answers = new Map();
+      state.result = null;
+      state.resultHistory = [];
+      state.exitWarnings = 0;
+      state.lastExitAt = 0;
+      state.integrityMessage = "";
+      state.attemptBlocked = false;
+      persistSession();
     }
 
     function beginExam(options = {}) {
@@ -2234,7 +2334,8 @@
         state.deadlineAt = Date.now() + EXAM_DURATION_MS;
       }
 
-      const questionIndexes = GenerarExamen(getSeed(), EXAM_QUESTION_COUNT, state.allQuestions.length);
+      const questionCount = getExamQuestionCount();
+      const questionIndexes = GenerarExamen(getSeed(), questionCount, state.allQuestions.length);
       state.currentQuestions = questionIndexes
         .map((number) => state.allQuestions[number - 1])
         .filter((question) => question && Number.isInteger(question.correctIndex) && question.correctIndex >= 0)
@@ -2268,7 +2369,7 @@
           <div class="exam-summary">
             <div class="metric"><strong>${escapeHtml(state.student.nombreSaludo)}</strong><span>Alumno</span></div>
             <div class="metric"><strong>${state.attempt} / ${MAX_ATTEMPTS}</strong><span>Intento actual</span></div>
-            <div class="metric"><strong>${EXAM_QUESTION_COUNT}</strong><span>Preguntas</span></div>
+            <div class="metric"><strong>${state.currentQuestions.length}</strong><span>Preguntas</span></div>
           </div>
           ${state.currentQuestions.map(renderQuestion).join("")}
         </section>
@@ -2375,6 +2476,7 @@
       const questionInputs = examContainer.querySelectorAll(`input[data-question-id="${CSS.escape(questionId)}"]`);
 
       if (!input.checked) return;
+      const wasAlreadyAnswered = state.answers.has(questionId);
       state.answers.set(questionId, optionIndex);
 
       const article = input.closest(".question");
@@ -2384,6 +2486,58 @@
       });
 
       updateMeta();
+      if (!wasAlreadyAnswered) {
+        scrollToNextUnansweredQuestion(questionId);
+      }
+    }
+
+    function scrollToNextUnansweredQuestion(questionId) {
+      const currentIndex = state.currentQuestions.findIndex((question) => question.id === questionId);
+      if (currentIndex < 0 || state.answers.size >= state.currentQuestions.length) {
+        return;
+      }
+
+      const nextQuestion = state.currentQuestions
+        .slice(currentIndex + 1)
+        .find((question) => !state.answers.has(question.id))
+        || state.currentQuestions.find((question) => !state.answers.has(question.id));
+
+      if (!nextQuestion) {
+        return;
+      }
+
+      const article = examContainer.querySelector(`[data-question-id="${CSS.escape(nextQuestion.id)}"]`);
+      if (!article) {
+        return;
+      }
+
+      window.setTimeout(() => scrollQuestionFullyIntoView(article), 80);
+    }
+
+    function scrollQuestionFullyIntoView(article, behavior = "smooth") {
+      const heroOffset = hero.getBoundingClientRect().height + 14;
+      const bottomBar = document.querySelector(".bottom-bar");
+      const bottomOffset = bottomBar && getComputedStyle(bottomBar).display !== "none"
+        ? bottomBar.getBoundingClientRect().height + 14
+        : 14;
+      const availableHeight = window.innerHeight - heroOffset - bottomOffset;
+      const rect = article.getBoundingClientRect();
+      const isFullyVisible = rect.top >= heroOffset && rect.bottom <= window.innerHeight - bottomOffset;
+
+      if (isFullyVisible) {
+        return;
+      }
+
+      const articleTop = rect.top + window.scrollY;
+      const articleBottom = rect.bottom + window.scrollY;
+      const targetTop = rect.height <= availableHeight
+        ? articleBottom - (window.innerHeight - bottomOffset)
+        : articleTop - heroOffset;
+
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior,
+      });
     }
 
     function scrollToFirstUnansweredQuestion() {
@@ -2401,9 +2555,7 @@
         return;
       }
 
-      const heroOffset = hero.getBoundingClientRect().height + 12;
-      article.style.scrollMarginTop = `${heroOffset}px`;
-      article.scrollIntoView({ block: "start", behavior: "auto" });
+      scrollQuestionFullyIntoView(article, "auto");
       article.querySelector('input[type="radio"]')?.focus({ preventScroll: true });
     }
 
@@ -2457,42 +2609,85 @@
       const correctCount = state.currentQuestions.reduce((total, question) => {
         return total + (state.answers.get(question.id) === question.correctIndex ? 1 : 0);
       }, 0);
-      const attendanceCredits = Math.floor(state.student.asistencias / 3);
-      const credits = correctCount + attendanceCredits - 20;
-      const grade = clampNumber(credits / 40, 1, 10);
+      
+      const attendanceCredits = Math.floor(state.student.asistencias / 3 + 0.5);
+      const credits = correctCount + attendanceCredits - 20 + 3; // -20 son para anular el azar, + 3 para compensar errores en las preguntas.
+      const grade = clampNumber(credits / 4.0 + 0.5, 1, 10);
+      const encodedAttemptAndGrade = state.attempt * 10 + (getCodeGrade(grade) - 1);
       const answerDigits = state.currentQuestions.map((question) => state.answers.get(question.id));
       const encodedAnswers = ConvertirBase(answerDigits, 3, 32);
 
       state.result = {
+        attempt: state.attempt,
+        questionCount: state.currentQuestions.length,
+        attendanceCount: state.student.asistencias,
         correctCount,
         attendanceCredits,
         credits,
         grade,
-        code: `${state.student.legajo}.${state.attempt}.${encodedAnswers}`,
+        code: (() => {
+          const base = `${state.student.legajo}.${encodedAttemptAndGrade}.${encodedAnswers}`;
+          return `${base}.${calcularSumaDeControl(base)}`;
+        })(),
       };
 
+      saveResultSnapshot(state.result);
+      persistSession();
       renderResultScreen();
+    }
+
+    function saveResultSnapshot(result) {
+      const snapshot = normalizeResultSnapshot(result);
+      const existingIndex = state.resultHistory.findIndex((item) => item.attempt === snapshot.attempt);
+
+      if (existingIndex >= 0) {
+        state.resultHistory[existingIndex] = snapshot;
+      } else {
+        state.resultHistory.push(snapshot);
+      }
+
+      state.resultHistory.sort((a, b) => a.attempt - b.attempt);
+      state.resultHistory = state.resultHistory.slice(-MAX_ATTEMPTS);
     }
 
     function renderResultScreen() {
       setScreen("result");
       clearIntegrityMessageTimer();
-      const result = state.result;
+      const result = normalizeResultSnapshot(state.result || state.resultHistory[state.resultHistory.length - 1]);
+      if (!result) {
+        renderStartScreen();
+        return;
+      }
+
+      state.result = result;
+      saveResultSnapshot(result);
+      persistSession();
       state.integrityMessage = "";
       state.exitWarnings = 0;
       state.lastExitAt = 0;
+      const resultIndex = state.resultHistory.findIndex((item) => item.attempt === result.attempt);
+      const hasPreviousResult = resultIndex > 0;
+      const hasNextResult = resultIndex >= 0 && resultIndex < state.resultHistory.length - 1;
       examContainer.className = "result-screen";
       examContainer.innerHTML = `
         <section class="result-panel">
-          <h3>Resultado intento ${state.attempt}</h3>
+          <div class="result-nav" aria-label="Navegación de intentos">
+            <button id="previousResultButton" class="result-nav-button previous" type="button" aria-label="Ver intento anterior" ${hasPreviousResult ? "" : "disabled"}>
+              <img src="${CHEVRON_LEFT_ICON}" alt="" aria-hidden="true">
+            </button>
+            <h3>Intento ${result.attempt}/${MAX_ATTEMPTS}</h3>
+            <button id="nextResultButton" class="result-nav-button next" type="button" aria-label="Ver intento siguiente" ${hasNextResult ? "" : "disabled"}>
+              <img src="${CHEVRON_LEFT_ICON}" alt="" aria-hidden="true">
+            </button>
+          </div>
           <div class="result-grid">
-            <div class="metric"><strong>${result.correctCount} / ${state.currentQuestions.length}</strong><span>Respuestas correctas</span></div>
-            <div class="metric"><strong>${state.student.asistencias}</strong><span>Asistencias registradas</span></div>
+            <div class="metric"><strong>${result.correctCount} / ${result.questionCount}</strong><span>Respuestas correctas</span></div>
+            <div class="metric"><strong>${result.attendanceCount}</strong><span>Asistencias registradas</span></div>
             <div class="metric"><strong>${result.attendanceCredits}</strong><span>Créditos por asistencia</span></div>
             <div class="metric"><strong>${formatGrade(result.grade)}</strong><span>Nota</span></div>
           </div>
           <p class="paper-subtitle">Código para compartir por WhatsApp</p>
-          <textarea id="resultCode" class="result-code" readonly>${escapeHtml(result.code)}</textarea>
+          <div id="resultCode" class="result-code">${escapeHtml(result.code)}</div>
           <div class="actions">
             <button id="copyCodeButton" class="primary-button" type="button">Copiar código</button>
             <button id="newExamButton" class="secondary-button" type="button" ${state.attempt >= MAX_ATTEMPTS || isTimeExpired() ? "disabled" : ""}>Nuevo intento</button>
@@ -2501,11 +2696,24 @@
         </section>
       `;
 
-      document.getElementById("resultCode").select();
+      ajustarFuenteCodigo();
+      document.getElementById("previousResultButton").addEventListener("click", () => showResultByOffset(-1));
+      document.getElementById("nextResultButton").addEventListener("click", () => showResultByOffset(1));
       document.getElementById("copyCodeButton").addEventListener("click", copyResultCode);
       document.getElementById("newExamButton").addEventListener("click", takeNewExam);
       updateMeta();
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showResultByOffset(offset) {
+      const currentIndex = state.resultHistory.findIndex((item) => item.attempt === state.result?.attempt);
+      const nextResult = state.resultHistory[currentIndex + offset];
+      if (!nextResult) {
+        return;
+      }
+
+      state.result = nextResult;
+      renderResultScreen();
     }
 
     async function copyResultCode() {
@@ -2522,11 +2730,15 @@
         message.style.color = "var(--ok)";
         message.textContent = "Código copiado.";
       } catch {
-        codeField.focus();
-        codeField.select();
+        const temp = document.createElement("textarea");
+        temp.value = code;
+        temp.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+        document.body.appendChild(temp);
+        temp.select();
 
         try {
           const copied = document.execCommand("copy");
+          document.body.removeChild(temp);
           if (!copied) {
             throw new Error("execCommand no copió");
           }
@@ -2541,11 +2753,12 @@
     }
 
     function takeNewExam() {
-      if (state.attempt >= MAX_ATTEMPTS || isTimeExpired()) {
+      const latestAttempt = Math.max(state.attempt, ...state.resultHistory.map((result) => result.attempt), 0);
+      if (latestAttempt >= MAX_ATTEMPTS || isTimeExpired()) {
         return;
       }
 
-      state.attempt += 1;
+      state.attempt = latestAttempt + 1;
       state.attemptBlocked = false;
       state.integrityMessage = "";
       state.exitWarnings = 0;
@@ -2558,12 +2771,29 @@
       return Number.isFinite(state.deadlineAt) && Date.now() > state.deadlineAt;
     }
 
+    function ajustarFuenteCodigo() {
+      const el = document.getElementById("resultCode");
+      if (!el) return;
+      el.style.fontSize = "";
+      const max = parseFloat(getComputedStyle(el).fontSize);
+      const min = 9;
+      let size = max;
+      while (el.scrollWidth > el.clientWidth && size > min) {
+        size -= 0.5;
+        el.style.fontSize = size + "px";
+      }
+    }
+
     function clampNumber(value, min, max) {
       return Math.min(max, Math.max(min, value));
     }
 
     function formatGrade(value) {
       return Number.isInteger(value) ? String(value) : value.toFixed(2);
+    }
+
+    function getCodeGrade(value) {
+      return clampNumber(Math.round(value), 1, 10);
     }
 
     function updateMeta() {
@@ -2673,20 +2903,20 @@
       if (lang === "cs" || lang === "csharp") {
         return highlightByPatterns(code, [
           ["comment", /\/\/[^\n]*/g],
-          ["string", /"(?:\\.|[^"\\])*"/g],
-          ["char", /'(?:\\.|[^'\\])+'/g],
-          ["number", /\b\d+(?:\.\d+)?\b/g],
+          ["string",  /"(?:\\.|[^"\\])*"/g],
+          ["char",    /'(?:\\.|[^'\\])+'/g],
+          ["number",  /\b\d+(?:\.\d+)?\b/g],
           ["keyword", /\b(?:using|namespace|class|record|struct|interface|enum|public|private|protected|internal|static|void|int|string|bool|var|new|return|if|else|switch|case|default|break|continue|for|foreach|while|do|try|catch|finally|throw|null|true|false|this|base|out|ref|in|is|as|params)\b/g],
-          ["type", /\b(?:Console|List|File|Directory|Path|Environment|Exception|ConsoleKeyInfo|ConsoleKey)\b/g],
+          ["type",    /\b(?:Console|List|File|Directory|Path|Environment|Exception|ConsoleKeyInfo|ConsoleKey)\b/g],
         ]);
       }
 
       if (lang === "bash" || lang === "sh" || lang === "zsh" || lang === "shell") {
         return highlightByPatterns(code, [
           ["comment", /#[^\n]*/g],
-          ["string", /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g],
-          ["var", /\$[A-Za-z_][A-Za-z0-9_]*|\$\{[^}]+\}/g],
-          ["number", /\b\d+\b/g],
+          ["string",  /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g],
+          ["var",     /\$[A-Za-z_][A-Za-z0-9_]*|\$\{[^}]+\}/g],
+          ["number",  /\b\d+\b/g],
           ["keyword", /\b(?:if|then|else|fi|for|in|do|done|case|esac|while|function)\b/g],
           ["command", /^(?:\s*)(?:dotnet|git|cd|ls|cat|rg|sed|python3|bash|zsh|mkdir|cp|mv|rm)\b/gm],
         ]);

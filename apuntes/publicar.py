@@ -22,7 +22,7 @@ BOOK_LANGUAGE   = "es"
 BOOK_SUBTITLE   = "C#, .NET y herramientas de desarrollo"
 BOOK_AUTHOR     = "Ing. Alejandro Di Battista"
 BOOK_COVER      = WORKDIR / "portada.jpg"
-EXCLUDED        = ["00.*.md", "05.*.md", "09.*.md", "README.md", "CONTRIBUTING.md", "LICENSE.md", "examen.md"]
+EXCLUDED        = ["00.*.md", "09.*.md", "README.md", "CONTRIBUTING.md", "LICENSE.md", "examen.md"]
 
 
 def is_excluded(path: Path) -> bool:
@@ -50,16 +50,24 @@ def normalize_heading_text(text: str) -> str:
 
 def inline_markdown(text: str) -> str:
     code_spans: list[str] = []
+    escaped_chars: list[str] = []
 
     def stash_code(match: re.Match[str]) -> str:
         code_spans.append(f"<code>{html.escape(match.group(1), quote=False)}</code>")
         return f"@@CODE{len(code_spans) - 1}@@"
 
+    def stash_escaped_char(match: re.Match[str]) -> str:
+        escaped_chars.append(html.escape(match.group(1), quote=False))
+        return f"@@ESC{len(escaped_chars) - 1}@@"
+
     text = re.sub(r"`([^`]+)`", stash_code, text)
+    text = re.sub(r"\\([\\`*_{}\[\]()#+\-.!<>|])", stash_escaped_char, text)
     text = html.escape(text, quote=False)
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", text)
     text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', text)
+    for index, escaped_html in enumerate(escaped_chars):
+        text = text.replace(f"@@ESC{index}@@", escaped_html)
     for index, code_html in enumerate(code_spans):
         text = text.replace(f"@@CODE{index}@@", code_html)
     return text
@@ -104,12 +112,17 @@ def wrap_code_block(content: str, language: str) -> str:
         label = html.escape(code_language_label(language), quote=False)
         return f"""
 <div class="code-block">
-    <div class="code-block-header">
-        <span class="code-block-language">{label}</span>
-    </div>
     {content}
 </div>
 """.strip()
+#         return f"""
+# <div class="code-block">
+#     <div class="code-block-header">
+#         <span class="code-block-language">{label}</span>
+#     </div>
+#     {content}
+# </div>
+# """.strip()
 
 
 def split_table_row(line: str) -> list[str]:
@@ -449,122 +462,273 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
 def build_epub(markdown_files: list[Path]) -> None:
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
     css = """
+:root {
+  color-scheme: light;
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Aptos, Helvetica, Arial, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Aptos, Helvetica, Arial, sans-serif;
+}
+@page {
+  margin: 7% 8%;
+}
 body {
-  color: #202428;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1em;
-  line-height: 1.58;
-  margin: 6%;
+  background: white;
+  background: oklch(100% 0 0);
+      color: #2a2d33;
+      color: oklch(27% 0.01 260);
+      font-family: var(--font-sans);
+      font-size: 1em;
+  font-kerning: normal;
+      line-height: 1.68;
+  margin: 7% 8%;
+  orphans: 3;
+      text-rendering: optimizeLegibility;
+  widows: 3;
 }
-p, ul, ol, table, blockquote, .code-block { margin-top: 0; margin-bottom: 1em; }
+p, ul, ol, blockquote {
+  margin-top: 0;
+      margin-bottom: 1em;
+  max-width: 72ch;
+}
+ul, ol { padding-left: 1.55em; }
+li { margin: 0.2em 0; padding-left: 0.12em; }
 h1, h2, h3, h4, h5, h6 {
-  color: #111820;
-  line-height: 1.18;
-  margin: 1.6em 0 0.55em;
+      color: #20242a;
+      color: oklch(24% 0.01 260);
+      font-family: var(--font-display);
+      font-weight: 740;
+      line-height: 1.16;
+      margin: 1.7em 0 0.46em;
   page-break-after: avoid;
+  text-wrap: balance;
 }
-h1 { font-size: 2em; }
-h2 { font-size: 1.45em; }
-h3 { font-size: 1.15em; }
-h4, h5, h6 { font-size: 1em; }
-a { color: #245f73; }
+    h1 {
+      font-size: 1.92rem;
+      letter-spacing: -0.02em;
+    }
+h2 {
+      border-bottom: 1px solid #d9dee6;
+      border-bottom-color: oklch(89% 0.008 255);
+      font-size: 1.46rem;
+      padding-bottom: 0.24em;
+}
+    h3 { font-size: 1.18rem; }
+h4, h5, h6 {
+      color: #3a414b;
+      color: oklch(34% 0.012 260);
+      font-size: 1rem;
+  font-weight: 800;
+}
+a {
+  color: #225f72;
+  color: oklch(43% 0.065 215);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+}
+strong {
+  color: #17211a;
+  color: oklch(22% 0.018 145);
+  font-weight: 700;
+}
 code {
-  background: #eef3ef;
-  border-radius: 0.25em;
-  color: #1e4037;
-  font-family: Menlo, Consolas, monospace;
-  font-size: 0.92em;
-  padding: 0.05em 0.25em;
+  background: #f3f4f7;
+  background: oklch(96.5% 0.004 260);
+  border: 1px solid #e7e9ee;
+  border-color: oklch(91.5% 0.004 260);
+  border-radius: 0.38em;
+  color: #2e3642;
+  color: oklch(31% 0.015 255);
+  font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em;
+  font-variant-ligatures: none;
+  padding: 0.08em 0.3em;
 }
 pre { margin: 0; white-space: pre-wrap; }
 pre code {
   background: transparent;
+  border: 0;
   border-radius: 0;
   color: inherit;
   display: block;
-  line-height: 1.58;
+  line-height: 1.48;
   padding: 0;
 }
 .code-block {
-  background: #f5f7f4;
-  border-left: 0.28em solid #5b7f6b;
-  margin: 1.35em 0;
+  background: #f5f6fa;
+  background: oklch(97.2% 0.005 260);
+  border: 1px solid #e7e9ef;
+  border-color: oklch(91.3% 0.004 260);
+  border-radius: 0.9em;
+  margin: 1.2em 0 1.35em;
+  max-width: 100%;
   page-break-inside: avoid;
 }
-.code-block-header { padding: 0.75em 1em 0; }
+.code-block-header {
+  border-bottom: 1px solid #e5e5e1;
+  border-bottom-color: oklch(91% 0.003 110);
+  padding: 0.46em 0.85em 0.38em;
+}
 .code-block-language {
-  color: #56625a;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 0.72em;
+  color: #52604f;
+  color: oklch(46% 0.026 132);
+  font-family: var(--font-sans);
+  font-size: 0.66em;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
-.code-block pre { padding: 0.45em 1em 1em; }
-.code-block code { font-size: 0.9em; }
+.code-block pre {
+  padding: 0.88em 1em 0.94em;
+}
+.code-block code {
+  font-size: 0.85em;
+  line-height: 1.56;
+}
 table {
+  background: transparent;
+  border: 0;
   border-collapse: collapse;
+  font-family: var(--font-sans);
   font-size: 0.92em;
-  margin: 1.2em 0;
+  line-height: 1.42;
+  margin: 1.15em 0 1.35em;
   width: 100%;
 }
 th, td {
-  border-bottom: 1px solid #d8ddd8;
-  padding: 0.5em 0.65em;
+  border-bottom: 1px solid #d9dee6;
+  border-bottom-color: oklch(89% 0.008 255);
+  padding: 0.56em 0.64em;
   vertical-align: top;
 }
 th {
-  color: #334137;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 0.82em;
+  background: transparent;
+  color: #2a2f36;
+  color: oklch(28% 0.01 260);
+  font-size: 0.98em;
+  font-weight: 700;
+  letter-spacing: 0;
   text-align: left;
+  text-transform: none;
 }
-.tok-comment { color: #5c6f62; font-style: italic; }
-.tok-string, .tok-char { color: #27623f; }
-.tok-number { color: #7656a0; }
-.tok-keyword { color: #8a3b1d; font-weight: 700; }
-.tok-type { color: #245f73; }
-.tok-var { color: #755a1d; }
-.tok-command { color: #245f73; font-weight: 700; }
-blockquote {
-  border-left: 0.22em solid #8ea899;
-  color: #3a4640;
+tr:last-child td { border-bottom: 0; }
+.tok-comment {
+  color: #60705d;
+  color: oklch(50% 0.031 132);
   font-style: italic;
-  margin-left: 0;
-  padding-left: 1em;
 }
-hr { border: none; border-top: 1px solid #d8ddd8; margin: 1.5em 0; }
+.tok-string, .tok-char {
+  color: #28623f;
+  color: oklch(45% 0.08 150);
+}
+.tok-number {
+  color: #6d5596;
+  color: oklch(48% 0.071 305);
+}
+.tok-keyword {
+  color: #8a3d20;
+  color: oklch(45% 0.094 47);
+  font-weight: 700;
+}
+.tok-type {
+  color: #225f72;
+  color: oklch(43% 0.065 215);
+}
+.tok-var {
+  color: #745b21;
+  color: oklch(47% 0.064 82);
+}
+.tok-command {
+  color: #225f72;
+  color: oklch(43% 0.065 215);
+  font-weight: 700;
+}
+blockquote {
+  background: #f7f8fb;
+  background: oklch(97.7% 0.004 260);
+  border: 1px solid #e7e9ef;
+  border-color: oklch(91.3% 0.004 260);
+  border-radius: 0.8em;
+  color: #3f4652;
+  color: oklch(37% 0.012 260);
+  font-style: normal;
+  margin-left: 0;
+  padding: 0.88em 1em;
+}
+blockquote p:last-child { margin-bottom: 0; }
+hr {
+  border: none;
+  border-top: 1px solid #d9dee6;
+  border-top-color: oklch(89% 0.008 255);
+  margin: 1.45em 0;
+}
 .chapter-header {
-  border-bottom: 2px solid #111820;
-  margin-bottom: 2.2em;
+  border-bottom: 1px solid #d9dee6;
+  border-bottom-color: oklch(89% 0.008 255);
+  margin-bottom: 1.85em;
   padding-bottom: 1em;
 }
-.chapter-header h1 { margin: 0.25em 0 0; }
+.chapter-header h1 {
+  margin: 0.18em 0 0;
+}
 .chapter-kicker {
-  color: #5b7f6b;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 0.76em;
+  color: #526f5b;
+  color: oklch(50% 0.054 145);
+  font-family: var(--font-sans);
+  font-size: 0.68em;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.11em;
   margin: 0;
   text-transform: uppercase;
 }
 .book-title {
-  border-bottom: 2px solid #111820;
-  margin: 18% 0 2em;
-  padding-bottom: 1em;
+  border-bottom: 2px solid #17211a;
+  border-bottom-color: oklch(22% 0.018 145);
+  border-top: 1px solid #d8ddd6;
+  border-top-color: oklch(87.5% 0.012 125);
+  margin: 14% 0 1.7em;
+  padding: 0.9em 0 1em;
 }
-.book-title h1 { margin-bottom: 0.2em; }
-.book-title p {
-  color: #5b7f6b;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 0.82em;
+.book-title h1 {
+  margin: 0.16em 0 0.28em;
+}
+.book-kicker,
+.book-subtitle,
+.book-author {
+  font-family: var(--font-sans);
+  margin: 0;
+}
+.book-kicker {
+  color: #526f5b;
+  color: oklch(50% 0.054 145);
+  font-size: 0.68em;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.toc-list { padding-left: 1.4em; }
-.toc-list li { margin: 0.45em 0; padding-left: 0.2em; }
+.book-subtitle {
+  color: #39443a;
+  color: oklch(36% 0.027 140);
+  font-size: 0.92em;
+  line-height: 1.36;
+  max-width: 42ch;
+}
+.book-author {
+  color: #5b6359;
+  color: oklch(48% 0.014 130);
+  font-size: 0.8em;
+  margin-top: 0.82em;
+}
+.toc-list {
+  font-family: var(--font-sans);
+  font-size: 0.9em;
+  line-height: 1.38;
+    padding-left: 2.4em;
+}
+.toc-list li {
+  border-bottom: 1px solid #e1e4dd;
+  border-bottom-color: oklch(90.5% 0.011 120);
+  margin: 0;
+  padding: 0.42em 0 0.42em 0.18em;
+}
 .cover-page { margin: 0; padding: 0; }
 .cover-frame { margin: 0 auto; text-align: center; }
 .cover-frame img { display: block; height: auto; width: 100%; }
@@ -586,8 +750,10 @@ hr { border: none; border-top: 1px solid #d8ddd8; margin: 1.5em 0; }
     index_body = f"""
 <section epub:type="frontmatter toc">
   <div class="book-title">
+    <p class="book-kicker">Programación III</p>
     <h1>{escape(BOOK_TITLE)}</h1>
-    <p>Índice general</p>
+    <p class="book-subtitle">{escape(BOOK_SUBTITLE)}</p>
+    <p class="book-author">{escape(BOOK_AUTHOR)}</p>
   </div>
   <nav epub:type="toc" id="toc">
     <ol class="toc-list">

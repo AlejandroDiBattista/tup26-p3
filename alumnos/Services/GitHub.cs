@@ -572,6 +572,7 @@ class GitHub {
         return salida;
     }
 
+
     string? ObtenerTituloPR(int numeroPR) {
         string? salida = Ejecutar($"Error al obtener el título del PR #{numeroPR}",
             $"/pulls/{numeroPR}", "--jq", ".title");
@@ -588,9 +589,11 @@ class GitHub {
                     .ToList();
     }
 
+
     static string NormalizarRutaRemota(string ruta) {
         return ruta.Trim().Replace('\\', '/').Trim('/');
     }
+
 
     static bool TryObtenerRutaRelativaDirectorio(string nombreRemoto, string carpetaAlumnoRemota, string directorioRemoto, out string rutaRelativa) {
         rutaRelativa = string.Empty;
@@ -623,6 +626,7 @@ class GitHub {
         return !string.IsNullOrWhiteSpace(rutaRelativa);
     }
 
+
     static int ContarLineas(byte[] contenido) {
         if (contenido.Length == 0) {
             return 0;
@@ -632,10 +636,12 @@ class GitHub {
         return contenido[^1] == (byte)'\n' ? lineas : lineas + 1;
     }
 
+
     public static int ExtraerTP(string titulo) {
-        Match match = Regex.Match(titulo, @"\bTP\s*\d+\b", RegexOptions.IgnoreCase);
-        return match.Success ? int.Parse(match.Value[2..].Trim()) : 0;
+        Match match = Regex.Match(titulo, @"\bTP\s*-?\s*\d+\b", RegexOptions.IgnoreCase);
+        return match.Success ? int.Parse(match.Value[2..].Replace("-", "").Trim()) : 0;
     }
+
 
     public static int ExtraerLegajo(string titulo) {
         Match match = Regex.Match(titulo, @"\b\d{5}\b");

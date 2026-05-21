@@ -64,8 +64,8 @@ public sealed class CrmWindow : Runnable
     {
         this.database = database;
 
-        Title = "Mini CRM - Terminal.Gui v2 + Dapper + SQLite";
-        Width = Dim.Fill();
+        Title  = "Mini CRM - Terminal.Gui v2 + Dapper + SQLite";
+        Width  = Dim.Fill();
         Height = Dim.Fill();
 
         BuildLayout();

@@ -1,73 +1,288 @@
-class Pruebas {
-    public static void Ejecutar() {
-        Console.WriteLine("Ejecutando pruebas automáticas...");
+using System;
+using System.Collections.Generic;
 
-        var numero = 1;
+public class Pruebas
+{
+    public static void EjecutarPruebas()
+    {
+        Console.WriteLine("=== Ejecutando Pruebas Automáticas ===\n");
 
-        Probar(ref numero, "Casos mínimos de evaluación del enunciado", () => {
-            AfirmarEvaluacion("1 + 2 * 3", 0, 7);
-            AfirmarEvaluacion("1 + 2 * x", 10, 21);
-            AfirmarEvaluacion("(x - 1) * (x - 8 / 4) + 3", 10, 75);
-            AfirmarEvaluacion("-(3 + 2)", 0, -5);
-            AfirmarEvaluacion("10 / 2", 0, 5);
-        });
+        int pasadas = 0;
+        int totales = 0;
 
-        Probar(ref numero, "Variables, mayúsculas y operadores unarios", () => {
-            AfirmarEvaluacion("1 + 2 * x", 5, 11);
-            AfirmarEvaluacion("(x - 1) * (x - 8 / 4) + 3", 5, 15);
-            AfirmarEvaluacion("+X", 7, 7);
-            AfirmarEvaluacion("-x", 3, -3);
-        });
+        var casos = ObtenerCasosPrueba();
 
-        Probar(ref numero, "Errores de parsing del enunciado", () => {
-            AfirmarExcepcion<FormatException>(() => Compilador.Parse("(1 + 2"), "Se esperaba ')'", "paréntesis sin cerrar");
-            AfirmarExcepcion<FormatException>(() => Compilador.Parse(""), "Token inesperado", "entrada vacía");
-            AfirmarExcepcion<FormatException>(() => Compilador.Parse("1 + ?"), "Token inesperado", "token inesperado");
-        });
+        foreach (var caso in casos)
+        {
+            totales++;
+            bool paso = EjecutarCaso(caso);
+            if (paso) pasadas++;
+            Console.WriteLine();
+        }
 
-        Probar(ref numero, "Errores de evaluación", () => {
-            AfirmarExcepcion<DivideByZeroException>(() => Compilador.Parse("10 / (x - 2)").Evaluar(2), null, "división por cero");
-        });
+        Console.WriteLine("\n╔════════════════════════════╗");
+        Console.WriteLine($"║ Pasadas: {pasadas}/{totales} de pruebas            ║");
+        Console.WriteLine("╚════════════════════════════╝");
 
-        Console.WriteLine($"Todas las pruebas pasaron correctamente. Total: {numero - 1} grupos.");
+        if (pasadas == totales)
+        {
+            Console.WriteLine("✓ Todas las pruebas pasaron");
+            Environment.Exit(0);
+        }
+        else
+        {
+            Console.WriteLine($"✗ {totales - pasadas} prueba(s) fallaron");
+            Environment.Exit(1);
+        }
     }
 
-    private static void Probar(ref int numero, string descripcion, Action accion) {
-        Console.WriteLine($"{numero}. {descripcion}");
-        accion();
-        numero++;
-    }
+    private static bool EjecutarCaso(CasoPrueba caso)
+    {
+        try
+        {
+            var compilador = new Compilador(caso.Expresion);
+            Nodo ast = compilador.Parsear();
+            int resultado = ast.Evaluar(caso.ValorX);
 
-    private static void AfirmarEvaluacion(string expresion, int x, int esperado) {
-        var resultado = Compilador.Parse(expresion).Evaluar(x);
-        Afirmar(
-            resultado == esperado,
-            $"La expresión '{expresion}' con x = {x} debería dar {esperado}, pero dio {resultado}."
-        );
-    }
-
-    private static void AfirmarExcepcion<TException>(Action accion, string? mensajeEsperado, string descripcion)
-        where TException : Exception {
-        try {
-            accion();
-        } catch (TException ex) {
-            if (mensajeEsperado is not null) {
-                Afirmar(
-                    ex.Message.Contains(mensajeEsperado, StringComparison.Ordinal),
-                    $"La prueba '{descripcion}' esperaba un mensaje que contuviera '{mensajeEsperado}', pero recibió '{ex.Message}'."
-                );
+            if (resultado == caso.ResultadoEsperado)
+            {
+                Console.WriteLine($"✓ {caso.Descripcion}");
+                Console.WriteLine($"  Expresión: '{caso.Expresion}' con x={caso.ValorX}");
+                Console.WriteLine($"  Resultado: {resultado}");
+                return true;
             }
-
-            return;
+            else
+            {
+                Console.WriteLine($"✗ {caso.Descripcion}");
+                Console.WriteLine($"  Expresión: '{caso.Expresion}' con x={caso.ValorX}");
+                Console.WriteLine($"  Resultado: {resultado} (esperado: {caso.ResultadoEsperado})");
+                return false;
+            }
         }
-
-        throw new InvalidOperationException($"La prueba '{descripcion}' esperaba una excepción de tipo {typeof(TException).Name}.");
+        catch (Exception ex)
+        {
+            if (caso.DebefallarCon != null)
+            {
+                bool esErrorEsperado = ex.Message.Contains(caso.DebefallarCon);
+                if (esErrorEsperado)
+                {
+                    Console.WriteLine($"✓ {caso.Descripcion} (Error esperado)");
+                    Console.WriteLine($"  Expresión: '{caso.Expresion}'");
+                    Console.WriteLine($"  Error: {ex.Message}");
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine($"✗ {caso.Descripcion} (Error diferente)");
+                    Console.WriteLine($"  Esperado: {caso.DebefallarCon}");
+                    Console.WriteLine($"  Obtuvimos: {ex.Message}");
+                    return false;
+                }
+            }
+            else
+            {
+                Console.WriteLine($"✗ {caso.Descripcion} (Excepción inesperada)");
+                Console.WriteLine($"  Expresión: '{caso.Expresion}'");
+                Console.WriteLine($"  Error: {ex.Message}");
+                return false;
+            }
+        }
     }
 
-    private static void Afirmar(bool condicion, string mensaje) {
-        if (!condicion) {
-            throw new InvalidOperationException(mensaje);
-        }
+    private static List<CasoPrueba> ObtenerCasosPrueba()
+    {
+        return new List<CasoPrueba>
+        {
+            new CasoPrueba
+            {
+                Descripcion = "Suma simple",
+                Expresion = "1+2",
+                ValorX = 0,
+                ResultadoEsperado = 3
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Resta simple",
+                Expresion = "10-3",
+                ValorX = 0,
+                ResultadoEsperado = 7
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Multiplicación simple",
+                Expresion = "3*4",
+                ValorX = 0,
+                ResultadoEsperado = 12
+            },
+            new CasoPrueba
+            {
+                Descripcion = "División entera",
+                Expresion = "10/2",
+                ValorX = 0,
+                ResultadoEsperado = 5
+            },
+
+            new CasoPrueba
+            {
+                Descripcion = "Precedencia: 1+2*3",
+                Expresion = "1+2*3",
+                ValorX = 0,
+                ResultadoEsperado = 7
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Precedencia: 2*3+1",
+                Expresion = "2*3+1",
+                ValorX = 0,
+                ResultadoEsperado = 7
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Precedencia: 10-2*3",
+                Expresion = "10-2*3",
+                ValorX = 0,
+                ResultadoEsperado = 4
+            },
+
+            new CasoPrueba
+            {
+                Descripcion = "Paréntesis: (1+2)*3",
+                Expresion = "(1+2)*3",
+                ValorX = 0,
+                ResultadoEsperado = 9
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Paréntesis anidados",
+                Expresion = "((2+3)*4)",
+                ValorX = 0,
+                ResultadoEsperado = 20
+            },
+
+            new CasoPrueba
+            {
+                Descripcion = "Negación simple",
+                Expresion = "-5",
+                ValorX = 0,
+                ResultadoEsperado = -5
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Negación de suma",
+                Expresion = "-(3+2)",
+                ValorX = 0,
+                ResultadoEsperado = -5
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Positivo simple",
+                Expresion = "+5",
+                ValorX = 0,
+                ResultadoEsperado = 5
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Negación doble",
+                Expresion = "--5",
+                ValorX = 0,
+                ResultadoEsperado = 5
+            },
+
+            new CasoPrueba
+            {
+                Descripcion = "Variable x sola",
+                Expresion = "x",
+                ValorX = 10,
+                ResultadoEsperado = 10
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Suma con x: 1+2*x",
+                Expresion = "1+2*x",
+                ValorX = 10,
+                ResultadoEsperado = 21
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Resta con x: x-1",
+                Expresion = "x-1",
+                ValorX = 5,
+                ResultadoEsperado = 4
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Multiplicación con x: x*2",
+                Expresion = "x*2",
+                ValorX = 5,
+                ResultadoEsperado = 10
+            },
+            new CasoPrueba
+            {
+                Descripcion = "División con x: x/2",
+                Expresion = "x/2",
+                ValorX = 10,
+                ResultadoEsperado = 5
+            },
+            new CasoPrueba
+            {
+                Descripcion = "x después de operador: 2*x",
+                Expresion = "2*x",
+                ValorX = 5,
+                ResultadoEsperado = 10
+            },
+            new CasoPrueba
+            {
+                Descripcion = "x con negación unaria: -x",
+                Expresion = "-x",
+                ValorX = 5,
+                ResultadoEsperado = -5
+            },
+
+            new CasoPrueba
+            {
+                Descripcion = "Expresión compleja 1: (x-1)*2",
+                Expresion = "(x-1)*2",
+                ValorX = 10,
+                ResultadoEsperado = 18
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Expresión compleja 2",
+                Expresion = "(x-1)*(x-8/4)+3",
+                ValorX = 5,
+                ResultadoEsperado = 15
+            },
+            new CasoPrueba
+            {
+                Descripcion = "Expresión compleja 3",
+                Expresion = "(x-1)*(x-8/4)+3",
+                ValorX = 10,
+                ResultadoEsperado = 75
+            },
+
+            new CasoPrueba
+            {
+                Descripcion = "Paréntesis sin cerrar",
+                Expresion = "(1+2",
+                ValorX = 0,
+                DebefallarCon = "Paréntesis sin cerrar"
+            },
+            new CasoPrueba
+            {
+                Descripcion = "División por cero",
+                Expresion = "1/0",
+                ValorX = 0,
+                DebefallarCon = "División por cero"
+            }
+        };
+    }
+
+    private class CasoPrueba
+    {
+        public string Descripcion { get; set; }
+        public string Expresion { get; set; }
+        public int ValorX { get; set; }
+        public int ResultadoEsperado { get; set; }
+        public string DebefallarCon { get; set; }
     }
 }
-

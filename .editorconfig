@@ -12,3 +12,13 @@ csharp_new_line_before_open_brace = none
 # Keep compact one-line constructs when the formatter can do so safely
 csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
+
+# Local variables: camelCase, sin prefijo underscore
+dotnet_naming_symbols.local_variables.applicable_kinds = local
+dotnet_naming_symbols.local_variables.applicable_accessibilities = *
+
+dotnet_naming_style.camel_case_no_underscore.capitalization = camel_case
+
+dotnet_naming_rule.local_variables_no_underscore.symbols = local_variables
+dotnet_naming_rule.local_variables_no_underscore.style = camel_case_no_underscore
+dotnet_naming_rule.local_variables_no_underscore.severity = warning

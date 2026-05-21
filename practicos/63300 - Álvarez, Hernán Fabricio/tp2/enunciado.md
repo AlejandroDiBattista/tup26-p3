@@ -35,7 +35,7 @@ calculadora [expresion valor] [--help] [--probar]
 ### Argumentos posicionales
 
 | Argumento   | Descripción                                                                           |
-| ----------- | ------------------------------------------------------------------------------------- |
+| ----------- | ---------------- |
 | `expresion` | Fórmula a evaluar. Incluir números enteros, operadores, paréntesis y la variable `x`. |
 | `valor`     | Valor entero con el que se reemplaza la variable `x` al evaluar la expresión.         |
 

@@ -44,8 +44,8 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /debug:portable
 /filealign:512
 /optimize-
-/out:obj\Debug\net10.0\editcsv.dll
-/refout:obj\Debug\net10.0\refint\editcsv.dll
+/out:obj/Debug/net10.0/editcsv.dll
+/refout:obj/Debug/net10.0/refint/editcsv.dll
 /target:exe
 /warnaserror-
 /utf8output
