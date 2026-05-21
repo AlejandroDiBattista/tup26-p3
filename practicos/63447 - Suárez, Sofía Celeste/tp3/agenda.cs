@@ -413,3 +413,40 @@ public sealed class AgendaWindow : Runnable {
         return base.OnKeyDown(key);
     }
 }
+
+public sealed class ConfirmarDialog : Dialog {
+    public bool Confirmado { get; private set; } = false;
+    public ConfirmarDialog(string mensaje) {
+        Title = "Confirmar";
+        Width = 40;
+        Height = 8;
+        Add(new Label() {
+            Text = mensaje,
+            X = Pos.Center(),
+            Y = 1
+        });
+        Button btnSi = new() {
+            Text = "_Sí",
+            IsDefault = true
+        };
+        btnSi.Accepting += (_, e) => {
+
+            Confirmado = true;
+
+            App!.RequestStop();
+
+            e.Handled = true;
+        };
+        Button btnNo = new() {
+            Text = "_No"
+        };
+        btnNo.Accepting += (_, e) => {
+
+            App!.RequestStop();
+
+            e.Handled = true;
+        };
+        AddButton(btnSi);
+        AddButton(btnNo);
+    }
+}
