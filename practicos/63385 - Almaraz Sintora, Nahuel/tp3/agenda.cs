@@ -87,30 +87,67 @@ public sealed class AgendaWindow : Runnable {
 }
 
 
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog
+{
+    private readonly IApplication _app;
+    public bool Aceptado { get; private set; }
+    public Contacto Resultado { get; private set; } = new();
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
+    private readonly TextField _nombre = new();
+    private readonly TextField[] _telefonos = new TextField[5];
+    private readonly TextField _email = new();
+    private readonly TextView _notas = new();
+    private readonly CheckBox _favorito = new();
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
+    public ContactDialog(IApplication app, string titulo, Contacto c)
+    {
+        _app = app; Title = titulo; Width = 60; Height = 22;
+        int y = 1;
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
+        Add(new Label { Text = "Nombre (*):", X = 1, Y = y });
+        _nombre.X = 20; _nombre.Y = y; _nombre.Width = Dim.Fill(1); _nombre.Text = c.Nombre;
+        Add(_nombre); y++;
 
-        Add(message);
-        AddButton(closeButton);
+        string[] tels = c.Telefonos.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < 5; i++)
+        {
+            Add(new Label { Text = $"Telefono {i + 1}:", X = 1, Y = y });
+            _telefonos[i] = new TextField { X = 20, Y = y, Width = Dim.Fill(1), Text = i < tels.Length ? tels[i].Trim() : "" };
+            Add(_telefonos[i]); y++;
+        }
+
+        Add(new Label { Text = "Email:", X = 1, Y = y });
+        _email.X = 20; _email.Y = y; _email.Width = Dim.Fill(1); _email.Text = c.Email;
+        Add(_email); y++;
+
+        _favorito.X = 1; _favorito.Y = y; _favorito.Text = "Favorito";
+        _favorito.Value = c.Favorito ? CheckState.Checked : CheckState.UnChecked;
+        Add(_favorito); y++;
+
+        Add(new Label { Text = "Notas:", X = 1, Y = y }); y++;
+        _notas.X = 1; _notas.Y = y; _notas.Width = Dim.Fill(1); _notas.Height = 3; _notas.Text = c.Notas;
+        Add(_notas);
+
+        var guardar = new Button { Text = "_Guardar" };
+        guardar.Accepting += (s, e) => { if (Validar()) { e.Handled = true; _app.RequestStop(); } };
+
+        var cancelar = new Button { Text = "_Cancelar" };
+        cancelar.Accepting += (s, e) => { Aceptado = false; e.Handled = true; _app.RequestStop(); };
+
+        AddButton(guardar); AddButton(cancelar);
+    }
+
+    private bool Validar()
+    {
+        string nombre = (_nombre.Text?.ToString() ?? "").Trim();
+        if (nombre.Length == 0) { MessageBox.ErrorQuery(_app, "Validación", "El nombre no puede estar vacío.", "OK"); return false; }
+        string email = (_email.Text?.ToString() ?? "").Trim();
+        if (email.Length > 0 && !email.Contains('@')) { MessageBox.ErrorQuery(_app, "Validación", "El email debe contener '@'.", "OK"); return false; }
+
+        string telefonos = string.Join(", ", _telefonos.Select(t => (t.Text?.ToString() ?? "").Trim()).Where(t => t.Length > 0));
+        Aceptado = true;
+        Resultado = new Contacto { Nombre = nombre, Telefonos = telefonos, Email = email, Notas = _notas.Text?.ToString() ?? "", Favorito = _favorito.Value == CheckState.Checked };
+        return true;
     }
 }
 
