@@ -594,3 +594,42 @@ public sealed class ContactoDialog : Dialog {
         App!.Run(errorDlg);
     }
 }
+
+public class SqliteAgendaStore {
+    private string _connStr;
+    public SqliteAgendaStore(string dbPath) {
+    _connStr = $"Data Source={dbPath}";
+    using var conn = new SqliteConnection(_connStr);
+    conn.Open();
+    conn.Execute(@"
+        CREATE TABLE IF NOT EXISTS Contactos (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Nombre TEXT NOT NULL,
+            Telefonos TEXT,
+            Email TEXT,
+            Notas TEXT,
+            Favorito INTEGER NOT NULL DEFAULT 0
+        )");
+
+    }
+
+    public List<Contacto> GetAll() {
+        using var conn = new SqliteConnection(_connStr);
+        return conn.GetAll<Contacto>().ToList();
+    }
+
+    public void Insert(Contacto c) {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Insert(c);
+    }
+
+    public void Update(Contacto c) {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Update(c);
+    }
+
+    public void Delete(Contacto c) {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Delete(c);
+    }
+}
