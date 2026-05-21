@@ -163,7 +163,7 @@ private void MostrarDetalle(Contacto? c)
 
 
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
+        ContactDialog dialog = new(new Contacto());
         App!.Run(dialog);
     }
 
@@ -179,33 +179,88 @@ private void MostrarDetalle(Contacto? c)
 
         return base.OnKeyDown(key);
     }
+}
 
-// Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog {
+       public bool Confirmed { get; private set; }
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
+    public Contacto? ContactResult { get; private set; }
+
+    private readonly TextField _nameField;
+    private readonly TextField _emailField;
+
+    public ContactDialog(Contacto initial)
+    {
+        Title = "Contacto";
+
+        Width = 50;
+        Height = 10;
+
+        Add(new Label { Text = "Nombre:", X = 1, Y = 1 });
+
+        _nameField = new TextField
+        {
+            Text = initial.Nombre,
+            X = 12,
+            Y = 1,
+            Width = 30
         };
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
+        Add(_nameField);
+
+        Add(new Label { Text = "Email:", X = 1, Y = 3 });
+
+        _emailField = new TextField
+        {
+            Text = initial.Email,
+            X = 12,
+            Y = 3,
+            Width = 30
+        };
+
+        Add(_emailField);
+
+        Button btnGuardar = new()
+        {
+            Text = "_Guardar",
             IsDefault = true
         };
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
+        btnGuardar.Accepting += (_, e) =>
+        {
+            Guardar();
             e.Handled = true;
         };
 
-        Add(message);
-        AddButton(closeButton);
+        AddButton(btnGuardar);
     }
+
+    private void Guardar()
+    {
+        string nombre = _nameField.Text?.ToString()?.Trim() ?? "";
+
+        if (string.IsNullOrEmpty(nombre))
+        {
+            MessageBox.ErrorQuery(
+                App!,
+                "Validación",
+                "El nombre no puede estar vacío.",
+                "OK"
+            );
+            return;
+        }
+
+        ContactResult = new Contacto
+        {
+            Nombre = nombre,
+            Email = _emailField.Text?.ToString() ?? ""
+        };
+
+        Confirmed = true;
+
+        App!.RequestStop();
+    }
+
 }
 
 
