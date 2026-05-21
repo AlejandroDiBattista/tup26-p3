@@ -26,8 +26,23 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+string dbPath = args.Length > 0 ? args[0] : "agenda.db";
+SqliteAgendaStore store;
+
+try
+{
+    store = new SqliteAgendaStore(dbPath);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error al abrir la base de datos: {ex.Message}");
+    return;
+}
+
+IApplication app = Application.Create();
+app.Init();
+app.Run(new AgendaWindow(store, app));
+app.Dispose();
 
 
 
