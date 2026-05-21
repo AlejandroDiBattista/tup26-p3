@@ -38,3 +38,44 @@ public class Contacto {
     public Contacto Clone() => (Contacto)MemberwiseClone();
     public override string ToString() => $"{(Favorito ? "★" : " ")} {Nombre}";
 }
+
+public class SqliteAgendaStore {
+    private readonly string _connStr;
+
+    public SqliteAgendaStore(string dbPath) {
+        _connStr = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
+    }
+
+    public void InitDb() {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Execute(@"
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT,
+                Email TEXT,
+                Notas TEXT,
+                Favorito INTEGER
+            )");
+    }
+
+    public IEnumerable<Contacto> GetAll() {
+        using var conn = new SqliteConnection(_connStr);
+        return conn.GetAll<Contacto>();
+    }
+
+    public void Insert(Contacto c) {
+        using var conn = new SqliteConnection(_connStr);
+        c.Id = (int)conn.Insert(c);
+    }
+
+    public void Update(Contacto c) {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Update(c);
+    }
+
+    public void Delete(Contacto c) {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Delete(c);
+    }
+}
