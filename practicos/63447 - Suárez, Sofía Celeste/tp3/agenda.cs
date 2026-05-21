@@ -128,5 +128,21 @@ public sealed class AgendaWindow : Runnable {
             ])
         ]};
     }
+    Label lblBuscar = new() {
+        Text = "Buscar:",
+        X = 1,
+        Y = 2
+    };
+
+    _txtBusqueda = new TextField() {
+        X = 10,
+        Y = 2,
+        Width = 30,
+        CanFocus = true
+    };
+
+    _txtBusqueda.TextChanged += (_, _) => {
+        AplicarFiltros();
+    };
     
 }
