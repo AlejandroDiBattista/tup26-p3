@@ -224,29 +224,65 @@ public sealed class AgendaWindow : Runnable {
 
 // Diálogo de ejemplo
 public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
+    readonly TextField nombre = new(), email = new(), favorito = new();
+    readonly TextField[] phones = new TextField[5];
+    readonly TextView notas = new();
+    public bool Ok { get; private set; }
+    public Contacto Result { get; private set; }
+
+    public EjemploDialog() : this("Nuevo contacto", new Contacto()) { }
+    public EjemploDialog(string title, Contacto c) {
         Title  = "Diálogo de ejemplo";
         Width  = 50;
         Height = 8;
+        Result = c;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
+        AddRow("Nombre:", 0, nombre, c.Nombre);
+        AddRow("Email:", 1, email, c.Email);
+        AddRow("Favorito (s/n):", 2, favorito, c.Favorito ? "s" : "n");
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
+        var parts = c.Telefonos.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        for (var i = 0; i < 5; i++) AddRow($"Tel {i + 1}:", 3 + i, phones[i] = new TextField(), i < parts.Length ? parts[i] : "");
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
+        Add(new Label { Text = "Notas:", X = 2, Y = 9 }, notas);
+        notas.X = 2;
+        notas.Y = 10;
+        notas.Width = Dim.Fill(2);
+        notas.Height = 4;
+        notas.Text = c.Notas;
 
-        Add(message);
+        Button closeButton = new() { Text = "_Guardar", IsDefault = true };
+        closeButton.Accepting += (_, e) => { Save(); e.Handled = true; };
+
+        Button cancelButton = new() { Text = "_Cancelar" };
+        cancelButton.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+
         AddButton(closeButton);
+        AddButton(cancelButton);
+    }
+    void AddRow(string label, int row, TextField field, string value)
+    {
+        Add(new Label { Text = label, X = 2, Y = row + 1 }, field);
+        field.X = 18;
+        field.Y = row + 1;
+        field.Width = Dim.Fill(2);
+        field.Text = value;
+    }
+
+    void Save()
+    {
+        var n = nombre.Text?.ToString()?.Trim() ?? "";
+        var e = email.Text?.ToString()?.Trim() ?? "";
+        if (n.Length == 0) { MessageBox.ErrorQuery(App!, "Error", "El nombre no puede estar vacio.", "OK"); return; }
+        if (e.Length > 0 && !e.Contains('@')) { MessageBox.ErrorQuery(App!, "Error", "El email debe contener @.", "OK"); return; }
+
+        Result.Nombre = n;
+        Result.Email = e;
+        Result.Telefonos = string.Join(", ", phones.Select(p => p.Text?.ToString()?.Trim() ?? "").Where(x => x.Length > 0).Take(5));
+        Result.Notas = notas.Text?.ToString() ?? "";
+        Result.Favorito = (favorito.Text?.ToString()?.Trim().ToLowerInvariant() ?? "") is "s" or "si" or "y" or "yes";
+        Ok = true;
+        App!.RequestStop();
     }
 }
 
