@@ -23,30 +23,60 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
-using IApplication app = Application.Create().Init();
+var dbPath = args.FirstOrDefault() ?? "agenda.db";
+using IApplication app = Application.Create();
 app.Run(new AgendaWindow());
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
+    public sealed class AgendaWindow : Runnable
+{
+    public static string DbPath = "agenda.db";
 
-    public AgendaWindow() {
-        Title  = "Agenda - Terminal.Gui";
-        Width  = Dim.Fill();
-        Height = Dim.Fill();
+    readonly SqliteAgendaStore store;
+    readonly List<Contacto> contacts = [];
+    List<Contacto> filtered = [];
+    readonly TextField search = new();
+    readonly ListView list = new();
+    readonly TextView detail = new();
+    readonly Label status = new();
+    readonly MenuItem favItem;
+    bool onlyFav;
 
-        Menu.DefaultBorderStyle = LineStyle.Single;
-        BuildLayout();
+        public AgendaWindow() {
+            Title  = "Agenda - Terminal.Gui";
+            Width  = Dim.Fill();
+            Height = Dim.Fill();
+            Menu.DefaultBorderStyle = LineStyle.Single;
+            store = new SqliteAgendaStore(DbPath);
+            try { store.Init(); contacts.AddRange(store.GetAll()); }
+            catch (Exception ex) { MessageBox.ErrorQuery(App!, "Base de datos", ex.Message, "OK"); }
+
+            favItem = new MenuItem("Solo favoritos", null, ToggleFav) { CheckType = MenuItemCheckStyle.Checked };
+            BuildLayout();
+            RefreshList();
+        }
+
     }
 
     private void BuildLayout() {
+       
         MenuBar menu = new() {
-            Menus = [
+             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
+                    new MenuItem("_Importar JSON", null, ImportJson),
+                    new MenuItem("_Exportar JSON", null, ExportJson),
+                    null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
+                ]),
+                new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo contacto", "F2 / Ctrl+N", AbrirDialogo),
+                    new MenuItem("_Editar contacto", "F3 / Enter", EditSelected),
+                    new MenuItem("_Eliminar contacto", "Del / Ctrl+D", DeleteSelected)
+                ]),
+                new MenuBarItem("_Ver", [favItem]),
+                new MenuBarItem("_Ayuda", [new MenuItem("_Acerca de", null, () => MessageBox.Query(App!, "Acerca de", "Agenda TUI simple", "OK"))])
             ]
         };
 
