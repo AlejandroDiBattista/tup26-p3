@@ -47,12 +47,12 @@ public sealed class AgendaWindow : Runnable {
     private List<Contacto> _contacts = [];
     private List<Contacto> _filteredContacts = [];
 
-    private readonly ListView _listView;
-    private readonly Label _detailName;
-    private readonly Label _detailPhone;
-    private readonly Label _detailEmail;
-    private readonly Label _detailNotes;
-    private readonly Label _statusBar;
+    private ListView _listView = null!;
+    private Label _detailName = null!;
+    private Label _detailPhone = null!;
+    private Label _detailEmail = null!;
+    private Label _detailNotes = null!;
+    private Label _statusBar = null!;
     
 
 
@@ -130,8 +130,10 @@ public sealed class AgendaWindow : Runnable {
 
     _filteredContacts = _contacts;
 
-    _listView.SetSource(
-        _filteredContacts.Select(c => c.Nombre).ToList()
+    _listView.SetSource<string>(
+        new System.Collections.ObjectModel.ObservableCollection<string>(
+            _filteredContacts.Select(c => c.Nombre)
+        )
     );
     
 }
