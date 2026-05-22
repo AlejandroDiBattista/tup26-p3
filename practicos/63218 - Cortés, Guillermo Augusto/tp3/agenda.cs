@@ -331,9 +331,109 @@ private void RequestExit() {
     App!.RequestStop();
 }
 
-private void ImportJson() {}
+private void ImportJson() {
+    string? path = AskForPath(App!, "Importar JSON", "Ruta del archivo JSON:", "Importar");
+    if (string.IsNullOrWhiteSpace(path)) {
+        SetStatus("Importacion cancelada.");
+        return;
+    }
 
-private void ExportJson() {}
+    try {
+        List<Contacto> imported = JsonAgendaIO.Read(path).ToList();
+
+        int answer = MessageBox.Query(
+            App!,
+            "Confirmar importacion",
+            $"Se agregaran {imported.Count} contacto(s). Continuar?",
+            "Importar",
+            "Cancelar") ?? 1;
+
+        if (answer != 0) {
+            SetStatus("Importacion cancelada.");
+            return;
+        }
+
+        foreach (Contacto contact in imported) {
+            contact.Id = 0;
+            int id = store.Insert(contact);
+            contact.Id = id;
+            contacts.Add(contact);
+        }
+
+        RefreshFilteredContacts();
+        SetStatus($"Importados {imported.Count} contacto(s) desde {path}.");
+    }
+    catch (Exception ex) {
+        MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+    }
+}
+
+private void ExportJson() {
+    string? path = AskForPath(App!, "Exportar JSON", "Ruta de salida:", "Exportar");
+    if (string.IsNullOrWhiteSpace(path)) {
+        SetStatus("Exportacion cancelada.");
+        return;
+    }
+
+    try {
+        JsonAgendaIO.Write(path, contacts);
+        SetStatus($"Exportados {contacts.Count} contacto(s) a {path}.");
+    }
+    catch (Exception ex) {
+        MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+    }
+}
+
+private static string? AskForPath(IApplication app, string title, string prompt, string actionText) {
+    Dialog dialog = new() {
+        Title = title,
+        Width = 72,
+        Height = 8
+    };
+
+    Label label = new() {
+        Text = prompt,
+        X = 1,
+        Y = 1,
+        Width = 20
+    };
+
+    TextField pathField = new() {
+        X = Pos.Right(label) + 1,
+        Y = 1,
+        Width = Dim.Fill(1)
+    };
+
+    string? result = null;
+
+    Button accept = new() {
+        Text = $"_{actionText}",
+        IsDefault = true
+    };
+
+    accept.Accepting += (_, e) => {
+        result = pathField.Text?.ToString();
+        app.RequestStop();
+        e.Handled = true;
+    };
+
+    Button cancel = new() {
+        Text = "_Cancelar"
+    };
+
+    cancel.Accepting += (_, e) => {
+        result = null;
+        app.RequestStop();
+        e.Handled = true;
+    };
+
+    dialog.Add(label, pathField);
+    dialog.AddButton(accept);
+    dialog.AddButton(cancel);
+    app.Run(dialog);
+
+    return string.IsNullOrWhiteSpace(result) ? null : result.Trim();
+}
 
 private void SetStatus(string message) {
     if (statusBar is not null) {
@@ -586,6 +686,39 @@ public sealed class SqliteAgendaStore : IDisposable {
 }
 
 public static class JsonAgendaIO {
+    private static readonly JsonSerializerOptions Options = new() {
+        WriteIndented = true,
+        PropertyNamingPolicy = null,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+
+    public static IReadOnlyList<Contacto> Read(string path) {
+        if (!File.Exists(path)) {
+            throw new FileNotFoundException("El archivo JSON no existe.", path);
+        }
+
+        try {
+            string json = File.ReadAllText(path, Encoding.UTF8);
+            List<Contacto>? contacts = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+
+            return contacts?.Select(c => {
+                c.Id = 0;
+                c.Nombre = c.Nombre?.Trim() ?? "";
+                c.Telefonos ??= "";
+                c.Email ??= "";
+                c.Notas ??= "";
+                return c;
+            }).ToList() ?? [];
+        }
+        catch (JsonException ex) {
+            throw new InvalidOperationException($"JSON con formato invalido: {ex.Message}", ex);
+        }
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> contacts) {
+        string json = JsonSerializer.Serialize(contacts, Options);
+        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
 }
 
 [Table("Contactos")]
