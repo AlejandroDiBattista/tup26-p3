@@ -124,3 +124,38 @@ public sealed class VentanaCtc : Runnable {
         Add(listaVis, panelDet, barEstado);
     }
 }
+readonly TextField cajaBusq;
+bool soloFav;
+
+cajaBusq = new() {
+    X = 10,
+    Y = 1,
+    Width = Dim.Fill(1)
+};
+
+cajaBusq.TextChanged += (_, _) => ActVista();
+
+void ActVista() {
+
+    string texto = cajaBusq.Text?.ToString() ?? "";
+
+    visibles.Clear();
+
+    visibles.AddRange(
+        listaCtc.Where(ctc =>
+            Coincide(ctc, texto)
+            && (!soloFav || ctc.Fav)
+        )
+        .OrderBy(ctc => ctc.Nombre)
+    );
+
+    filas.Clear();
+
+    foreach (Ctc ctc in visibles)
+        filas.Add(
+            $"{(ctc.Fav ? "*" : " ")} " +
+            $"{ctc.Nombre} - {ctc.Tels}"
+        );
+
+    listaVis.SetSource(filas);
+}
