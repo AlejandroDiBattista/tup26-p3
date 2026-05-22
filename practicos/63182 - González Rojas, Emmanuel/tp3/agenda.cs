@@ -386,6 +386,169 @@ public sealed class AgendaWindow : Window
     }
 }
 
+
+// ==========================================================
+// DIALOGO DE CONTACTO
+// ==========================================================
+public sealed class ContactDialog : Dialog
+{
+    public Contacto Contacto { get; private set; }
+    public bool Guardado { get; private set; }
+
+    private readonly TextField txtNombre;
+    private readonly TextField[] txtTelefonos = new TextField[5];
+    private readonly TextField txtEmail;
+    private readonly TextView txtNotas;
+    private readonly CheckBox chkFavorito;
+    private readonly bool esNuevo;
+
+    public ContactDialog(Contacto contacto, bool esNuevo = false)
+    {
+        Contacto = contacto;
+        this.esNuevo = esNuevo;
+        Title = esNuevo ? "Nuevo contacto" : "Contacto";
+        Width = 70;
+        Height = 23;
+
+        // Nombre
+        Add(new Label() { Text = "Nombre:", X = 1, Y = 1 });
+        txtNombre = new TextField() { Text = contacto.Nombre, X = 15, Y = 1, Width = 40 };
+        Add(txtNombre);
+
+        // Teléfonos
+        Add(new Label() { Text = "Teléfonos:", X = 1, Y = 3 });
+        string[] telefonos = contacto.Telefonos.Split(',');
+
+        for (int i = 0; i < 5; i++)
+        {
+            txtTelefonos[i] = new TextField()
+            {
+                Text = i < telefonos.Length ? telefonos[i].Trim() : "",
+                X = 15,
+                Y = 3 + i,
+                Width = 40
+            };
+            Add(new Label() { Text = $"Tel {i + 1}:", X = 1, Y = 3 + i });
+            Add(txtTelefonos[i]);
+        }
+
+        // Email
+        Add(new Label() { Text = "Email:", X = 1, Y = 9 });
+        txtEmail = new TextField()
+        {
+            Text = contacto.Email,
+            X = 15,
+            Y = 9,
+            Width = 40
+        };
+        Add(txtEmail);
+        Add(new Label()
+        {
+            Text = "Presione F6 para insertar @",
+            X = 15,
+            Y = 10
+        });
+        txtEmail.KeyDown += (sender, e) =>
+        {
+            if (e == Key.F6)
+            {
+                txtEmail.Text = (txtEmail.Text?.ToString() ?? "") + "@";
+            }
+        };
+
+        // Favorito
+        chkFavorito = new CheckBox()
+        {
+            Text = "Favorito",
+            X = 15,
+            Y = 11,
+            CheckedState = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked
+        };
+        Add(chkFavorito);
+
+        // Notas
+        Add(new Label() { Text = "Notas:", X = 1, Y = 13 });
+        txtNotas = new TextView() { X = 15, Y = 13, Width = 40, Height = 4, Text = contacto.Notas };
+        Add(txtNotas);
+
+        // Botones
+        Button botonGuardar = new Button() { Text = "Guardar" };
+        botonGuardar.Accept += (_, _) => Guardar();
+        AddButton(botonGuardar);
+
+        Button botonCancelar = new Button() { Text = "Cancelar" };
+        botonCancelar.Accept += (_, _) => Application.RequestStop();
+        AddButton(botonCancelar);
+
+        txtNombre.SetFocus();
+
+    //arroba
+        txtEmail.KeyDown += (sender, keyEvent) =>
+        {
+            if (keyEvent.IsCtrl && keyEvent.KeyCode == KeyCode.A)
+            {
+                InsertarArrobaManualmente();
+                keyEvent.Handled = true;
+                return;
+            }
+
+            bool altGrQ = (keyEvent.IsAlt && keyEvent.IsCtrl && keyEvent.KeyCode == KeyCode.Q) || (keyEvent.IsAlt && keyEvent.KeyCode == KeyCode.Q);
+            bool altGr2 = (keyEvent.IsAlt && keyEvent.IsCtrl && keyEvent.KeyCode == KeyCode.D2) || (keyEvent.IsAlt && keyEvent.KeyCode == KeyCode.D2);
+
+            if (altGrQ || altGr2)
+            {
+                InsertarArrobaManualmente();
+                keyEvent.Handled = true;
+            }
+        };
+    }
+
+    private void InsertarArrobaManualmente()
+    {
+        string textoActual = txtEmail.Text?.ToString() ?? "";
+        int pos = txtEmail.CursorPosition;
+        txtEmail.Text = textoActual.Insert(pos, "@");
+        txtEmail.CursorPosition = pos + 1;
+    }
+
+    private void Guardar()
+    {
+        string nombre = txtNombre.Text?.ToString()?.Trim() ?? "";
+        string email = txtEmail.Text?.ToString()?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            MessageBox.ErrorQuery("Error", "El nombre es obligatorio", "OK");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(email) && !email.Contains("@"))
+        {
+            MessageBox.ErrorQuery("Error", "El email debe contener @", "OK");
+            return;
+        }
+
+        Contacto.Nombre = nombre;
+        List<string> telefonosGuardados = txtTelefonos
+            .Select(t => t.Text?.ToString()?.Trim() ?? "")
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .ToList();
+
+        Contacto.Telefonos = string.Join(", ", telefonosGuardados);
+        Contacto.Email = email;
+        Contacto.Notas = txtNotas.Text?.ToString() ?? "";
+        Contacto.Favorito = chkFavorito.CheckedState == CheckState.Checked;
+
+        if (esNuevo)
+        {
+            Contacto.Id = 0;
+        }
+
+        Guardado = true;
+        Application.RequestStop();
+    }
+}
+
 // ==========================================================
 // SQLITE STORE
 // ==========================================================
