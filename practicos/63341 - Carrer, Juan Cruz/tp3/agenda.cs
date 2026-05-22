@@ -19,19 +19,19 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
-string databasePath = args.Length > 0 ? args[0] : "agenda.db";
+    string databasePath = args.Length > 0 ? args[0] : "agenda.db";
 
-try {
-    using SqliteAgendaStore store = new(databasePath);
-    using IApplication app = Application.Create().Init();
-    app.Run(new AgendaWindow(store));
-}
-catch (Exception ex) {
-    Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
-    Environment.ExitCode = 1;
-}
+    try {
+        using SqliteAgendaStore store = new(databasePath);
+        using IApplication app = Application.Create().Init();
+        app.Run(new AgendaWindow(store));
+    }
+    catch (Exception ex) {
+        Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
+        Environment.ExitCode = 1;
+    }
 
-public sealed class AgendaWindow : Window {
+    public sealed class AgendaWindow : Window {
     private readonly SqliteAgendaStore store;
     private readonly List<Contacto> contacts;
     private readonly List<Contacto> filteredContacts = [];
@@ -57,7 +57,7 @@ public sealed class AgendaWindow : Window {
         SetStatus($"Agenda abierta. {contacts.Count} contacto(s).");
     }
 
-private void BuildLayout() {
+    private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
@@ -137,7 +137,7 @@ private void BuildLayout() {
         Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
     }
 
-private void RefreshFilteredContacts() {
+    private void RefreshFilteredContacts() {
         string query = searchField?.Text?.ToString() ?? "";
         int currentId = SelectedContact()?.Id ?? 0;
 
@@ -177,3 +177,40 @@ private void RefreshFilteredContacts() {
         string email = string.IsNullOrWhiteSpace(contact.Email) ? "" : $" <{contact.Email}>";
         return $"{favorite}{contact.Nombre}{email}";
     }
+
+    private Contacto? SelectedContact() {
+        if (filteredContacts.Count == 0) {
+            return null;
+        }
+
+        int index = listView is null ? selectedIndex : listView.SelectedItem ?? selectedIndex;
+        if (index < 0 || index >= filteredContacts.Count) {
+            index = 0;
+        }
+
+        return filteredContacts[index];
+    }
+
+    private void UpdateDetails() {
+        Contacto? contact = SelectedContact();
+        if (detailLabel is null) {
+            return;
+        }
+
+        detailLabel.Text = contact is null
+            ? "No hay contactos para mostrar."
+            : BuildDetails(contact);
+    }
+
+    private static string BuildDetails(Contacto contact) {
+        string favorite = contact.Favorito ? "Si" : "No";
+        return
+            $"Id: {contact.Id}\n" +
+            $"Nombre: {contact.Nombre}\n" +
+            $"Telefonos: {contact.Telefonos}\n" +
+            $"Email: {contact.Email}\n" +
+            $"Favorito: {favorite}\n\n" +
+            $"Notas:\n{contact.Notas}";
+    }
+
+    
