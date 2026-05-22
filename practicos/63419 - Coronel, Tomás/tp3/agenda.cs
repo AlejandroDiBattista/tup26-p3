@@ -35,6 +35,8 @@ repositorio.InitDb();
 
 using IApplication app = Application.Create().Init();
 app.Run(new VentanaPrincipal(repositorio));
+
+
 public sealed class VentanaPrincipal : Runnable
 {
     private readonly SqliteAgendaStore _repositorio;
@@ -149,7 +151,7 @@ public sealed class VentanaPrincipal : Runnable
         Add(barraMenu, lblBuscar, _campoBusqueda, panelIzquierdo, panelDerecho, _etiquetaEstado);
     }
 
-        private void ActualizarEstado(string msg) => _etiquetaEstado.Text = msg;
+    private void ActualizarEstado(string msg) => _etiquetaEstado.Text = msg;
 
     private void CargarContactos()
     {
@@ -181,7 +183,7 @@ public sealed class VentanaPrincipal : Runnable
         RefrescarDetalle();
     }
 
-  private void RefrescarDetalle()
+    private void RefrescarDetalle()
     {
         int? idx = _vistaLista.SelectedItem;
         if (idx.HasValue && idx.Value >= 0 && idx.Value < _listaFiltrada.Count)
@@ -235,7 +237,7 @@ public sealed class VentanaPrincipal : Runnable
         catch (Exception ex) { DialogoError("Error al actualizar", ex.Message); }
     }
 
-       private void BorrarContacto()
+    private void BorrarContacto()
     {
         int? idx = _vistaLista.SelectedItem;
         if (!idx.HasValue || idx.Value < 0 || idx.Value >= _listaFiltrada.Count) return;
@@ -282,7 +284,7 @@ public sealed class VentanaPrincipal : Runnable
         catch (Exception ex)          { DialogoError("Error al importar", ex.Message); }
     }
 
-       private void ExportarAJson()
+    private void ExportarAJson()
     {
         string? ruta = PedirRuta("Exportar JSON", "Ruta donde guardar:", "contactos.json");
         if (ruta == null) return;
@@ -360,6 +362,8 @@ public sealed class VentanaPrincipal : Runnable
         return base.OnKeyDown(key);
     }
 }
+
+
 public sealed class DialogoContacto : Dialog
 {
     private readonly TextField   _tfNombre;
@@ -466,4 +470,92 @@ public sealed class DialogoContacto : Dialog
         d.AddButton(btn);
         App!.Run(d);
     }
+}
+
+
+public class SqliteAgendaStore
+{
+    private readonly string _connStr;
+
+    public SqliteAgendaStore(string rutaDb)
+    {
+        _connStr = new SqliteConnectionStringBuilder { DataSource = rutaDb }.ToString();
+    }
+
+    public void InitDb()
+    {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Execute(@"
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre    TEXT NOT NULL,
+                Telefonos TEXT,
+                Email     TEXT,
+                Notas     TEXT,
+                Favorito  INTEGER
+            )");
+    }
+
+    public IEnumerable<Contacto> GetAll()
+    {
+        using var conn = new SqliteConnection(_connStr);
+        return conn.GetAll<Contacto>();
+    }
+
+    public void Insert(Contacto c)
+    {
+        using var conn = new SqliteConnection(_connStr);
+        c.Id = (int)conn.Insert(c);
+    }
+
+    public void Update(Contacto c)
+    {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Update(c);
+    }
+
+    public void Delete(Contacto c)
+    {
+        using var conn = new SqliteConnection(_connStr);
+        conn.Delete(c);
+    }
+}
+
+
+public class JsonAgendaIO
+{
+    private static readonly JsonSerializerOptions Opciones = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        PropertyNameCaseInsensitive = true
+    };
+
+    public static void Export(string ruta, IEnumerable<Contacto> contactos)
+    {
+        var json = JsonSerializer.Serialize(contactos, Opciones);
+        File.WriteAllText(ruta, json);
+    }
+
+    public static IEnumerable<Contacto> Import(string ruta)
+    {
+        if (!File.Exists(ruta)) throw new FileNotFoundException("No se encontró el archivo JSON.");
+        var json = File.ReadAllText(ruta);
+        return JsonSerializer.Deserialize<List<Contacto>>(json, Opciones) ?? [];
+    }
+}
+
+
+[Table("Contactos")]
+public class Contacto
+{
+    [Key] public int    Id        { get; set; }
+         public string Nombre    { get; set; } = "";
+         public string Telefonos { get; set; } = "";
+         public string Email     { get; set; } = "";
+         public string Notas     { get; set; } = "";
+         public bool   Favorito  { get; set; }
+
+    public Contacto Clone() => (Contacto)MemberwiseClone();
+    public override string ToString() => $"{(Favorito ? "★" : " ")} {Nombre}";
 }
