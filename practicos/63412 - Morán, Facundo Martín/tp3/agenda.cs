@@ -16,6 +16,7 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text.Json;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -77,12 +78,27 @@ public sealed class AgendaWindow : Runnable {
          MenuBar menu = new() {
         Menus = [
             new MenuBarItem("_Archivo", [
-                new MenuItem("_Nuevo", "F2", AbrirNuevo),
-                new MenuItem("_Editar", "F3", AbrirEditar),
-                new MenuItem("_Eliminar", "Del", EliminarContacto),
+                new MenuItem("_Importar JSON", "Ctrl+I", ImportarJson),
+                new MenuItem("_Exportar JSON", "Ctrl+E", ExportarJson),
                 null!,
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+            ]),
+
+            new MenuBarItem("_Contactos", [
+                new MenuItem("_Nuevo", "F2", AbrirNuevo),
+                new MenuItem("_Editar", "F3", AbrirEditar),
+                new MenuItem("_Eliminar", "Del", EliminarContacto)
+            ]),
+
+            new MenuBarItem("_Ver", [
+                new MenuItem("_Solo favoritos", "F4", ToggleFavoritos)
+            ]),
+
+            new MenuBarItem("_Ayuda", [
+                new MenuItem("_Acerca de", "F1", MostrarAcercaDe)
             ])
+
+            
         ]
     };
     Label searchLabel = new()
@@ -236,6 +252,75 @@ private void MostrarDetalle(Contacto? c)
         MostrarDetalle(ContactoSeleccionado());
     }
 
+    private void ToggleFavoritos()
+    {
+        _onlyFavorites = !_onlyFavorites;
+        AplicarFiltro();
+        MostrarDetalle(ContactoSeleccionado());
+        _statusBar.Text = _onlyFavorites
+            ? "Mostrando solo favoritos."
+            : "Mostrando todos los contactos.";
+    }
+
+    private void MostrarAcercaDe()
+    {
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "Agenda de contactos - TP3",
+            "OK"
+        );
+    }
+
+    private void ImportarJson()
+{
+    try
+    {
+        List<Contacto> imported =
+            JsonAgendaIO.Read("contactos.json");
+
+        foreach (Contacto c in imported)
+        {
+            c.Id = 0;
+
+            _store.Insert(c);
+
+            _contacts.Add(c);
+        }
+
+        CargarContactos();
+    }
+    catch
+    {
+        MessageBox.ErrorQuery(
+            App!,
+            "Error",
+            "No se pudo importar JSON.",
+            "OK"
+        );
+    }
+}
+
+private void ExportarJson()
+{
+    try
+    {
+        JsonAgendaIO.Write(
+            "contactos.json",
+            _contacts
+        );
+    }
+    catch
+    {
+        MessageBox.ErrorQuery(
+            App!,
+            "Error",
+            "No se pudo exportar JSON.",
+            "OK"
+        );
+    }
+}
+
     private void SolicitarSalir() {
         App!.RequestStop();
     }
@@ -255,6 +340,14 @@ private void MostrarDetalle(Contacto? c)
         }
         if (key == Key.Delete) {
             EliminarContacto();
+            return true;
+        }
+        if (key == Key.I.WithCtrl) {
+            ImportarJson();
+            return true;
+        }
+        if (key == Key.E.WithCtrl) {
+            ExportarJson();
             return true;
         }
 
@@ -396,7 +489,37 @@ public class SqliteAgendaStore
         con.Delete(c);
     }
 }
-public class JsonAgendaIO {}
+public class JsonAgendaIO 
+{
+    private static readonly JsonSerializerOptions Opts = new()
+    {
+        WriteIndented = true
+    };
+
+    public static List<Contacto> Read(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException();
+        }
+
+        string json = File.ReadAllText(path);
+
+        return JsonSerializer.Deserialize<List<Contacto>>(json, Opts)
+            ?? [];
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> contacts)
+    {
+        string json = JsonSerializer.Serialize(
+            contacts,
+            Opts
+        );
+
+        File.WriteAllText(path, json);
+    }
+}
+
 
 [Table("Contactos")]
 public class Contacto {
