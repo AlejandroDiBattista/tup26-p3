@@ -82,3 +82,20 @@ public sealed class AgendaWindow : Runnable {
             baseCompleta.Add(creado); Redibujar(creado.Id); Mensaje("Alta realizada.");
         });
     }
+ void Modificar() {
+        Contacto? actual = ContactoActual(); if (actual is null) { Mensaje("No hay selección."); return; }
+        ContactDialog d = new("Edición de contacto", actual.Clone());
+        App!.Run(d); if (d.Valor is null) return;
+        Seguro("modificar", () => {
+            datos.Actualizar(d.Valor);
+            int i = baseCompleta.FindIndex(x => x.Id == actual.Id);
+            if (i >= 0) baseCompleta[i] = d.Valor;
+            Redibujar(d.Valor.Id); Mensaje("Registro actualizado.");
+        });
+    }
+
+    void Baja() {
+        Contacto? actual = ContactoActual(); if (actual is null) { Mensaje("No hay selección."); return; }
+        if (MessageBox.Query(App!, "Baja", $"¿Borrar \"{actual.Nombre}\"?", "Borrar", "Cancelar") != 0) return;
+        Seguro("borrar", () => { datos.Borrar(actual); baseCompleta.RemoveAll(x => x.Id == actual.Id); Redibujar(); Mensaje("Registro eliminado."); });
+    }
