@@ -101,6 +101,7 @@ public sealed class AgendaWindow : Runnable {
             Y = 1,
             Width = Dim.Fill(),
         };
+        _searchField.TextChanged += (_, _) => ApplyFilter();
 
         FrameView listFrame = new() {
             Title = "Contactos",
@@ -151,7 +152,6 @@ public sealed class AgendaWindow : Runnable {
         Add(menu, searchLabel, _searchField, listFrame, detailFrame, _statusLabel);
     }
 
-
     private void LoadContacts() {
         try {
             _contacts = _store.GetAll();
@@ -163,23 +163,35 @@ public sealed class AgendaWindow : Runnable {
         ApplyFilter();
     }
 
-    private void MenuNuevo() {
-        var dlg = new ContactDialog("Nuevo contacto", new Contacto());
-        App!.Run(dlg);
-        if (!dlg.WasAccepted) return;
+    private void ApplyFilter() {
+        string search = _searchField?.Text?.Trim() ?? "";
+        var query = _contacts.AsEnumerable();
 
-        var nuevo = dlg.ContactResult!;
-        try {
-            _store.Insert(nuevo);
-            _contacts.Add(nuevo);
-            ApplyFilter();
-            int idx = _filteredContacts.FindIndex(c => c.Id == nuevo.Id);
-            if (idx >= 0) _listView.SelectedItem = idx;
-            SetStatus($"Contacto '{nuevo.Nombre}' creado.");
+        if (_soloFavoritos)
+            query = query.Where(c => c.Favorito);
+
+        if (!string.IsNullOrEmpty(search)) {
+            string lower = search.ToLowerInvariant();
+            query = query.Where(c =>
+                c.Nombre.ToLowerInvariant().Contains(lower) ||
+                c.Telefonos.ToLowerInvariant().Contains(lower) ||
+                c.Email.ToLowerInvariant().Contains(lower));
         }
-        catch (Exception ex) {
-            MessageBox.ErrorQuery(App!, "Error", $"No se pudo guardar el contacto:\n{ex.Message}", "Aceptar");
-        }
+
+        _filteredContacts = query.ToList();
+
+        var items = new ObservableCollection<string>(
+            _filteredContacts.Select(c => (c.Favorito ? "★ " : "  ") + c.Nombre));
+
+        _listView.SetSource(items);
+
+        int? sel = _listView.SelectedItem;
+        if (_filteredContacts.Count > 0 && (sel == null || sel.Value >= _filteredContacts.Count))
+            _listView.SelectedItem = 0;
+        else if (_filteredContacts.Count == 0)
+            _listView.SelectedItem = null;
+
+        UpdateDetail();
     }
 
     private void OnSelectedItemChanged(object? sender, ValueChangedEventArgs<int?> e)
@@ -207,15 +219,93 @@ public sealed class AgendaWindow : Runnable {
             $"Notas:\n{c.Notas}";
     }
 
-    private void SetStatus(string msg) => _statusLabel.Text = msg;
+    private Contacto? GetSelected() {
+        int? selNullable = _listView.SelectedItem;
+        if (selNullable == null) return null;
+        int idx = selNullable.Value;
+        return (idx >= 0 && idx < _filteredContacts.Count) ? _filteredContacts[idx] : null;
+    }
 
-    private void MenuToggleFavoritos() { }
+    private void SetStatus(string msg) => _statusLabel.Text = msg;
+    private void MenuToggleFavoritos() {
+        _soloFavoritos = !_soloFavoritos;
+        _soloFavoritosMenuItem.Title = _soloFavoritos ? "_Solo favoritos ✓" : "_Solo favoritos";
+        SetStatus(_soloFavoritos ? "Mostrando solo favoritos." : "Mostrando todos los contactos.");
+        ApplyFilter();
+    }
+
+
+    private void MenuNuevo() {
+        var dlg = new ContactDialog("Nuevo contacto", new Contacto());
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+
+        var nuevo = dlg.ContactResult!;
+        try {
+            _store.Insert(nuevo);
+            _contacts.Add(nuevo);
+            ApplyFilter();
+            int idx = _filteredContacts.FindIndex(c => c.Id == nuevo.Id);
+            if (idx >= 0) _listView.SelectedItem = idx;
+            SetStatus($"Contacto '{nuevo.Nombre}' creado.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo guardar el contacto:\n{ex.Message}", "Aceptar");
+        }
+    }
+
+
+    private void MenuEditar() {
+        var sel = GetSelected();
+        if (sel == null) {
+            MessageBox.ErrorQuery(App!, "Aviso", "No hay contacto seleccionado.", "Aceptar");
+            return;
+        }
+
+        var dlg = new ContactDialog("Editar contacto", sel.Clone());
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+
+        var editado = dlg.ContactResult!;
+        editado.Id = sel.Id;
+        try {
+            _store.Update(editado);
+            int memIdx = _contacts.FindIndex(c => c.Id == sel.Id);
+            if (memIdx >= 0) _contacts[memIdx] = editado;
+            ApplyFilter();
+            int idx = _filteredContacts.FindIndex(c => c.Id == editado.Id);
+            if (idx >= 0) _listView.SelectedItem = idx;
+            SetStatus($"Contacto '{editado.Nombre}' actualizado.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo actualizar el contacto:\n{ex.Message}", "Aceptar");
+        }
+    }
+
+    private void MenuEliminar() {
+        var sel = GetSelected();
+        if (sel == null) {
+            MessageBox.ErrorQuery(App!, "Aviso", "No hay contacto seleccionado.", "Aceptar");
+            return;
+        }
+
+        int? resp = MessageBox.Query(App!, "Confirmar", $"¿Eliminar el contacto '{sel.Nombre}'?", "Sí", "No");
+        if (resp != 0) return;
+
+        try {
+            _store.Delete(sel);
+            _contacts.RemoveAll(c => c.Id == sel.Id);
+            ApplyFilter();
+            SetStatus($"Contacto '{sel.Nombre}' eliminado.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo eliminar el contacto:\n{ex.Message}", "Aceptar");
+        }
+    }
+
     private void MenuImportar() { }
     private void MenuExportar() { }
     private void MenuSalir() { }
-    private void MenuNuevo() { }
-    private void MenuEditar() { }
-    private void MenuEliminar() { }
     private void MenuAcercaDe() { }
 }
 
