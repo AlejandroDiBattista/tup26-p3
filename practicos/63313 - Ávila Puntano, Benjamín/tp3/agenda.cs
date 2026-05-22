@@ -34,8 +34,16 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
-}
 
+    public Contacto Clone() => new()
+    {
+        Id = Id,
+        Nombre = Nombre,
+        Telefonos = Telefonos,
+        Email = Email,
+        Notas = Notas,
+        Favorito = Favorito
+    };
 public sealed class SqliteAgendaStore {
     private readonly string _connectionString;
 
@@ -275,7 +283,7 @@ private void SetStatus(string message)
     
 private void NuevoContacto()
 {
-    ContactDialog dialog = new("Nuevo contacto", new Contacto());
+    ContactDialog dialog = new("Nuevo contacto", new Contacto);
     App!.Run(dialog);
     if (!dialog.Aceptado)
         return;
@@ -318,7 +326,7 @@ private void NuevoContacto()
          if (respuesta != 0) {
             return;
    
-          _store.Eliminar(contacto.Id);
+         _store.Eliminar(contacto.Id);
          _contacts.Remove(contacto);
          AplicarFiltro();
          SetStatus($"Contacto '{contacto.Nombre}' eliminado.");  
@@ -326,4 +334,76 @@ private void NuevoContacto()
         }
     
     }
+    public sealed class ContactDialog : Dialog {
+            public bool Aceptado { get; private set; }
+            public Contacto Resultado { get; private set; } = new();
+              
+            private readonly TextField _nombre = new();
+              private readonly TextField[] _telefonos = new TextField[5];
+            private readonly TextField _email = new();
+            private readonly TextView _notas = new();
+            private readonly CheckBox _favorito = new();
+
+        }
+    public ContactDialog(string titulo, Contacto contacto) {
+        Title = titulo;
+        Width = 60;
+        Height = 20;
+        int y = 1;
+
+        Add(new Label { Text = "nombre (*):", X = 1, Y = y });
+        _nombre.X = 20;
+        _nombre.Y = y;
+        _nombre.Width = Dim.Fill(1);
+        _nombre.Text = contacto.Nombre;
+        Add(_nombre);
+        y++;
+    string[] telefonos = contacto.Telefonos.Split(';', StringSplitOptions.RemoveEmptyEntries);
+    for (int i = 0; i < _telefonos.Length; i++)
+    {        Add(new Label { Text = $"Telefono {i + 1}:", X = 1, Y= y });
+            _telefonos[i] = new TextField {
+                X = 20,
+                Y = y,
+                Width = Dim.Fill(1),
+                Text = i < telefonos.Length ? telefonos[i].Trim(): ""
+            };
+            Add(_telefonos[i]);
+            y++;
+    }
+        Add(new Label { Text = "Email:", X = 1, Y = y });
+        _email.X = 20;
+        _email.Y = y;
+        _email.Width = Dim.Fill(1);
+        _email.Text = contacto.Email;
+        Add(_email);
+        y++;
+
+
+        _favorito.X = 1;
+        _favorito.Y = y;
+        _favorito.Text = "Favorito";
+        _favorito.Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked;
+        Add(_favorito);
+        y++;
+
+        Add(new Label { Text = "Notas:", X = 1, Y = y });
+        _notas.X = 1;  
+        _notas.Y = y;
+        _notas.Width = Dim.Fill(1);
+        _notas.Height = 3;
+        _notas.Text = contacto.Notas;
+        Add(_notas);
+
+        Button saveButton = new() { Text = "_Guardar", IsDefault = true };
+        saveButton.Accepting += (_, e) => 
+        {
+            if (Validar())
+                App!.RequestStop();
+            e.Handled = true;
+        };
+
+        }
 }
+}
+
+
