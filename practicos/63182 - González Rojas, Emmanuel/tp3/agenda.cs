@@ -52,7 +52,7 @@ catch (Exception ex)
 }
 
 // ==========================================================
-//VENTANA PRINCIPAL
+backing window
 // ==========================================================
 
 public sealed class AgendaWindow : Window
@@ -178,6 +178,22 @@ public sealed class AgendaWindow : Window
         SetEstado("Listo");
 
         Application.KeyDown += ManejarAtajosGlobales;
+    }
+
+private void NuevoContacto()
+    {
+        ContactDialog dialogo = new ContactDialog(new Contacto(), true);
+        Application.Run(dialogo);
+
+        if (!dialogo.Guardado) return;
+
+        dialogo.Contacto.Id = 0;
+        store.Insertar(dialogo.Contacto);
+        contactos = store.ObtenerTodos();
+        AplicarFiltros();
+
+        MessageBox.Query("Éxito", "Contacto agregado", "OK");
+        SetEstado("Contacto agregado");
     }
 
 }
