@@ -180,3 +180,57 @@ public sealed class VentanaPrincipal : Runnable
         _vistaLista.SetSource(new ObservableCollection<Contacto>(_listaFiltrada));
         RefrescarDetalle();
     }
+
+  private void RefrescarDetalle()
+    {
+        int? idx = _vistaLista.SelectedItem;
+        if (idx.HasValue && idx.Value >= 0 && idx.Value < _listaFiltrada.Count)
+        {
+            var c = _listaFiltrada[idx.Value];
+            _vistaDetalle.Text =
+                $"Nombre:    {c.Nombre}\n"     +
+                $"Email:     {c.Email}\n"       +
+                $"Teléfonos: {c.Telefonos}\n"   +
+                $"Favorito:  {(c.Favorito ? "Sí ★" : "No")}\n\n" +
+                $"Notas:\n{c.Notas}";
+        }
+        else
+        {
+            _vistaDetalle.Text = "";
+        }
+    }
+
+    private void AgregarContacto()
+    {
+        var dlg = new DialogoContacto();
+        App!.Run(dlg);
+        if (dlg.Cancelado || dlg.Resultado == null) return;
+        try
+        {
+            _repositorio.Insert(dlg.Resultado);
+            _listaCompleta.Add(dlg.Resultado);
+            AplicarFiltro();
+            ActualizarEstado($"Contacto '{dlg.Resultado.Nombre}' guardado.");
+        }
+        catch (Exception ex) { DialogoError("Error al guardar", ex.Message); }
+    }
+
+    private void ModificarContacto()
+    {
+        int? idx = _vistaLista.SelectedItem;
+        if (!idx.HasValue || idx.Value < 0 || idx.Value >= _listaFiltrada.Count) return;
+
+        var original = _listaFiltrada[idx.Value];
+        var dlg = new DialogoContacto(original);
+        App!.Run(dlg);
+        if (dlg.Cancelado || dlg.Resultado == null) return;
+        try
+        {
+            _repositorio.Update(dlg.Resultado);
+            int pos = _listaCompleta.FindIndex(x => x.Id == dlg.Resultado.Id);
+            if (pos >= 0) _listaCompleta[pos] = dlg.Resultado;
+            AplicarFiltro();
+            ActualizarEstado($"Contacto '{dlg.Resultado.Nombre}' actualizado.");
+        }
+        catch (Exception ex) { DialogoError("Error al actualizar", ex.Message); }
+    }
