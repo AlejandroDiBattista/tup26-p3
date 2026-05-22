@@ -16,6 +16,10 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Collections.ObjectModel;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -112,9 +116,6 @@ public sealed class EjemploDialog : Dialog {
 }
 
 
-public class SqliteAgendaStore {}
-public class JsonAgendaIO {}
-
 [Table("Contactos")]
 public class Contacto {
     [Key] public int    Id        { get; set; }
@@ -148,4 +149,34 @@ public SqliteAgendaStore(String dbPath) {
 
 
     }
+    private SqliteConnection Conectar() {
+    SqliteConnection connection = new(_connectionString);
+    connection.Open();
+    return connection;
+ }
+    public IEnumerable<Contacto> ObtenerContactos() {
+    using SqliteConnection connection = Conectar();
+    return connection.GetAll<Contacto>().OrderBy(c => c.Nombre).ToList();
+}
+public void Insertar(Contacto contacto) {
+    using SqliteConnection connection = Conectar();
+    long id = connection.Insert(contacto);
+    contacto.Id = (int)id;
+    }
+public void Actualizar(Contacto contacto) {
+    using SqliteConnection connection = Conectar();
+        connection.Update(contacto);
+}
+public void Eliminar(int id) {
+    using SqliteConnection connection = Conectar();
+    connection.Delete(new Contacto { Id = id });}
+ 
+}
+public static class JsonAgendaIO
+{
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 }
