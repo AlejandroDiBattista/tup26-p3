@@ -298,3 +298,144 @@ private void RefreshFilteredContacts() {
             MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
         }
     }
+
+    private void ImportJson() {
+        string? path = AskForPath(App!, "Importar JSON", "Ruta del archivo JSON:", "Importar");
+        if (string.IsNullOrWhiteSpace(path)) {
+            SetStatus("Importacion cancelada.");
+            return;
+        }
+
+        try {
+            List<Contacto> imported = JsonAgendaIO.Read(path).ToList();
+            int answer = MessageBox.Query(
+                App!,
+                "Confirmar importacion",
+                $"Se agregaran {imported.Count} contacto(s). Continuar?",
+                "Importar",
+                "Cancelar") ?? 1;
+
+            if (answer != 0) {
+                SetStatus("Importacion cancelada.");
+                return;
+            }
+
+            foreach (Contacto contact in imported) {
+                contact.Id = 0;
+                int id = store.Insert(contact);
+                contact.Id = id;
+                contacts.Add(contact);
+            }
+
+            RefreshFilteredContacts();
+            SetStatus($"Importados {imported.Count} contacto(s) desde {path}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void ExportJson() {
+        string? path = AskForPath(App!, "Exportar JSON", "Ruta de salida:", "Exportar");
+        if (string.IsNullOrWhiteSpace(path)) {
+            SetStatus("Exportacion cancelada.");
+            return;
+        }
+
+        try {
+            JsonAgendaIO.Write(path, contacts);
+            SetStatus($"Exportados {contacts.Count} contacto(s) a {path}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+        }
+    }
+
+    private static string? AskForPath(IApplication app, string title, string prompt, string actionText) {
+        Dialog dialog = new() {
+            Title = title,
+            Width = 72,
+            Height = 8
+        };
+
+        Label label = new() {
+            Text = prompt,
+            X = 1,
+            Y = 1,
+            Width = 20
+        };
+
+        TextField pathField = new() {
+            X = Pos.Right(label) + 1,
+            Y = 1,
+            Width = Dim.Fill(1)
+        };
+
+        string? result = null;
+
+        Button accept = new() {
+            Text = $"_{actionText}",
+            IsDefault = true
+        };
+        accept.Accepting += (_, e) => {
+            result = pathField.Text?.ToString();
+            app.RequestStop();
+            e.Handled = true;
+        };
+
+        Button cancel = new() {
+            Text = "_Cancelar"
+        };
+        cancel.Accepting += (_, e) => {
+            result = null;
+            app.RequestStop();
+            e.Handled = true;
+        };
+
+        dialog.Add(label, pathField);
+        dialog.AddButton(accept);
+        dialog.AddButton(cancel);
+        app.Run(dialog);
+
+        return string.IsNullOrWhiteSpace(result) ? null : result.Trim();
+    }
+
+    private void ToggleOnlyFavorites() {
+        onlyFavorites = !onlyFavorites;
+        RefreshFilteredContacts();
+        SetStatus(onlyFavorites ? "Filtro activo: solo favoritos." : "Filtro de favoritos desactivado.");
+    }
+
+    private void ShowAbout() {
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "Agenda de contactos\nTerminal.Gui v2 + SQLite + JSON",
+            "Aceptar");
+    }
+
+    private void FocusSearch() {
+        searchField.SetFocus();
+        SetStatus("Busqueda activa.");
+    }
+
+    private void RequestExit() {
+        App!.RequestStop();
+    }
+
+    private void SelectContact(int id) {
+        int index = filteredContacts.FindIndex(c => c.Id == id);
+        if (index >= 0) {
+            listView.SelectedItem = index;
+            selectedIndex = index;
+            UpdateDetails();
+        }
+    }
+
+    private void SetStatus(string message) {
+        if (statusBar is not null) {
+            statusBar.Text = message;
+        }
+    }
+
+    
