@@ -16,7 +16,6 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
-using System.Collections.ObjectModel;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -24,57 +23,55 @@ using System.Collections.ObjectModel;
 /// ====
 
 // Punto de entrada
-var dbPath = "agenda.db";
-var store = new SqliteAgendaStore(dbPath);
+string databasePath = args.Length > 0 ? args[0] : "agenda.db";
 
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow(store));
+try {
+    using SqliteAgendaStore store = new(databasePath);
+    using IApplication app = Application.Create().Init();
+    app.Run(new AgendaWindow(store));
+}
+catch (Exception ex) {
+    Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
+    Environment.ExitCode = 1;
+}
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    private readonly SqliteAgendaStore store;
-    private List<Contacto> contacts = [];
-
-    public AgendaWindow(SqliteAgendaStore store) {
-        this.store = store;
-
+    public AgendaWindow() {
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
-
-        CargarContactos();
         BuildLayout();
     }
-    private void CargarContactos() {
-    contacts = store.GetAll();
-}
-   private void BuildLayout() {
-    MenuBar menu = new() {
-        Menus = [
-            new MenuBarItem("_Archivo", [
-                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-            ])
-        ]
-    };
 
-    var listView = new ListView() {
-        X = 0,
-        Y = 1,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
+    private void BuildLayout() {
+        MenuBar menu = new() {
+            Menus = [
+                new MenuBarItem("_Archivo", [
+                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
+                    null!, // Separador
+                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ])
+            ]
+        };
 
-    listView.SetSource(
-        new ObservableCollection<string>(
-            contacts.Select(c => c.Nombre)
-        )
-    );
+        Button openButton = new() {
+            Text = "_Abrir diálogo",
+            X    = Pos.Center(),
+            Y    = Pos.Center()
+        };
 
-    Add(menu, listView);
-}
+        openButton.Accepting += (_, e) => {
+            AbrirDialogo();
+            e.Handled = true;
+        };
+
+        Add(menu, openButton);
+    }
+
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
         App!.Run(dialog);
@@ -123,64 +120,32 @@ public sealed class EjemploDialog : Dialog {
 }
 
 
-public class SqliteAgendaStore {
-    private readonly string _connectionString;
-
-    public SqliteAgendaStore(string dbPath = "agenda.db") {
-        _connectionString = $"Data Source={dbPath}";
-        CrearTablaSiNoExiste();
-    }
-
-    private DbConnection GetConnection() {
-        return new SqliteConnection(_connectionString);
-    }
-
-    private void CrearTablaSiNoExiste() {
-        using var conn = GetConnection();
-        conn.Execute(@"
-            CREATE TABLE IF NOT EXISTS Contactos (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Nombre TEXT NOT NULL,
-                Telefonos TEXT,
-                Email TEXT,
-                Notas TEXT,
-                Favorito INTEGER NOT NULL
-            );
-        ");
-    }
-
-    public List<Contacto> GetAll() {
-        using var conn = GetConnection();
-        return conn.GetAll<Contacto>().ToList();
-    }
-
-    public long Insert(Contacto c) {
-        using var conn = GetConnection();
-        return conn.Insert(c);
-    }
-
-    public bool Update(Contacto c) {
-        using var conn = GetConnection();
-        return conn.Update(c);
-    }
-
-    public bool Delete(Contacto c) {
-        using var conn = GetConnection();
-        return conn.Delete(c);
-    }
-}
+public class SqliteAgendaStore {}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
-public class Contacto {
-    [Key] public int    Id        { get; set; }
-          public string Nombre    { get; set; } = "";
-          public string Telefonos { get; set; } = "";
-          public string Email     { get; set; } = "";
-          public string Notas     { get; set; } = "";
-          public bool   Favorito  { get; set; }
-    
+public sealed class Contacto {
+    [Key]
+    public int Id { get; set; }
+
+    public string Nombre { get; set; } = "";
+
+    public string Telefonos { get; set; } = "";
+
+    public string Email { get; set; } = "";
+
+    public string Notas { get; set; } = "";
+
+    public bool Favorito { get; set; }
+
     public Contacto Clone() {
-        return (Contacto)this.MemberwiseClone();
+        return new Contacto {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
+        };
     }
 }
