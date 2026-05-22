@@ -28,7 +28,7 @@ using Microsoft.Data.Sqlite;
 
 
 // ==========================================================
-// TOP LEVEL CODE
+// PUNTO DE ENTRADA
 // ==========================================================
 
 SqlMapper.AddTypeHandler(new BooleanTypeHandler());
@@ -613,6 +613,27 @@ public sealed class SqliteAgendaStore
         conexion.Delete(contacto);
     }
 }
+
+// ==========================================================
+// SOPORTE JSON
+// ==========================================================
+public static class JsonAgendaIO
+{
+    public static void Exportar(string ruta, List<Contacto> contactos)
+    {
+        JsonSerializerOptions opciones = new JsonSerializerOptions { WriteIndented = true };
+        string json = JsonSerializer.Serialize(contactos, opciones);
+        File.WriteAllText(ruta, json);
+    }
+
+    public static List<Contacto> Importar(string ruta)
+    {
+        if (!File.Exists(ruta)) throw new Exception("El archivo JSON no existe");
+        string json = File.ReadAllText(ruta);
+        return JsonSerializer.Deserialize<List<Contacto>>(json) ?? new List<Contacto>();
+    }
+}
+
 
 // ==========================================================
 // MODELO
