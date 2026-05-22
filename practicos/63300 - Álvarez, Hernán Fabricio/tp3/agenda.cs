@@ -16,16 +16,26 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Collections.ObjectModel;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
 /// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
 /// ====
-
+string databasePath = args.Length > 0 ? args[0] : "agenda.db";
 // Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
-
+try {
+    using SqliteAgendaStore store = new(databasePath);
+    using IApplication app = Application.Create().Init();
+    app.Run(new AgendaWindow(store));
+}
+catch (Exception ex) {
+    Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
+    Environment.ExitCode = 1;
+}
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
@@ -113,7 +123,40 @@ public sealed class EjemploDialog : Dialog {
 
 
 public class SqliteAgendaStore {}
-public class JsonAgendaIO {}
+public class JsonAgendaIO {
+    private static readonly JsonSerializerOptions Options = new() {
+        WriteIndented = true,
+        PropertyNamingPolicy = null,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+
+    public static IReadOnlyList<Contacto> Read(string path) {
+        if (!File.Exists(path)) {
+            throw new FileNotFoundException("El archivo JSON no existe.", path);
+        }
+
+        try {
+            string json = File.ReadAllText(path, Encoding.UTF8);
+            List<Contacto>? contacts = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+            return contacts?.Select(c => {
+                c.Id = 0;
+                c.Nombre = c.Nombre?.Trim() ?? "";
+                c.Telefonos ??= "";
+                c.Email ??= "";
+                c.Notas ??= "";
+                return c;
+            }).ToList() ?? [];
+        }
+        catch (JsonException ex) {
+            throw new InvalidOperationException($"JSON con formato invalido: {ex.Message}", ex);
+        }
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> contacts) {
+        string json = JsonSerializer.Serialize(contacts, Options);
+        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+}
 
 [Table("Contactos")]
 public class Contacto {
