@@ -21,73 +21,10 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
-
-// Punto de entrada
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(store));
 
 
-// Ventana principal
-public sealed class AgendaWindow : Runnable {
-
-    public AgendaWindow() {
-        Title  = "Agenda - Terminal.Gui";
-        Width  = Dim.Fill();
-        Height = Dim.Fill();
-
-        Menu.DefaultBorderStyle = LineStyle.Single;
-        BuildLayout();
-    }
-
-    private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
-        };
-
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
-        };
-
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
-
-        Add(menu, openButton);
-    }
-
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
-    }
-
-    private void SolicitarSalir() {
-        App!.RequestStop();
-    }
-
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) {
-            SolicitarSalir();
-            return true;
-        }
-
-        return base.OnKeyDown(key);
-    }
-}
-
-// Diálogo de ejemplo
 public sealed class EjemploDialog : Dialog {
     public EjemploDialog() {
         Title  = "Diálogo de ejemplo";
@@ -179,4 +116,76 @@ public static class JsonAgendaIO
         WriteIndented = true,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
+    public static List<Contacto> Leer(String ruta)
+     {
+        string json = File.ReadAllText(ruta, Encoding.UTF8);
+        return JsonSerializer.Deserialize<List<Contacto>>(json, Options) ?? new List<Contacto>();
+         throw new InvalidOperationException("No se pudo deserializar el archivo JSON."); 
+    }
+    public static void Escribir(string ruta, IEnumerable<Contacto> contactos)
+    {
+        string json = JsonSerializer.Serialize(contactos.ToList(), Options);
+        File.WriteAllText(ruta, json, Encoding.UTF8);
+    }
+
+}
+public sealed class AgendaWindow : Runnable {
+    private readonly SqliteAgendaStore _store;
+    private readonly List<Contacto> _contacts = new();
+    private readonly List<Contacto> _filteredContacts = new();
+    private bool _soloFavoritos;
+    private ListView _listView = null!;
+    private TextField _searchBox = null!;
+    private Label _detailView = null!;
+     private Label _statusBar = null!;
+    public AgendaWindow(SqliteAgendaStore store) {
+       _store = store;
+        Title  = "Agenda";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+
+        Menu.DefaultBorderStyle = LineStyle.Single;
+        BuildLayout();
+    }
+
+    private void BuildLayout() {
+    MenuBar menu = new()
+{
+    Menus =
+    [
+        new MenuBarItem("_Archivo",
+        [
+            new MenuItem("_Importar JSON", "Ctrl+I", ImportarJson),
+            new MenuItem("_Exportar JSON", "Ctrl+E", ExportarJson),
+            null!,
+            new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+        ]),
+        new MenuBarItem("_Contactos",
+        [
+            new MenuItem("_Nuevo", "F2 / Ctrl+N", NuevoContacto),
+            new MenuItem("_Editar", "F3 / Enter", EditarContacto),
+            new MenuItem("E_liminar", "Del / Ctrl+D", EliminarContacto)
+        ]),
+        new MenuBarItem("_Ver",
+        [
+            new MenuItem("_Solo favoritos", null!, ToggleFavoritos)
+        ]),
+        new MenuBarItem("A_yuda",
+        [
+            new MenuItem("_Acerca de", null!, AcercaDe)
+        ])
+    ]
+};
+    Label searchLabel = new() 
+    {
+        Text = "Buscar:",
+        X    = 0,
+        Y    = 1
+    };
+    _searchBox = new TextField {
+        X    = Pos.Right(searchLabel) + 1,
+        Y    = 1,
+        Width = Dim.Fill()
+    };
+    
 }
