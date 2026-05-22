@@ -586,5 +586,44 @@ using Terminal.Gui.Views;
     }
 }
 
+    public sealed class SqliteAgendaStore : IDisposable {
+    private readonly SqliteConnection connection;
+
+    public string DatabasePath { get; }
+
+    public SqliteAgendaStore(string databasePath) {
+        DatabasePath = databasePath;
+        SqliteConnectionStringBuilder builder = new() {
+            DataSource = databasePath
+        };
+
+        connection = new SqliteConnection(builder.ConnectionString);
+        connection.Open();
+        EnsureSchema();
+    }
+
+    public IEnumerable<Contacto> GetAll() {
+        return connection.GetAll<Contacto>();
+    }
+
+    public int Insert(Contacto contact) {
+        Validate(contact);
+        long id = connection.Insert(contact);
+        return checked((int)id);
+    }
+
+    public void Update(Contacto contact) {
+        Validate(contact);
+        connection.Update(contact);
+    }
+
+    public void Delete(Contacto contact) {
+        connection.Delete(contact);
+    }
+
+    public void Dispose() {
+        connection.Dispose();
+    }
+
 
 
