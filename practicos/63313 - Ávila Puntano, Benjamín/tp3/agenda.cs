@@ -124,3 +124,28 @@ public class Contacto {
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
 }
+
+public sealed class SqliteAgendaStore {
+    private readonly string _connectionString;
+
+public SqliteAgendaStore(String dbPath) {
+    _connectionString = $"Data Source={dbPath}";
+    InicializarBaseDeDatos();
+}
+  private void InicializarBaseDeDatos()
+    {
+        using SqliteConnection connection = Conectar();
+        connection.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre    TEXT NOT NULL DEFAULT '',
+                Telefonos TEXT NOT NULL DEFAULT '',
+                Email     TEXT NOT NULL DEFAULT '',
+                Notas     TEXT NOT NULL DEFAULT '',
+                Favorito  INTEGER NOT NULL DEFAULT 0
+            )
+            """);
+
+
+    }
+}
