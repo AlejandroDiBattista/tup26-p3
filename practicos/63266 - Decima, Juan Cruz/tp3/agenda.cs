@@ -14,8 +14,11 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
-using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text.Json;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
+using System.Collections.ObjectModel;
 
 
 string dbPath = args.Length > 0 ? args[0] : "agenda.db";
@@ -303,12 +306,83 @@ public sealed class AgendaWindow : Runnable {
         }
     }
 
-    private void MenuImportar() { }
-    private void MenuExportar() { }
+
+    private void MenuImportar() {
+        var dlgPath = new InputDialog("Importar JSON", "Ruta del archivo JSON a importar:", "contactos.json");
+        App!.Run(dlgPath);
+        if (!dlgPath.WasAccepted || string.IsNullOrWhiteSpace(dlgPath.InputValue)) return;
+
+        string path = dlgPath.InputValue.Trim();
+        List<Contacto> importados;
+        try {
+            importados = JsonAgendaIO.Read(path);
+            ValidateImportedContacts(importados);
+        }
+        catch (FileNotFoundException) {
+            MessageBox.ErrorQuery(App!, "Error", $"Archivo no encontrado:\n{path}", "Aceptar");
+            return;
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo leer el archivo JSON:\n{ex.Message}", "Aceptar");
+            return;
+        }
+
+        int? resp = MessageBox.Query(App!, "Confirmar importación", $"Se agregarán {importados.Count} contacto(s).\n¿Continuar?", "Sí", "No");
+        if (resp != 0) return;
+
+        try {
+            int agregados = 0;
+            foreach (var c in importados) {
+                c.Id = 0;
+                NormalizeContact(c);
+                _store.Insert(c);
+                _contacts.Add(c);
+                agregados++;
+            }
+            ApplyFilter();
+            SetStatus($"{agregados} contacto(s) importados desde '{path}'.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"Error durante la importación:\n{ex.Message}", "Aceptar");
+        }
+    }
+
+    private void MenuExportar() {
+        var dlgPath = new InputDialog("Exportar JSON", "Ruta del archivo JSON de salida:", "contactos.json");
+        App!.Run(dlgPath);
+        if (!dlgPath.WasAccepted || string.IsNullOrWhiteSpace(dlgPath.InputValue)) return;
+
+        string path = dlgPath.InputValue.Trim();
+        try {
+            JsonAgendaIO.Write(_contacts, path);
+            SetStatus($"{_contacts.Count} contacto(s) exportados a '{path}'.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo exportar:\n{ex.Message}", "Aceptar");
+        }
+    }
+
+    private static void ValidateImportedContacts(IEnumerable<Contacto> contactos) {
+        int row = 1;
+        foreach (var contacto in contactos) {
+            if (string.IsNullOrEmpty(contacto.Nombre?.Trim() ?? ""))
+                throw new JsonException($"El contacto #{row} no tiene nombre.");
+            if (!string.IsNullOrEmpty(contacto.Email?.Trim() ?? "") && !contacto.Email.Contains('@'))
+                throw new JsonException($"El contacto #{row} tiene un email inválido.");
+            row++;
+        }
+    }
+
+    private static void NormalizeContact(Contacto contacto) {
+        contacto.Nombre = contacto.Nombre?.Trim() ?? "";
+        contacto.Telefonos = string.Join(", ", (contacto.Telefonos ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Take(5));
+        contacto.Email = contacto.Email?.Trim() ?? "";
+        contacto.Notas ??= "";
+    }
+
     private void MenuSalir() { }
     private void MenuAcercaDe() { }
 }
-
 
 public sealed class ContactDialog : Dialog {
     public bool WasAccepted { get; private set; } = false;
@@ -429,7 +503,24 @@ public sealed class ContactDialog : Dialog {
     }
 }
 
+public sealed class InputDialog : Dialog {
+    public bool WasAccepted { get; private set; } = false;
+    public string InputValue => _field.Text?.Trim() ?? "";
+    private readonly TextField _field;
 
+    public InputDialog(string title, string prompt, string defaultValue = "") {
+        Title = title; Width = 62; Height = 9;
+        Add(new Label() { Text = prompt, X = 1, Y = 0 });
+        _field = new TextField() { Text = defaultValue, X = 1, Y = 1, Width = Dim.Fill(1) };
+        Add(_field);
+
+        Button btnOk = new() { Text = "_Aceptar", IsDefault = true };
+        btnOk.Accepting += (_, e) => { WasAccepted = true; App!.RequestStop(); e.Handled = true; };
+        Button btnCancel = new() { Text = "_Cancelar" };
+        btnCancel.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        AddButton(btnOk); AddButton(btnCancel);
+    }
+}
 public sealed class SqliteAgendaStore : IDisposable {
     private readonly SqliteConnection _conn;
 
@@ -469,7 +560,28 @@ public sealed class SqliteAgendaStore : IDisposable {
         => _conn.Dispose();
 }
 
-public class JsonAgendaIO { }
+public static class JsonAgendaIO {
+    private static readonly JsonSerializerOptions _opts = new() {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+    };
+
+    public static List<Contacto> Read(string path) {
+        if (!File.Exists(path))
+            throw new FileNotFoundException("Archivo no encontrado.", path);
+
+        string json = File.ReadAllText(path, System.Text.Encoding.UTF8);
+        var list = JsonSerializer.Deserialize<List<Contacto>>(json, _opts);
+        if (list == null)
+            throw new JsonException("El archivo JSON no contiene un arreglo de contactos válido.");
+        return list;
+    }
+
+    public static void Write(IEnumerable<Contacto> contactos, string path) {
+        string json = JsonSerializer.Serialize(contactos.ToList(), _opts);
+        File.WriteAllText(path, json, System.Text.Encoding.UTF8);
+    }
+}
 
 [Table("Contactos")]
 public class Contacto {
