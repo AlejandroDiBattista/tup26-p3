@@ -37,3 +37,17 @@ Window ventana = new Window()
 
 Application.Run(ventana);
 Application.Shutdown();
+
+
+[Table("Contactos")]
+public sealed class Contacto
+{
+    [Key]
+    public int Id { get; set; }
+
+    public string Nombre { get; set; } = "";
+    public string Telefonos { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Notas { get; set; } = "";
+    public bool Favorito { get; set; }
+}
