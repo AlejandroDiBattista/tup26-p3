@@ -18,7 +18,7 @@
     "chat.useCustomizationsInParentRepositories": true,
     "chat.fontSize": 14,
     "chat.editor.fontSize": 14,
-    "terminal.integrated.fontSize": 28,
+    "terminal.integrated.fontSize": 14,
     "editor.wordWrap": "off",
     "notebook.lineNumbers": "on",
     "[markdown]": { "editor.wordWrap": "off" },
