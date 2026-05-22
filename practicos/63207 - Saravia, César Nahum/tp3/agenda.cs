@@ -559,8 +559,57 @@ public sealed class ContactDialog : Dialog {
         AddButton(cancelButton);
     }
     
+    private bool TryBuildContact(int id, out Contacto? contact) {
+        contact = null;
+        string name = nameField.Text?.ToString()?.Trim() ?? "";
+        string email = emailField.Text?.ToString()?.Trim() ?? "";
 
+         if (string.IsNullOrWhiteSpace(name)) {
+            MessageBox.ErrorQuery(App!, "Validacion", "El nombre no puede estar vacio.", "Aceptar");
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@')) {
+            MessageBox.ErrorQuery(App!, "Validacion", "El email debe contener @.", "Aceptar");
+            return false;
+        }
+
+         string phones = string.Join(", ",
+            phoneFields
+                .Select(field => field.Text?.ToString()?.Trim() ?? "")
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+
+        contact = new Contacto {
+            Id = id,
+            Nombre = name,
+            Telefonos = phones,
+            Email = email,
+            Notas = notesField.Text?.ToString() ?? "",
+            Favorito = favoriteField.Value == CheckState.Checked
+        };
+
+        return true;
     }
+
+    private static Label LabelAt(string text, int x, int y) {
+        return new Label {
+            Text = text,
+            X = x,
+            Y = y,
+            Width = 11
+        };
+    }
+
+    private static TextField FieldAt(Pos x, int y, string text) {
+        return new TextField {
+            Text = text,
+            X = x,
+            Y = y,
+            Width = Dim.Fill(1)
+        };
+    }
+}
+
 
 
 public class SqliteAgendaStore {}
