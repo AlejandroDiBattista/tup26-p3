@@ -209,3 +209,56 @@ public sealed class DialogCtc : Dialog {
         AddButton(btnGuardar);
     }
 }
+
+public static class JsonCtcIO {
+
+    static readonly System.Text.Json.JsonSerializerOptions Opc
+        = new() {
+            WriteIndented = true
+        };
+
+    public static IEnumerable<Ctc> Leer(string ruta) {
+
+        if (!File.Exists(ruta))
+            throw new FileNotFoundException(
+                "El archivo JSON no existe.",
+                ruta
+            );
+
+        return System.Text.Json.JsonSerializer
+            .Deserialize<List<Ctc>>(
+                File.ReadAllText(ruta),
+                Opc
+            ) ?? [];
+    }
+
+    public static void Escribir(
+        string ruta,
+        IEnumerable<Ctc> contactos
+    ) {
+
+        File.WriteAllText(
+            ruta,
+            System.Text.Json.JsonSerializer.Serialize(
+                contactos,
+                Opc
+            )
+        );
+    }
+}
+
+void Exportar() {
+
+    string? ruta = PedirRuta(
+        "Exportar JSON",
+        "Destino:",
+        "Exportar"
+    );
+
+    if (ruta is null)
+        return;
+
+    JsonCtcIO.Escribir(ruta, listaCtc);
+
+    Avisar("Exportación terminada.");
+}
