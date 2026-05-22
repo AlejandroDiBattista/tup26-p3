@@ -145,12 +145,72 @@ public sealed class AgendaWindow : Runnable {
         ]);
 
         Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
+}
+        private void RefreshFilteredContacts() {
+        string query = searchField?.Text?.ToString() ?? "";
+        int currentId = SelectedContact()?.Id ?? 0;
+
+        filteredContacts.Clear();
+        filteredContacts.AddRange(contacts
+            .Where(c => (!onlyFavorites || c.Favorito) && MatchesSearch(c, query))
+            .OrderByDescending(c => c.Favorito)
+            .ThenBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase));
+
+        listView?.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem).ToList()));
+
+        selectedIndex = 0;
+        if (currentId != 0) {
+            int found = filteredContacts.FindIndex(c => c.Id == currentId);
+            selectedIndex = found >= 0 ? found : 0;
+        }
+
+        if (listView is not null && filteredContacts.Count > 0) {
+            listView.SelectedItem = Math.Min(selectedIndex, filteredContacts.Count - 1);
+        }
+
+        UpdateDetails();
+
     }
 
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
+    private static bool MatchesSearch(Contacto contact, string query) {
+        if (string.IsNullOrWhiteSpace(query)) {
+            return true;
+        }
+
+        return contact.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || contact.Telefonos.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || contact.Email.Contains(query, StringComparison.CurrentCultureIgnoreCase);
     }
+
+     private static string FormatContactListItem(Contacto contact) {
+        string favorite = contact.Favorito ? "* " : "  ";
+        return $"{favorite}{contact.Nombre}";
+    }
+
+     private Contacto? SelectedContact() {
+        if (filteredContacts.Count == 0) {
+            return null;
+        }
+
+        int index = listView is null ? selectedIndex : listView.SelectedItem ?? selectedIndex;
+        if (index < 0 || index >= filteredContacts.Count) {
+            index = 0;
+        }
+
+        return filteredContacts[index];
+    }
+
+     private void UpdateDetails() {
+        Contacto? contact = SelectedContact();
+        if (detailLabel is null) {
+            return;
+        }
+
+        detailLabel.Text = contact is null
+            ? "No hay contactos para mostrar."
+            : BuildDetails(contact);
+    }
+
 
     private void SolicitarSalir() {
         App!.RequestStop();
