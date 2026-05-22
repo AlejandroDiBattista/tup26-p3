@@ -212,3 +212,89 @@ private void RefreshFilteredContacts() {
             $"Favorito: {favorite}\n\n" +
             $"Notas:\n{contact.Notas}";
     }
+
+     private void NewContact() {
+        ContactDialog dialog = new();
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null) {
+            SetStatus("Alta cancelada.");
+            return;
+        }
+
+        try {
+            Contacto saved = dialog.Contact;
+            int id = store.Insert(saved);
+            saved.Id = id;
+            contacts.Add(saved);
+            RefreshFilteredContacts();
+            SelectContact(id);
+            SetStatus($"Contacto agregado: {saved.Nombre}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al guardar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void EditSelectedContact() {
+        Contacto? selected = SelectedContact();
+        if (selected is null) {
+            SetStatus("No hay contacto seleccionado para editar.");
+            return;
+        }
+
+        ContactDialog dialog = new(selected);
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null) {
+            SetStatus("Edicion cancelada.");
+            return;
+        }
+
+        try {
+            Contacto updated = dialog.Contact;
+            store.Update(updated);
+
+            int index = contacts.FindIndex(c => c.Id == updated.Id);
+            if (index >= 0) {
+                contacts[index] = updated;
+            }
+
+            RefreshFilteredContacts();
+            SelectContact(updated.Id);
+            SetStatus($"Contacto actualizado: {updated.Nombre}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al actualizar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void DeleteSelectedContact() {
+        Contacto? selected = SelectedContact();
+        if (selected is null) {
+            SetStatus("No hay contacto seleccionado para eliminar.");
+            return;
+        }
+
+        int answer = MessageBox.Query(
+            App!,
+            "Confirmar eliminacion",
+            $"Eliminar el contacto \"{selected.Nombre}\"?",
+            "Eliminar",
+            "Cancelar") ?? 1;
+
+        if (answer != 0) {
+            SetStatus("Eliminacion cancelada.");
+            return;
+        }
+
+        try {
+            store.Delete(selected);
+            contacts.RemoveAll(c => c.Id == selected.Id);
+            RefreshFilteredContacts();
+            SetStatus($"Contacto eliminado: {selected.Nombre}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
+        }
+    }
