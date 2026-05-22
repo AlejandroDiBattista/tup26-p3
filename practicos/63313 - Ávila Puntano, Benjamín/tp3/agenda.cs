@@ -16,20 +16,44 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
+string dbPath = args.Length > 0 ? args[0] : RootAgendaPath();
+
+SqliteAgendaStore store;
+try
+{
+    store = new SqliteAgendaStore(dbPath);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error al abrir la base de datos: {ex.Message}");
+    return 1;
+}
+
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(store));
+return 0;
+
+static string RootAgendaPath([CallerFilePath] string sourcePath = "")
+{
+    string sourceDirectory = Path.GetDirectoryName(sourcePath) ?? Directory.GetCurrentDirectory();
+    string rootDirectory = Path.GetFullPath(Path.Combine(sourceDirectory, "..", "..", ".."));
+    return Path.Combine(rootDirectory, "agenda.db");
+}
 
 [Table("Contactos")]
 public class Contacto
 {
     [Key] public int Id { get; set; }
     public string Nombre { get; set; } = "";
+    public string Apellido { get; set; } = "";
     public string Telefonos { get; set; } = "";
     public string Email { get; set; } = "";
+    public string Direccion { get; set; } = "";
     public string Notas { get; set; } = "";
     public bool Favorito { get; set; }
 
@@ -37,8 +61,10 @@ public class Contacto
     {
         Id = Id,
         Nombre = Nombre,
+        Apellido = Apellido,
         Telefonos = Telefonos,
         Email = Email,
+        Direccion = Direccion,
         Notas = Notas,
         Favorito = Favorito
     };
@@ -61,12 +87,21 @@ public sealed class SqliteAgendaStore
             CREATE TABLE IF NOT EXISTS Contactos (
                 Id        INTEGER PRIMARY KEY AUTOINCREMENT,
                 Nombre    TEXT NOT NULL DEFAULT '',
+                Apellido  TEXT NOT NULL DEFAULT '',
                 Telefonos TEXT NOT NULL DEFAULT '',
                 Email     TEXT NOT NULL DEFAULT '',
+                Direccion TEXT NOT NULL DEFAULT '',
                 Notas     TEXT NOT NULL DEFAULT '',
                 Favorito  INTEGER NOT NULL DEFAULT 0
             )
             """);
+
+        IEnumerable<string> columns = connection
+            .Query<string>("SELECT name FROM pragma_table_info('Contactos')")
+            .ToList();
+
+        if (!columns.Contains("Favorito", StringComparer.OrdinalIgnoreCase))
+            connection.Execute("ALTER TABLE Contactos ADD COLUMN Favorito INTEGER NOT NULL DEFAULT 0");
     }
 
     private SqliteConnection Conectar()
@@ -146,6 +181,7 @@ public sealed class AgendaWindow : Runnable
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        LoadContacts();
     }
 
     private void BuildLayout()
@@ -300,10 +336,17 @@ public sealed class AgendaWindow : Runnable
             return;
 
         Contacto contacto = dialog.Resultado;
-        _store.Insertar(contacto);
-        _contacts.Add(contacto);
-        AplicarFiltro();
-        SetStatus($"Contacto '{contacto.Nombre}' creado.");
+        try
+        {
+            _store.Insertar(contacto);
+            _contacts.Add(contacto);
+            AplicarFiltro();
+            SetStatus($"Contacto '{contacto.Nombre}' creado.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al guardar", $"No se pudo guardar el contacto.\n{ex.Message}", "OK");
+        }
     }
 
     private void EditarContacto()
@@ -322,14 +365,23 @@ public sealed class AgendaWindow : Runnable
 
         Contacto actualizado = dialog.Resultado;
         actualizado.Id = original.Id;
-        _store.Actualizar(actualizado);
+        actualizado.Apellido = original.Apellido;
+        actualizado.Direccion = original.Direccion;
+        try
+        {
+            _store.Actualizar(actualizado);
 
-        int index = _contacts.IndexOf(original);
-        if (index >= 0)
-            _contacts[index] = actualizado;
+            int index = _contacts.IndexOf(original);
+            if (index >= 0)
+                _contacts[index] = actualizado;
 
-        AplicarFiltro();
-        SetStatus($"Contacto '{actualizado.Nombre}' actualizado.");
+            AplicarFiltro();
+            SetStatus($"Contacto '{actualizado.Nombre}' actualizado.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al guardar", $"No se pudo actualizar el contacto.\n{ex.Message}", "OK");
+        }
     }
 
     private void EliminarContacto()
@@ -447,10 +499,38 @@ public sealed class AgendaWindow : Runnable
         return resultado;
     }
 
-    private void ToggleFavoritos() => throw new NotImplementedException();
-    private void AcercaDe() => throw new NotImplementedException();
-    private void SolicitarSalir() => throw new NotImplementedException();
-    protected override bool OnKeyDown(Key key) => base.OnKeyDown(key);
+    private void ToggleFavoritos()
+    {
+        _soloFavoritos = !_soloFavoritos;
+        AplicarFiltro();
+        SetStatus(_soloFavoritos ? "Mostrando solo favoritos." : "Mostrando todos los contactos.");
+    }
+
+    private void AcercaDe()
+    {
+        MessageBox.Query(App!, "Acerca de", "AgendaT - TP3\nTUI con Terminal.Gui, SQLite y JSON.", "OK");
+    }
+
+    private void SolicitarSalir()
+    {
+        App!.RequestStop();
+    }
+
+    protected override bool OnKeyDown(Key key)
+    {
+        if (key == Key.Q.WithCtrl) { SolicitarSalir(); return true; }
+        if (key == Key.F2) { NuevoContacto(); return true; }
+        if (key == Key.N.WithCtrl) { NuevoContacto(); return true; }
+        if (key == Key.F3) { EditarContacto(); return true; }
+        if (key == Key.Enter) { EditarContacto(); return true; }
+        if (key == Key.Delete) { EliminarContacto(); return true; }
+        if (key == Key.D.WithCtrl) { EliminarContacto(); return true; }
+        if (key == Key.I.WithCtrl) { ImportarJson(); return true; }
+        if (key == Key.E.WithCtrl) { ExportarJson(); return true; }
+        if (key == Key.F4) { _searchBox.SetFocus(); return true; }
+
+        return base.OnKeyDown(key);
+    }
 }
 
 public sealed class ContactDialog : Dialog
@@ -468,7 +548,7 @@ public sealed class ContactDialog : Dialog
     {
         Title = titulo;
         Width = 60;
-        Height = 22;
+        Height = 15;
 
         int y = 1;
 
