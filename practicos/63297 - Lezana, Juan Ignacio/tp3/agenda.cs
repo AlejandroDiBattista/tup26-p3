@@ -58,3 +58,24 @@ public sealed class SqliteAlmacenCtc : IDisposable {
         return ctc;
     }
 }
+public void Modificar(Ctc ctc) {
+    Validar(ctc);
+    cn.Update(ctc);
+}
+
+public void Borrar(Ctc ctc)
+    => cn.Delete(ctc);
+
+static void Validar(Ctc ctc) {
+
+    if (string.IsNullOrWhiteSpace(ctc.Nombre))
+        throw new InvalidOperationException(
+            "El nombre no puede estar vacío."
+        );
+
+    if (!string.IsNullOrWhiteSpace(ctc.Email)
+        && !ctc.Email.Contains('@'))
+        throw new InvalidOperationException(
+            "El email debe contener @."
+        );
+}
