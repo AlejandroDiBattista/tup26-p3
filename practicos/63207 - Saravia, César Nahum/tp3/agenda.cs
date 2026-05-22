@@ -9,6 +9,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.ObjectModel;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -308,13 +309,10 @@ public sealed class AgendaWindow : Runnable {
 
     private void ImportJson() {
         string? path = AskForPath(App!, "Importar JSON", "Ruta del archivo JSON:", "Importar");
-        if (string.IsNullOrWhiteSpace(path)) {
-            SetStatus("Importacion cancelada.");
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(path)) return;
 
         try {
-            List<Contacto> imported = JsonAgendaIO.Read(path).ToList();
+            var imported = JsonAgendaIO.Read(path);
             int answer = MessageBox.Query(
                 App!,
                 "Confirmar importacion",
@@ -350,8 +348,13 @@ public sealed class AgendaWindow : Runnable {
         }
 
         try {
-            JsonAgendaIO.Write(path, contacts);
-            SetStatus($"Exportados {contacts.Count} contacto(s) a {path}.");
+        string? directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) {
+            MessageBox.ErrorQuery(App!, "Error", $"La carpeta '{directory}' no existe.", "Aceptar");
+            return;
+        }
+        JsonAgendaIO.Write(path, contacts);
+        SetStatus($"Exportados {contacts.Count} contacto(s) a {path}.");
         }
         catch (Exception ex) {
             MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
@@ -667,7 +670,42 @@ private static void Validate(Contacto contact) {
     }
 }
 
-public class JsonAgendaIO {}
+public static class JsonAgendaIO {
+    
+    private static readonly JsonSerializerOptions Options = new() {
+        WriteIndented = true,
+        PropertyNamingPolicy = null,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+
+    public static IReadOnlyList<Contacto> Read(string path) {
+        if (!File.Exists(path)) {
+            throw new FileNotFoundException("El archivo JSON no existe.", path);
+        }
+
+        try {
+            string json = File.ReadAllText(path, Encoding.UTF8);
+            List<Contacto>? contacts = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+            return contacts?.Select(c => {
+                c.Id = 0;
+                c.Nombre = c.Nombre?.Trim() ?? "";
+                c.Telefonos ??= "";
+                c.Email ??= "";
+                c.Notas ??= "";
+                return c;
+            }).ToList() ?? [];
+        }
+        catch (JsonException ex) {
+            throw new InvalidOperationException($"JSON con formato invalido: {ex.Message}", ex);
+        }
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> contacts) {
+        string json = JsonSerializer.Serialize(contacts, Options);
+        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+
+}
 
 [Table("Contactos")]
 public class Contacto {

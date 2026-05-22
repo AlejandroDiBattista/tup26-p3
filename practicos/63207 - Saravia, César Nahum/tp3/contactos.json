@@ -1,0 +1,18 @@
+[
+  {
+    "Id": 2,
+    "Nombre": "Nahum",
+    "Telefonos": "3816121173",
+    "Email": "nahum@hotmail.com",
+    "Notas": "chau",
+    "Favorito": false
+  },
+  {
+    "Id": 3,
+    "Nombre": "ana",
+    "Telefonos": "3816121175",
+    "Email": "ana@hotmail.com",
+    "Notas": "chau",
+    "Favorito": true
+  }
+]
