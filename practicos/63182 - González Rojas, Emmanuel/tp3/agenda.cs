@@ -38,6 +38,15 @@ Window ventana = new Window()
 Application.Run(ventana);
 Application.Shutdown();
 
+public sealed class SqliteAgendaStore
+{
+    private readonly string connectionString;
+
+    public SqliteAgendaStore(string archivo)
+    {
+        connectionString = $"Data Source={archivo}";
+    }
+}
 
 [Table("Contactos")]
 public sealed class Contacto
