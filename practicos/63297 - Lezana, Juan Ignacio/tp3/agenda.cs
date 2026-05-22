@@ -159,3 +159,53 @@ void ActVista() {
 
     listaVis.SetSource(filas);
 }
+
+public sealed class DialogCtc : Dialog {
+
+    readonly TextField campNombre;
+    readonly TextField campEmail;
+
+    public Ctc? Resultado { get; private set; }
+
+    public DialogCtc(
+        string titulo,
+        Ctc ctc
+    ) {
+
+        Title = titulo;
+
+        campNombre = new() {
+            X = 14,
+            Y = 1,
+            Width = Dim.Fill(2),
+            Text = ctc.Nombre
+        };
+
+        campEmail = new() {
+            X = 14,
+            Y = 3,
+            Width = Dim.Fill(2),
+            Text = ctc.Email
+        };
+
+        Add(campNombre, campEmail);
+
+        Button btnGuardar = new() {
+            Text = "Guardar",
+            IsDefault = true
+        };
+
+        btnGuardar.Accepting += (_, e) => {
+
+            Resultado = new Ctc {
+                Nombre = campNombre.Text.ToString(),
+                Email = campEmail.Text.ToString()
+            };
+
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        AddButton(btnGuardar);
+    }
+}
