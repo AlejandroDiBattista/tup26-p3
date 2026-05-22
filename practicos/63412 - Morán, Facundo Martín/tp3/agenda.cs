@@ -73,6 +73,10 @@ public sealed class AgendaWindow : Runnable {
          MenuBar menu = new() {
         Menus = [
             new MenuBarItem("_Archivo", [
+                new MenuItem("_Nuevo", "F2", AbrirNuevo),
+                new MenuItem("_Editar", "F3", AbrirEditar),
+                new MenuItem("_Eliminar", "Del", EliminarContacto),
+                null!,
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
             ])
         ]
@@ -164,9 +168,43 @@ private void MostrarDetalle(Contacto? c)
 }
 
 
-    private void AbrirDialogo() {
+    private void AbrirNuevo() {
         ContactDialog dialog = new(new Contacto());
         App!.Run(dialog);
+         if (!dialog.Confirmed || dialog.ContactResult is null)
+        return;
+
+    Contacto c = dialog.ContactResult;
+    _store.Insert(c);
+    _contacts.Add(c);
+    CargarContactos();
+    }   
+
+    private void AbrirEditar() {
+        Contacto? seleccionado = ContactoSeleccionado();
+        if (seleccionado is null)
+            return;
+
+        ContactDialog dialog = new(seleccionado);
+        App!.Run(dialog);
+        if (!dialog.Confirmed || dialog.ContactResult is null)
+            return;
+
+        seleccionado.Nombre = dialog.ContactResult.Nombre;
+        seleccionado.Email = dialog.ContactResult.Email;
+        _store.Update(seleccionado);
+        CargarContactos();
+        MostrarDetalle(seleccionado);
+    }
+
+    private void EliminarContacto() {
+        Contacto? seleccionado = ContactoSeleccionado();
+        if (seleccionado is null)
+            return;
+
+        _store.Delete(seleccionado);
+        CargarContactos();
+        MostrarDetalle(ContactoSeleccionado());
     }
 
     private void SolicitarSalir() {
@@ -176,6 +214,18 @@ private void MostrarDetalle(Contacto? c)
     protected override bool OnKeyDown(Key key) {
         if (key == Key.Q.WithCtrl) {
             SolicitarSalir();
+            return true;
+        }
+        if (key == Key.F2) {
+            AbrirNuevo();
+            return true;
+        }
+        if (key == Key.F3) {
+            AbrirEditar();
+            return true;
+        }
+        if (key == Key.Delete) {
+            EliminarContacto();
             return true;
         }
 
