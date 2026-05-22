@@ -215,13 +215,138 @@ public sealed class AgendaWindow : Runnable
     }
 
     // Acciones CRUD — se agregan en el siguiente commit
-    private void NuevoContacto() { }
-    private void EditarContacto() { }
-    private void EliminarContacto() { }
-    private void ToggleSoloFavoritos() { }
-    private void ImportarJson() { }
-    private void ExportarJson() { }
-    private string PedirRuta(string t, string l, string d) => "";
+    
+    private void NuevoContacto()
+    {
+        var dlg = new ContactDialog(App!, "Nuevo contacto", new Contacto());
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+        try { _store.Insert(dlg.ResultContact!); ReloadFromDb(); SetStatus($"'{dlg.ResultContact!.Nombre}' creado."); }
+        catch (Exception ex) { MostrarError("Error al guardar", ex.Message); }
+    }
+
+    private void EditarContacto()
+    {
+        var sel = ContactoSeleccionado();
+        if (sel is null) return;
+        var dlg = new ContactDialog(App!, "Editar contacto", sel.Clone());
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+        try { _store.Update(dlg.ResultContact!); ReloadFromDb(); SetStatus($"'{dlg.ResultContact!.Nombre}' actualizado."); }
+        catch (Exception ex) { MostrarError("Error al actualizar", ex.Message); }
+    }
+
+    private void EliminarContacto()
+    {
+        var sel = ContactoSeleccionado();
+        if (sel is null) return;
+        int r = Preguntar("Confirmar", $"¿Eliminar a '{sel.Nombre}'?", "Sí", "No");
+        if (r != 0) return;
+        try { _store.Delete(sel); ReloadFromDb(); SetStatus($"'{sel.Nombre}' eliminado."); }
+        catch (Exception ex) { MostrarError("Error al eliminar", ex.Message); }
+    }
+
+    private void ToggleSoloFavoritos()
+    {
+        _soloFavoritos = !_soloFavoritos;
+        AplicarFiltros();
+        SetStatus(_soloFavoritos ? "Solo favoritos." : "Todos los contactos.");
+    }
+
+    private void ImportarJson()
+    {
+        string path = PedirRuta("Importar JSON", "Ruta del archivo JSON:", "");
+        if (string.IsNullOrEmpty(path)) return;
+        List<Contacto> lista;
+        try { lista = JsonAgendaIO.Leer(path); }
+        catch (Exception ex) { MostrarError("Error al importar", ex.Message); return; }
+
+        int r = Preguntar("Confirmar", $"Se agregarán {lista.Count} contacto(s). ¿Continuar?", "Sí", "No");
+        if (r != 0) return;
+        try
+        {
+            foreach (var c in lista) { c.Id = 0; _store.Insert(c); }
+            ReloadFromDb(); SetStatus($"{lista.Count} contacto(s) importados.");
+        }
+        catch (Exception ex) { MostrarError("Error al importar", ex.Message); }
+    }
+
+    private void ExportarJson()
+    {
+        string path = PedirRuta("Exportar JSON", "Ruta de salida:", "salida.json");
+        if (string.IsNullOrEmpty(path)) return;
+        try { JsonAgendaIO.Escribir(path, _contacts); SetStatus($"Exportados {_contacts.Count} contacto(s) a '{path}'."); }
+        catch (Exception ex) { MostrarError("Error al exportar", ex.Message); }
+    }
+
+    private string PedirRuta(string title, string label, string defaultVal)
+    {
+    string result = "";
+    bool confirmed = false;
+
+    var dlg = new Dialog()
+    {
+        Title = title,
+        Width = 60,
+        Height = 10
+    };
+
+    var lbl = new Label()
+    {
+        Text = label,
+        X = 1,
+        Y = 1
+    };
+
+    var fld = new TextField()
+    {
+        X = 1,
+        Y = 3,
+        Width = Dim.Fill(2),
+        Text = defaultVal
+    };
+
+    var ok = new Button()
+    {
+        Text = "_Aceptar",
+        X = Pos.Center() - 10,
+        Y = 5,
+        IsDefault = true
+    };
+
+    var cancel = new Button()
+    {
+        Text = "_Cancelar",
+        X = Pos.Right(ok) + 2,
+        Y = 5
+    };
+
+    ok.Accepting += (_, e) =>
+    {
+        result = fld.Text.ToString() ?? "";
+        confirmed = true;
+
+        dlg.App!.RequestStop();
+        e.Handled = true;
+    };
+
+    cancel.Accepting += (_, e) =>
+    {
+        dlg.App!.RequestStop();
+        e.Handled = true;
+    };
+
+    dlg.Add(lbl);
+    dlg.Add(fld);
+    dlg.Add(ok);
+    dlg.Add(cancel);
+
+    fld.SetFocus();
+
+    App!.Run(dlg);
+
+    return confirmed ? result : "";
+    }
 }
 
 [Table("Contactos")]
