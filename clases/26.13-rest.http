@@ -1,10 +1,10 @@
 @baseUrl = http://localhost:5001
 
 ### Listar productos
-GET {{baseUrl}}/productos
+GET {{baseUrl}}/contador
 
 ### Obtener producto 1
-GET {{baseUrl}}/productos/1
+POST {{baseUrl}}/contador
 
 ### Crear producto
 POST {{baseUrl}}/productos
@@ -32,3 +32,21 @@ DELETE {{baseUrl}}/productos/3
 
 ### Verificar borrado
 GET {{baseUrl}}/productos/3
+
+
+### Prueba con GOOGLE
+
+GET https://www.google.com/search?q=rest+api+en+c%23
+
+###
+
+GET https://www.vea.com.ar
+
+
+### Actualizar producto 3
+PATCH {{baseUrl}}/productos/3
+Content-Type: application/json
+
+{
+  "precio": 275000
+}

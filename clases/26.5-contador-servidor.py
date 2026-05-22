@@ -29,4 +29,5 @@ os.system("cls" if os.name == "nt" else "clear")
 print("=== Servidor de Contador (Python) ===\n")
 print(f"Docs:  http://{host}:{port}/docs")
 print(f"OpenAPI: http://{host}:{port}/openapi.json\n")
+
 uvicorn.run(app, host=host, port=port)

@@ -10,12 +10,11 @@ var app = builder.Build();
 
 List<Producto> productos = [
     new Producto(1, "Teclado", 15000),
-    new Producto(2, "Mouse", 10000)
+    new Producto(2, "Mouse",   10000)
 ];
 
-app.MapGet("/productos", () => {
-    return Results.Ok(productos);
-});
+app.MapGet("/productos", () => Results.Ok(productos));
+
 
 app.MapGet("/productos/{id:int}", (int id) => {
     Producto? producto = productos.FirstOrDefault(p => p.Id == id);
@@ -49,6 +48,11 @@ app.MapPut("/productos/{id:int}", (int id, ActualizarProductoDto dto) => {
 
     return Results.Ok(productoActualizado);
 });
+app.MapPatch("/productos/{id:int}", (int id, ActualizarPrecioProductoDto dto)   => {
+   var p = productos.FirstOrDefault(p => p.id == id);
+   p.Precio = dto.Precio; 
+   return Results.Ok(p);
+});
 
 app.MapDelete("/productos/{id:int}", (int id) => {
     Producto? producto = productos.FirstOrDefault(p => p.Id == id);
@@ -65,5 +69,6 @@ app.Run();
 public record Producto(int Id, string Nombre, decimal Precio);
 
 public record CrearProductoDto(string Nombre, decimal Precio);
-
 public record ActualizarProductoDto(string Nombre, decimal Precio);
+public record ActualizarPrecioProductoDto(decimal Precio);
+

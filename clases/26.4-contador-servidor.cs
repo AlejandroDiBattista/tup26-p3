@@ -35,5 +35,6 @@ app.MapDelete("/contador", () => {
 
 Console.Clear();
 Console.WriteLine("=== Servidor de Contador (C#) ===\n");
+
 app.Run();
 

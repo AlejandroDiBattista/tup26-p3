@@ -4,4 +4,4 @@ GET https://www.google.com
 
 ###
 
-GET http://localhost:5001/despedida
+GET http://localhost:5001/productos
