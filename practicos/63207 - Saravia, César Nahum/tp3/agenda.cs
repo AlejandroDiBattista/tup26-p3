@@ -444,37 +444,71 @@ public sealed class AgendaWindow : Runnable {
     }
 
     protected override bool OnKeyDown(Key key) {
+        if (key == Key.N.WithCtrl || key == Key.F2) {
+            NuevoContacto();
+            return true;
+        }
+        if (key == Key.F3 || key == Key.Enter) {
+            EditarContacto();
+            return true;
+        }
+         if (key == Key.D.WithCtrl || key == Key.Delete) {
+            EliminarContacto();
+            return true;
+        }
+        if (key == Key.I.WithCtrl) {
+            ImportJson();
+            return true;
+        }
+        if (key == Key.E.WithCtrl) {
+            ExportJson();
+            return true;
+        }
+        if (key == Key.F4) {
+            FocoBusqueda();
+            return true;
+        }
         if (key == Key.Q.WithCtrl) {
             SolicitarSalir();
             return true;
         }
-
-        return base.OnKeyDown(key);
+        bool handled = base.OnKeyDown(key);
+        selectedIndex = listView?.SelectedItem ?? selectedIndex;
+        UpdateDetails();
+        return handled;
     }
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog {
+    private readonly TextField nameField;
+    private readonly TextField[] phoneFields;
+    private readonly TextField emailField;
+    private readonly TextView notesField;
+    private readonly CheckBox favoriteField;
+    public new bool Accepted { get; private set; }
+    public Contacto? Contact { get; private set; }
+    public ContactDialog(Contacto? contact = null) {
+        Contacto editing = contact?.Clone() ?? new Contacto();
+        Title  = contact is null ? "Nuevo contacto" : "Editar contacto";
+        Width  = 74;
+        Height = 22;
+        
+        Label nameLabel = LabelAt("Nombre:", 1, 1);
+        nameField = FieldAt(Pos.Right(nameLabel) + 1, 1, editing.Nombre);
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
+         phoneFields = new TextField[5];
+        List<Label> phoneLabels = [];
+        string[] phones = editing.Telefonos
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(5)
+            .ToArray();
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
+        for (int i = 0; i < phoneFields.Length; i++) {
+            Label phoneLabel = LabelAt($"Telefono {i + 1}:", 1, 3 + i);
+            phoneLabels.Add(phoneLabel);
+            phoneFields[i] = FieldAt(Pos.Right(phoneLabel) + 1, 3 + i, i < phones.Length ? phones[i] : "");
+        }
 
         Add(message);
         AddButton(closeButton);
