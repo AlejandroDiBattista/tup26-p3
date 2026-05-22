@@ -79,3 +79,48 @@ static void Validar(Ctc ctc) {
             "El email debe contener @."
         );
 }
+using IApplication apl = Application.Create().Init();
+apl.Run(new VentanaCtc(almacen, archBd));
+
+public sealed class VentanaCtc : Runnable {
+
+    readonly ListView listaVis;
+    readonly TextView panelDet;
+    readonly Label barEstado;
+
+    public VentanaCtc(
+        SqliteAlmacenCtc almacen,
+        string bd
+    ) {
+
+        Title = "Agenda - Terminal.Gui";
+
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        listaVis = new() {
+            X = 0,
+            Y = 3,
+            Width = Dim.Percent(40),
+            Height = Dim.Fill(1),
+            Title = "Contactos"
+        };
+
+        panelDet = new() {
+            X = Pos.Right(listaVis) + 1,
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(1),
+            Title = "Detalle"
+        };
+
+        barEstado = new() {
+            X = 1,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+            Text = "Listo."
+        };
+
+        Add(listaVis, panelDet, barEstado);
+    }
+}
