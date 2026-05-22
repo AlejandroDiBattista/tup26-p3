@@ -187,5 +187,52 @@ public sealed class AgendaWindow : Runnable {
         Y    = 1,
         Width = Dim.Fill()
     };
+      _searchBox.TextChanged += (_, _) => AplicarFiltro();
+
+        _listView = new ListView
+        {
+            X = 0,
+            Y = 3,
+            Width = Dim.Percent(40),
+            Height = Dim.Fill(2)
+        };
+        _listView.ValueChanged += (_, _) => MostrarDetalle();
+
+        _detailView = new Label
+        {
+            X = Pos.Right(_listView) + 1,
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(2),
+            Text = ""
+        };
+
+        _statusBar = new Label
+        {
+            X = 0,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+            Text = "Listo. F2=Nuevo  F3=Editar  Del=Eliminar  F4=Buscar  Ctrl+Q=Salir"
+        };
+
+        Add(menu, searchLabel, _searchBox, _listView, _detailView, _statusBar);
+    }
     
+
+    // aqui implemento los stubs q se usaran despues
+ private void LoadContacts() => throw new NotImplementedException();
+private void AplicarFiltro() => throw new NotImplementedException();
+private void MostrarDetalle() => throw new NotImplementedException();
+private Contacto? ContactoSeleccionado() => throw new NotImplementedException();
+private void SetStatus(string message) => throw new NotImplementedException();
+private void NuevoContacto() => throw new NotImplementedException();
+private void EditarContacto() => throw new NotImplementedException();
+private void EliminarContacto() => throw new NotImplementedException();
+private void ImportarJson() => throw new NotImplementedException();
+private void ExportarJson() => throw new NotImplementedException();
+private string PedirRuta(string titulo, string etiqueta) => throw new NotImplementedException();
+private void ToggleFavoritos() => throw new NotImplementedException();
+private void AcercaDe() => throw new NotImplementedException();
+private void SolicitarSalir() => throw new NotImplementedException();
+protected override bool OnKeyDown(Key key) => base.OnKeyDown(key);
 }
