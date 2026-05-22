@@ -27,16 +27,33 @@ using Dapper.Contrib.Extensions;
 using Microsoft.Data.Sqlite;
 
 
+// ==========================================================
+// TOP LEVEL CODE
+// ==========================================================
 
-Application.Init();
+SqlMapper.AddTypeHandler(new BooleanTypeHandler());
 
-Window ventana = new Window()
+string archivoBaseDatos = args.Length > 0 ? args[0] : "agenda.db";
+
+try
 {
-    Title = "Agenda"
-};
+    SqliteAgendaStore store = new SqliteAgendaStore(archivoBaseDatos);
 
-Application.Run(ventana);
-Application.Shutdown();
+    Application.Init();
+
+    AgendaWindow ventana = new AgendaWindow(store);
+    Application.Run(ventana);
+    Application.Shutdown();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Error al iniciar la aplicación:");
+    Console.WriteLine(ex.Message);
+}
+
+// ==========================================================
+// SQLITE STORE
+// ==========================================================
 
 public sealed class SqliteAgendaStore
 {
@@ -45,18 +62,101 @@ public sealed class SqliteAgendaStore
     public SqliteAgendaStore(string archivo)
     {
         connectionString = $"Data Source={archivo}";
+        CrearTabla();
+    }
+
+    private void CrearTabla()
+    {
+        using SqliteConnection conexion = new SqliteConnection(connectionString);
+        conexion.Open();
+        string sql = """
+        CREATE TABLE IF NOT EXISTS Contactos(
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Nombre TEXT NOT NULL,
+            Telefonos TEXT,
+            Email TEXT,
+            Notas TEXT,
+            Favorito INTEGER NOT NULL
+        );
+        """;
+        conexion.Execute(sql);
+    }
+
+    public List<Contacto> ObtenerTodos()
+    {
+        using SqliteConnection conexion = new SqliteConnection(connectionString);
+        conexion.Open();
+        string sql = """
+        SELECT Id, Nombre, Telefonos, Email, Notas, (Favorito = 1) AS Favorito 
+        FROM Contactos 
+        ORDER BY Nombre
+        """;
+        return conexion.Query<Contacto>(sql).ToList();
+    }
+
+    public void Insertar(Contacto contacto)
+    {
+        using SqliteConnection conexion = new SqliteConnection(connectionString);
+        conexion.Open();
+        conexion.Insert(contacto);
+    }
+
+    public void Actualizar(Contacto contacto)
+    {
+        using SqliteConnection conexion = new SqliteConnection(connectionString);
+        conexion.Open();
+        conexion.Update(contacto);
+    }
+
+    public void Eliminar(Contacto contacto)
+    {
+        using SqliteConnection conexion = new SqliteConnection(connectionString);
+        conexion.Open();
+        conexion.Delete(contacto);
     }
 }
+
+// ==========================================================
+// MODELO
+// ==========================================================
 
 [Table("Contactos")]
 public sealed class Contacto
 {
     [Key]
     public int Id { get; set; }
-
     public string Nombre { get; set; } = "";
     public string Telefonos { get; set; } = "";
     public string Email { get; set; } = "";
     public string Notas { get; set; } = "";
     public bool Favorito { get; set; }
+
+    public Contacto Clone() => new Contacto()
+    {
+        Id = this.Id,
+        Nombre = this.Nombre,
+        Telefonos = this.Telefonos,
+        Email = this.Email,
+        Notas = this.Notas,
+        Favorito = this.Favorito
+    };
+}
+
+// ==========================================================
+// SOPORTE INTERNO: BooleanTypeHandler
+// ==========================================================
+
+internal class BooleanTypeHandler : SqlMapper.TypeHandler<bool>
+{
+    public override void SetValue(System.Data.IDbDataParameter parameter, bool value)
+    {
+        parameter.Value = value ? 1 : 0;
+    }
+
+    public override bool Parse(object value)
+    {
+        if (value is long l) return l == 1;
+        if (value is int i) return i == 1;
+        return Convert.ToBoolean(value);
+    }
 }
