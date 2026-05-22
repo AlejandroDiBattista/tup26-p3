@@ -406,8 +406,41 @@ public sealed class AgendaWindow : Runnable {
 
         return string.IsNullOrWhiteSpace(result) ? null : result.Trim();
     }
+    private void ToggleOnlyFavorites() {
+        onlyFavorites = !onlyFavorites;
+        RefreshFilteredContacts();
+        SetStatus(onlyFavorites ? "Filtro activo: solo favoritos." : "Filtro de favoritos desactivado.");
+    }
+
+    private void AcercaDe() {
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "Agenda de contactos\nTerminal.Gui v2 + SQLite + JSON",
+            "Aceptar");
+    }
+    private void FocoBusqueda() {
+        searchField.SetFocus();
+        SetStatus("Busqueda activa.");
+    }
+
     private void SolicitarSalir() {
         App!.RequestStop();
+    }
+
+    private void SelectContact(int id) {
+        int index = filteredContacts.FindIndex(c => c.Id == id);
+        if (index >= 0) {
+            listView.SelectedItem = index;
+            selectedIndex = index;
+            UpdateDetails();
+        }
+    }
+
+     private void SetStatus(string message) {
+        if (statusBar is not null) {
+            statusBar.Text = message;
+        }
     }
 
     protected override bool OnKeyDown(Key key) {
