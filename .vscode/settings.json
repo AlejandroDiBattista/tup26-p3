@@ -1,5 +1,5 @@
 {
-    "workbench.colorTheme": "Light+",
+    "workbench.colorTheme": "Visual Studio Dark",
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "workbench.preferredDarkColorTheme": "Dark 2026",
     "dotnet.projects.enableFileBasedPrograms": true,
