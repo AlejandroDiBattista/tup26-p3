@@ -408,4 +408,47 @@ using Terminal.Gui.Views;
         }
     }
 
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.N.WithCtrl || key == Key.F2) {
+            NewContact();
+            return true;
+        }
+
+        if (key == Key.F3 || key == Key.Enter) {
+            EditSelectedContact();
+            return true;
+        }
+
+        if (key == Key.D.WithCtrl || key == Key.Delete) {
+            DeleteSelectedContact();
+            return true;
+        }
+
+        if (key == Key.I.WithCtrl) {
+            ImportJson();
+            return true;
+        }
+
+        if (key == Key.E.WithCtrl) {
+            ExportJson();
+            return true;
+        }
+
+        if (key == Key.F4) {
+            FocusSearch();
+            return true;
+        }
+
+        if (key == Key.Q.WithCtrl) {
+            RequestExit();
+            return true;
+        }
+
+        bool handled = base.OnKeyDown(key);
+        selectedIndex = listView?.SelectedItem ?? selectedIndex;
+        UpdateDetails();
+        return handled;
+    }
+}
+
 
