@@ -609,10 +609,64 @@ public sealed class ContactDialog : Dialog {
         };
     }
 }
+public sealed class SqliteAgendaStore : IDisposable {
+    private readonly SqliteConnection connection;
+    public string DatabasePath { get; }
+    public SqliteAgendaStore(string databasePath) {
+        DatabasePath = databasePath;
+        SqliteConnectionStringBuilder builder = new() {
+            DataSource = databasePath
+        };
+        connection = new SqliteConnection(builder.ConnectionString);
+        connection.Open();
+        EnsureSchema();
+}
 
+     public IEnumerable<Contacto> GetAll() {
+        return connection.GetAll<Contacto>();
+    }
 
+    public int Insert(Contacto contact) {
+        Validate(contact);
+        long id = connection.Insert(contact);
+        return checked((int)id);
+    }
 
-public class SqliteAgendaStore {}
+     public void Update(Contacto contact) {
+        Validate(contact);
+        connection.Update(contact);
+    }
+
+     public void Delete(Contacto contact) {
+        connection.Delete(contact);
+    }
+
+    public void Dispose() {
+        connection.Dispose();
+    }
+
+    private void EnsureSchema() {
+        connection.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL DEFAULT '',
+                Email TEXT NOT NULL DEFAULT '',
+                Notas TEXT NOT NULL DEFAULT '',
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+            """);
+    }
+private static void Validate(Contacto contact) {
+        if (string.IsNullOrWhiteSpace(contact.Nombre)) {
+            throw new InvalidOperationException("El nombre no puede estar vacio.");
+        }
+        if (!string.IsNullOrWhiteSpace(contact.Email) && !contact.Email.Contains('@')) {
+            throw new InvalidOperationException("El email debe contener @.");
+        }
+    }
+}
+
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
@@ -623,4 +677,15 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+        public Contacto Clone() {
+        return new Contacto {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
+        };
+    }
 }
