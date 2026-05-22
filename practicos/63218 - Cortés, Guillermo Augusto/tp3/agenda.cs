@@ -136,6 +136,7 @@ public sealed class AgendaWindow : Window {
         ]);
 
         Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
+        
     }
 
     private void RefreshFilteredContacts() {
@@ -277,19 +278,109 @@ private void SelectContact(int id) {
         UpdateDetails();
     }
 }
-    private void DeleteSelectedContact() {}
-    private void ImportJson() {}
-    private void ExportJson() {}
-    private void ToggleOnlyFavorites() {}
-    private void ShowAbout() {}
-    private void FocusSearch() {}
-    private void RequestExit() => App!.RequestStop();
-
-    private void SetStatus(string message) {
-        if (statusBar is not null) {
-            statusBar.Text = message;
-        }
+private void DeleteSelectedContact() {
+    Contacto? selected = SelectedContact();
+    if (selected is null) {
+        SetStatus("No hay contacto seleccionado para eliminar.");
+        return;
     }
+
+    int answer = MessageBox.Query(
+        App!,
+        "Confirmar eliminacion",
+        $"Eliminar el contacto \"{selected.Nombre}\"?",
+        "Eliminar",
+        "Cancelar") ?? 1;
+
+    if (answer != 0) {
+        SetStatus("Eliminacion cancelada.");
+        return;
+    }
+
+    try {
+        store.Delete(selected);
+        contacts.RemoveAll(c => c.Id == selected.Id);
+        RefreshFilteredContacts();
+        SetStatus($"Contacto eliminado: {selected.Nombre}.");
+    }
+    catch (Exception ex) {
+        MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
+    }
+}
+
+private void ToggleOnlyFavorites() {
+    onlyFavorites = !onlyFavorites;
+    RefreshFilteredContacts();
+    SetStatus(onlyFavorites ? "Filtro activo: solo favoritos." : "Filtro de favoritos desactivado.");
+}
+
+private void ShowAbout() {
+    MessageBox.Query(
+        App!,
+        "Acerca de",
+        "Agenda de contactos\nTerminal.Gui v2 + SQLite + JSON",
+        "Aceptar");
+}
+
+private void FocusSearch() {
+    searchField.SetFocus();
+    SetStatus("Busqueda activa.");
+}
+
+private void RequestExit() {
+    App!.RequestStop();
+}
+
+private void ImportJson() {}
+
+private void ExportJson() {}
+
+private void SetStatus(string message) {
+    if (statusBar is not null) {
+        statusBar.Text = message;
+    }
+}
+protected override bool OnKeyDown(Key key) {
+    if (key == Key.N.WithCtrl || key == Key.F2) {
+        NewContact();
+        return true;
+    }
+
+    if (key == Key.F3 || key == Key.Enter) {
+        EditSelectedContact();
+        return true;
+    }
+
+    if (key == Key.D.WithCtrl || key == Key.Delete) {
+        DeleteSelectedContact();
+        return true;
+    }
+
+    if (key == Key.I.WithCtrl) {
+        ImportJson();
+        return true;
+    }
+
+    if (key == Key.E.WithCtrl) {
+        ExportJson();
+        return true;
+    }
+
+    if (key == Key.F4) {
+        FocusSearch();
+        return true;
+    }
+
+    if (key == Key.Q.WithCtrl) {
+        RequestExit();
+        return true;
+    }
+
+    bool handled = base.OnKeyDown(key);
+    selectedIndex = listView?.SelectedItem ?? selectedIndex;
+    UpdateDetails();
+    return handled;
+}    
 }
 public sealed class ContactDialog : Dialog {
     private readonly TextField nameField;
