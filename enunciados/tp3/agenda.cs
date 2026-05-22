@@ -19,6 +19,7 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
+//Comienzo estructura
 string databasePath = args.Length > 0 ? args[0] : "agenda.db";
 
 try {
@@ -31,6 +32,7 @@ catch (Exception ex) {
     Environment.ExitCode = 1;
 }
 
+//Ventana Principal
 public sealed class AgendaWindow : Window {
     private readonly SqliteAgendaStore store;
     private readonly List<Contacto> contacts;
@@ -42,6 +44,7 @@ public sealed class AgendaWindow : Window {
     private StatusBar statusBar = null!;
     private bool onlyFavorites;
     private int selectedIndex;
+
 
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
@@ -481,6 +484,7 @@ public sealed class AgendaWindow : Window {
     }
 }
 
+//ContactDialog
 public sealed class ContactDialog : Dialog {
     private readonly TextField nameField;
     private readonly TextField[] phoneFields;
@@ -565,6 +569,7 @@ public sealed class ContactDialog : Dialog {
         AddButton(cancelButton);
     }
 
+
     private bool TryBuildContact(int id, out Contacto? contact) {
         contact = null;
         string name = nameField.Text?.ToString()?.Trim() ?? "";
@@ -615,6 +620,7 @@ public sealed class ContactDialog : Dialog {
         };
     }
 }
+
 
 public sealed class SqliteAgendaStore : IDisposable {
     private readonly SqliteConnection connection;
