@@ -159,3 +159,44 @@ void CargarJson() {
     }
     void Mensaje(string texto) { barra.Text = texto; barra.SetNeedsDraw(); }
 }
+public sealed class ContactDialog : Dialog {
+    readonly TextField txtNombre, txtEmail; readonly TextField[] txtTelefono; readonly TextView txtNotas; readonly CheckBox chkFavorito;
+    public Contacto? Valor { get; private set; }
+
+    public ContactDialog(string titulo, Contacto c) {
+        Title = titulo; Width = Dim.Percent(68); Height = Dim.Percent(80);
+        txtNombre = Entrada("Nombre:", 1, c.Nombre);
+        txtTelefono = Enumerable.Range(0, 5).Select(i => Entrada($"Tel. {i + 1}:", 3 + i * 2, ParteTelefono(c, i))).ToArray();
+        txtEmail = Entrada("Email:", 13, c.Email);
+        Add(new Label { Text = "Notas:", X = 2, Y = 15 });
+        txtNotas = new() { X = 13, Y = 15, Width = Dim.Fill(2), Height = Dim.Fill(4), Text = c.Notas, BorderStyle = LineStyle.Single };
+        chkFavorito = new() { Text = "Favorito", X = 13, Y = Pos.Bottom(txtNotas) + 1, Value = c.Favorito ? CheckState.Checked : CheckState.UnChecked };
+        Add(txtNotas, chkFavorito);
+        Button aceptar = new() { Text = "Aceptar", IsDefault = true };
+        aceptar.Accepting += (_, e) => { if (TomarDatos(c.Id, out Contacto nuevo)) { Valor = nuevo; App!.RequestStop(); } e.Handled = true; };
+        Button cancelar = new() { Text = "Cancelar" };
+        cancelar.Accepting += (_, e) => { Valor = null; App!.RequestStop(); e.Handled = true; };
+        AddButton(cancelar); AddButton(aceptar);
+    }
+
+    TextField Entrada(string label, int y, string valor) {
+        Add(new Label { Text = label, X = 2, Y = y });
+        TextField t = new() { X = 13, Y = y, Width = Dim.Fill(2), Text = valor };
+        Add(t); return t;
+    }
+
+    bool TomarDatos(int id, out Contacto c) {
+        c = new Contacto();
+        string nombre = txtNombre.Text?.ToString().Trim() ?? "";
+        string mail = txtEmail.Text?.ToString().Trim() ?? "";
+        if (nombre == "") { MessageBox.ErrorQuery(App!, "Validación", "Ingresá un nombre.", "Aceptar"); return false; }
+        if (mail != "" && !mail.Contains('@')) { MessageBox.ErrorQuery(App!, "Validación", "El email debe tener @.", "Aceptar"); return false; }
+        c = new Contacto { Id = id, Nombre = nombre, Email = mail, Notas = txtNotas.Text?.ToString() ?? "", Favorito = chkFavorito.Value == CheckState.Checked,
+            Telefonos = string.Join(", ", txtTelefono.Select(t => t.Text?.ToString().Trim()).Where(t => !string.IsNullOrWhiteSpace(t))) };
+        return true;
+    }
+    static string ParteTelefono(Contacto c, int i) {
+        string[] p = c.Telefonos.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return i < p.Length ? p[i] : "";
+    }
+}
