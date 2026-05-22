@@ -59,26 +59,43 @@ public AgendaWindow(SqliteAgendaStore store) {
     Title  = "Agenda - Terminal.Gui";
     Width  = Dim.Fill();
     Height = Dim.Fill();
+    BuildLayout();
+    AplicarFiltros();
+    }
+    private void BuildLayout()
+    {
+        MenuBar menu = new()
+        {
+            Menus =
+            [
+                new MenuBarItem("_Archivo",
+                [
+                    new MenuItem(
+                        "_Salir",
+                        "Ctrl+Q",
+                        SolicitarSalir
+                    )
+                ]),
 
-    MenuBar menu = new() {
-        Menus = [
-
-            new MenuBarItem("_Archivo", [
-                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-            ]),
-
-            new MenuBarItem("_Contactos",
+                new MenuBarItem("_Contactos",
                 [
                     new MenuItem()
                     {
                         Title = "_Nuevo",
                         Action = NuevoContacto
                     },
+
                     new MenuItem()
                     {
                         Title = "_Editar",
                         Action = EditarContacto
-                        }
+                    },
+
+                    new MenuItem()
+                    {
+                        Title = "_Eliminar",
+                        Action = EliminarContacto
+                    }
                 ]),
 
                 new MenuBarItem("_Ver",
@@ -89,8 +106,8 @@ public AgendaWindow(SqliteAgendaStore store) {
                         ToggleFavoritos
                     )
                 ])
-        ]
-    };
+            ]
+        };
 
     Label buscarLabel = new() {
         Text = "Buscar:",
@@ -154,9 +171,7 @@ private void AplicarFiltros() {
             campoBusqueda.Text?.ToString()?.ToLower()
             ?? "";
 
-        contactosFiltrados = contactos
-            .Where(c =>
-
+        contactosFiltrados = contactos.Where(c =>
                 (
                     c.Nombre.ToLower().Contains(texto)
                     || c.Telefonos.ToLower().Contains(texto)
@@ -168,7 +183,6 @@ private void AplicarFiltros() {
                 (
                     !soloFavoritos || c.Favorito
                 )
-
             )
             .ToList();
 
@@ -284,13 +298,34 @@ Notas:
             "Contacto actualizado";
     }
 
+    private void EliminarContacto()
+    {
+        int index =
+            listaContactos.SelectedItem ?? -1;
+
+        if (
+            index < 0
+            || index >= contactosFiltrados.Count
+        )
+            return;
+
+        contactos = store.ObtenerTodos();
+
+        AplicarFiltros();
+
+        statusBar.Title =
+            "Contacto eliminado";
+    }
+
+
     private void SolicitarSalir() {
         App!.RequestStop();
     }
 
-    protected override bool OnKeyDown(Key key) {
-
-        if (key == Key.Q.WithCtrl) {
+    protected override bool OnKeyDown(Key key) 
+    {
+        if (key == Key.Q.WithCtrl)
+        {
 
             SolicitarSalir();
 
@@ -314,6 +349,13 @@ Notas:
         if (key == Key.Enter)
         {
             EditarContacto();
+
+            return true;
+        }
+
+        if (key == Key.DeleteChar)
+        {
+            EliminarContacto();
 
             return true;
         }
@@ -460,7 +502,6 @@ public sealed class ContactDialog : Dialog
 
         AddButton(cancelar);
 
-        
     }
 
     private void Guardar()
