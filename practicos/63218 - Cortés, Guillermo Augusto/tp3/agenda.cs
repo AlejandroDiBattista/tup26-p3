@@ -92,6 +92,7 @@ public sealed class AgendaWindow : Window {
             Y = 1,
             Width = Dim.Fill(1)
         };
+        searchField.TextChanged += (_, _) => RefreshFilteredContacts();
 
         FrameView listFrame = new() {
             Title = "Contactos",
@@ -136,7 +137,81 @@ public sealed class AgendaWindow : Window {
         Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
     }
 
-    private void RefreshFilteredContacts() {}
+    private void RefreshFilteredContacts() {
+    string query = searchField?.Text?.ToString() ?? "";
+    int currentId = SelectedContact()?.Id ?? 0;
+
+    filteredContacts.Clear();
+    filteredContacts.AddRange(contacts
+        .Where(c => (!onlyFavorites || c.Favorito) && MatchesSearch(c, query))
+        .OrderByDescending(c => c.Favorito)
+        .ThenBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase));
+
+    listView?.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem).ToList()));
+
+    selectedIndex = 0;
+    if (currentId != 0) {
+        int found = filteredContacts.FindIndex(c => c.Id == currentId);
+        selectedIndex = found >= 0 ? found : 0;
+    }
+
+    if (listView is not null && filteredContacts.Count > 0) {
+        listView.SelectedItem = Math.Min(selectedIndex, filteredContacts.Count - 1);
+    }
+
+    UpdateDetails();
+}
+
+private static bool MatchesSearch(Contacto contact, string query) {
+    if (string.IsNullOrWhiteSpace(query)) {
+        return true;
+    }
+
+    return contact.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+        || contact.Telefonos.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+        || contact.Email.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+}
+
+private static string FormatContactListItem(Contacto contact) {
+    string favorite = contact.Favorito ? "* " : "  ";
+    string email = string.IsNullOrWhiteSpace(contact.Email) ? "" : $" <{contact.Email}>";
+    return $"{favorite}{contact.Nombre}{email}";
+}
+
+private Contacto? SelectedContact() {
+    if (filteredContacts.Count == 0) {
+        return null;
+    }
+
+    int index = listView is null ? selectedIndex : listView.SelectedItem ?? selectedIndex;
+    if (index < 0 || index >= filteredContacts.Count) {
+        index = 0;
+    }
+
+    return filteredContacts[index];
+}
+
+private void UpdateDetails() {
+    Contacto? contact = SelectedContact();
+    if (detailLabel is null) {
+        return;
+    }
+
+    detailLabel.Text = contact is null
+        ? "No hay contactos para mostrar."
+        : BuildDetails(contact);
+}
+
+private static string BuildDetails(Contacto contact) {
+    string favorite = contact.Favorito ? "Si" : "No";
+    return
+        $"Id: {contact.Id}\n" +
+        $"Nombre: {contact.Nombre}\n" +
+        $"Telefonos: {contact.Telefonos}\n" +
+        $"Email: {contact.Email}\n" +
+        $"Favorito: {favorite}\n\n" +
+        $"Notas:\n{contact.Notas}";
+}
     private void NewContact() {}
     private void EditSelectedContact() {}
     private void DeleteSelectedContact() {}
