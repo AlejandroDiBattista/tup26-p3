@@ -17,20 +17,24 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
 
-// Punto de entrada
+string dbPath = args.Length > 0
+    ? args[0]
+    : "agenda.db";
+
+SqliteAgendaStore store = new(dbPath);
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(store));
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+private readonly SqliteAgendaStore store;
+        
+     public AgendaWindow(SqliteAgendaStore store) {
+        
+        this.store = store ;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -38,7 +42,7 @@ public sealed class AgendaWindow : Runnable {
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
     }
-
+    
     private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
