@@ -16,6 +16,7 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Linq;
 
 
 string dbPath = args.Length > 0
@@ -31,6 +32,11 @@ app.Run(new AgendaWindow(store));
 public sealed class AgendaWindow : Runnable {
 
 private readonly SqliteAgendaStore store;
+private List<Contacto> contactos = [];
+private ListView listaContactos = null!;
+private TextField buscador = null!;
+private Label detalle = null!;
+
         
      public AgendaWindow(SqliteAgendaStore store) {
         
@@ -44,29 +50,81 @@ private readonly SqliteAgendaStore store;
     }
     
     private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
-        };
+       contactos = store.GetAll();
+        
+        MenuBar menu = new() 
+        {
+        Menus = 
+        [
+            new MenuBarItem("_Archivo", 
+            [
+                new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
+                null!,
+                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+            ])
+        ]
+    };
+        Label buscarLabel = new() 
+        {
+          Text = "Buscar:", 
+          X = 1,
+          Y = 1 
+        }; 
+        
+    buscador = new TextField("")
+     {
+        X = 10,
+        Y = 1,
+        Width = 40    
+     }; 
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
-        };
+    listaContactos = new ListView(contactos.Select(c => c.Nombre).ToList()) 
+    {
+        X = 1,
+        Y = 3,
+        Width = 30,
+        Height = Dim.Fill() - 1
+    };
+      
+    detalle = new Label("Seleccione un contacto") 
+    {
+        X = 35,
+        Y = 3,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    listaContactos.SelectedItemChanged += e => 
+    {
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
+        if (e.Item >= 0 && e.Item < contactos.Count) 
+        {
 
-        Add(menu, openButton);
-    }
+            Contacto c = contactos[e.Item];
+
+            detalle.Text =
+                $"Nombre: {c.Nombre}\n" +
+                $"Telefonos: {c.Telefonos}\n" +
+                $"Email: {c.Email}\n" +
+                $"Notas: {c.Notas}\n" +
+                $"Favorito: {(c.Favorito ? "Sí" : "No")}";
+        }
+    };
+     
+     Add(
+        menu,
+        buscarLabel,
+        buscador,
+        listaContactos,
+        detalle
+    );
+    
+}
+
+
+
+
+                
+    
 
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
