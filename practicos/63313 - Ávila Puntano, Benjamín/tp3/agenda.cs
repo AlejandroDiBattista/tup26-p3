@@ -25,33 +25,6 @@ using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(store));
 
 
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
-
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
-
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
-
-        Add(message);
-        AddButton(closeButton);
-    }
-}
-
 
 [Table("Contactos")]
 public class Contacto {
@@ -91,7 +64,7 @@ public SqliteAgendaStore(String dbPath) {
     connection.Open();
     return connection;
  }
-    public IEnumerable<Contacto> ObtenerContactos() {
+    public IEnumerable<Contacto> ObtenerTodos() {
     using SqliteConnection connection = Conectar();
     return connection.GetAll<Contacto>().OrderBy(c => c.Nombre).ToList();
 }
@@ -119,9 +92,11 @@ public static class JsonAgendaIO
     public static List<Contacto> Leer(String ruta)
      {
         string json = File.ReadAllText(ruta, Encoding.UTF8);
-        return JsonSerializer.Deserialize<List<Contacto>>(json, Options) ?? new List<Contacto>();
-         throw new InvalidOperationException("No se pudo deserializar el archivo JSON."); 
-    }
+        List<Contacto>? resultado = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+        if (resultado is null)
+        throw new InvalidDataException("El archivo JSON no contiene una lista valida.");
+        return resultado;
+}
     public static void Escribir(string ruta, IEnumerable<Contacto> contactos)
     {
         string json = JsonSerializer.Serialize(contactos.ToList(), Options);
@@ -220,11 +195,12 @@ public sealed class AgendaWindow : Runnable {
     
 
     // aqui implemento los stubs q se usaran despues
- private void LoadContacts() => throw new NotImplementedException();
-private void AplicarFiltro() => throw new NotImplementedException();
-private void MostrarDetalle() => throw new NotImplementedException();
-private Contacto? ContactoSeleccionado() => throw new NotImplementedException();
-private void SetStatus(string message) => throw new NotImplementedException();
+private void LoadContacts()
+{
+    _contacts.Clear();
+    _contacts.AddRange(_store.ObtenerTodos());
+    AplicarFiltro();
+}
 private void NuevoContacto() => throw new NotImplementedException();
 private void EditarContacto() => throw new NotImplementedException();
 private void EliminarContacto() => throw new NotImplementedException();
@@ -235,4 +211,71 @@ private void ToggleFavoritos() => throw new NotImplementedException();
 private void AcercaDe() => throw new NotImplementedException();
 private void SolicitarSalir() => throw new NotImplementedException();
 protected override bool OnKeyDown(Key key) => base.OnKeyDown(key);
+
+  
+    private void AplicarFiltro()
+{
+    string texto = (_searchBox.Text?.ToString() ?? "").Trim();
+
+    _filteredContacts.Clear();
+    foreach (Contacto contacto in _contacts)
+    {
+        if (_soloFavoritos && !contacto.Favorito)
+            continue;
+
+        if (texto.Length > 0 && !CoincideBusqueda(contacto, texto))
+            continue;
+
+        _filteredContacts.Add(contacto);
+    }
+
+    int selectedBefore = _listView.SelectedItem ?? 0;
+    _listView.SetSource(new ObservableCollection<string>(_filteredContacts.Select(FormatearFila)));
+    if (_filteredContacts.Count > 0)
+        _listView.SelectedItem = Math.Clamp(selectedBefore, 0, _filteredContacts.Count - 1);
+
+    MostrarDetalle();
 }
+
+private static bool CoincideBusqueda(Contacto contacto, string texto)
+{
+    return contacto.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase)
+        || contacto.Telefonos.Contains(texto, StringComparison.OrdinalIgnoreCase)
+        || contacto.Email.Contains(texto, StringComparison.OrdinalIgnoreCase);
+}
+
+private static string FormatearFila(Contacto contacto)
+    => (contacto.Favorito ? "* " : "  ") + contacto.Nombre;
+
+private void MostrarDetalle()
+{
+    Contacto? contacto = ContactoSeleccionado();
+    if (contacto is null)
+    {
+        _detailView.Text = "Sin contacto seleccionado.";
+        return;
+    }
+
+    _detailView.Text =
+        $"Nombre:    {contacto.Nombre}\n" +
+        $"Telefonos: {contacto.Telefonos}\n" +
+        $"Email:     {contacto.Email}\n" +
+        $"Favorito:  {(contacto.Favorito ? "Si" : "No")}\n\n" +
+        $"Notas:\n{contacto.Notas}";
+}
+
+private Contacto? ContactoSeleccionado()
+{
+    int index = _listView.SelectedItem ?? -1;
+    if (index < 0 || index >= _filteredContacts.Count)
+        return null;
+
+    return _filteredContacts[index];
+}
+
+private void SetStatus(string message)
+    => _statusBar.Text = message;
+    
+}
+
+
