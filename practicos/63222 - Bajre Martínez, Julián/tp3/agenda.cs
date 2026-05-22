@@ -15,6 +15,7 @@ using Terminal.Gui.Views;
 using Terminal.Gui;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 using Microsoft.Data.Sqlite;
 
@@ -66,13 +67,28 @@ public AgendaWindow(SqliteAgendaStore store) {
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
             ]),
 
-            new MenuBarItem("_Ver", [
-                new MenuItem(
-                    "_Solo favoritos",
-                    "",
-                    ToggleFavoritos
-                )
-            ])
+            new MenuBarItem("_Contactos",
+                [
+                    new MenuItem()
+                    {
+                        Title = "_Nuevo",
+                        Action = NuevoContacto
+                    },
+                    new MenuItem()
+                    {
+                        Title = "_Editar",
+                        Action = EditarContacto
+                        }
+                ]),
+
+                new MenuBarItem("_Ver",
+                [
+                    new MenuItem(
+                        "_Solo favoritos",
+                        "",
+                        ToggleFavoritos
+                    )
+                ])
         ]
     };
 
@@ -216,6 +232,58 @@ Notas:
         AplicarFiltros();
     }
 
+    private void NuevoContacto()
+{
+    ContactDialog dialog =
+        new(new Contacto());
+
+    App!.Run(dialog);
+
+    if (!dialog.Guardado)
+        return;
+
+    store.Insertar(dialog.Contacto);
+
+    contactos = store.ObtenerTodos();
+
+    AplicarFiltros();
+
+    statusBar.Title =
+        "Contacto creado";
+}
+
+    private void EditarContacto()
+    {
+        int index =
+            listaContactos.SelectedItem ?? -1;
+
+        if (
+            index < 0
+            || index >= contactosFiltrados.Count
+        )
+            return;
+
+        Contacto original =
+            contactosFiltrados[index];
+
+        ContactDialog dialog =
+            new(original.Clone());
+
+        App!.Run(dialog);
+
+        if (!dialog.Guardado)
+            return;
+
+        store.Actualizar(dialog.Contacto);
+
+        contactos = store.ObtenerTodos();
+
+        AplicarFiltros();
+
+        statusBar.Title =
+            "Contacto actualizado";
+    }
+
     private void SolicitarSalir() {
         App!.RequestStop();
     }
@@ -236,39 +304,188 @@ Notas:
             return true;
         }
 
+        if (key == Key.F2)
+        {
+            NuevoContacto();
+
+            return true;
+        }
+
+        if (key == Key.Enter)
+        {
+            EditarContacto();
+
+            return true;
+        }
+
         return base.OnKeyDown(key);
     }
 }
 
+public sealed class ContactDialog : Dialog
+{
+    public Contacto Contacto { get; private set; }
 
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo";
-        Width  = 50;
-        Height = 8;
+    public bool Guardado { get; private set; }
 
-        Label message = new() {
-            Text = "Ejemplo de Dialogo.",
-            X    = Pos.Center(),
-            Y    = 1
+    private TextField nombreField;
+
+    private TextField telefonosField;
+
+    private TextField emailField;
+
+    private CheckBox favoritoCheck;
+
+    private TextView notasField;
+
+    public ContactDialog(Contacto contacto)
+    {
+        
+        Contacto = contacto;
+
+        Title =
+            contacto.Id == 0
+            ? "Nuevo contacto"
+            : "Editar contacto";
+
+        Width = 60;
+
+        Height = 20;
+
+        Label nombreLabel = new()
+        {
+            Text = "Nombre:",
+            X = 1,
+            Y = 1
         };
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
+        nombreField = new()
+        {
+            X = 15,
+            Y = 1,
+            Width = 40,
+            Text = contacto.Nombre
+        };
+
+        Label telefonoLabel = new()
+        {
+            Text = "Teléfonos:",
+            X = 1,
+            Y = 3
+        };
+
+        telefonosField = new()
+        {
+            X = 15,
+            Y = 3,
+            Width = 40,
+            Text = contacto.Telefonos
+        };
+
+        Label emailLabel = new()
+        {
+            Text = "Email:",
+            X = 1,
+            Y = 5
+        };
+
+        emailField = new()
+        {
+            X = 15,
+            Y = 5,
+            Width = 40,
+            Text = contacto.Email
+        };
+
+        favoritoCheck = new CheckBox()
+        {
+            Text = "Favorito",
+            X = 15,
+            Y = 7,
+            };
+
+        Label notasLabel = new()
+        {
+            Text = "Notas:",
+            X = 1,
+            Y = 9
+        };
+
+        notasField = new()
+        {
+            X = 15,
+            Y = 9,
+            Width = 40,
+            Height = 4,
+            Text = contacto.Notas
+        };
+
+        Button guardar = new()
+        {
+            Text = "_Guardar",
             IsDefault = true
         };
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
+        guardar.Accepting += (_, e) =>
+        {
+            Guardar();
             e.Handled = true;
         };
 
-        Add(message);
+        Button cancelar = new()
+        {
+            Text = "_Cancelar"
+        };
 
-        AddButton(closeButton);
+        cancelar.Accepting += (_, e) =>
+        {
+            App!.RequestStop();
+
+            e.Handled = true;
+        };
+
+        Add(
+            nombreLabel,
+            nombreField,
+            telefonoLabel,
+            telefonosField,
+            emailLabel,
+            emailField,
+            favoritoCheck,
+            notasLabel,
+            notasField
+        );
+
+        AddButton(guardar);
+
+        AddButton(cancelar);
+
+        
+    }
+
+    private void Guardar()
+    {
+    string nombre =
+        nombreField.Text.ToString();
+
+    string email =
+        emailField.Text.ToString();
+
+    Contacto.Nombre = nombre;
+
+    Contacto.Telefonos =
+        telefonosField.Text.ToString();
+
+    Contacto.Email = email;
+
+    Contacto.Notas =
+        notasField.Text.ToString();
+
+    Guardado = true;
+
+    App!.RequestStop();
     }
 }
-
 
 public sealed class SqliteAgendaStore {
     private readonly string dbPath;
