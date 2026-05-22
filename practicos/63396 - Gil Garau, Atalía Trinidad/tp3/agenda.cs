@@ -14,6 +14,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
+using System.Collections.ObjectModel;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 using System.Text;
@@ -57,7 +58,7 @@ public sealed class AgendaWindow : Runnable {
         try { store.Init(); contacts.AddRange(store.GetAll()); }
         catch (Exception ex) { MessageBox.ErrorQuery(App!, "Base de datos", ex.Message, "OK"); }
 
-        favItem = new MenuItem("Solo favoritos", null, ToggleFav) { CheckType = MenuItemCheckStyle.Checked };
+        favItem = new MenuItem("Solo favoritos", null, ToggleFav);
         BuildLayout();
         RefreshList();
     }
@@ -94,8 +95,7 @@ public sealed class AgendaWindow : Runnable {
         FrameView left = new() { Title = "Contactos", X = 0, Y = 4, Width = Dim.Percent(40), Height = Dim.Fill(2) };
         list.Width = Dim.Fill();
         list.Height = Dim.Fill();
-        list.SelectedItemChanged += (_, _) => ShowDetail();
-        list.OpenSelectedItem += (_, _) => EditSelected();
+        list.ValueChanged += (_, _) => ShowDetail();
         left.Add(list);
 
         FrameView right = new() { Title = "Detalle", X = Pos.Right(left), Y = 4, Width = Dim.Fill(), Height = Dim.Fill(2) };
@@ -148,8 +148,7 @@ public sealed class AgendaWindow : Runnable {
         status.Text = "Contacto eliminado.";
         RefreshList();
     }
-    private void ToggleFav() { onlyFav = !onlyFav; favItem.Checked = onlyFav; RefreshList(); }
-
+    private void ToggleFav() { onlyFav = !onlyFav; favItem.Title = onlyFav ? "Solo favoritos ✓" : "Solo favoritos"; RefreshList(); }
     private void ImportJson()
     {
         var path = AskPath("Importar JSON", "agenda.json");
@@ -196,13 +195,14 @@ public sealed class AgendaWindow : Runnable {
     {
         var q = search.Text?.ToString()?.Trim() ?? "";
         filtered = contacts.Where(c => (!onlyFav || c.Favorito) && (q.Length == 0 || c.Nombre.Contains(q, StringComparison.OrdinalIgnoreCase) || c.Telefonos.Contains(q, StringComparison.OrdinalIgnoreCase) || c.Email.Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
-        list.SetSource(filtered.Select(c => (c.Favorito ? "★ " : "  ") + c.Nombre).ToList());
+        list.SetSource(new ObservableCollection<string>(filtered.Select(c => (c.Favorito ? "★ " : "  ") + c.Nombre).ToList()));
         if (filtered.Count > 0) list.SelectedItem = 0;
         ShowDetail();
     }
     private Contacto? Current()
     {
-        var i = list.SelectedItem;
+        
+        var i = list.SelectedItem ?? -1;
         return i >= 0 && i < filtered.Count ? filtered[i] : null;
     }
     private void ShowDetail()
@@ -232,7 +232,7 @@ public sealed class EjemploDialog : Dialog {
     readonly TextField[] phones = new TextField[5];
     readonly TextView notas = new();
     public bool Ok { get; private set; }
-    public Contacto Result { get; private set; }
+    public new Contacto Result { get; private set; }
 
     public EjemploDialog() : this("Nuevo contacto", new Contacto()) { }
     public EjemploDialog(string title, Contacto c) {
