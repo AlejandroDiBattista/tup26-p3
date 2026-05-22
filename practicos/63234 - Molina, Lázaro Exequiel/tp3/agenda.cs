@@ -48,3 +48,29 @@ public sealed class AgendaWindow : Runnable {
         Add(menu, etiqueta, txtFiltro, listado, panel, barra);
         Redibujar();
     }
+    MenuBar MenuPrincipal() => new() { Menus = [
+        new MenuBarItem("_Archivo", [
+            new MenuItem("_Importar", "Ctrl+I", CargarJson),
+            new MenuItem("_Exportar", "Ctrl+E", GuardarJson),
+            null!,
+            new MenuItem("_Salir", "Ctrl+Q", () => App!.RequestStop())]),
+        new MenuBarItem("_Contactos", [
+            new MenuItem("_Alta", "F2 / Ctrl+N", Alta),
+            new MenuItem("_Edición", "F3 / Enter", Modificar),
+            new MenuItem("_Baja", "Del / Ctrl+D", Baja)]),
+        new MenuBarItem("_Ver", [
+            new MenuItem("_Favoritos", null!, AlternarFavoritos)]),
+        new MenuBarItem("A_yuda", [
+            new MenuItem("_Acerca de", null!, () => MessageBox.Query(App!, "AgendaT", $"Base actual: {(origen == ":memory:" ? "memoria" : origen)}", "Aceptar"))])
+    ] };
+
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.F2 || key == Key.N.WithCtrl) { Alta(); return true; }
+        if (key == Key.F3 || key == Key.Enter) { Modificar(); return true; }
+        if (key == Key.Delete || key == Key.D.WithCtrl) { Baja(); return true; }
+        if (key == Key.I.WithCtrl) { CargarJson(); return true; }
+        if (key == Key.E.WithCtrl) { GuardarJson(); return true; }
+        if (key == Key.F4) { txtFiltro.SetFocus(); Mensaje("Filtro listo."); return true; }
+        if (key == Key.Q.WithCtrl) { App!.RequestStop(); return true; }
+        return base.OnKeyDown(key);
+    }
