@@ -52,6 +52,47 @@ catch (Exception ex)
 }
 
 // ==========================================================
+// VENTANA PRINCIPAL
+// ==========================================================
+
+public sealed class AgendaWindow : Window
+{
+    private readonly SqliteAgendaStore store;
+    private List<Contacto> contactos = new();
+    
+    // Componentes principales
+    private readonly ListView listaContactos;
+    private readonly TextView detalleContacto;
+
+    public AgendaWindow(SqliteAgendaStore store)
+    {
+        this.store = store;
+        Title = "Agenda de Contactos TUI";
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        contactos = store.ObtenerTodos();
+
+        // LISTA
+        listaContactos = new ListView()
+        {
+            X = 0, Y = 0, Width = 30, Height = Dim.Fill()
+        };
+        Add(listaContactos);
+
+        // DETALLE
+        detalleContacto = new TextView()
+        {
+            X = 31, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(),
+            ReadOnly = true
+        };
+        Add(detalleContacto);
+        
+        // Cargar nombres en la lista
+        listaContactos.SetSource(contactos.Select(c => c.Nombre).ToList());
+    }
+}
+// ==========================================================
 // SQLITE STORE
 // ==========================================================
 
