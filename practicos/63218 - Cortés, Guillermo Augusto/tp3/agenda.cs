@@ -42,6 +42,7 @@ public sealed class AgendaWindow : Window {
     private StatusBar statusBar = null!;
     private bool onlyFavorites;
     private int selectedIndex;
+    
 
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
@@ -212,8 +213,70 @@ private static string BuildDetails(Contacto contact) {
         $"Favorito: {favorite}\n\n" +
         $"Notas:\n{contact.Notas}";
 }
-    private void NewContact() {}
-    private void EditSelectedContact() {}
+private void NewContact() {
+    ContactDialog dialog = new();
+    App!.Run(dialog);
+
+    if (!dialog.Accepted || dialog.Contact is null) {
+        SetStatus("Alta cancelada.");
+        return;
+    }
+
+    try {
+        Contacto saved = dialog.Contact;
+        int id = store.Insert(saved);
+        saved.Id = id;
+        contacts.Add(saved);
+        RefreshFilteredContacts();
+        SelectContact(id);
+        SetStatus($"Contacto agregado: {saved.Nombre}.");
+    }
+    catch (Exception ex) {
+        MessageBox.ErrorQuery(App!, "Error al guardar", ex.Message, "Aceptar");
+    }
+}
+
+private void EditSelectedContact() {
+    Contacto? selected = SelectedContact();
+    if (selected is null) {
+        SetStatus("No hay contacto seleccionado para editar.");
+        return;
+    }
+
+    ContactDialog dialog = new(selected);
+    App!.Run(dialog);
+
+    if (!dialog.Accepted || dialog.Contact is null) {
+        SetStatus("Edicion cancelada.");
+        return;
+    }
+
+    try {
+        Contacto updated = dialog.Contact;
+        store.Update(updated);
+
+        int index = contacts.FindIndex(c => c.Id == updated.Id);
+        if (index >= 0) {
+            contacts[index] = updated;
+        }
+
+        RefreshFilteredContacts();
+        SelectContact(updated.Id);
+        SetStatus($"Contacto actualizado: {updated.Nombre}.");
+    }
+    catch (Exception ex) {
+        MessageBox.ErrorQuery(App!, "Error al actualizar", ex.Message, "Aceptar");
+    }
+}
+
+private void SelectContact(int id) {
+    int index = filteredContacts.FindIndex(c => c.Id == id);
+    if (index >= 0) {
+        listView.SelectedItem = index;
+        selectedIndex = index;
+        UpdateDetails();
+    }
+}
     private void DeleteSelectedContact() {}
     private void ImportJson() {}
     private void ExportJson() {}
@@ -226,6 +289,144 @@ private static string BuildDetails(Contacto contact) {
         if (statusBar is not null) {
             statusBar.Text = message;
         }
+    }
+}
+public sealed class ContactDialog : Dialog {
+    private readonly TextField nameField;
+    private readonly TextField[] phoneFields;
+    private readonly TextField emailField;
+    private readonly TextView notesField;
+    private readonly CheckBox favoriteField;
+
+    public new bool Accepted { get; private set; }
+    public Contacto? Contact { get; private set; }
+
+    public ContactDialog(Contacto? contact = null) {
+        Contacto editing = contact?.Clone() ?? new Contacto();
+
+        Title = contact is null ? "Nuevo contacto" : "Editar contacto";
+        Width = 74;
+        Height = 22;
+
+        Label nameLabel = LabelAt("Nombre:", 1, 1);
+        nameField = FieldAt(Pos.Right(nameLabel) + 1, 1, editing.Nombre);
+
+        phoneFields = new TextField[5];
+        List<Label> phoneLabels = [];
+        string[] phones = editing.Telefonos
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(5)
+            .ToArray();
+
+        for (int i = 0; i < phoneFields.Length; i++) {
+            Label phoneLabel = LabelAt($"Telefono {i + 1}:", 1, 3 + i);
+            phoneLabels.Add(phoneLabel);
+            phoneFields[i] = FieldAt(Pos.Right(phoneLabel) + 1, 3 + i, i < phones.Length ? phones[i] : "");
+        }
+
+        Label emailLabel = LabelAt("Email:", 1, 9);
+        emailField = FieldAt(Pos.Right(emailLabel) + 1, 9, editing.Email);
+
+        favoriteField = new CheckBox {
+            Text = "Favorito",
+            X = 13,
+            Y = 11,
+            Value = editing.Favorito ? CheckState.Checked : CheckState.UnChecked
+        };
+
+        Label notesLabel = LabelAt("Notas:", 1, 13);
+        notesField = new TextView {
+            X = 13,
+            Y = 13,
+            Width = Dim.Fill(1),
+            Height = 4,
+            Text = editing.Notas
+        };
+
+        Button saveButton = new() {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+
+        saveButton.Accepting += (_, e) => {
+            if (TryBuildContact(editing.Id, out Contacto? result)) {
+                Contact = result;
+                Accepted = true;
+                App!.RequestStop();
+            }
+
+            e.Handled = true;
+        };
+
+        Button cancelButton = new() {
+            Text = "_Cancelar"
+        };
+
+        cancelButton.Accepting += (_, e) => {
+            Accepted = false;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Add(nameLabel, nameField, emailLabel, emailField, favoriteField, notesLabel, notesField);
+
+        for (int i = 0; i < phoneFields.Length; i++) {
+            Add(phoneLabels[i], phoneFields[i]);
+        }
+
+        AddButton(saveButton);
+        AddButton(cancelButton);
+    }
+
+    private bool TryBuildContact(int id, out Contacto? contact) {
+        contact = null;
+
+        string name = nameField.Text?.ToString()?.Trim() ?? "";
+        string email = emailField.Text?.ToString()?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(name)) {
+            MessageBox.ErrorQuery(App!, "Validacion", "El nombre no puede estar vacio.", "Aceptar");
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@')) {
+            MessageBox.ErrorQuery(App!, "Validacion", "El email debe contener @.", "Aceptar");
+            return false;
+        }
+
+        string phones = string.Join(", ",
+            phoneFields
+                .Select(field => field.Text?.ToString()?.Trim() ?? "")
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+
+        contact = new Contacto {
+            Id = id,
+            Nombre = name,
+            Telefonos = phones,
+            Email = email,
+            Notas = notesField.Text?.ToString() ?? "",
+            Favorito = favoriteField.Value == CheckState.Checked
+        };
+
+        return true;
+    }
+
+    private static Label LabelAt(string text, int x, int y) {
+        return new Label {
+            Text = text,
+            X = x,
+            Y = y,
+            Width = 11
+        };
+    }
+
+    private static TextField FieldAt(Pos x, int y, string text) {
+        return new TextField {
+            Text = text,
+            X = x,
+            Y = y,
+            Width = Dim.Fill(1)
+        };
     }
 }
 
