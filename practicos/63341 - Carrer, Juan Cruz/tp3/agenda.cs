@@ -451,4 +451,89 @@ using Terminal.Gui.Views;
     }
 }
 
+    public sealed class ContactDialog : Dialog {
+    private readonly TextField nameField;
+    private readonly TextField[] phoneFields;
+    private readonly TextField emailField;
+    private readonly TextView notesField;
+    private readonly CheckBox favoriteField;
+
+    public new bool Accepted { get; private set; }
+    public Contacto? Contact { get; private set; }
+
+    public ContactDialog(Contacto? contact = null) {
+        Contacto editing = contact?.Clone() ?? new Contacto();
+
+        Title = contact is null ? "Nuevo contacto" : "Editar contacto";
+        Width = 74;
+        Height = 22;
+
+        Label nameLabel = LabelAt("Nombre:", 1, 1);
+        nameField = FieldAt(Pos.Right(nameLabel) + 1, 1, editing.Nombre);
+
+        phoneFields = new TextField[5];
+        List<Label> phoneLabels = [];
+        string[] phones = editing.Telefonos
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(5)
+            .ToArray();
+
+        for (int i = 0; i < phoneFields.Length; i++) {
+            Label phoneLabel = LabelAt($"Telefono {i + 1}:", 1, 3 + i);
+            phoneLabels.Add(phoneLabel);
+            phoneFields[i] = FieldAt(Pos.Right(phoneLabel) + 1, 3 + i, i < phones.Length ? phones[i] : "");
+        }
+
+        Label emailLabel = LabelAt("Email:", 1, 9);
+        emailField = FieldAt(Pos.Right(emailLabel) + 1, 9, editing.Email);
+
+        favoriteField = new CheckBox {
+            Text = "Favorito",
+            X = 13,
+            Y = 11,
+            Value = editing.Favorito ? CheckState.Checked : CheckState.UnChecked
+        };
+
+        Label notesLabel = LabelAt("Notas:", 1, 13);
+        notesField = new TextView {
+            X = 13,
+            Y = 13,
+            Width = Dim.Fill(1),
+            Height = 4,
+            Text = editing.Notas
+        };
+
+        Button saveButton = new() {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+        saveButton.Accepting += (_, e) => {
+            if (TryBuildContact(editing.Id, out Contacto? result)) {
+                Contact = result;
+                Accepted = true;
+                App!.RequestStop();
+            }
+
+            e.Handled = true;
+        };
+
+        Button cancelButton = new() {
+            Text = "_Cancelar"
+        };
+        cancelButton.Accepting += (_, e) => {
+            Accepted = false;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Add(nameLabel, nameField, emailLabel, emailField, favoriteField, notesLabel, notesField);
+        for (int i = 0; i < phoneFields.Length; i++) {
+            Add(phoneLabels[i], phoneFields[i]);
+        }
+
+        AddButton(saveButton);
+        AddButton(cancelButton);
+    }
+
+
 
