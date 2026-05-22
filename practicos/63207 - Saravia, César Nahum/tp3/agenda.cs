@@ -6,7 +6,9 @@
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
-
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -23,45 +25,91 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+string databasePath = args.Length > 0 ? args[0] : "agenda.db";
+
+try {
+    using SqliteAgendaStore store = new(databasePath);
+    using IApplication app = Application.Create().Init();
+    app.Run(new AgendaWindow(store));
+}
+catch (Exception ex) {
+    Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
+    Environment.ExitCode = 1;
+}
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+    private readonly SqliteAgendaStore store;
+    private readonly List<Contacto> contacts;
+    private readonly List<Contacto> filteredContacts = [];
+
+    private TextField searchField = null!;
+    private ListView listView = null!;
+    private Label detailLabel = null!;
+    private StatusBar statusBar = null!;
+    private bool onlyFavorites;
+    private int selectedIndex;
+    
+    public AgendaWindow(SqliteAgendaStore store) {
+
+        this.store = store;
+        contacts = store.GetAll().ToList();
+
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        RefreshFilteredContacts();
+        SetStatus($"Agenda abierta. {contacts.Count} contacto(s).");
     }
 
     private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportJson),
                     null!, // Separador
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ]),
+                new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo", "F2 / Ctrl+N", NuevoContacto),
+                    new MenuItem("_Editar", "F3 / Enter", EditarContacto),
+                    new MenuItem("_Eliminar", "Del / Ctrl+D", EliminarContacto)
+                ]),
+                 new MenuBarItem("_Ver", [
+                    new MenuItem("_Solo favoritos", null!, ToggleOnlyFavorites)
+                 ]),
+                  new MenuBarItem("_Ayuda", [
+                    new MenuItem("_Acerca de", null!, AcercaDe)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+       Label searchLabel = new() {
+            Text = "Buscar:",
+            X = 1,
+            Y = 1,
+            Width = 8
         };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        searchField = new TextField {
+            X = Pos.Right(searchLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill(1)
         };
-
-        Add(menu, openButton);
+        searchField.TextChanged += (_, _) => RefreshFilteredContacts();
+            FrameView listFrame = new() {
+            Title = "Contactos",
+            X = 1,
+            Y = 3,
+            Width = Dim.Percent(38),
+            Height = Dim.Fill(1)
+        };
     }
 
     private void AbrirDialogo() {
