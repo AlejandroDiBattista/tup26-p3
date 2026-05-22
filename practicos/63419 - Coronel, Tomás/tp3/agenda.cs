@@ -234,3 +234,236 @@ public sealed class VentanaPrincipal : Runnable
         }
         catch (Exception ex) { DialogoError("Error al actualizar", ex.Message); }
     }
+
+       private void BorrarContacto()
+    {
+        int? idx = _vistaLista.SelectedItem;
+        if (!idx.HasValue || idx.Value < 0 || idx.Value >= _listaFiltrada.Count) return;
+
+        var c = _listaFiltrada[idx.Value];
+        if (DialogoConfirmacion("Eliminar contacto", $"¿Eliminar a '{c.Nombre}'?") != 1) return;
+        try
+        {
+            _repositorio.Delete(c);
+            _listaCompleta.RemoveAll(x => x.Id == c.Id);
+            AplicarFiltro();
+            ActualizarEstado($"'{c.Nombre}' eliminado.");
+        }
+        catch (Exception ex) { DialogoError("Error al eliminar", ex.Message); }
+    }
+
+    private void AlternarFavoritos()
+    {
+        _filtrarFavoritos = !_filtrarFavoritos;
+        _itemFavoritos.Title = _filtrarFavoritos ? "_Ver todos" : "_Solo favoritos";
+        AplicarFiltro();
+        ActualizarEstado(_filtrarFavoritos ? "Mostrando solo favoritos." : "Mostrando todos los contactos.");
+    }
+
+    private void ImportarDesdeJson()
+    {
+        string? ruta = PedirRuta("Importar JSON", "Ruta del archivo JSON:");
+        if (ruta == null) return;
+        try
+        {
+            var importados = JsonAgendaIO.Import(ruta).ToList();
+            if (DialogoConfirmacion("Importar", $"Se encontraron {importados.Count} contacto(s).\n¿Agregar todos?") != 1) return;
+            foreach (var c in importados)
+            {
+                c.Id = 0;
+                _repositorio.Insert(c);
+                _listaCompleta.Add(c);
+            }
+            AplicarFiltro();
+            ActualizarEstado($"{importados.Count} contacto(s) importado(s).");
+        }
+        catch (FileNotFoundException) { DialogoError("Error", "No se encontró el archivo indicado."); }
+        catch (JsonException)         { DialogoError("Error", "El archivo no tiene formato JSON válido."); }
+        catch (Exception ex)          { DialogoError("Error al importar", ex.Message); }
+    }
+
+       private void ExportarAJson()
+    {
+        string? ruta = PedirRuta("Exportar JSON", "Ruta donde guardar:", "contactos.json");
+        if (ruta == null) return;
+        try
+        {
+            JsonAgendaIO.Export(ruta, _listaCompleta);
+            ActualizarEstado($"Exportado correctamente en: {ruta}");
+        }
+        catch (Exception ex) { DialogoError("Error al exportar", ex.Message); }
+    }
+
+    private void VerAcercaDe()
+    {
+        Dialog d = new() { Title = "Acerca de", Width = 42, Height = 9 };
+        d.Add(new Label() { Text = "AgendaT — Trabajo Práctico 3\nDesarrollado con Terminal.Gui v2\nC# / .NET 10", X = Pos.Center(), Y = 1 });
+        Button btn = new() { Text = "Cerrar", IsDefault = true };
+        btn.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        d.AddButton(btn);
+        App!.Run(d);
+    }
+
+    private void PedirSalida() => App!.RequestStop();
+
+    private void DialogoError(string titulo, string mensaje)
+    {
+        Dialog d = new() { Title = titulo, Width = 50, Height = 8 };
+        d.Add(new Label() { Text = mensaje, X = Pos.Center(), Y = 1 });
+        Button btn = new() { Text = "Aceptar", IsDefault = true };
+        btn.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        d.AddButton(btn);
+        App!.Run(d);
+    }
+
+    private int DialogoConfirmacion(string titulo, string mensaje)
+    {
+        Dialog d = new() { Title = titulo, Width = 50, Height = 8 };
+        d.Add(new Label() { Text = mensaje, X = Pos.Center(), Y = 1 });
+        Button btnSi = new() { Text = "Sí", IsDefault = true };
+        Button btnNo = new() { Text = "No" };
+        int resultado = 0;
+        btnSi.Accepting += (_, e) => { resultado = 1; App!.RequestStop(); e.Handled = true; };
+        btnNo.Accepting += (_, e) => { resultado = 0; App!.RequestStop(); e.Handled = true; };
+        d.AddButton(btnNo);
+        d.AddButton(btnSi);
+        App!.Run(d);
+        return resultado;
+    }
+
+    private string? PedirRuta(string titulo, string etiqueta, string valorInicial = "")
+    {
+        Dialog d = new() { Title = titulo, Width = 50, Height = 8 };
+        Label lbl = new() { Text = etiqueta, X = 1, Y = 1 };
+        TextField tf = new() { Text = valorInicial, X = 1, Y = 2, Width = Dim.Fill(1) };
+        Button btnOk     = new() { Text = "Aceptar",  IsDefault = true };
+        Button btnCancel = new() { Text = "Cancelar" };
+        string? resultado = null;
+        btnOk.Accepting     += (_, e) => { resultado = tf.Text; App!.RequestStop(); e.Handled = true; };
+        btnCancel.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        d.Add(lbl, tf);
+        d.AddButton(btnOk);
+        d.AddButton(btnCancel);
+        App!.Run(d);
+        return string.IsNullOrWhiteSpace(resultado) ? null : resultado;
+    }
+
+    protected override bool OnKeyDown(Key key)
+    {
+        if (key == Key.Q.WithCtrl)                  { PedirSalida();         return true; }
+        if (key == Key.I.WithCtrl)                  { ImportarDesdeJson();   return true; }
+        if (key == Key.E.WithCtrl)                  { ExportarAJson();       return true; }
+        if (key == Key.N.WithCtrl || key == Key.F2) { AgregarContacto();     return true; }
+        if (key == Key.F3)                          { ModificarContacto();   return true; }
+        if (key == Key.D.WithCtrl || key == Key.Delete) { BorrarContacto(); return true; }
+        if (key == Key.F4)                          { _campoBusqueda.SetFocus(); return true; }
+        return base.OnKeyDown(key);
+    }
+}
+public sealed class DialogoContacto : Dialog
+{
+    private readonly TextField   _tfNombre;
+    private readonly TextField[] _tfTelefonos = new TextField[5];
+    private readonly TextField   _tfEmail;
+    private readonly TextView    _tvNotas;
+    private readonly Button      _btnFavorito;
+    private bool _esFavorito;
+
+    public Contacto? Resultado { get; private set; }
+    public bool Cancelado { get; private set; } = true;
+
+    public DialogoContacto(Contacto? c = null)
+    {
+        Title  = c == null ? "Nuevo contacto" : "Editar contacto";
+        Width  = 55;
+        Height = 22;
+
+        Add(new Label() { Text = "Nombre:", X = 1, Y = 1 });
+        _tfNombre = new TextField() { Text = c?.Nombre ?? "", X = 12, Y = 1, Width = Dim.Fill(1) };
+        Add(_tfNombre);
+
+        string[] numeros = (c?.Telefonos ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < 5; i++)
+        {
+            Add(new Label() { Text = $"Teléfono {i + 1}:", X = 1, Y = 3 + i });
+            _tfTelefonos[i] = new TextField()
+            {
+                Text = i < numeros.Length ? numeros[i].Trim() : "",
+                X = 12, Y = 3 + i, Width = Dim.Fill(1)
+            };
+            Add(_tfTelefonos[i]);
+        }
+
+        Add(new Label() { Text = "Email:", X = 1, Y = 9 });
+        _tfEmail = new TextField() { Text = c?.Email ?? "", X = 12, Y = 9, Width = Dim.Fill(1) };
+        Add(_tfEmail);
+
+        Add(new Label() { Text = "Notas:", X = 1, Y = 11 });
+        _tvNotas = new TextView() { Text = c?.Notas ?? "", X = 12, Y = 11, Width = Dim.Fill(1), Height = 4 };
+        Add(_tvNotas);
+
+        _esFavorito = c?.Favorito ?? false;
+        Add(new Label() { Text = "Favorito:", X = 1, Y = 16 });
+        _btnFavorito = new Button()
+        {
+            Text = _esFavorito ? "[★] Sí" : "[ ] No",
+            X = 12, Y = 16
+        };
+        _btnFavorito.Accepting += (_, e) =>
+        {
+            _esFavorito = !_esFavorito;
+            _btnFavorito.Text = _esFavorito ? "[★] Sí" : "[ ] No";
+            e.Handled = true;
+        };
+        Add(_btnFavorito);
+
+        Button btnGuardar  = new() { Text = "Guardar",   IsDefault = true };
+        Button btnCancelar = new() { Text = "Cancelar" };
+
+        btnGuardar.Accepting += (_, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(_tfNombre.Text))
+            {
+                MostrarValidacion("El nombre es obligatorio.");
+                return;
+            }
+            string email = _tfEmail.Text ?? "";
+            if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@'))
+            {
+                MostrarValidacion("El email debe contener '@'.");
+                return;
+            }
+            var tels = _tfTelefonos
+                .Select(t => t.Text?.Trim())
+                .Where(t => !string.IsNullOrEmpty(t));
+
+            Resultado = new Contacto
+            {
+                Id        = c?.Id ?? 0,
+                Nombre    = _tfNombre.Text.Trim(),
+                Telefonos = string.Join(",", tels),
+                Email     = email.Trim(),
+                Notas     = _tvNotas.Text ?? "",
+                Favorito  = _esFavorito
+            };
+            Cancelado = false;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        btnCancelar.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+
+        AddButton(btnGuardar);
+        AddButton(btnCancelar);
+    }
+
+    private void MostrarValidacion(string mensaje)
+    {
+        Dialog d = new() { Title = "Atención", Width = 42, Height = 7 };
+        d.Add(new Label() { Text = mensaje, X = Pos.Center(), Y = 1 });
+        Button btn = new() { Text = "OK", IsDefault = true };
+        btn.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        d.AddButton(btn);
+        App!.Run(d);
+    }
+}
