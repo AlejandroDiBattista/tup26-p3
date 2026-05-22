@@ -321,3 +321,105 @@ public sealed class AgendaWindow : Window
             MessageBox.ErrorQuery(App!, "Error al actualizar", ex.Message, "Aceptar");
         }
     }
+      private void DeleteSelectedContact()
+    {
+        Contacto? selected = SelectedContact();
+
+        if (selected is null)
+        {
+            SetStatus("No hay contacto seleccionado para eliminar.");
+            return;
+        }
+
+        int answer = MessageBox.Query(
+            App!,
+            "Confirmar eliminacion",
+            $"Eliminar el contacto \"{selected.Nombre}\"?",
+            "Eliminar",
+            "Cancelar") ?? 1;
+
+        if (answer != 0)
+        {
+            SetStatus("Eliminacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            store.Delete(selected);
+            contacts.RemoveAll(c => c.Id == selected.Id);
+
+            RefreshFilteredContacts();
+
+            SetStatus($"Contacto eliminado: {selected.Nombre}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void ImportJson()
+    {
+        string? path = AskForPath(App!, "Importar JSON", "Ruta del archivo JSON:", "Importar");
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            SetStatus("Importacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            List<Contacto> imported = JsonAgendaIO.Read(path).ToList();
+
+            int answer = MessageBox.Query(
+                App!,
+                "Confirmar importacion",
+                $"Se agregaran {imported.Count} contacto(s). Continuar?",
+                "Importar",
+                "Cancelar") ?? 1;
+
+            if (answer != 0)
+            {
+                SetStatus("Importacion cancelada.");
+                return;
+            }
+
+            foreach (Contacto contact in imported)
+            {
+                contact.Id = 0;
+                int id = store.Insert(contact);
+                contact.Id = id;
+                contacts.Add(contact);
+            }
+
+            RefreshFilteredContacts();
+            SetStatus($"Importados {imported.Count} contacto(s) desde {path}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void ExportJson()
+    {
+        string? path = AskForPath(App!, "Exportar JSON", "Ruta de salida:", "Exportar");
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            SetStatus("Exportacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            JsonAgendaIO.Write(path, contacts);
+            SetStatus($"Exportados {contacts.Count} contacto(s) a {path}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+        }
+    }
