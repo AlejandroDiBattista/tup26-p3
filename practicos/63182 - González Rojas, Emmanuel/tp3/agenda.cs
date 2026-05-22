@@ -196,6 +196,29 @@ private void NuevoContacto()
         SetEstado("Contacto agregado");
     }
 
+private void EditarContacto()
+    {
+        if (contactosFiltrados.Count == 0) return;
+
+        int indice = listaContactos.SelectedItem;
+        if (indice < 0 || indice >= contactosFiltrados.Count) return;
+
+        Contacto original = contactosFiltrados[indice];
+        Contacto copia = original.Clone();
+
+        ContactDialog dialogo = new ContactDialog(copia);
+        Application.Run(dialogo);
+
+        if (!dialogo.Guardado) return;
+
+        store.Actualizar(dialogo.Contacto);
+        contactos = store.ObtenerTodos();
+        AplicarFiltros();
+        MessageBox.Query("Actualizado", "Contacto modificado", "OK");
+        SetEstado("Contacto modificado");
+    }
+
+
 }
 // ==========================================================
 // SQLITE STORE
