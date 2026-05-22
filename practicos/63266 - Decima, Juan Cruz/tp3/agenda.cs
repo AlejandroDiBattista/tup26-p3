@@ -229,7 +229,27 @@ public sealed class AgendaWindow : Runnable {
         return (idx >= 0 && idx < _filteredContacts.Count) ? _filteredContacts[idx] : null;
     }
 
+
     private void SetStatus(string msg) => _statusLabel.Text = msg;
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.F2) { MenuNuevo(); return true; }
+        if (key == Key.F3) { MenuEditar(); return true; }
+        if (key == Key.F4) { FocusSearch(); return true; }
+        if (key == Key.Delete) { MenuEliminar(); return true; }
+        if (key == Key.N.WithCtrl) { MenuNuevo(); return true; }
+        if (key == Key.D.WithCtrl) { MenuEliminar(); return true; }
+        if (key == Key.I.WithCtrl) { MenuImportar(); return true; }
+        if (key == Key.E.WithCtrl) { MenuExportar(); return true; }
+        if (key == Key.Q.WithCtrl) { MenuSalir(); return true; }
+        return base.OnKeyDown(key);
+    }
+
+    private void MenuSalir() => App!.RequestStop();
+
+    private void MenuAcercaDe()
+        => MessageBox.Query(App!, "Acerca de AgendaT", "AgendaT — Aplicación de agenda en terminal\n" + "TP3 — .NET 10 + Terminal.Gui v2 + SQLite\n", "Cerrar");
+
+    private void FocusSearch() => _searchField.SetFocus();
     private void MenuToggleFavoritos() {
         _soloFavoritos = !_soloFavoritos;
         _soloFavoritosMenuItem.Title = _soloFavoritos ? "_Solo favoritos ✓" : "_Solo favoritos";
@@ -380,8 +400,6 @@ public sealed class AgendaWindow : Runnable {
         contacto.Notas ??= "";
     }
 
-    private void MenuSalir() { }
-    private void MenuAcercaDe() { }
 }
 
 public sealed class ContactDialog : Dialog {
@@ -591,4 +609,13 @@ public class Contacto {
     public string Email { get; set; } = "";
     public string Notas { get; set; } = "";
     public bool Favorito { get; set; }
+
+    public Contacto Clone() => new() {
+        Id = Id,
+        Nombre = Nombre,
+        Telefonos = Telefonos,
+        Email = Email,
+        Notas = Notas,
+        Favorito = Favorito,
+    };
 }
