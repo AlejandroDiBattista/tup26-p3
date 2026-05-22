@@ -17,3 +17,9 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
+
+string destino = args.FirstOrDefault() ?? ":memory:";
+using SqliteAgendaStore agendaStore = new(destino);
+agendaStore.Inicializar();
+using IApplication app = Application.Create().Init();
+app.Run(new AgendaWindow(agendaStore, destino));
