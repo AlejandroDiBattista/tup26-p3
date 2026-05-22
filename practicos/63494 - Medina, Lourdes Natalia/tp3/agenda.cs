@@ -64,7 +64,7 @@ public sealed class AgendaWindow : Window {
                     new MenuItem("_Importar JSON", "Ctrl+I", ImportJson),
                     new MenuItem("_Exportar JSON", "Ctrl+E", ExportJson),
                     null!,
-                    new MenuItem("_Salir", "Ctrl+Q", RequestExit
+                    new MenuItem("_Salir", "Ctrl+Q", RequestExit)
                 ]),
                 new MenuBarItem("_Contactos", [
                     new MenuItem("_Nuevo", "F2 / Ctrl+N", NewContact),
@@ -612,6 +612,131 @@ public sealed class ContactDialog : Dialog {
             X = x,
             Y = y,
             Width = Dim.Fill(1)
+        };
+    }
+}
+
+public sealed class SqliteAgendaStore : IDisposable {
+    private readonly SqliteConnection connection;
+
+    public string DatabasePath { get; }
+
+    public SqliteAgendaStore(string databasePath) {
+        DatabasePath = databasePath;
+        SqliteConnectionStringBuilder builder = new() {
+            DataSource = databasePath
+        };
+
+        connection = new SqliteConnection(builder.ConnectionString);
+        connection.Open();
+        EnsureSchema();
+    }
+
+    public IEnumerable<Contacto> GetAll() {
+        return connection.GetAll<Contacto>();
+    }
+
+    public int Insert(Contacto contact) {
+        Validate(contact);
+        long id = connection.Insert(contact);
+        return checked((int)id);
+    }
+
+    public void Update(Contacto contact) {
+        Validate(contact);
+        connection.Update(contact);
+    }
+
+    public void Delete(Contacto contact) {
+        connection.Delete(contact);
+    }
+
+    public void Dispose() {
+        connection.Dispose();
+    }
+
+    private void EnsureSchema() {
+        connection.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL DEFAULT '',
+                Email TEXT NOT NULL DEFAULT '',
+                Notas TEXT NOT NULL DEFAULT '',
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+            """);
+    }
+
+    private static void Validate(Contacto contact) {
+        if (string.IsNullOrWhiteSpace(contact.Nombre)) {
+            throw new InvalidOperationException("El nombre no puede estar vacio.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(contact.Email) && !contact.Email.Contains('@')) {
+            throw new InvalidOperationException("El email debe contener @.");
+        }
+    }
+}
+
+public static class JsonAgendaIO {
+    private static readonly JsonSerializerOptions Options = new() {
+        WriteIndented = true,
+        PropertyNamingPolicy = null,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+
+    public static IReadOnlyList<Contacto> Read(string path) {
+        if (!File.Exists(path)) {
+            throw new FileNotFoundException("El archivo JSON no existe.", path);
+        }
+
+        try {
+            string json = File.ReadAllText(path, Encoding.UTF8);
+            List<Contacto>? contacts = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
+            return contacts?.Select(c => {
+                c.Id = 0;
+                c.Nombre = c.Nombre?.Trim() ?? "";
+                c.Telefonos ??= "";
+                c.Email ??= "";
+                c.Notas ??= "";
+                return c;
+            }).ToList() ?? [];
+        }
+        catch (JsonException ex) {
+            throw new InvalidOperationException($"JSON con formato invalido: {ex.Message}", ex);
+        }
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> contacts) {
+        string json = JsonSerializer.Serialize(contacts, Options);
+        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+}
+
+[Table("Contactos")]
+public sealed class Contacto {
+    [Key]
+    public int Id { get; set; }
+
+    public string Nombre { get; set; } = "";
+
+    public string Telefonos { get; set; } = "";
+
+    public string Email { get; set; } = "";
+
+    public string Notas { get; set; } = "";
+
+    public bool Favorito { get; set; }
+
+    public Contacto Clone() {
+        return new Contacto {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
         };
     }
 }
