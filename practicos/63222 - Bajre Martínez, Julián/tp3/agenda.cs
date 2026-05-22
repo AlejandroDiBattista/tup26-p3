@@ -12,6 +12,9 @@ using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui;
+using System.Collections;
+using System.Collections.ObjectModel;
 
 using Microsoft.Data.Sqlite;
 
@@ -36,52 +39,183 @@ private List<Contacto> contactos = [];
 
 private ListView listaContactos = null!;
 
-    public AgendaWindow(SqliteAgendaStore store) 
-    {
-        this.store = store;
+private List<Contacto> contactosFiltrados = [];
 
-        contactos = store.ObtenerTodos();
+private TextField campoBusqueda = null!;
 
-        Title  = "Agenda - Terminal.Gui";
-        Width  = Dim.Fill();
-        Height = Dim.Fill();
+private TextView detalle = null!;
 
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
-        };
+private StatusBar statusBar = null!;
 
-        listaContactos = new ListView() {
-            X      = 0,
-            Y      = 1,
-            Width  = 30,
-            Height = Dim.Fill()
-        };
+private bool soloFavoritos = false;
+
+public AgendaWindow(SqliteAgendaStore store) {
+
+    this.store = store;
+
+    contactos = store.ObtenerTodos();
+
+    Title  = "Agenda - Terminal.Gui";
+    Width  = Dim.Fill();
+    Height = Dim.Fill();
+
+    MenuBar menu = new() {
+        Menus = [
+
+            new MenuBarItem("_Archivo", [
+                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+            ]),
+
+            new MenuBarItem("_Ver", [
+                new MenuItem(
+                    "_Solo favoritos",
+                    "",
+                    ToggleFavoritos
+                )
+            ])
+        ]
+    };
+
+    Label buscarLabel = new() {
+        Text = "Buscar:",
+        X = 1,
+        Y = 1
+    };
+
+    campoBusqueda = new TextField() {
+        X = 10,
+        Y = 1,
+        Width = 30
+    };
+
+    campoBusqueda.TextChanged += (_, _) => {
+        AplicarFiltros();
+    };
+
+listaContactos = new ListView()
+{
+    X = 0,
+    Y = 3,
+    Width = 30,
+    Height = Dim.Fill(1)
+};
+
+    FrameView detalleFrame = new() {
+        Title  = "Detalle",
+        X      = 30,
+        Y      = 3,
+        Width  = Dim.Fill(),
+        Height = Dim.Fill(1)
+    };
+
+    detalle = new TextView() {
+        Width  = Dim.Fill(),
+        Height = Dim.Fill(),
+        ReadOnly = true
+    };
+
+    detalleFrame.Add(detalle);
+
+    statusBar = new StatusBar([
+        new Shortcut(Key.Q.WithCtrl, "Salir", SolicitarSalir)
+    ]);
+
+    Add(
+        menu,
+        buscarLabel,
+        campoBusqueda,
+        listaContactos,
+        detalleFrame,
+        statusBar
+    );
+
+    AplicarFiltros();
+}
+
+private void AplicarFiltros() {
+
+        string texto =
+            campoBusqueda.Text?.ToString()?.ToLower()
+            ?? "";
+
+        contactosFiltrados = contactos
+            .Where(c =>
+
+                (
+                    c.Nombre.ToLower().Contains(texto)
+                    || c.Telefonos.ToLower().Contains(texto)
+                    || c.Email.ToLower().Contains(texto)
+                )
+
+                &&
+
+                (
+                    !soloFavoritos || c.Favorito
+                )
+
+            )
+            .ToList();
 
         ActualizarLista();
 
-        FrameView detalle = new() {
-            Title  = "Detalle",
-            X      = 30,
-            Y      = 1,
-            Width  = Dim.Fill(),
-            Height = Dim.Fill()
-        };
+        ActualizarDetalle();
+    }
+private void ActualizarLista()
+{
+    ObservableCollection<string> items =
+    [
+        .. contactosFiltrados.Select(c =>
+            $"{(c.Favorito ? "★" : " ")} {c.Nombre}"
+        )
+    ];
 
-        Add(menu, listaContactos, detalle);
+    listaContactos.SetSource<string>(items);
+}
+private void ActualizarDetalle()
+{
+    int index = listaContactos.SelectedItem ?? -1;
+
+    if (
+        index < 0 ||
+        index >= contactosFiltrados.Count
+    )
+    {
+        detalle.Text = "";
+        return;
     }
 
-    private void ActualizarLista() {
+    Contacto c = contactosFiltrados[index];
 
-        listaContactos.SetSource(
-            contactos.Select(c =>
-                $"{(c.Favorito ? "★" : " ")} {c.Nombre}"
-            ).ToList()
-        );
+    detalle.Text =
+$"""
+Nombre:
+{c.Nombre}
+
+Teléfonos:
+{c.Telefonos}
+
+Email:
+{c.Email}
+
+Favorito:
+{(c.Favorito ? "Sí" : "No")}
+
+Notas:
+{c.Notas}
+""";
+}
+
+    private void ToggleFavoritos() {
+
+        soloFavoritos = !soloFavoritos;
+
+        statusBar.Title = soloFavoritos
+            ? "Filtro: solo favoritos"
+            : "Filtro: todos";
+
+        AplicarFiltros();
     }
+
     private void SolicitarSalir() {
         App!.RequestStop();
     }
@@ -89,13 +223,23 @@ private ListView listaContactos = null!;
     protected override bool OnKeyDown(Key key) {
 
         if (key == Key.Q.WithCtrl) {
+
             SolicitarSalir();
+
+            return true;
+        }
+
+        if (key == Key.F4) {
+
+            campoBusqueda.SetFocus();
+
             return true;
         }
 
         return base.OnKeyDown(key);
     }
-    }
+}
+
 
 public sealed class EjemploDialog : Dialog {
     public EjemploDialog() {
