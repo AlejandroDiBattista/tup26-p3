@@ -110,6 +110,41 @@ public sealed class AgendaWindow : Runnable {
             Width = Dim.Percent(38),
             Height = Dim.Fill(1)
         };
+
+        listView = new ListView {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        listFrame.Add(listView);
+
+        FrameView detailFrame = new() {
+            Title = "Detalle",
+            X = Pos.Right(listFrame) + 1,
+            Y = 3,
+            Width = Dim.Fill(1),
+            Height = Dim.Fill(1)
+        };
+
+        detailLabel = new Label {
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(1),
+            Height = Dim.Fill()
+        };
+        detailFrame.Add(detailLabel);
+
+        statusBar = new StatusBar([
+            new Shortcut(Key.F2, "Nuevo", NuevoContacto),
+            new Shortcut(Key.F3, "Editar", EditarContacto),
+            new Shortcut(Key.Delete, "Eliminar", EliminarContacto),
+            new Shortcut(Key.F4, "Buscar", FocoBusqueda),
+            new Shortcut(Key.Q.WithCtrl, "Salir", SolicitarSalir)
+        ]);
+
+        Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
     }
 
     private void AbrirDialogo() {
