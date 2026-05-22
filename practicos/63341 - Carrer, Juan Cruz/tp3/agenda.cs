@@ -213,4 +213,27 @@ using Terminal.Gui.Views;
             $"Notas:\n{contact.Notas}";
     }
 
+    private void NewContact() {
+        ContactDialog dialog = new();
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null) {
+            SetStatus("Alta cancelada.");
+            return;
+        }
+
+        try {
+            Contacto saved = dialog.Contact;
+            int id = store.Insert(saved);
+            saved.Id = id;
+            contacts.Add(saved);
+            RefreshFilteredContacts();
+            SelectContact(id);
+            SetStatus($"Contacto agregado: {saved.Nombre}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al guardar", ex.Message, "Aceptar");
+        }
+    }
+
     
