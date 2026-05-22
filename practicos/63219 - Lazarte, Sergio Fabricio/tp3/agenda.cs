@@ -35,6 +35,195 @@ catch (Exception ex)
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(store));
 
+public sealed class AgendaWindow : Runnable
+{
+    private readonly SqliteAgendaStore _store;
+    private readonly List<Contacto>    _contacts = new();
+    private readonly List<Contacto>    _filtered = new();
+    private bool _soloFavoritos = false;
+
+    private TextField _searchField  = null!;
+    private ListView  _listView     = null!;
+    private Label     _detailFav    = null!;
+    private Label     _detailNombre = null!;
+    private Label     _detailTels   = null!;
+    private Label     _detailEmail  = null!;
+    private Label     _detailNotas  = null!;
+
+    public AgendaWindow(SqliteAgendaStore store)
+    {
+        _store = store;
+        Title  = $"AgendaT — {Path.GetFileName(store.DbPath)}";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+        Menu.DefaultBorderStyle = LineStyle.Single;
+        BuildLayout();
+        ReloadFromDb();
+    }
+
+    private void BuildLayout()
+    {
+        MenuBar menu = new()
+        {
+            Menus =
+            [
+                new MenuBarItem("_Archivo",
+                [
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportarJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportarJson),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ]),
+                new MenuBarItem("_Contactos",
+                [
+                    new MenuItem("_Nuevo",    "F2",  NuevoContacto),
+                    new MenuItem("_Editar",   "F3",  EditarContacto),
+                    new MenuItem("E_liminar", "Del", EliminarContacto)
+                ]),
+                new MenuBarItem("_Ver",
+                [
+                    new MenuItem("_Solo favoritos", "", ToggleSoloFavoritos)
+                ]),
+                new MenuBarItem("_Ayuda",
+                [
+                    new MenuItem("_Acerca de", null!, AcercaDe)
+                ])
+            ]
+        };
+
+        Label searchLabel = new() { Text = "Buscar:", X = 1, Y = 1 };
+        _searchField = new TextField { X = Pos.Right(searchLabel) + 1, Y = 1, Width = 35 };
+        _searchField.TextChanged += (_, _) => AplicarFiltros();
+
+        FrameView listFrame = new()
+        {
+            Title = "Contactos", X = 0, Y = 3,
+            Width = Dim.Percent(45), Height = Dim.Fill(1)
+        };
+        _listView = new ListView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
+        listFrame.Add(_listView);
+
+        FrameView detailFrame = new()
+        {
+            Title = "Detalle", X = Pos.Right(listFrame), Y = 3,
+            Width = Dim.Fill(), Height = Dim.Fill(1)
+        };
+        _detailFav    = new Label { X = 1, Y = 0, Width = Dim.Fill() };
+        _detailNombre = new Label { X = 1, Y = 1, Width = Dim.Fill() };
+        _detailTels   = new Label { X = 1, Y = 2, Width = Dim.Fill() };
+        _detailEmail  = new Label { X = 1, Y = 3, Width = Dim.Fill() };
+        Label lblNotas = new() { Text = "Notas:", X = 1, Y = 4 };
+        _detailNotas  = new Label { X = 1, Y = 5, Width = Dim.Fill(), Height = Dim.Fill() };
+        detailFrame.Add(_detailFav, _detailNombre, _detailTels,
+                        _detailEmail, lblNotas, _detailNotas);
+
+        StatusBar statusBar = new();
+        statusBar.Add(
+            new Shortcut { Key = Key.F2,         Title = "F2 Nuevo",     Action = NuevoContacto },
+            new Shortcut { Key = Key.F3,         Title = "F3 Editar",    Action = EditarContacto },
+            new Shortcut { Key = Key.Delete,     Title = "Del Eliminar", Action = EliminarContacto },
+            new Shortcut { Key = Key.F4,         Title = "F4 Buscar",    Action = () => _searchField.SetFocus() },
+            new Shortcut { Key = Key.F5,         Title = "F5 Importar", Action = ImportarJson },
+            new Shortcut { Key = Key.Q.WithCtrl, Title = "^Q Salir",     Action = SolicitarSalir }
+        );
+
+        Add(menu, searchLabel, _searchField, listFrame, detailFrame, statusBar);
+    }
+
+    private void ReloadFromDb()
+    {
+        _contacts.Clear();
+        _contacts.AddRange(_store.GetAll());
+        AplicarFiltros();
+        SetStatus($"{_contacts.Count} contacto(s) cargados.");
+    }
+
+    private void AplicarFiltros()
+    {
+        string query = (_searchField?.Text ?? "").Trim().ToLowerInvariant();
+        _filtered.Clear();
+        foreach (var c in _contacts)
+        {
+            if (_soloFavoritos && !c.Favorito) continue;
+            if (query.Length > 0)
+            {
+                bool match = c.Nombre.Contains(query,    StringComparison.OrdinalIgnoreCase)
+                          || c.Telefonos.Contains(query, StringComparison.OrdinalIgnoreCase)
+                          || c.Email.Contains(query,     StringComparison.OrdinalIgnoreCase);
+                if (!match) continue;
+            }
+            _filtered.Add(c);
+        }
+        _listView.SetSource<string>(new ObservableCollection<string>(_filtered.Select(FormatItem)));
+        MostrarDetalle();
+    }
+
+    private static string FormatItem(Contacto c)
+        => (c.Favorito ? "★ " : "  ") + c.Nombre;
+
+    private void MostrarDetalle()
+    {
+        int idx = _listView.SelectedItem.GetValueOrDefault(-1);
+        Contacto? c = (idx >= 0 && idx < _filtered.Count) ? _filtered[idx] : null;
+        if (c is null)
+        {
+            _detailFav.Text = _detailNombre.Text =
+            _detailTels.Text = _detailEmail.Text = _detailNotas.Text = "";
+            return;
+        }
+        _detailFav.Text    = c.Favorito ? "★  Favorito" : "";
+        _detailNombre.Text = $"Nombre:    {c.Nombre}";
+        _detailTels.Text   = $"Teléfonos: {c.Telefonos}";
+        _detailEmail.Text  = $"Email:     {c.Email}";
+        _detailNotas.Text  = c.Notas;
+    }
+
+    private Contacto? ContactoSeleccionado()
+    {
+        int idx = _listView.SelectedItem.GetValueOrDefault(-1);
+        return (idx >= 0 && idx < _filtered.Count) ? _filtered[idx] : null;
+    }
+
+    private void SetStatus(string msg)
+        => Title = $"AgendaT — {Path.GetFileName(_store.DbPath)}   [{msg}]";
+
+    private void MostrarError(string titulo, string msg)
+        => MessageBox.ErrorQuery(App!, titulo, msg, "Aceptar");
+
+    private void MostrarInfo(string titulo, string msg)
+        => MessageBox.Query(App!, titulo, msg, "Cerrar");
+
+    private int Preguntar(string titulo, string msg, params string[] botones)
+    => (int)(MessageBox.Query(App!, titulo, msg, botones) ?? -1);
+
+    private void AcercaDe()
+        => MostrarInfo("Acerca de AgendaT", "AgendaT v1.0\nTP3 — TUI con Terminal.Gui + SQLite");
+
+    private void SolicitarSalir() => App!.RequestStop();
+
+    protected override bool OnKeyDown(Key key)
+    {
+        if (key == Key.Q.WithCtrl)                      { SolicitarSalir();        return true; }
+        if (key == Key.N.WithCtrl || key == Key.F2)     { NuevoContacto();         return true; }
+        if (key == Key.F3)                              { EditarContacto();        return true; }
+        if (key == Key.D.WithCtrl || key == Key.Delete) { EliminarContacto();      return true; }
+        if (key == Key.I.WithCtrl || key == Key.F5)     { ImportarJson();          return true; }
+        if (key == Key.E.WithCtrl)                      { ExportarJson();          return true; }
+        if (key == Key.F4)                              { _searchField.SetFocus(); return true; }
+        MostrarDetalle();
+        return base.OnKeyDown(key);
+    }
+
+    // Acciones CRUD — se agregan en el siguiente commit
+    private void NuevoContacto() { }
+    private void EditarContacto() { }
+    private void EliminarContacto() { }
+    private void ToggleSoloFavoritos() { }
+    private void ImportarJson() { }
+    private void ExportarJson() { }
+    private string PedirRuta(string t, string l, string d) => "";
+}
+
 [Table("Contactos")]
 public sealed class Contacto
 {
