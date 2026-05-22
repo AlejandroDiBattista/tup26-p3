@@ -109,6 +109,10 @@ public sealed class AgendaWindow : Window {
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
+        listView.ValueChanged += (_, e) => {
+            selectedIndex = e.NewValue ?? selectedIndex;
+            UpdateDetails();
+        };
         listFrame.Add(listView);
 
         FrameView detailFrame = new() {
@@ -185,7 +189,7 @@ private Contacto? SelectedContact() {
         return null;
     }
 
-    int index = listView is null ? selectedIndex : listView.SelectedItem ?? selectedIndex;
+    int index = listView is null ? selectedIndex : (listView.SelectedItem ?? selectedIndex);
     if (index < 0 || index >= filteredContacts.Count) {
         index = 0;
     }
@@ -477,7 +481,9 @@ protected override bool OnKeyDown(Key key) {
     }
 
     bool handled = base.OnKeyDown(key);
-    selectedIndex = listView?.SelectedItem ?? selectedIndex;
+    if (listView is not null) {
+        selectedIndex = listView.SelectedItem ?? selectedIndex;
+    }
     UpdateDetails();
     return handled;
 }    
