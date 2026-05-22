@@ -138,40 +138,41 @@ public sealed class AgendaWindow : Window {
     }
 
 private void RefreshFilteredContacts() {
-        string query = searchField?.Text?.ToString() ?? "";
-        int currentId = SelectedContact()?.Id ?? 0;
+    string query = (searchField?.Text?.ToString() ?? "").Trim();
+    int currentId = SelectedContact()?.Id ?? 0;
 
-        filteredContacts.Clear();
-        filteredContacts.AddRange(contacts
-            .Where(c => (!onlyFavorites || c.Favorito) && MatchesSearch(c, query))
-            .OrderByDescending(c => c.Favorito)
-            .ThenBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase));
+    filteredContacts.Clear();
+    filteredContacts.AddRange(contacts
+        .Where(c => (!onlyFavorites || c.Favorito) && MatchesSearch(c, query))
+        .OrderByDescending(c => c.Favorito)
+        .ThenBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase));
 
-        listView?.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem).ToList()));
+    listView?.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem).ToList()));
 
-        selectedIndex = 0;
-        if (currentId != 0) {
-            int found = filteredContacts.FindIndex(c => c.Id == currentId);
-            selectedIndex = found >= 0 ? found : 0;
-        }
-
-        if (listView is not null && filteredContacts.Count > 0) {
-            listView.SelectedItem = Math.Min(selectedIndex, filteredContacts.Count - 1);
-        }
-
-        UpdateDetails();
+    selectedIndex = 0;
+    if (currentId != 0) {
+        int found = filteredContacts.FindIndex(c => c.Id == currentId);
+        selectedIndex = found >= 0 ? found : 0;
     }
 
-    private static bool MatchesSearch(Contacto contact, string query) {
-        if (string.IsNullOrWhiteSpace(query)) {
-            return true;
-        }
-
-        return contact.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase)
-            || contact.Telefonos.Contains(query, StringComparison.CurrentCultureIgnoreCase)
-            || contact.Email.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+    if (listView is not null && filteredContacts.Count > 0) {
+        listView.SelectedItem = Math.Min(selectedIndex, filteredContacts.Count - 1);
     }
 
+    UpdateDetails();
+    listView?.SetNeedsDraw();
+    detailLabel?.SetNeedsDraw();
+}
+
+private static bool MatchesSearch(Contacto contact, string query) {
+    if (string.IsNullOrWhiteSpace(query)) {
+        return true;
+    }
+
+    return contact.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+        || contact.Telefonos.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+        || contact.Email.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+}
     private static string FormatContactListItem(Contacto contact) {
         string favorite = contact.Favorito ? "* " : "  ";
         string email = string.IsNullOrWhiteSpace(contact.Email) ? "" : $" <{contact.Email}>";
@@ -439,46 +440,61 @@ private void RefreshFilteredContacts() {
     }
 
      protected override bool OnKeyDown(Key key) {
-        if (key == Key.N.WithCtrl || key == Key.F2) {
-            NewContact();
-            return true;
-        }
-
-        if (key == Key.F3 || key == Key.Enter) {
-            EditSelectedContact();
-            return true;
-        }
-
-        if (key == Key.D.WithCtrl || key == Key.Delete) {
-            DeleteSelectedContact();
-            return true;
-        }
-
-        if (key == Key.I.WithCtrl) {
-            ImportJson();
-            return true;
-        }
-
-        if (key == Key.E.WithCtrl) {
-            ExportJson();
-            return true;
-        }
-
-        if (key == Key.F4) {
-            FocusSearch();
-            return true;
-        }
-
-        if (key == Key.Q.WithCtrl) {
-            RequestExit();
-            return true;
-        }
-
-        bool handled = base.OnKeyDown(key);
-        selectedIndex = listView?.SelectedItem ?? selectedIndex;
-        UpdateDetails();
-        return handled;
+    if (key == Key.N.WithCtrl || key == Key.F2) {
+        NewContact();
+        return true;
     }
+
+    if (key == Key.F3 || key == Key.Enter) {
+        EditSelectedContact();
+        return true;
+    }
+
+    if (key == Key.D.WithCtrl || key == Key.Delete) {
+        DeleteSelectedContact();
+        return true;
+    }
+
+    if (key == Key.I.WithCtrl) {
+        ImportJson();
+        return true;
+    }
+
+    if (key == Key.E.WithCtrl) {
+        ExportJson();
+        return true;
+    }
+
+    if (key == Key.F4) {
+        FocusSearch();
+        return true;
+    }
+
+    if (key == Key.Q.WithCtrl) {
+        RequestExit();
+        return true;
+    }
+
+    if (!key.IsCtrl && !key.IsAlt && !string.IsNullOrEmpty(key.AsGrapheme)) {
+        searchField.Text = (searchField.Text?.ToString() ?? "") + key.AsGrapheme;
+        searchField.SetFocus();
+        RefreshFilteredContacts();
+        return true;
+    }
+
+    if (key == Key.Backspace && !string.IsNullOrEmpty(searchField.Text?.ToString())) {
+        string text = searchField.Text.ToString()!;
+        searchField.Text = text[..^1];
+        searchField.SetFocus();
+        RefreshFilteredContacts();
+        return true;
+    }
+
+    bool handled = base.OnKeyDown(key);
+    selectedIndex = listView?.SelectedItem ?? selectedIndex;
+    UpdateDetails();
+    return handled;
+}
 }
 
 public sealed class ContactDialog : Dialog {
