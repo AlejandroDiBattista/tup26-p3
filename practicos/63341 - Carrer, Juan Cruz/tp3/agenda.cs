@@ -236,4 +236,36 @@ using Terminal.Gui.Views;
         }
     }
 
-    
+    private void EditSelectedContact() {
+        Contacto? selected = SelectedContact();
+        if (selected is null) {
+            SetStatus("No hay contacto seleccionado para editar.");
+            return;
+        }
+
+        ContactDialog dialog = new(selected);
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null) {
+            SetStatus("Edicion cancelada.");
+            return;
+        }
+
+        try {
+            Contacto updated = dialog.Contact;
+            store.Update(updated);
+
+            int index = contacts.FindIndex(c => c.Id == updated.Id);
+            if (index >= 0) {
+                contacts[index] = updated;
+            }
+
+            RefreshFilteredContacts();
+            SelectContact(updated.Id);
+            SetStatus($"Contacto actualizado: {updated.Nombre}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al actualizar", ex.Message, "Aceptar");
+        }
+    }
+
