@@ -306,6 +306,106 @@ public sealed class AgendaWindow : Runnable {
         }
     }
 
+    private void ImportJson() {
+        string? path = AskForPath(App!, "Importar JSON", "Ruta del archivo JSON:", "Importar");
+        if (string.IsNullOrWhiteSpace(path)) {
+            SetStatus("Importacion cancelada.");
+            return;
+        }
+
+        try {
+            List<Contacto> imported = JsonAgendaIO.Read(path).ToList();
+            int answer = MessageBox.Query(
+                App!,
+                "Confirmar importacion",
+                $"Se agregaran {imported.Count} contacto(s). Continuar?",
+                "Importar",
+                "Cancelar") ?? 1;
+
+            if (answer != 0) {
+                SetStatus("Importacion cancelada.");
+                return;
+            }
+
+            foreach (Contacto contact in imported) {
+                contact.Id = 0;
+                int id = store.Insert(contact);
+                contact.Id = id;
+                contacts.Add(contact);
+            }
+
+            RefreshFilteredContacts();
+            SetStatus($"Importados {imported.Count} contacto(s) desde {path}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void ExportJson() {
+        string? path = AskForPath(App!, "Exportar JSON", "Ruta de salida:", "Exportar");
+        if (string.IsNullOrWhiteSpace(path)) {
+            SetStatus("Exportacion cancelada.");
+            return;
+        }
+
+        try {
+            JsonAgendaIO.Write(path, contacts);
+            SetStatus($"Exportados {contacts.Count} contacto(s) a {path}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+        }
+    }
+
+    private static string? AskForPath(IApplication app, string title, string prompt, string actionText) {
+        Dialog dialog = new() {
+            Title = title,
+            Width = 72,
+            Height = 8
+        };
+
+        Label label = new() {
+            Text = prompt,
+            X = 1,
+            Y = 1,
+            Width = 20
+        };
+
+        TextField pathField = new() {
+            X = Pos.Right(label) + 1,
+            Y = 1,
+            Width = Dim.Fill(1)
+        };
+
+        string? result = null;
+
+         Button accept = new() {
+            Text = $"_{actionText}",
+            IsDefault = true
+        };
+        accept.Accepting += (_, e) => {
+            result = pathField.Text?.ToString();
+            app.RequestStop();
+            e.Handled = true;
+        };
+
+        Button cancel = new() {
+            Text = "_Cancelar"
+        };
+        cancel.Accepting += (_, e) => {
+            result = null;
+            app.RequestStop();
+            e.Handled = true;
+        };
+
+        dialog.Add(label, pathField);
+        dialog.AddButton(accept);
+        dialog.AddButton(cancel);
+        app.Run(dialog);
+
+        return string.IsNullOrWhiteSpace(result) ? null : result.Trim();
+    }
     private void SolicitarSalir() {
         App!.RequestStop();
     }
