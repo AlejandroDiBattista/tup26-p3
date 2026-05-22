@@ -1,0 +1,10 @@
+﻿[
+  {
+    "Id": 1,
+    "Nombre": "martin",
+    "Telefonos": "878787777",
+    "Email": "martin@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  }
+]
