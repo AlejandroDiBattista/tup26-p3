@@ -52,7 +52,7 @@ catch (Exception ex)
 }
 
 // ==========================================================
-backing window
+// VENTANA PRINCIPAL
 // ==========================================================
 
 public sealed class AgendaWindow : Window
@@ -68,10 +68,10 @@ public sealed class AgendaWindow : Window
     private readonly Label mensajeEstado;
     private bool soloFavoritos = false;
 
- public AgendaWindow(SqliteAgendaStore store)
+    public AgendaWindow(SqliteAgendaStore store)
     {
         this.store = store;
-        Title = "Agenda TUI (v2)";
+        Title = "Agenda TUI";
         X = 0;
         Y = 0;
         Width = Dim.Fill();
@@ -180,7 +180,82 @@ public sealed class AgendaWindow : Window
         Application.KeyDown += ManejarAtajosGlobales;
     }
 
-private void NuevoContacto()
+    // Solucionado warning de nulabilidad cambiando object por object?
+    private void ManejarAtajosGlobales(object? sender, Key keyEvent)
+    {
+        if (keyEvent == Key.F2) { NuevoContacto(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.N.WithCtrl) { NuevoContacto(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.F3) { EditarContacto(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.Enter && listaContactos.HasFocus) { EditarContacto(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.Delete) { EliminarContacto(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.D.WithCtrl) { EliminarContacto(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.I.WithCtrl) { ImportarJson(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.E.WithCtrl) { ExportarJson(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.F4) { campoBusqueda.SetFocus(); keyEvent.Handled = true; }
+        else if (keyEvent == Key.Q.WithCtrl) { Salir(); keyEvent.Handled = true; }
+    }
+
+    private void AplicarFiltros()
+    {
+        string textoBusqueda = campoBusqueda.Text?.ToString()?.ToLower() ?? "";
+
+        contactosFiltrados = contactos
+            .Where(c => (string.IsNullOrEmpty(textoBusqueda) || 
+                         c.Nombre.ToLower().Contains(textoBusqueda) ||
+                         c.Telefonos.ToLower().Contains(textoBusqueda) ||
+                         c.Email.ToLower().Contains(textoBusqueda)) &&
+                        (!soloFavoritos || c.Favorito))
+            .ToList();
+
+        var nombres = new ObservableCollection<string>(
+            contactosFiltrados.Select(c => c.Favorito ? "★ " + c.Nombre : c.Nombre)
+        );
+
+        listaContactos.SetSource<string>(nombres);
+        
+        if (contactosFiltrados.Count > 0 && listaContactos.SelectedItem < 0)
+        {
+            listaContactos.SelectedItem = 0;
+        }
+
+        MostrarDetalle();
+    }
+
+    private void MostrarDetalle()
+    {
+        if (contactosFiltrados.Count == 0)
+        {
+            detalleContacto.Text = "";
+            return;
+        }
+
+        int indice = listaContactos.SelectedItem;
+        if (indice < 0 || indice >= contactosFiltrados.Count)
+        {
+            detalleContacto.Text = "";
+            return;
+        }
+
+        Contacto c = contactosFiltrados[indice];
+        detalleContacto.Text = $"""
+        Nombre:
+        {c.Nombre}
+
+        Teléfonos:
+        {c.Telefonos}
+
+        Email:
+        {c.Email}
+
+        Favorito:
+        {(c.Favorito ? "Sí" : "No")}
+
+        Notas:
+        {c.Notas}
+        """;
+    }
+
+    private void NuevoContacto()
     {
         ContactDialog dialogo = new ContactDialog(new Contacto(), true);
         Application.Run(dialogo);
@@ -196,7 +271,7 @@ private void NuevoContacto()
         SetEstado("Contacto agregado");
     }
 
-private void EditarContacto()
+    private void EditarContacto()
     {
         if (contactosFiltrados.Count == 0) return;
 
@@ -218,8 +293,99 @@ private void EditarContacto()
         SetEstado("Contacto modificado");
     }
 
+    private void EliminarContacto()
+    {
+        if (contactosFiltrados.Count == 0) return;
 
+        int indice = listaContactos.SelectedItem;
+        if (indice < 0 || indice >= contactosFiltrados.Count) return;
+
+        Contacto contacto = contactosFiltrados[indice];
+        int respuesta = MessageBox.Query("Confirmar", $"¿Eliminar a {contacto.Nombre}?", "Sí", "No");
+
+        if (respuesta != 0) return;
+
+        store.Eliminar(contacto);
+        contactos = store.ObtenerTodos();
+        AplicarFiltros();
+        SetEstado($"Contacto eliminado: {contacto.Nombre}");
+    }
+
+    private void ImportarJson()
+    {
+        OpenDialog dialogo = new OpenDialog { Title = "Importar", Text = "Seleccionar JSON" };
+        Application.Run(dialogo);
+
+        if (dialogo.Canceled) return;
+
+        try
+        {
+            string ruta = dialogo.FilePaths.FirstOrDefault() ?? "";
+            if (string.IsNullOrEmpty(ruta)) return;
+
+            List<Contacto> importados = JsonAgendaIO.Importar(ruta);
+
+            int respuesta = MessageBox.Query("Importar", $"Se agregarán {importados.Count} contactos", "Aceptar", "Cancelar");
+            if (respuesta != 0) return;
+
+            foreach (Contacto c in importados)
+            {
+                c.Id = 0;
+                store.Insertar(c);
+            }
+
+            contactos = store.ObtenerTodos();
+            AplicarFiltros();
+            SetEstado($"Importados {importados.Count} contactos");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+        }
+    }
+
+    private void ExportarJson()
+    {
+        SaveDialog dialogo = new SaveDialog { Title = "Exportar", Text = "Guardar JSON" };
+        Application.Run(dialogo);
+
+        if (dialogo.Canceled) return;
+
+        try
+        {
+            string ruta = dialogo.Path?.ToString() ?? "";
+            if (string.IsNullOrEmpty(ruta)) return;
+
+            JsonAgendaIO.Exportar(ruta, contactos);
+            MessageBox.Query("Exportado", "Archivo JSON generado", "OK");
+            SetEstado($"Exportado {Path.GetFileName(ruta)}");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery("Error", ex.Message, "OK");
+        }
+    }
+
+    private void ToggleFavoritos()
+    {
+        soloFavoritos = !soloFavoritos;
+        AplicarFiltros();
+        SetEstado(soloFavoritos ? "Mostrando solo favoritos" : "Mostrando todos los contactos");
+    }
+
+    private void MostrarAcercaDe()
+    {
+        MessageBox.Query("Acerca de", "Agenda TUI - TP3\n.NET 10 + SQLite (v2)", "OK");
+    }
+
+    private void Salir() => Application.RequestStop();
+
+    private void SetEstado(string mensaje)
+    {
+        mensajeEstado.Text = mensaje;
+    }
 }
+
 // ==========================================================
 // SQLITE STORE
 // ==========================================================
