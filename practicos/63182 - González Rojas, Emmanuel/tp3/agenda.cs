@@ -52,45 +52,134 @@ catch (Exception ex)
 }
 
 // ==========================================================
-// VENTANA PRINCIPAL
+//VENTANA PRINCIPAL
 // ==========================================================
 
 public sealed class AgendaWindow : Window
 {
     private readonly SqliteAgendaStore store;
     private List<Contacto> contactos = new();
-    
-    // Componentes principales
+    private List<Contacto> contactosFiltrados = new();
+
+    private readonly TextField campoBusqueda;
     private readonly ListView listaContactos;
     private readonly TextView detalleContacto;
+    private readonly StatusBar barraEstado;
+    private readonly Label mensajeEstado;
+    private bool soloFavoritos = false;
 
-    public AgendaWindow(SqliteAgendaStore store)
+ public AgendaWindow(SqliteAgendaStore store)
     {
         this.store = store;
-        Title = "Agenda de Contactos TUI";
+        Title = "Agenda TUI (v2)";
+        X = 0;
+        Y = 0;
         Width = Dim.Fill();
         Height = Dim.Fill();
 
         contactos = store.ObtenerTodos();
 
+        // MENÚ 
+        MenuBar menu = new MenuBar
+        {
+            Menus = new MenuBarItem[] {
+                new MenuBarItem {
+                    Title = "_Archivo",
+                    Children = new MenuItem[] {
+                        new MenuItem { Title = "_Importar JSON", Action = () => ImportarJson() },
+                        new MenuItem { Title = "_Exportar JSON", Action = () => ExportarJson() },
+                        new MenuItem { Title = "_Salir", Action = () => Salir() }
+                    }
+                },
+                new MenuBarItem {
+                    Title = "_Contactos",
+                    Children = new MenuItem[] {
+                        new MenuItem { Title = "_Nuevo", Action = () => NuevoContacto() },
+                        new MenuItem { Title = "_Editar", Action = () => EditarContacto() },
+                        new MenuItem { Title = "_Eliminar", Action = () => EliminarContacto() }
+                    }
+                },
+                new MenuBarItem {
+                    Title = "_Ver",
+                    Children = new MenuItem[] {
+                        new MenuItem { Title = "_Solo favoritos", Action = () => ToggleFavoritos() }
+                    }
+                },
+                new MenuBarItem {
+                    Title = "_Ayuda",
+                    Children = new MenuItem[] {
+                        new MenuItem { Title = "_Acerca de", Action = () => MostrarAcercaDe() }
+                    }
+                }
+            }
+        };
+        Add(menu);
+
+        // BÚSQUEDA (Solucionado warning de Dim nulo usando Dim.Percent)
+        campoBusqueda = new TextField()
+        {
+            Text = "",
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(2),
+            CanFocus = true
+        };
+        campoBusqueda.TextChanged += (_, _) => AplicarFiltros();
+        Add(campoBusqueda);
+
         // LISTA
         listaContactos = new ListView()
         {
-            X = 0, Y = 0, Width = 30, Height = Dim.Fill()
+            X = 0,
+            Y = 3,
+            Width = 30,
+            Height = Dim.Fill()
         };
+        listaContactos.SelectedItemChanged += (_, _) => MostrarDetalle();
+        listaContactos.OpenSelectedItem += (_, _) => EditarContacto();
         Add(listaContactos);
 
         // DETALLE
         detalleContacto = new TextView()
         {
-            X = 31, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(),
+            X = 31,
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
             ReadOnly = true
         };
         Add(detalleContacto);
-        
-        // Cargar nombres en la lista
-        listaContactos.SetSource(contactos.Select(c => c.Nombre).ToList());
+
+        mensajeEstado = new Label()
+        {
+            Text = "Listo",
+            X = 0,
+            Y = Pos.AnchorEnd(2),
+            Width = Dim.Fill()
+        };
+        Add(mensajeEstado);
+
+        barraEstado = new StatusBar()
+        {
+            Y = Pos.AnchorEnd(1)
+        };
+        barraEstado.Add(new Shortcut { Key = Key.F2, Title = "Nuevo", Action = NuevoContacto });
+        barraEstado.Add(new Shortcut { Key = Key.F3, Title = "Editar", Action = EditarContacto });
+        barraEstado.Add(new Shortcut { Key = Key.N.WithCtrl, Title = "Nuevo", Action = NuevoContacto });
+        barraEstado.Add(new Shortcut { Key = Key.Delete, Title = "Eliminar", Action = EliminarContacto });
+        barraEstado.Add(new Shortcut { Key = Key.D.WithCtrl, Title = "Eliminar", Action = EliminarContacto });
+        barraEstado.Add(new Shortcut { Key = Key.I.WithCtrl, Title = "Importar", Action = ImportarJson });
+        barraEstado.Add(new Shortcut { Key = Key.E.WithCtrl, Title = "Exportar", Action = ExportarJson });
+        barraEstado.Add(new Shortcut { Key = Key.F4, Title = "Buscar", Action = () => campoBusqueda.SetFocus() });
+        barraEstado.Add(new Shortcut { Key = Key.Q.WithCtrl, Title = "Salir", Action = Salir });
+        Add(barraEstado);
+
+        AplicarFiltros();
+        SetEstado("Listo");
+
+        Application.KeyDown += ManejarAtajosGlobales;
     }
+
 }
 // ==========================================================
 // SQLITE STORE
