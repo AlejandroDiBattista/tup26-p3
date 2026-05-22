@@ -30,3 +30,29 @@ catch (Exception ex) {
     Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
     Environment.ExitCode = 1;
 }
+
+public sealed class AgendaWindow : Window {
+    private readonly SqliteAgendaStore store;
+    private readonly List<Contacto> contacts;
+    private readonly List<Contacto> filteredContacts = [];
+
+    private TextField searchField = null!;
+    private ListView listView = null!;
+    private Label detailLabel = null!;
+    private StatusBar statusBar = null!;
+    private bool onlyFavorites;
+    private int selectedIndex;
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
+        contacts = store.GetAll().ToList();
+
+        Title = $"Agenda - {store.DatabasePath}";
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        Menu.DefaultBorderStyle = LineStyle.Single;
+        BuildLayout();
+        RefreshFilteredContacts();
+        SetStatus($"Agenda abierta. {contacts.Count} contacto(s).");
+    }
