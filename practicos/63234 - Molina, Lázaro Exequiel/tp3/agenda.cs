@@ -200,3 +200,60 @@ public sealed class ContactDialog : Dialog {
         return i < p.Length ? p[i] : "";
     }
 }
+
+public sealed class SqliteAgendaStore : IDisposable {
+    readonly SqliteConnection db;
+    public SqliteAgendaStore(string archivo) { db = new(new SqliteConnectionStringBuilder { DataSource = archivo }.ConnectionString); db.Open(); }
+    public void Inicializar() => db.Execute("""
+        CREATE TABLE IF NOT EXISTS Contactos(
+            Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT NOT NULL,
+            Telefonos TEXT NOT NULL DEFAULT '', Email TEXT NOT NULL DEFAULT '',
+            Notas TEXT NOT NULL DEFAULT '', Favorito INTEGER NOT NULL DEFAULT 0);
+        """);
+    public IEnumerable<Contacto> Obtener() => db.GetAll<Contacto>();
+    public Contacto Insertar(Contacto c) { Controlar(c); c.Id = 0; c.Id = Convert.ToInt32(db.Insert(c)); return c; }
+    public void Actualizar(Contacto c) { Controlar(c); db.Update(c); }
+    public void Borrar(Contacto c) => db.Delete(c);
+    public void Dispose() => db.Dispose();
+    static void Controlar(Contacto c) {
+        if (string.IsNullOrWhiteSpace(c.Nombre)) throw new InvalidOperationException("El nombre es obligatorio.");
+        if (!string.IsNullOrWhiteSpace(c.Email) && !c.Email.Contains('@')) throw new InvalidOperationException("El email debe tener @.");
+    }
+}
+
+public static class JsonAgendaIO {
+    static readonly System.Text.Json.JsonSerializerOptions Json = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    public static IEnumerable<Contacto> Importar(string archivo) {
+        if (!File.Exists(archivo)) throw new FileNotFoundException("No se encontró el JSON.", archivo);
+        var datos = System.Text.Json.JsonSerializer.Deserialize<List<Contacto>>(File.ReadAllText(archivo, System.Text.Encoding.UTF8), Json) ?? throw new InvalidDataException("JSON inválido.");
+        foreach (Contacto c in datos) { c.Id = 0; c.Nombre ??= ""; c.Telefonos ??= ""; c.Email ??= ""; c.Notas ??= ""; }
+        return datos;
+    }
+    public static void Exportar(string archivo, IEnumerable<Contacto> contactos) =>
+        File.WriteAllText(archivo, System.Text.Json.JsonSerializer.Serialize(contactos, Json), new System.Text.UTF8Encoding(false));
+}
+
+public sealed class PathDialog : Dialog {
+    readonly TextField ruta; public string? Texto { get; private set; }
+    public PathDialog(string titulo, string etiqueta, string boton) {
+        Title = titulo; Width = Dim.Percent(66); Height = 7;
+        Add(new Label { Text = etiqueta, X = 1, Y = 1 });
+        ruta = new() { X = 1, Y = 2, Width = Dim.Fill(2) }; Add(ruta);
+        Button ok = new() { Text = boton, IsDefault = true };
+        ok.Accepting += (_, e) => { Texto = ruta.Text?.ToString().Trim(); App!.RequestStop(); e.Handled = true; };
+        Button cancelar = new() { Text = "Cancelar" };
+        cancelar.Accepting += (_, e) => { Texto = null; App!.RequestStop(); e.Handled = true; };
+        AddButton(cancelar); AddButton(ok);
+    }
+}
+
+[Table("Contactos")]
+public sealed class Contacto {
+    [Key] public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string Telefonos { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Notas { get; set; } = "";
+    public bool Favorito { get; set; }
+    public Contacto Clone() => new() { Id = Id, Nombre = Nombre, Telefonos = Telefonos, Email = Email, Notas = Notas, Favorito = Favorito };
+}
