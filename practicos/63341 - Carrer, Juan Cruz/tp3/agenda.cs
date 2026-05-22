@@ -136,3 +136,44 @@ private void BuildLayout() {
 
         Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
     }
+
+private void RefreshFilteredContacts() {
+        string query = searchField?.Text?.ToString() ?? "";
+        int currentId = SelectedContact()?.Id ?? 0;
+
+        filteredContacts.Clear();
+        filteredContacts.AddRange(contacts
+            .Where(c => (!onlyFavorites || c.Favorito) && MatchesSearch(c, query))
+            .OrderByDescending(c => c.Favorito)
+            .ThenBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase));
+
+        listView?.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem).ToList()));
+
+        selectedIndex = 0;
+        if (currentId != 0) {
+            int found = filteredContacts.FindIndex(c => c.Id == currentId);
+            selectedIndex = found >= 0 ? found : 0;
+        }
+
+        if (listView is not null && filteredContacts.Count > 0) {
+            listView.SelectedItem = Math.Min(selectedIndex, filteredContacts.Count - 1);
+        }
+
+        UpdateDetails();
+    }
+
+    private static bool MatchesSearch(Contacto contact, string query) {
+        if (string.IsNullOrWhiteSpace(query)) {
+            return true;
+        }
+
+        return contact.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || contact.Telefonos.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || contact.Email.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static string FormatContactListItem(Contacto contact) {
+        string favorite = contact.Favorito ? "* " : "  ";
+        string email = string.IsNullOrWhiteSpace(contact.Email) ? "" : $" <{contact.Email}>";
+        return $"{favorite}{contact.Nombre}{email}";
+    }
