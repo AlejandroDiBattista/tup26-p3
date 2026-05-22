@@ -50,75 +50,71 @@ private Label detalle = null!;
     }
     
     private void BuildLayout() {
-       contactos = store.GetAll();
-        
-        MenuBar menu = new() 
-        {
-        Menus = 
-        [
-            new MenuBarItem("_Archivo", 
-            [
-                new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                null!,
-                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-            ])
-        ]
-    };
-        Label buscarLabel = new() 
-        {
-          Text = "Buscar:", 
-          X = 1,
-          Y = 1 
-        }; 
-        
-    buscador = new TextField("")
-     {
-        X = 10,
-        Y = 1,
-        Width = 40    
-     }; 
 
-    listaContactos = new ListView(contactos.Select(c => c.Nombre).ToList()) 
-    {
-        X = 1,
-        Y = 3,
-        Width = 30,
-        Height = Dim.Fill() - 1
-    };
-      
-    detalle = new Label("Seleccione un contacto") 
-    {
-        X = 35,
-        Y = 3,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    listaContactos.SelectedItemChanged += e => 
-    {
+        contactos = store.GetAll();
 
-        if (e.Item >= 0 && e.Item < contactos.Count) 
-        {
+        MenuBar menu = new() {
+            Menus = [
+                new MenuBarItem("_Archivo", [
+                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ])
+            ]
+        };
 
-            Contacto c = contactos[e.Item];
+        Label buscarLabel = new() {
+            Text = "Buscar:",
+            X = 1,
+            Y = 1
+        };
 
-            detalle.Text =
-                $"Nombre: {c.Nombre}\n" +
-                $"Telefonos: {c.Telefonos}\n" +
-                $"Email: {c.Email}\n" +
-                $"Notas: {c.Notas}\n" +
-                $"Favorito: {(c.Favorito ? "Sí" : "No")}";
-        }
-    };
-     
-     Add(
-        menu,
-        buscarLabel,
-        buscador,
-        listaContactos,
-        detalle
-    );
-    
-}
+        buscador = new TextField("") {
+            X = 10,
+            Y = 1,
+            Width = 40
+        };
+
+        listaContactos = new ListView(
+            contactos.Select(c => c.Nombre).ToList()
+        ) {
+            X = 1,
+            Y = 3,
+            Width = 30,
+            Height = Dim.Fill() - 1
+        };
+
+        detalle = new Label("Seleccione un contacto") {
+            X = 35,
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        listaContactos.SelectedItemChanged += e => {
+
+            if (e.Item >= 0 && e.Item < contactos.Count) {
+
+                Contacto c = contactos[e.Item];
+
+                detalle.Text =
+                    $"Nombre: {c.Nombre}\n" +
+                    $"Telefonos: {c.Telefonos}\n" +
+                    $"Email: {c.Email}\n" +
+                    $"Notas: {c.Notas}\n" +
+                    $"Favorito: {(c.Favorito ? "Sí" : "No")}";
+            }
+        };
+
+        Add(
+            menu,
+            buscarLabel,
+            buscador,
+            listaContactos,
+            detalle
+        );
+    }
+   
 
 
 
@@ -127,8 +123,23 @@ private Label detalle = null!;
     
 
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
+        {
+
+    ContactDialog dialog = new();
+
+    App!.Run(dialog);
+
+    if (dialog.Guardado) {
+
+        store.Insert(dialog.Contacto);
+
+        contactos = store.GetAll();
+
+        listaContactos.SetSource(
+            contactos.Select(c => c.Nombre).ToList()
+        );
+    }
+};
     }
 
     private void SolicitarSalir() {
@@ -147,29 +158,150 @@ private Label detalle = null!;
 
 // Diálogo de ejemplo
 public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+    public Contacto Contacto { get; private set; } = new();
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
+    public bool Guardado { get; private set; }
+
+    public ContactDialog() {
+
+        Title = "Nuevo contacto";
+
+        Width = 60;
+        Height = 20;
+
+        Label nombreLabel = new() {
+            Text = "Nombre:",
+            X = 1,
+            Y = 1
         };
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
+        TextField nombreField = new("") {
+            X = 15,
+            Y = 1,
+            Width = 40
+        };
+
+        Label telefonoLabel = new() {
+            Text = "Telefonos:",
+            X = 1,
+            Y = 3
+        };
+
+        TextField telefonoField = new("") {
+            X = 15,
+            Y = 3,
+            Width = 40
+        };
+
+        Label emailLabel = new() {
+            Text = "Email:",
+            X = 1,
+            Y = 5
+        };
+
+        TextField emailField = new("") {
+            X = 15,
+            Y = 5,
+            Width = 40
+        };
+
+        Label notasLabel = new() {
+            Text = "Notas:",
+            X = 1,
+            Y = 7
+        };
+
+        TextView notasField = new() {
+            X = 15,
+            Y = 7,
+            Width = 40,
+            Height = 5
+        };
+
+        CheckBox favoritoCheck = new() {
+            Text = "Favorito",
+            X = 15,
+            Y = 13
+        };
+
+        Button guardarButton = new() {
+            Text = "_Guardar",
+            X = 15,
+            Y = 15,
             IsDefault = true
         };
 
-        closeButton.Accepting += (_, e) => {
+        Button cancelarButton = new() {
+            Text = "_Cancelar",
+            X = 30,
+            Y = 15
+        };
+
+        guardarButton.Accepting += (_, e) => {
+
+            string nombre = nombreField.Text.ToString() ?? "";
+            string email = emailField.Text.ToString() ?? "";
+
+            if (string.IsNullOrWhiteSpace(nombre)) {
+
+                MessageBox.ErrorQuery(
+                    "Error",
+                    "El nombre es obligatorio",
+                    "OK"
+                );
+
+                return;
+            }
+
+            if (email.Length > 0 && !email.Contains("@")) {
+
+                MessageBox.ErrorQuery(
+                    "Error",
+                    "El email debe contener @",
+                    "OK"
+                );
+
+                return;
+            }
+
+            Contacto = new Contacto {
+
+                Nombre = nombre,
+                Telefonos = telefonoField.Text.ToString() ?? "",
+                Email = email,
+                Notas = notasField.Text.ToString() ?? "",
+                Favorito = favoritoCheck.Checked
+            };
+
+            Guardado = true;
+
             App!.RequestStop();
+
             e.Handled = true;
         };
 
-        Add(message);
-        AddButton(closeButton);
+        cancelarButton.Accepting += (_, e) => {
+
+            App!.RequestStop();
+
+            e.Handled = true;
+        };
+
+        Add(
+            nombreLabel,
+            nombreField,
+            telefonoLabel,
+            telefonoField,
+            emailLabel,
+            emailField,
+            notasLabel,
+            notasField,
+            favoritoCheck
+        );
+
+        AddButton(guardarButton);
+
+        AddButton(cancelarButton);
     }
 }
 
