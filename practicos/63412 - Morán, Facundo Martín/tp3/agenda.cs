@@ -54,6 +54,7 @@ public sealed class AgendaWindow : Runnable {
 
     private ListView _listView = null!;
     private Label _detailName = null!;
+    private Label _detailFav = null!;
     private Label _detailPhone = null!;
     private Label _detailEmail = null!;
     private Label _detailNotes = null!;
@@ -141,12 +142,14 @@ _searchField.TextChanged += (_, _) => AplicarFiltro();
     };
 
     _detailName = new Label() { X = 0, Y = 0 };
-    _detailPhone = new Label() { X = 0, Y = 1 };
-    _detailEmail = new Label() { X = 0, Y = 2 };
-    _detailNotes = new Label() { X = 0, Y = 3 };
+    _detailFav = new Label() { X = 0, Y = 1 };
+    _detailPhone = new Label() { X = 0, Y = 2 };
+    _detailEmail = new Label() { X = 0, Y = 3 };
+    _detailNotes = new Label() { X = 0, Y = 4 };
 
     detailFrame.Add(
         _detailName,
+        _detailFav,
         _detailPhone,
         _detailEmail,
         _detailNotes
@@ -181,10 +184,13 @@ private void AplicarFiltro()
             || c.Email.ToLowerInvariant().Contains(q)
             || c.Telefonos.ToLowerInvariant().Contains(q))
         .ToList();
+        _listView.SetSource<string>(new(
+    _filteredContacts
+        .Select(c =>
+            $"{(c.Favorito ? "★ " : "")}{c.Nombre}")
+        .ToList()
+    ));
 
-    _listView.SetSource<string>(
-        new(_filteredContacts.Select(c => c.Nombre))
-    );
 }
 private Contacto? ContactoSeleccionado()
 {
@@ -207,6 +213,7 @@ private void MostrarDetalle(Contacto? c)
     }
 
     _detailName.Text = $"Nombre: {c.Nombre}";
+    _detailFav.Text = $"Favorito: {(c.Favorito ? "Sí" : "No")}";
     _detailPhone.Text = $"Tel: {c.Telefonos}";
     _detailEmail.Text = $"Email: {c.Email}";
     _detailNotes.Text = $"Notas: {c.Notas}";
@@ -355,44 +362,105 @@ private void ExportarJson()
     }
 }
 
-public sealed class ContactDialog : Dialog {
-       public bool Confirmed { get; private set; }
+public sealed class ContactDialog : Dialog
+{
+    public bool Confirmed { get; private set; }
 
     public Contacto? ContactResult { get; private set; }
 
     private readonly TextField _nameField;
+    private readonly TextField[] _phoneFields = new TextField[5];
     private readonly TextField _emailField;
+    private readonly TextView _notesField;
+    private readonly CheckBox _favCheck;
 
     public ContactDialog(Contacto initial)
     {
         Title = "Contacto";
 
-        Width = 50;
-        Height = 10;
+        Width = 70;
+        Height = 24;
 
-        Add(new Label { Text = "Nombre:", X = 1, Y = 1 });
+        Add(new Label { Text = "Nombre (*):", X = 1, Y = 1 });
 
         _nameField = new TextField
         {
             Text = initial.Nombre,
-            X = 12,
+            X = 15,
             Y = 1,
-            Width = 30
+            Width = Dim.Fill(2),
         };
 
         Add(_nameField);
 
-        Add(new Label { Text = "Email:", X = 1, Y = 3 });
+        string[] phones = initial.Telefonos.Split(',');
+
+        Add(new Label { Text = "Teléfonos:", X = 1, Y = 3 });
+
+        for (int i = 0; i < 5; i++)
+        {
+            Add(new Label {
+                Text = $"{i + 1}:",
+                X = 1,
+                Y = 4 + i
+            });
+
+            _phoneFields[i] = new TextField
+            {
+                Text = i < phones.Length
+                    ? phones[i].Trim()
+                    : "",
+
+                X = 6,
+                Y = 4 + i,
+                Width = 30
+            };
+
+            Add(_phoneFields[i]);
+        }
+
+        Add(new Label { Text = "Email:", X = 1, Y = 10 });
 
         _emailField = new TextField
         {
             Text = initial.Email,
-            X = 12,
-            Y = 3,
-            Width = 30
+            X = 15,
+            Y = 10,
+            Width = Dim.Fill(2),
         };
 
         Add(_emailField);
+
+        Add(new Label { Text = "Notas:", X = 1, Y = 12 });
+
+        FrameView notesFrame = new()
+        {
+            X = 1,
+            Y = 13,
+            Width = Dim.Fill(2),
+            Height = 5
+        };
+
+        _notesField = new TextView
+        {
+            Text = initial.Notas,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        notesFrame.Add(_notesField);
+
+        Add(notesFrame);
+
+        _favCheck = new CheckBox
+        {
+            Text = "Favorito",
+            Value = initial.Favorito ? CheckState.Checked : CheckState.UnChecked,
+            X = 1,
+            Y = 19
+        };
+
+        Add(_favCheck);
 
         Button btnGuardar = new()
         {
@@ -406,14 +474,27 @@ public sealed class ContactDialog : Dialog {
             e.Handled = true;
         };
 
+        Button btnCancelar = new()
+        {
+            Text = "_Cancelar"
+        };
+
+        btnCancelar.Accepting += (_, e) =>
+        {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
         AddButton(btnGuardar);
+        AddButton(btnCancelar);
     }
 
     private void Guardar()
     {
-        string nombre = _nameField.Text?.ToString()?.Trim() ?? "";
+        string nombre =
+            _nameField.Text?.ToString()?.Trim() ?? "";
 
-        if (string.IsNullOrEmpty(nombre))
+        if (string.IsNullOrWhiteSpace(nombre))
         {
             MessageBox.ErrorQuery(
                 App!,
@@ -421,20 +502,44 @@ public sealed class ContactDialog : Dialog {
                 "El nombre no puede estar vacío.",
                 "OK"
             );
+
             return;
         }
+
+        string email =
+            _emailField.Text?.ToString()?.Trim() ?? "";
+
+        if (!string.IsNullOrEmpty(email)
+            && !email.Contains('@'))
+        {
+            MessageBox.ErrorQuery(
+                App!,
+                "Validación",
+                "El email debe contener @.",
+                "OK"
+            );
+
+            return;
+        }
+
+        List<string> telefonos = _phoneFields
+            .Select(f => f.Text?.ToString()?.Trim() ?? "")
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
 
         ContactResult = new Contacto
         {
             Nombre = nombre,
-            Email = _emailField.Text?.ToString() ?? ""
+            Telefonos = string.Join(", ", telefonos),
+            Email = email,
+            Notas = _notesField.Text?.ToString() ?? "",
+            Favorito = _favCheck.Value == CheckState.Checked
         };
 
         Confirmed = true;
 
         App!.RequestStop();
     }
-
 }
 
 
