@@ -510,10 +510,57 @@ public sealed class ContactDialog : Dialog {
             phoneFields[i] = FieldAt(Pos.Right(phoneLabel) + 1, 3 + i, i < phones.Length ? phones[i] : "");
         }
 
-        Add(message);
-        AddButton(closeButton);
+        Label emailLabel = LabelAt("Email:", 1, 9);
+        emailField = FieldAt(Pos.Right(emailLabel) + 1, 9, editing.Email);
+
+        favoriteField = new CheckBox {
+            Text = "Favorito",
+            X = 13,
+            Y = 11,
+            Value = editing.Favorito ? CheckState.Checked : CheckState.UnChecked
+        };
+
+        Label notesLabel = LabelAt("Notas:", 1, 13);
+        notesField = new TextView {
+            X = 13,
+            Y = 13,
+            Width = Dim.Fill(1),
+            Height = 4,
+            Text = editing.Notas
+        };
+
+        Button saveButton = new() {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+
+        saveButton.Accepting += (_, e) => {
+            if (TryBuildContact(editing.Id, out Contacto? result)) {
+                Contact = result;
+                Accepted = true;
+                App!.RequestStop();
+            }
+             e.Handled = true;
+        };
+        Button cancelButton = new() {
+            Text = "_Cancelar"
+        };
+         cancelButton.Accepting += (_, e) => {
+            Accepted = false;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+         Add(nameLabel, nameField, emailLabel, emailField, favoriteField, notesLabel, notesField);
+        for (int i = 0; i < phoneFields.Length; i++) {
+            Add(phoneLabels[i], phoneFields[i]);
+        }
+
+        AddButton(saveButton);
+        AddButton(cancelButton);
     }
-}
+    
+
+    }
 
 
 public class SqliteAgendaStore {}
