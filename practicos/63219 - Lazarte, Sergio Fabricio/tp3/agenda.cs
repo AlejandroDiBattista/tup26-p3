@@ -366,6 +366,132 @@ public sealed class Contacto
     };
 }
 
+public sealed class ContactDialog : Dialog
+{
+    public bool      WasAccepted   { get; private set; }
+    public Contacto? ResultContact { get; private set; }
+
+    private readonly IApplication _app;
+    private readonly Contacto     _orig;
+    private TextField             _nombre = null!;
+    private TextField[]           _tels   = null!;
+    private TextField             _email  = null!;
+    private TextView              _notas  = null!;
+    private bool                  _favorito;
+    private Button                _favBtn = null!;
+
+    public ContactDialog(IApplication app, string title, Contacto contacto)
+    {
+        _app      = app;
+        _orig     = contacto;
+        _favorito = contacto.Favorito;
+        Title     = title;
+        Width     = 62;
+        Height    = 26;
+        BuildLayout();
+        CargarDatos();
+    }
+
+    private void BuildLayout()
+    {
+        int y = 1;
+
+        Add(new Label { Text = "Nombre (*):", X = 1, Y = y });
+        _nombre = new TextField { X = 20, Y = y, Width = Dim.Fill(2) };
+        Add(_nombre);
+        y += 2;
+
+        Add(new Label { Text = "Teléfonos:", X = 1, Y = y });
+        y++;
+        _tels = new TextField[5];
+        for (int i = 0; i < 5; i++)
+        {
+            Add(new Label { Text = $"  Tel {i + 1}:", X = 1, Y = y });
+            _tels[i] = new TextField { X = 12, Y = y, Width = 32 };
+            Add(_tels[i]);
+            y++;
+        }
+        y++;
+
+        Add(new Label { Text = "Email:", X = 1, Y = y });
+        _email = new TextField { X = 20, Y = y, Width = Dim.Fill(2) };
+        Add(_email);
+        y += 2;
+
+        _favBtn = new Button { X = 1, Y = y };
+        ActualizarTextoFav();
+        _favBtn.Accepting += (_, e) =>
+        {
+            _favorito = !_favorito;
+            ActualizarTextoFav();
+            e.Handled = true;
+        };
+        Add(_favBtn);
+        y += 2;
+
+        Add(new Label { Text = "Notas:", X = 1, Y = y });
+        y++;
+        _notas = new TextView { X = 1, Y = y, Width = Dim.Fill(2), Height = 3 };
+        Add(_notas);
+
+        Button guardar  = new() { Text = "_Guardar",  IsDefault = true };
+        Button cancelar = new() { Text = "_Cancelar" };
+        guardar.Accepting  += (_, e) => { Guardar();  e.Handled = true; };
+        cancelar.Accepting += (_, e) => { Cancelar(); e.Handled = true; };
+        AddButton(guardar);
+        AddButton(cancelar);
+    }
+
+    private void ActualizarTextoFav()
+        => _favBtn.Text = _favorito ? "★ Favorito [ON] " : "☆ Favorito [OFF]";
+
+    private void CargarDatos()
+    {
+        _nombre.Text = _orig.Nombre;
+        _email.Text  = _orig.Email;
+        _notas.Text  = _orig.Notas;
+
+        string[] partes = _orig.Telefonos
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        for (int i = 0; i < _tels.Length; i++)
+            _tels[i].Text = i < partes.Length ? partes[i] : "";
+    }
+
+    private void Guardar()
+    {
+        string nombre = _nombre.Text.Trim();
+        string email  = _email.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            MessageBox.ErrorQuery(_app, "Validación", "El nombre no puede estar vacío.", "Aceptar");
+            return;
+        }
+        if (!string.IsNullOrEmpty(email) && !email.Contains('@'))
+        {
+            MessageBox.ErrorQuery(_app, "Validación", "El email debe contener '@'.", "Aceptar");
+            return;
+        }
+
+        string tels = string.Join(", ",
+            _tels.Select(t => t.Text.Trim()).Where(t => !string.IsNullOrEmpty(t)));
+
+        ResultContact = new Contacto
+        {
+            Id        = _orig.Id,
+            Nombre    = nombre,
+            Telefonos = tels,
+            Email     = email,
+            Notas     = _notas.Text,
+            Favorito  = _favorito
+        };
+        WasAccepted = true;
+        App!.RequestStop();
+    }
+
+    private void Cancelar() { WasAccepted = false; App!.RequestStop(); }
+}
+
 public sealed class SqliteAgendaStore
 {
     public string DbPath { get; }
