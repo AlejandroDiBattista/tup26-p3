@@ -7,7 +7,7 @@
 #:package Dapper.Contrib@*
 
 
-using Terminal.Gui.App;
+using Terminal.Gui;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
@@ -16,7 +16,11 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Collections.ObjectModel;
 using System.Linq;
+using Terminal.Gui.App;
+
+
 
 
 string dbPath = args.Length > 0
@@ -24,15 +28,17 @@ string dbPath = args.Length > 0
     : "agenda.db";
 
 SqliteAgendaStore store = new(dbPath);
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow(store));
+Application.Init();
+Application.Run(new AgendaWindow(store));
 
+Application.Shutdown();
 
 // Ventana principal
-public sealed class AgendaWindow : Runnable {
+public sealed class AgendaWindow : Window {
 
 private readonly SqliteAgendaStore store;
 private List<Contacto> contactos = [];
+private List<Contacto> contactosFiltrados= [];
 private ListView listaContactos = null!;
 private TextField buscador = null!;
 private Label detalle = null!;
@@ -71,42 +77,57 @@ private Label detalle = null!;
         };
 
         buscador = new TextField() {
-            X = 10,
-            Y = 1,
-            Width = 40
-        };
+    X = 10,
+    Y = 1,
+    Width = 40
+};
 
-        listaContactos = new ListView(
-            contactos.Select(c => c.Nombre).ToList()
-        ) {
+   buscador.TextChanged += (_, _) => {
+    ActualizarLista();
+};
+        listaContactos = new ListView(){
             X = 1,
             Y = 3,
             Width = 30,
             Height = Dim.Fill() - 1
         };
+        listaContactos.SetSource(
+        new ObservableCollection<string>()
+);
 
-        detalle = new Label("Seleccione un contacto") {
+        detalle = new Label() {
+           Text = "Seleccione un contacto",
             X = 35,
             Y = 3,
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
 
-        listaContactos.SelectedItemChanged += e => {
+      
 
-            if (e.Item >= 0 && e.Item < contactos.Count) {
+listaContactos.Accepting += (_, e) => {
 
-                Contacto c = contactos[e.Item];
+    if (!listaContactos.SelectedItem.HasValue ||
+        listaContactos.SelectedItem.Value < 0 ||
+        listaContactos.SelectedItem.Value >= contactosFiltrados.Count) {
 
-                detalle.Text =
-                    $"Nombre: {c.Nombre}\n" +
-                    $"Telefonos: {c.Telefonos}\n" +
-                    $"Email: {c.Email}\n" +
-                    $"Notas: {c.Notas}\n" +
-                    $"Favorito: {(c.Favorito ? "Sí" : "No")}";
-            }
-        };
+        return;
+    }
 
+    Contacto c =
+        contactosFiltrados[
+            listaContactos.SelectedItem.Value
+        ];
+
+    detalle.Text =
+        $"Nombre: {c.Nombre}\n" +
+        $"Telefonos: {c.Telefonos}\n" +
+        $"Email: {c.Email}\n" +
+        $"Notas: {c.Notas}\n" +
+        $"Favorito: {(c.Favorito ? "Sí" : "No")}";
+
+    e.Handled = true;
+};
         Add(
             menu,
             buscarLabel,
@@ -114,41 +135,63 @@ private Label detalle = null!;
             listaContactos,
             detalle
         );
+        ActualizarLista();
     }
    
    private void EliminarContacto() {
 
-    if (listaContactos.SelectedItem < 0 ||
-        listaContactos.SelectedItem >= contactos.Count) {
+     if (!listaContactos.SelectedItem.HasValue ||
+        listaContactos.SelectedItem.Value < 0 ||
+        listaContactos.SelectedItem.Value >= contactosFiltrados.Count) {
 
         return;
     }
-
     Contacto contacto =
-        contactos[listaContactos.SelectedItem];
+        contactosFiltrados[listaContactos.SelectedItem.Value];
 
-    int respuesta = MessageBox.Query(
-        "Confirmar",
-        $"¿Eliminar a {contacto.Nombre}?",
-        "Si",
-        "No"
-    );
+    int? respuesta = MessageBox.Query(
+    App!,
+    "Confirmar",
+    $"¿Eliminar a {contacto.Nombre}?",
+    "Si",
+    "No"
+);
 
-    if (respuesta == 0) {
+    if (respuesta.HasValue && respuesta .Value== 0) {
 
         store.Delete(contacto);
 
         contactos = store.GetAll();
 
-        listaContactos.SetSource(
-            contactos.Select(c => c.Nombre).ToList()
-        );
-
-        detalle.Text = "Contacto eliminado";
+       ActualizarLista();
+    
+    detalle.Text = "Contacto eliminado";
     }
 }
 
+private void ActualizarLista() 
+{
 
+    string texto =
+        buscador.Text.ToString()?.ToLower() ?? "";
+
+    contactosFiltrados = contactos
+        .Where(c =>
+            c.Nombre.ToLower().Contains(texto) ||
+            c.Telefonos.ToLower().Contains(texto) ||
+            c.Email.ToLower().Contains(texto)
+        )
+        .ToList();
+
+   listaContactos.SetSource(
+    new ObservableCollection<string>
+    (
+        contactosFiltrados
+            .Select(c => c.Nombre)
+            .ToList()
+    )
+);
+}
 
                 
     
@@ -158,23 +201,20 @@ private Label detalle = null!;
 
     ContactDialog dialog = new();
 
-    App!.Run(dialog);
+    Application.Run(dialog);
 
     if (dialog.Guardado) {
 
         store.Insert(dialog.Contacto);
 
         contactos = store.GetAll();
-
-        listaContactos.SetSource(
-            contactos.Select(c => c.Nombre).ToList()
-        );
-    }
-;
+     
+     ActualizarLista();
+     }
     }
 
     private void SolicitarSalir() {
-        App!.RequestStop();
+        Application.RequestStop();
     }
 
     protected override bool OnKeyDown(Key key) {
@@ -303,19 +343,20 @@ public sealed class ContactDialog  : Dialog {
                 Telefonos = telefonoField.Text.ToString() ?? "",
                 Email = email,
                 Notas = notasField.Text.ToString() ?? "",
-                Favorito = favoritoCheck.CheckedState == CheckState.Checked
-            };
+                Favorito = false
+                     
+                };
 
             Guardado = true;
 
-            App!.RequestStop();
+            Application.RequestStop();
 
             e.Handled = true;
         };
 
         cancelarButton.Accepting += (_, e) => {
 
-            App!.RequestStop();
+            Application.RequestStop();
 
             e.Handled = true;
         };
@@ -394,11 +435,18 @@ public class SqliteAgendaStore {
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
-public class Contacto {
+public class Contacto
+{
+
     [Key] public int    Id        { get; set; }
+
           public string Nombre    { get; set; } = "";
+
           public string Telefonos { get; set; } = "";
+
           public string Email     { get; set; } = "";
+
           public string Notas     { get; set; } = "";
+
           public bool   Favorito  { get; set; }
-}
+ }
