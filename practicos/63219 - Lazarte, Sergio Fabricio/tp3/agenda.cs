@@ -78,3 +78,27 @@ public sealed class SqliteAgendaStore
     public void Update(Contacto c)         { using var cn = Open(); cn.Update(c); }
     public void Delete(Contacto c)         { using var cn = Open(); cn.Delete(c); }
 }
+
+public static class JsonAgendaIO
+{
+    private static readonly JsonSerializerOptions Opts = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    public static List<Contacto> Leer(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException($"Archivo no encontrado: '{path}'");
+        string json = File.ReadAllText(path, System.Text.Encoding.UTF8);
+        List<Contacto>? lista;
+        try { lista = JsonSerializer.Deserialize<List<Contacto>>(json, Opts); }
+        catch (JsonException ex) { throw new FormatException($"JSON inválido: {ex.Message}"); }
+        return lista ?? throw new FormatException("El JSON no contiene una lista válida.");
+    }
+
+    public static void Escribir(string path, IEnumerable<Contacto> contactos)
+        => File.WriteAllText(path, JsonSerializer.Serialize(contactos.ToList(), Opts),
+                             System.Text.Encoding.UTF8);
+}
