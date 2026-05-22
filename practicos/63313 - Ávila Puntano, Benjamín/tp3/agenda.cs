@@ -201,8 +201,6 @@ private void LoadContacts()
     _contacts.AddRange(_store.ObtenerTodos());
     AplicarFiltro();
 }
-private void NuevoContacto() => throw new NotImplementedException();
-private void EditarContacto() => throw new NotImplementedException();
 private void EliminarContacto() => throw new NotImplementedException();
 private void ImportarJson() => throw new NotImplementedException();
 private void ExportarJson() => throw new NotImplementedException();
@@ -276,6 +274,25 @@ private Contacto? ContactoSeleccionado()
 private void SetStatus(string message)
     => _statusBar.Text = message;
     
+private void NuevoContacto()
+{
+    ContactDialog dialog = new("Nuevo contacto", new Contacto());
+    App!.Run(dialog);
+    if (!dialog.Aceptado)
+        return;
+
+    Contacto contacto = dialog.Resultado;
+    _store.Insertar(contacto);
+    _contacts.Add(contacto);
+    AplicarFiltro();
+    SetStatus($"Contacto '{contacto.Nombre}' creado.");
 }
-
-
+ private void EditarContacto() {
+        Contacto? original = ContactoSeleccionado();
+        if (original is null)        {
+            SetStatus("No hay contacto seleccionado para editar.");
+            return;
+        }
+        Contactdialog dialog = new("Editar contacto", original.Clone());
+    }
+}
