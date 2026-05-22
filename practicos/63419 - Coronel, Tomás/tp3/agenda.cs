@@ -6,121 +6,147 @@
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Encodings.Web;
+using System.Data.Common;
 
+using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+
 using Microsoft.Data.Sqlite;
 using Dapper;
-using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
 
-// Punto de entrada
+
+string archivoDb = args.Length > 0 ? args[0] : "agenda.db";
+
+var repositorio = new SqliteAgendaStore(archivoDb);
+repositorio.InitDb();
+
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new VentanaPrincipal(repositorio));
+public sealed class VentanaPrincipal : Runnable
+{
+    private readonly SqliteAgendaStore _repositorio;
+    private List<Contacto> _listaCompleta = [];
+    private List<Contacto> _listaFiltrada = [];
 
+    private ListView    _vistaLista    = null!;
+    private TextField   _campoBusqueda = null!;
+    private TextView    _vistaDetalle  = null!;
+    private Label       _etiquetaEstado = null!;
+    private MenuItem    _itemFavoritos  = null!;
 
-// Ventana principal
-public sealed class AgendaWindow : Runnable {
+    private bool _filtrarFavoritos = false;
 
-    public AgendaWindow() {
-        Title  = "Agenda - Terminal.Gui";
+    public VentanaPrincipal(SqliteAgendaStore repositorio)
+    {
+        _repositorio = repositorio;
+        Title  = "AgendaT — TP3";
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
-        BuildLayout();
+        ArmarVentana();
+        CargarContactos();
     }
 
-    private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+    private void ArmarVentana()
+    {
+        _itemFavoritos = new MenuItem("_Solo favoritos", null!, AlternarFavoritos);
+
+        MenuBar barraMenu = new()
+        {
+            Menus =
+            [
+                new MenuBarItem("_Archivo",
+                [
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportarDesdeJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportarAJson),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", PedirSalida)
+                ]),
+                new MenuBarItem("_Contactos",
+                [
+                    new MenuItem("_Nuevo",    "F2",  AgregarContacto),
+                    new MenuItem("_Editar",   "F3",  ModificarContacto),
+                    new MenuItem("_Eliminar", "Del", BorrarContacto)
+                ]),
+                new MenuBarItem("_Ver",
+                [
+                    _itemFavoritos
+                ]),
+                new MenuBarItem("_Ayuda",
+                [
+                    new MenuItem("_Acerca de", null!, VerAcercaDe)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        Label lblBuscar = new() { Text = "Buscar [F4]:", X = 0, Y = 1 };
+        _campoBusqueda = new TextField()
+        {
+            Text = "",
+            X = Pos.Right(lblBuscar) + 1,
+            Y = 1,
+            Width = Dim.Fill()
+        };
+        _campoBusqueda.TextChanged += (_, _) => AplicarFiltro();
+
+        FrameView panelIzquierdo = new()
+        {
+            Title = "Contactos",
+            X = 0, Y = 2,
+            Width = Dim.Percent(50),
+            Height = Dim.Fill(1)
+        };
+        _vistaLista = new ListView()
+        {
+            X = 0, Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        _vistaLista.Accepting += (_, e) => { ModificarContacto(); e.Handled = true; };
+        _vistaLista.KeyDown   += (_, _) => RefrescarDetalle();
+        _vistaLista.KeyUp     += (_, _) => RefrescarDetalle();
+        panelIzquierdo.Add(_vistaLista);
+
+        FrameView panelDerecho = new()
+        {
+            Title = "Detalle",
+            X = Pos.Right(panelIzquierdo), Y = 2,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(1)
+        };
+        _vistaDetalle = new TextView()
+        {
+            X = 0, Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ReadOnly = true,
+            WordWrap = true
+        };
+        panelDerecho.Add(_vistaDetalle);
+
+        _etiquetaEstado = new Label()
+        {
+            Text = "Listo.",
+            X = 0,
+            Y = Pos.Bottom(panelIzquierdo),
+            Width = Dim.Fill()
         };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
-
-        Add(menu, openButton);
+        Add(barraMenu, lblBuscar, _campoBusqueda, panelIzquierdo, panelDerecho, _etiquetaEstado);
     }
 
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
-    }
-
-    private void SolicitarSalir() {
-        App!.RequestStop();
-    }
-
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) {
-            SolicitarSalir();
-            return true;
-        }
-
-        return base.OnKeyDown(key);
-    }
-}
-
-// Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
-
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
-
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
-
-        Add(message);
-        AddButton(closeButton);
-    }
-}
-
-
-public class SqliteAgendaStore {}
-public class JsonAgendaIO {}
-
-[Table("Contactos")]
-public class Contacto {
-    [Key] public int    Id        { get; set; }
-          public string Nombre    { get; set; } = "";
-          public string Telefonos { get; set; } = "";
-          public string Email     { get; set; } = "";
-          public string Notas     { get; set; } = "";
-          public bool   Favorito  { get; set; }
-}
+    
