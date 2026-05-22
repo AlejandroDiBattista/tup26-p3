@@ -201,7 +201,6 @@ private void LoadContacts()
     _contacts.AddRange(_store.ObtenerTodos());
     AplicarFiltro();
 }
-private void EliminarContacto() => throw new NotImplementedException();
 private void ImportarJson() => throw new NotImplementedException();
 private void ExportarJson() => throw new NotImplementedException();
 private string PedirRuta(string titulo, string etiqueta) => throw new NotImplementedException();
@@ -294,5 +293,37 @@ private void NuevoContacto()
             return;
         }
         Contactdialog dialog = new("Editar contacto", original.Clone());
+        App!.Run(dialog);
+        if (!dialog.Aceptado)
+            return;
+
+        Contacto actualizado = dialog.Resultado;
+        actualizado.Id = original.Id;
+        _store.Actualizar(actualizado);
+        int index = _contacts.IndexOf(original);
+        if (index >= 0)
+            _contacts[index] = actualizado;
+
+        AplicarFiltro();
+        SetStatus($"Contacto '{actualizado.Nombre}' actualizado.");
+    }
+
+ private void EliminarContacto() {
+        Contacto? contacto = ContactoSeleccionado();
+        if (contacto is null) {
+            SetStatus("No hay contacto seleccionado para eliminar.");
+            return;
+        }
+         int respuesta = MessageBox.Query( App!, "Confirmar", $"Eliminar a '{contacto.Nombre}'?",  "Si", "No") ?? -1;
+         if (respuesta != 0) {
+            return;
+   
+          _store.Eliminar(contacto.Id);
+         _contacts.Remove(contacto);
+         AplicarFiltro();
+         SetStatus($"Contacto '{contacto.Nombre}' eliminado.");  
+         
+        }
+    
     }
 }
