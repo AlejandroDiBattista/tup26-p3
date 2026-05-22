@@ -351,9 +351,102 @@ public sealed class AgendaWindow : Runnable
         SetStatus($"Contacto '{contacto.Nombre}' eliminado.");
     }
 
-    private void ImportarJson() => throw new NotImplementedException();
-    private void ExportarJson() => throw new NotImplementedException();
-    private string PedirRuta(string titulo, string etiqueta) => throw new NotImplementedException();
+    private void ImportarJson()
+    {
+        string ruta = PedirRuta("Importar JSON", "Ruta del archivo JSON a importar:");
+        if (ruta.Length == 0)
+            return;
+
+        List<Contacto> importados;
+        try
+        {
+            importados = JsonAgendaIO.Leer(ruta);
+        }
+        catch (FileNotFoundException ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", $"Archivo no encontrado:\n{ex.Message}", "OK");
+            return;
+        }
+        catch (JsonException ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", $"JSON con formato invalido:\n{ex.Message}", "OK");
+            return;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo importar:\n{ex.Message}", "OK");
+            return;
+        }
+
+        int respuesta = MessageBox.Query(App!, "Confirmar importacion", $"Se agregaran {importados.Count} contacto(s). Continuar?", "Si", "No") ?? -1;
+        if (respuesta != 0)
+            return;
+
+        foreach (Contacto contacto in importados)
+        {
+            contacto.Id = 0;
+            _store.Insertar(contacto);
+            _contacts.Add(contacto);
+        }
+
+        AplicarFiltro();
+        SetStatus($"{importados.Count} contacto(s) importado(s).");
+    }
+
+    private void ExportarJson()
+    {
+        string ruta = PedirRuta("Exportar JSON", "Ruta de destino del archivo JSON:");
+        if (ruta.Length == 0)
+            return;
+
+        try
+        {
+            JsonAgendaIO.Escribir(ruta, _contacts);
+            SetStatus($"Exportado a '{ruta}'.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo exportar:\n{ex.Message}", "OK");
+        }
+    }
+
+    private string PedirRuta(string titulo, string etiqueta)
+    {
+        string resultado = "";
+
+        Dialog dialog = new()
+        {
+            Title = titulo,
+            Width = 60,
+            Height = 8
+        };
+
+        Label label = new() { Text = etiqueta, X = 1, Y = 1 };
+        TextField pathField = new() { X = 1, Y = 2, Width = Dim.Fill(1), Text = "" };
+
+        Button okButton = new() { Text = "_OK", IsDefault = true };
+        okButton.Accepting += (_, e) =>
+        {
+            resultado = (pathField.Text?.ToString() ?? "").Trim();
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Button cancelButton = new() { Text = "_Cancelar" };
+        cancelButton.Accepting += (_, e) =>
+        {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        dialog.Add(label, pathField);
+        dialog.AddButton(okButton);
+        dialog.AddButton(cancelButton);
+        App!.Run(dialog);
+
+        return resultado;
+    }
+
     private void ToggleFavoritos() => throw new NotImplementedException();
     private void AcercaDe() => throw new NotImplementedException();
     private void SolicitarSalir() => throw new NotImplementedException();
