@@ -1,4 +1,5 @@
 #!/usr/bin/env dotnet
+/* 1 directivas #:package y #:property */
 #:property PublishAot=false
 
 #:package Terminal.Gui@2.0.1
@@ -6,7 +7,7 @@
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
-
+/* 2 Usings */
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -26,7 +27,7 @@ using System.Collections.ObjectModel;
 /// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
 /// ====
 string databasePath = args.Length > 0 ? args[0] : "agenda.db";
-// Punto de entrada
+/* 3.top-level code (procesar args, crear store, arrancar la app) */
 try {
     using SqliteAgendaStore store = new(databasePath);
     using IApplication app = Application.Create().Init();
@@ -65,8 +66,10 @@ public sealed class AgendaWindow : Window {
     }
 
     private void BuildLayout() {
+        
         MenuBar menu = new() {
             Menus = [
+                
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Importar JSON", "Ctrl+I", ImportJson),
                     new MenuItem("_Exportar JSON", "Ctrl+E", ExportJson),
@@ -85,7 +88,9 @@ public sealed class AgendaWindow : Window {
                     new MenuItem("_Acerca de", null!, ShowAbout)
                 ])
             ]
+            
         };
+        
 
         Label searchLabel = new() {
             Text = "Buscar:",
@@ -737,7 +742,7 @@ public class Contacto {
 
             
             public Contacto Clone() {
-                
+
         return new Contacto {
             Id = Id,
             Nombre = Nombre,
