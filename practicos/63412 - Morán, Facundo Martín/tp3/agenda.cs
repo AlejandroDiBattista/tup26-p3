@@ -47,6 +47,10 @@ public sealed class AgendaWindow : Runnable {
     private List<Contacto> _contacts = [];
     private List<Contacto> _filteredContacts = [];
 
+    private bool _onlyFavorites;
+    private TextField _searchField = null!;
+
+
     private ListView _listView = null!;
     private Label _detailName = null!;
     private Label _detailPhone = null!;
@@ -81,11 +85,26 @@ public sealed class AgendaWindow : Runnable {
             ])
         ]
     };
+    Label searchLabel = new()
+{
+    Text = "Buscar:",
+    X = 0,
+    Y = 1
+};
+
+_searchField = new TextField()
+{
+    X = Pos.Right(searchLabel),
+    Y = 1,
+    Width = Dim.Fill()
+};
+
+_searchField.TextChanged += (_, _) => AplicarFiltro();
 
     FrameView listFrame = new() {
         Title = "Contactos",
         X = 0,
-        Y = 1,
+        Y = 2,
         Width = Dim.Percent(40),
         Height = Dim.Fill(1)
     };
@@ -124,22 +143,32 @@ public sealed class AgendaWindow : Runnable {
         Width = Dim.Fill()
     };
 
-    Add(menu, listFrame, detailFrame, _statusBar);
+    Add(menu, searchLabel, _searchField, listFrame, detailFrame, _statusBar);
 
     CargarContactos();
     }
     private void CargarContactos()
 {
     _contacts = _store.GetAll().ToList();
+    AplicarFiltro();
 
-    _filteredContacts = _contacts;
+    
+}
+private void AplicarFiltro()
+{
+    string q = _searchField.Text?.ToString()?.ToLowerInvariant() ?? "";
+
+    _filteredContacts = _contacts
+        .Where(c => !_onlyFavorites || c.Favorito)
+        .Where(c =>
+            c.Nombre.ToLowerInvariant().Contains(q)
+            || c.Email.ToLowerInvariant().Contains(q)
+            || c.Telefonos.ToLowerInvariant().Contains(q))
+        .ToList();
 
     _listView.SetSource<string>(
-        new System.Collections.ObjectModel.ObservableCollection<string>(
-            _filteredContacts.Select(c => c.Nombre)
-        )
+        new(_filteredContacts.Select(c => c.Nombre))
     );
-    
 }
 private Contacto? ContactoSeleccionado()
 {
