@@ -56,3 +56,83 @@ public sealed class AgendaWindow : Window {
         RefreshFilteredContacts();
         SetStatus($"Agenda abierta. {contacts.Count} contacto(s).");
     }
+
+private void BuildLayout() {
+        MenuBar menu = new() {
+            Menus = [
+                new MenuBarItem("_Archivo", [
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportJson),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", RequestExit)
+                ]),
+                new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo", "F2 / Ctrl+N", NewContact),
+                    new MenuItem("_Editar", "F3 / Enter", EditSelectedContact),
+                    new MenuItem("_Eliminar", "Del / Ctrl+D", DeleteSelectedContact)
+                ]),
+                new MenuBarItem("_Ver", [
+                    new MenuItem("_Solo favoritos", null!, ToggleOnlyFavorites)
+                ]),
+                new MenuBarItem("_Ayuda", [
+                    new MenuItem("_Acerca de", null!, ShowAbout)
+                ])
+            ]
+        };
+
+        Label searchLabel = new() {
+            Text = "Buscar:",
+            X = 1,
+            Y = 1,
+            Width = 8
+        };
+
+        searchField = new TextField {
+            X = Pos.Right(searchLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill(1)
+        };
+        searchField.TextChanged += (_, _) => RefreshFilteredContacts();
+
+        FrameView listFrame = new() {
+            Title = "Contactos",
+            X = 1,
+            Y = 3,
+            Width = Dim.Percent(38),
+            Height = Dim.Fill(1)
+        };
+
+        listView = new ListView {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        listFrame.Add(listView);
+
+        FrameView detailFrame = new() {
+            Title = "Detalle",
+            X = Pos.Right(listFrame) + 1,
+            Y = 3,
+            Width = Dim.Fill(1),
+            Height = Dim.Fill(1)
+        };
+
+        detailLabel = new Label {
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(1),
+            Height = Dim.Fill()
+        };
+        detailFrame.Add(detailLabel);
+
+        statusBar = new StatusBar([
+            new Shortcut(Key.F2, "Nuevo", NewContact),
+            new Shortcut(Key.F3, "Editar", EditSelectedContact),
+            new Shortcut(Key.Delete, "Eliminar", DeleteSelectedContact),
+            new Shortcut(Key.F4, "Buscar", FocusSearch),
+            new Shortcut(Key.Q.WithCtrl, "Salir", RequestExit)
+        ]);
+
+        Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
+    }
