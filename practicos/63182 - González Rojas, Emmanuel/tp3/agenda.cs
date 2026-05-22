@@ -13,19 +13,22 @@
 #:package Dapper@2.1.35
 #:package Dapper.Contrib@2.0.78
 
+// ==========================================================
+// USING
+// ==========================================================
 
 using System;
-using Terminal.Gui;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+
 using System.Text.Json;
 using Dapper;
 using Dapper.Contrib.Extensions;
 using Microsoft.Data.Sqlite;
-
+using Terminal.Gui;
 
 // ==========================================================
 // PUNTO DE ENTRADA
@@ -71,7 +74,7 @@ public sealed class AgendaWindow : Window
     public AgendaWindow(SqliteAgendaStore store)
     {
         this.store = store;
-        Title = "Agenda TUI";
+        Title = "Agenda TUI (v2)";
         X = 0;
         Y = 0;
         Width = Dim.Fill();
@@ -386,10 +389,10 @@ public sealed class AgendaWindow : Window
     }
 }
 
+// ==========================================================
+// DIALOG CONTACTO
+// ==========================================================
 
-// ==========================================================
-// DIALOGO DE CONTACTO
-// ==========================================================
 public sealed class ContactDialog : Dialog
 {
     public Contacto Contacto { get; private set; }
@@ -550,7 +553,7 @@ public sealed class ContactDialog : Dialog
 }
 
 // ==========================================================
-// SQLITE STORE
+// SQLITE AGENDA STORE
 // ==========================================================
 
 public sealed class SqliteAgendaStore
@@ -617,6 +620,7 @@ public sealed class SqliteAgendaStore
 // ==========================================================
 // SOPORTE JSON
 // ==========================================================
+
 public static class JsonAgendaIO
 {
     public static void Exportar(string ruta, List<Contacto> contactos)
@@ -633,7 +637,6 @@ public static class JsonAgendaIO
         return JsonSerializer.Deserialize<List<Contacto>>(json) ?? new List<Contacto>();
     }
 }
-
 
 // ==========================================================
 // MODELO
