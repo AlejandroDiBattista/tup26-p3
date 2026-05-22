@@ -99,3 +99,18 @@ public sealed class AgendaWindow : Runnable {
         if (MessageBox.Query(App!, "Baja", $"¿Borrar \"{actual.Nombre}\"?", "Borrar", "Cancelar") != 0) return;
         Seguro("borrar", () => { datos.Borrar(actual); baseCompleta.RemoveAll(x => x.Id == actual.Id); Redibujar(); Mensaje("Registro eliminado."); });
     }
+
+void CargarJson() {
+        string? archivo = DialogoRuta("Importar JSON", "Ruta:", "Importar"); if (archivo is null) return;
+        Seguro("importar", () => {
+            var lista = JsonAgendaIO.Importar(archivo).ToList();
+            if (MessageBox.Query(App!, "Confirmar importación", $"Contactos a agregar: {lista.Count}", "Continuar", "Cancelar") != 0) return;
+            foreach (Contacto c in lista) baseCompleta.Add(datos.Insertar(c));
+            Redibujar(); Mensaje("JSON importado.");
+        });
+    }
+
+    void GuardarJson() {
+        string? archivo = DialogoRuta("Exportar JSON", "Guardar en:", "Exportar"); if (archivo is null) return;
+        Seguro("exportar", () => { JsonAgendaIO.Exportar(archivo, baseCompleta); Mensaje("JSON exportado."); });
+    }
