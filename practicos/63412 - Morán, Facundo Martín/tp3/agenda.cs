@@ -19,8 +19,8 @@ using Dapper.Contrib.Extensions;
 using System.Text.Json;
 
 /// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
+/// Este es un archivo de referencia con el esqueleto del proyecto.
+/// No es un codigo de ejemplo, sino el punto de partida para el desarrollo del trabajo practico. 
 /// ====
 
 // Punto de entrada
@@ -187,7 +187,7 @@ private void AplicarFiltro()
         _listView.SetSource<string>(new(
     _filteredContacts
         .Select(c =>
-            $"{(c.Favorito ? "★ " : "")}{c.Nombre}")
+            $"{(c.Favorito ? "* " : "")}{c.Nombre}")
         .ToList()
     ));
 
@@ -206,6 +206,7 @@ private void MostrarDetalle(Contacto? c)
     if (c is null)
     {
         _detailName.Text = "";
+        _detailFav.Text = "";
         _detailPhone.Text = "";
         _detailEmail.Text = "";
         _detailNotes.Text = "";
@@ -213,7 +214,7 @@ private void MostrarDetalle(Contacto? c)
     }
 
     _detailName.Text = $"Nombre: {c.Nombre}";
-    _detailFav.Text = $"Favorito: {(c.Favorito ? "Sí" : "No")}";
+    _detailFav.Text = $"Favorito: {(c.Favorito ? "Si" : "No")}";
     _detailPhone.Text = $"Tel: {c.Telefonos}";
     _detailEmail.Text = $"Email: {c.Email}";
     _detailNotes.Text = $"Notas: {c.Notas}";
@@ -243,7 +244,10 @@ private void MostrarDetalle(Contacto? c)
             return;
 
         seleccionado.Nombre = dialog.ContactResult.Nombre;
+        seleccionado.Telefonos = dialog.ContactResult.Telefonos;
         seleccionado.Email = dialog.ContactResult.Email;
+        seleccionado.Notas = dialog.ContactResult.Notas;
+        seleccionado.Favorito = dialog.ContactResult.Favorito;
         _store.Update(seleccionado);
         CargarContactos();
         MostrarDetalle(seleccionado);
@@ -349,6 +353,14 @@ private void ExportarJson()
             EliminarContacto();
             return true;
         }
+        if (key == Key.F4) {
+            ToggleFavoritos();
+            return true;
+        }
+        if (key == Key.F1) {
+            MostrarAcercaDe();
+            return true;
+        }
         if (key == Key.I.WithCtrl) {
             ImportarJson();
             return true;
@@ -395,7 +407,7 @@ public sealed class ContactDialog : Dialog
 
         string[] phones = initial.Telefonos.Split(',');
 
-        Add(new Label { Text = "Teléfonos:", X = 1, Y = 3 });
+        Add(new Label { Text = "Telefonos:", X = 1, Y = 3 });
 
         for (int i = 0; i < 5; i++)
         {
@@ -431,14 +443,24 @@ public sealed class ContactDialog : Dialog
 
         Add(_emailField);
 
-        Add(new Label { Text = "Notas:", X = 1, Y = 12 });
+        _favCheck = new CheckBox
+        {
+            Text = "Favorito",
+            Value = initial.Favorito ? CheckState.Checked : CheckState.UnChecked,
+            X = 1,
+            Y = 12
+        };
+
+        Add(_favCheck);
+
+        Add(new Label { Text = "Notas:", X = 1, Y = 14 });
 
         FrameView notesFrame = new()
         {
             X = 1,
-            Y = 13,
+            Y = 15,
             Width = Dim.Fill(2),
-            Height = 5
+            Height = 4
         };
 
         _notesField = new TextView
@@ -451,16 +473,6 @@ public sealed class ContactDialog : Dialog
         notesFrame.Add(_notesField);
 
         Add(notesFrame);
-
-        _favCheck = new CheckBox
-        {
-            Text = "Favorito",
-            Value = initial.Favorito ? CheckState.Checked : CheckState.UnChecked,
-            X = 1,
-            Y = 19
-        };
-
-        Add(_favCheck);
 
         Button btnGuardar = new()
         {
@@ -498,8 +510,8 @@ public sealed class ContactDialog : Dialog
         {
             MessageBox.ErrorQuery(
                 App!,
-                "Validación",
-                "El nombre no puede estar vacío.",
+                "Validacion",
+                "El nombre no puede estar vacio.",
                 "OK"
             );
 
@@ -514,7 +526,7 @@ public sealed class ContactDialog : Dialog
         {
             MessageBox.ErrorQuery(
                 App!,
-                "Validación",
+                "Validacion",
                 "El email debe contener @.",
                 "OK"
             );
