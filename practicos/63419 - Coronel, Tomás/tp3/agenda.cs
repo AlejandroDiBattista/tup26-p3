@@ -149,4 +149,34 @@ public sealed class VentanaPrincipal : Runnable
         Add(barraMenu, lblBuscar, _campoBusqueda, panelIzquierdo, panelDerecho, _etiquetaEstado);
     }
 
-    
+        private void ActualizarEstado(string msg) => _etiquetaEstado.Text = msg;
+
+    private void CargarContactos()
+    {
+        try
+        {
+            _listaCompleta = _repositorio.GetAll().ToList();
+            AplicarFiltro();
+            ActualizarEstado($"{_listaCompleta.Count} contacto(s) cargado(s).");
+        }
+        catch (Exception ex)
+        {
+            DialogoError("Error al cargar", ex.Message);
+        }
+    }
+
+    private void AplicarFiltro()
+    {
+        string termino = _campoBusqueda.Text?.ToLower() ?? "";
+        _listaFiltrada = _listaCompleta.Where(c =>
+        {
+            if (_filtrarFavoritos && !c.Favorito) return false;
+            if (string.IsNullOrWhiteSpace(termino)) return true;
+            return (c.Nombre?.ToLower().Contains(termino) == true)    ||
+                   (c.Telefonos?.ToLower().Contains(termino) == true) ||
+                   (c.Email?.ToLower().Contains(termino) == true);
+        }).ToList();
+
+        _vistaLista.SetSource(new ObservableCollection<Contacto>(_listaFiltrada));
+        RefrescarDetalle();
+    }
