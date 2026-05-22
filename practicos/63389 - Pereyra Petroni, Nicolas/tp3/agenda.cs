@@ -56,10 +56,11 @@ private Label detalle = null!;
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!,
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
+    new MenuItem("_Nuevo contacto", "", AbrirDialogo),
+    new MenuItem("_Eliminar contacto", "", EliminarContacto),
+    null!,
+    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+])
             ]
         };
 
@@ -69,7 +70,7 @@ private Label detalle = null!;
             Y = 1
         };
 
-        buscador = new TextField("") {
+        buscador = new TextField() {
             X = 10,
             Y = 1,
             Width = 40
@@ -115,7 +116,37 @@ private Label detalle = null!;
         );
     }
    
+   private void EliminarContacto() {
 
+    if (listaContactos.SelectedItem < 0 ||
+        listaContactos.SelectedItem >= contactos.Count) {
+
+        return;
+    }
+
+    Contacto contacto =
+        contactos[listaContactos.SelectedItem];
+
+    int respuesta = MessageBox.Query(
+        "Confirmar",
+        $"¿Eliminar a {contacto.Nombre}?",
+        "Si",
+        "No"
+    );
+
+    if (respuesta == 0) {
+
+        store.Delete(contacto);
+
+        contactos = store.GetAll();
+
+        listaContactos.SetSource(
+            contactos.Select(c => c.Nombre).ToList()
+        );
+
+        detalle.Text = "Contacto eliminado";
+    }
+}
 
 
 
@@ -123,7 +154,7 @@ private Label detalle = null!;
     
 
     private void AbrirDialogo() {
-        {
+        
 
     ContactDialog dialog = new();
 
@@ -139,7 +170,7 @@ private Label detalle = null!;
             contactos.Select(c => c.Nombre).ToList()
         );
     }
-};
+;
     }
 
     private void SolicitarSalir() {
@@ -157,7 +188,7 @@ private Label detalle = null!;
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
+public sealed class ContactDialog  : Dialog {
     public Contacto Contacto { get; private set; } = new();
 
     public bool Guardado { get; private set; }
@@ -175,7 +206,7 @@ public sealed class EjemploDialog : Dialog {
             Y = 1
         };
 
-        TextField nombreField = new("") {
+        TextField nombreField = new() {
             X = 15,
             Y = 1,
             Width = 40
@@ -187,7 +218,7 @@ public sealed class EjemploDialog : Dialog {
             Y = 3
         };
 
-        TextField telefonoField = new("") {
+        TextField telefonoField = new() {
             X = 15,
             Y = 3,
             Width = 40
@@ -199,7 +230,7 @@ public sealed class EjemploDialog : Dialog {
             Y = 5
         };
 
-        TextField emailField = new("") {
+        TextField emailField = new() {
             X = 15,
             Y = 5,
             Width = 40
@@ -244,7 +275,8 @@ public sealed class EjemploDialog : Dialog {
 
             if (string.IsNullOrWhiteSpace(nombre)) {
 
-                MessageBox.ErrorQuery(
+                MessageBox.Query(
+                     App!,
                     "Error",
                     "El nombre es obligatorio",
                     "OK"
@@ -255,7 +287,8 @@ public sealed class EjemploDialog : Dialog {
 
             if (email.Length > 0 && !email.Contains("@")) {
 
-                MessageBox.ErrorQuery(
+                MessageBox.Query(
+                     App!,
                     "Error",
                     "El email debe contener @",
                     "OK"
@@ -270,7 +303,7 @@ public sealed class EjemploDialog : Dialog {
                 Telefonos = telefonoField.Text.ToString() ?? "",
                 Email = email,
                 Notas = notasField.Text.ToString() ?? "",
-                Favorito = favoritoCheck.Checked
+                Favorito = favoritoCheck.CheckedState == CheckState.Checked
             };
 
             Guardado = true;
