@@ -21,27 +21,23 @@ using Dapper.Contrib.Extensions;
 string dbPath = args.Length > 0 ? args[0] : "agenda.db";
 
 SqliteAgendaStore store;
-try
-{
+try {
     store = new SqliteAgendaStore(dbPath);
 }
-catch (Exception ex)
-{
+catch (Exception ex) {
     Console.Error.WriteLine($"Error al abrir la base de datos '{dbPath}': {ex.Message}");
     return 1;
 }
 
-using (store)
-{
+using (store) {
     using IApplication app = Application.Create().Init();
-    app.Run(new AgendaWindow(store)); 
+    app.Run(new AgendaWindow(store));
 }
 return 0;
 
 
 
-public sealed class AgendaWindow : Runnable 
-{
+public sealed class AgendaWindow : Runnable {
     private readonly SqliteAgendaStore _store;
     private List<Contacto> _contacts = new();
     private List<Contacto> _filteredContacts = new();
@@ -53,8 +49,7 @@ public sealed class AgendaWindow : Runnable
     private Label _statusLabel = null!;
     private MenuItem _soloFavoritosMenuItem = null!;
 
-    public AgendaWindow(SqliteAgendaStore store)
-    {
+    public AgendaWindow(SqliteAgendaStore store) {
         _store = store;
         Title = "AgendaT";
         Width = Dim.Fill();
@@ -62,14 +57,13 @@ public sealed class AgendaWindow : Runnable
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        LoadContacts();
     }
 
-    private void BuildLayout()
-    {
+    private void BuildLayout() {
         _soloFavoritosMenuItem = new MenuItem("_Solo favoritos", "", MenuToggleFavoritos);
 
-        MenuBar menu = new()
-        {
+        MenuBar menu = new() {
             Menus =
             [
                 new MenuBarItem("_Archivo",
@@ -96,22 +90,19 @@ public sealed class AgendaWindow : Runnable
             ]
         };
 
-        Label searchLabel = new()
-        {
+        Label searchLabel = new() {
             Text = "Buscar: ",
             X = 0,
             Y = 1,
         };
 
-        _searchField = new TextField()
-        {
+        _searchField = new TextField() {
             X = Pos.Right(searchLabel),
             Y = 1,
             Width = Dim.Fill(),
         };
 
-        FrameView listFrame = new()
-        {
+        FrameView listFrame = new() {
             Title = "Contactos",
             X = 0,
             Y = 2,
@@ -119,17 +110,20 @@ public sealed class AgendaWindow : Runnable
             Height = Dim.Fill(2),
         };
 
-        _listView = new ListView()
-        {
+        _listView = new ListView() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
         };
+        _listView.ValueChanged += OnSelectedItemChanged;
+        _listView.Accepting += (_, e) => {
+            MenuEditar();
+            e.Handled = true;
+        };
         listFrame.Add(_listView);
 
-        FrameView detailFrame = new()
-        {
+        FrameView detailFrame = new() {
             Title = "Detalle",
             X = Pos.Right(listFrame),
             Y = 2,
@@ -137,8 +131,7 @@ public sealed class AgendaWindow : Runnable
             Height = Dim.Fill(2),
         };
 
-        _detailView = new TextView()
-        {
+        _detailView = new TextView() {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -148,8 +141,7 @@ public sealed class AgendaWindow : Runnable
         };
         detailFrame.Add(_detailView);
 
-        _statusLabel = new Label()
-        {
+        _statusLabel = new Label() {
             Text = "F2/Ctrl+N:Nuevo  F3/Enter:Editar  Del/Ctrl+D:Eliminar  Ctrl+I/E:JSON  F4:Buscar  Ctrl+Q:Salir",
             X = 0,
             Y = Pos.AnchorEnd(1),
@@ -158,20 +150,77 @@ public sealed class AgendaWindow : Runnable
 
         Add(menu, searchLabel, _searchField, listFrame, detailFrame, _statusLabel);
     }
-    
-    private void MenuToggleFavoritos() {}
-    private void MenuImportar() {}
-    private void MenuExportar() {}
-    private void MenuSalir() {}
-    private void MenuNuevo() {}
-    private void MenuEditar() {}
-    private void MenuEliminar() {}
-    private void MenuAcercaDe() {}
+
+
+    private void LoadContacts() {
+        try {
+            _contacts = _store.GetAll();
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudieron cargar los contactos:\n{ex.Message}", "Aceptar");
+            _contacts = new List<Contacto>();
+        }
+        ApplyFilter();
+    }
+
+    private void MenuNuevo() {
+        var dlg = new ContactDialog("Nuevo contacto", new Contacto());
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+
+        var nuevo = dlg.ContactResult!;
+        try {
+            _store.Insert(nuevo);
+            _contacts.Add(nuevo);
+            ApplyFilter();
+            int idx = _filteredContacts.FindIndex(c => c.Id == nuevo.Id);
+            if (idx >= 0) _listView.SelectedItem = idx;
+            SetStatus($"Contacto '{nuevo.Nombre}' creado.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo guardar el contacto:\n{ex.Message}", "Aceptar");
+        }
+    }
+
+    private void OnSelectedItemChanged(object? sender, ValueChangedEventArgs<int?> e)
+        => UpdateDetail();
+
+    private void UpdateDetail() {
+        int? selNullable = _listView.SelectedItem;
+        if (selNullable == null) {
+            _detailView.Text = "";
+            return;
+        }
+
+        int idx = selNullable.Value;
+        if (idx < 0 || idx >= _filteredContacts.Count) {
+            _detailView.Text = "";
+            return;
+        }
+
+        var c = _filteredContacts[idx];
+        _detailView.Text =
+            $"Nombre:    {c.Nombre}\n" +
+            $"Teléfonos: {c.Telefonos}\n" +
+            $"Email:     {c.Email}\n" +
+            $"Favorito:  {(c.Favorito ? "Sí" : "No")}\n\n" +
+            $"Notas:\n{c.Notas}";
+    }
+
+    private void SetStatus(string msg) => _statusLabel.Text = msg;
+
+    private void MenuToggleFavoritos() { }
+    private void MenuImportar() { }
+    private void MenuExportar() { }
+    private void MenuSalir() { }
+    private void MenuNuevo() { }
+    private void MenuEditar() { }
+    private void MenuEliminar() { }
+    private void MenuAcercaDe() { }
 }
 
 
-public sealed class ContactDialog : Dialog
-{
+public sealed class ContactDialog : Dialog {
     public bool WasAccepted { get; private set; } = false;
     public Contacto? ContactResult { get; private set; }
 
@@ -181,8 +230,7 @@ public sealed class ContactDialog : Dialog
     private readonly TextView _notasField;
     private readonly CheckBox _favoritoCheck;
 
-    public ContactDialog(string title, Contacto contacto)
-    {
+    public ContactDialog(string title, Contacto contacto) {
         Title = title;
         Width = 62;
         Height = 27;
@@ -191,8 +239,7 @@ public sealed class ContactDialog : Dialog
 
         Add(new Label() { Text = "Nombre (*):", X = 1, Y = row });
         row++;
-        _nombreField = new TextField()
-        {
+        _nombreField = new TextField() {
             Text = contacto.Nombre,
             X = 1,
             Y = row,
@@ -205,12 +252,10 @@ public sealed class ContactDialog : Dialog
         row++;
         string[] teleparts = contacto.Telefonos.Split(',',
             StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        for (int i = 0; i < 5; i++)
-        {
+        for (int i = 0; i < 5; i++) {
             Add(new Label() { Text = $"  Tel {i + 1}:", X = 1, Y = row });
             string val = i < teleparts.Length ? teleparts[i] : "";
-            _telefonoFields[i] = new TextField()
-            {
+            _telefonoFields[i] = new TextField() {
                 Text = val,
                 X = 10,
                 Y = row,
@@ -222,8 +267,7 @@ public sealed class ContactDialog : Dialog
 
         Add(new Label() { Text = "Email:", X = 1, Y = row });
         row++;
-        _emailField = new TextField()
-        {
+        _emailField = new TextField() {
             Text = contacto.Email,
             X = 1,
             Y = row,
@@ -232,8 +276,7 @@ public sealed class ContactDialog : Dialog
         Add(_emailField);
         row++;
 
-        _favoritoCheck = new CheckBox()
-        {
+        _favoritoCheck = new CheckBox() {
             Text = "Favorito",
             X = 1,
             Y = row,
@@ -246,8 +289,7 @@ public sealed class ContactDialog : Dialog
 
         Add(new Label() { Text = "Notas:", X = 1, Y = row });
         row++;
-        _notasField = new TextView()
-        {
+        _notasField = new TextView() {
             Text = contacto.Notas,
             X = 1,
             Y = row,
@@ -266,18 +308,15 @@ public sealed class ContactDialog : Dialog
         AddButton(btnCancelar);
     }
 
-    private void OnGuardar()
-    {
+    private void OnGuardar() {
         string nombre = _nombreField.Text?.Trim() ?? "";
-        if (string.IsNullOrEmpty(nombre))
-        {
+        if (string.IsNullOrEmpty(nombre)) {
             MessageBox.ErrorQuery(App!, "Validación", "El nombre no puede estar vacío.", "Aceptar");
             return;
         }
 
         string email = _emailField.Text?.Trim() ?? "";
-        if (!string.IsNullOrEmpty(email) && !email.Contains('@'))
-        {
+        if (!string.IsNullOrEmpty(email) && !email.Contains('@')) {
             MessageBox.ErrorQuery(App!, "Validación", "El email debe contener '@'.", "Aceptar");
             return;
         }
@@ -287,8 +326,7 @@ public sealed class ContactDialog : Dialog
             .Where(t => !string.IsNullOrEmpty(t))
             .ToList();
 
-        ContactResult = new Contacto
-        {
+        ContactResult = new Contacto {
             Nombre = nombre,
             Telefonos = string.Join(", ", telefonos),
             Email = email,
@@ -302,19 +340,16 @@ public sealed class ContactDialog : Dialog
 }
 
 
-public sealed class SqliteAgendaStore : IDisposable
-{
+public sealed class SqliteAgendaStore : IDisposable {
     private readonly SqliteConnection _conn;
 
-    public SqliteAgendaStore(string dbPath)
-    {
+    public SqliteAgendaStore(string dbPath) {
         _conn = new SqliteConnection($"Data Source={dbPath}");
         _conn.Open();
         EnsureSchema();
     }
 
-    private void EnsureSchema()
-    {
+    private void EnsureSchema() {
         _conn.Execute(@"
             CREATE TABLE IF NOT EXISTS Contactos (
                 Id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -329,8 +364,7 @@ public sealed class SqliteAgendaStore : IDisposable
     public List<Contacto> GetAll()
         => _conn.GetAll<Contacto>().ToList();
 
-    public void Insert(Contacto c)
-    {
+    public void Insert(Contacto c) {
         long id = _conn.Insert(c);
         c.Id = (int)id;
     }
