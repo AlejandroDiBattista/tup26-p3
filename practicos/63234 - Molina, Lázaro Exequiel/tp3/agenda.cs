@@ -114,3 +114,48 @@ void CargarJson() {
         string? archivo = DialogoRuta("Exportar JSON", "Guardar en:", "Exportar"); if (archivo is null) return;
         Seguro("exportar", () => { JsonAgendaIO.Exportar(archivo, baseCompleta); Mensaje("JSON exportado."); });
     }
+
+    void AlternarFavoritos() {
+        favoritosActivos = !favoritosActivos;
+        Redibujar();
+        Mensaje(favoritosActivos ? "Mostrando favoritos." : "Mostrando todos.");
+    }
+
+    string? DialogoRuta(string titulo, string texto, string ok) {
+        PathDialog d = new(titulo, texto, ok);
+        App!.Run(d);
+        return string.IsNullOrWhiteSpace(d.Texto) ? null : d.Texto;
+    }
+
+    void Redibujar(int? id = null) {
+        string f = txtFiltro.Text?.ToString() ?? "";
+        baseFiltrada.Clear();
+        baseFiltrada.AddRange(baseCompleta.Where(c => Acepta(c, f) && (!favoritosActivos || c.Favorito)).OrderBy(c => c.Nombre));
+        lineas.Clear();
+        foreach (Contacto c in baseFiltrada) lineas.Add($"{(c.Favorito ? "[*]" : "[ ]")} {c.Nombre} <{c.Email}>");
+        listado.SetSource(lineas);
+        int p = id.HasValue ? baseFiltrada.FindIndex(c => c.Id == id) : 0;
+        listado.SelectedItem = baseFiltrada.Count == 0 ? null : Math.Max(0, p);
+        PintarFicha();
+    }
+    static bool Acepta(Contacto c, string f) => string.IsNullOrWhiteSpace(f)
+        || c.Nombre.Contains(f, StringComparison.CurrentCultureIgnoreCase)
+        || c.Telefonos.Contains(f, StringComparison.CurrentCultureIgnoreCase)
+        || c.Email.Contains(f, StringComparison.CurrentCultureIgnoreCase);
+
+    Contacto? ContactoActual() {
+        int? pos = listado.SelectedItem;
+        return pos is null || pos < 0 || pos >= baseFiltrada.Count ? null : baseFiltrada[pos.Value];
+    }
+
+    void PintarFicha() {
+        Contacto? c = ContactoActual();
+        panel.Text = c is null ? "La agenda está vacía." :
+            $"Nombre: {c.Nombre}\nTeléfonos: {c.Telefonos}\nEmail: {c.Email}\nFavorito: {(c.Favorito ? "Sí" : "No")}\n\nNotas:\n{c.Notas}";
+    }
+
+    void Seguro(string accion, Action tarea) {
+        try { tarea(); } catch (Exception e) { MessageBox.ErrorQuery(App!, $"No se pudo {accion}", e.Message, "Aceptar"); Mensaje(e.Message); }
+    }
+    void Mensaje(string texto) { barra.Text = texto; barra.SetNeedsDraw(); }
+}
