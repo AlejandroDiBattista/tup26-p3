@@ -74,3 +74,11 @@ public sealed class AgendaWindow : Runnable {
         if (key == Key.Q.WithCtrl) { App!.RequestStop(); return true; }
         return base.OnKeyDown(key);
     }
+     void Alta() {
+        ContactDialog d = new("Alta de contacto", new Contacto());
+        App!.Run(d); if (d.Valor is null) return;
+        Seguro("agregar", () => {
+            Contacto creado = datos.Insertar(d.Valor);
+            baseCompleta.Add(creado); Redibujar(creado.Id); Mensaje("Alta realizada.");
+        });
+    }
