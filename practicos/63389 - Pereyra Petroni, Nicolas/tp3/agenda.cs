@@ -62,12 +62,20 @@ private Label detalle = null!;
 
         MenuBar menu = new() {
             Menus = [
-                new MenuBarItem("_Archivo", [
+               new MenuBarItem("_Archivo", [
+
     new MenuItem("_Nuevo contacto", "", AbrirDialogo),
+
+    new MenuItem("_Editar contacto", "", EditarContacto),
+
     new MenuItem("_Eliminar contacto", "", EliminarContacto),
+
     new MenuItem("_Importar JSON", "", ImportarJson),
+
+    new MenuItem("_Exportar JSON", "", ExportarJson),
+
     null!,
-      new MenuItem("_Exportar JSON", "", ExportarJson),
+
     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
 ])
             ]
@@ -152,13 +160,14 @@ listaContactos.Accepting += (_, e) => {
     Contacto contacto =
         contactosFiltrados[listaContactos.SelectedItem.Value];
 
-    int? respuesta = MessageBox.Query(
+    int? respuesta = MessageBox.Query
+    (
     App!,
     "Confirmar",
     $"¿Eliminar a {contacto.Nombre}?",
     "Si",
     "No"
-);
+    );
 
     if (respuesta.HasValue && respuesta .Value== 0) {
 
@@ -169,6 +178,37 @@ listaContactos.Accepting += (_, e) => {
        ActualizarLista();
     
     detalle.Text = "Contacto eliminado";
+    }
+}
+private void EditarContacto() {
+
+    if (!listaContactos.SelectedItem.HasValue ||
+        listaContactos.SelectedItem.Value < 0 ||
+        listaContactos.SelectedItem.Value >= contactosFiltrados.Count) {
+
+        return;
+    }
+
+    Contacto seleccionado =
+        contactosFiltrados[
+            listaContactos.SelectedItem.Value
+        ];
+
+    ContactDialog dialog =
+        new(seleccionado);
+
+    Application.Run(dialog);
+
+    if (dialog.Guardado) {
+
+        store.Update(dialog.Contacto);
+
+        contactos = store.GetAll();
+
+        ActualizarLista();
+
+        detalle.Text =
+            "Contacto actualizado";
     }
 }
 
@@ -283,7 +323,8 @@ public sealed class ContactDialog  : Dialog {
 
     public bool Guardado { get; private set; }
 
-    public ContactDialog() {
+   public ContactDialog(Contacto? contacto = null)
+   {
 
         Title = "Nuevo contacto";
 
@@ -357,6 +398,18 @@ public sealed class ContactDialog  : Dialog {
             X = 30,
             Y = 15
         };
+       
+     if (contacto != null) 
+     {
+
+    nombreField.Text = contacto.Nombre;
+
+    telefonoField.Text = contacto.Telefonos;
+
+    emailField.Text = contacto.Email;
+
+    notasField.Text = contacto.Notas;
+     }
 
         guardarButton.Accepting += (_, e) => {
 
@@ -387,15 +440,16 @@ public sealed class ContactDialog  : Dialog {
                 return;
             }
 
-            Contacto = new Contacto {
-
+            Contacto = new Contacto
+             {
+                Id = contacto?.Id ?? 0,
                 Nombre = nombre,
                 Telefonos = telefonoField.Text.ToString() ?? "",
                 Email = email,
                 Notas = notasField.Text.ToString() ?? "",
                 Favorito = false
                      
-                };
+            };
 
             Guardado = true;
 
