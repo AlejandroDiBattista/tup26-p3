@@ -213,6 +213,102 @@ void Refrescar() {
         estado.Text = "Contacto eliminado.";
         Refrescar();
     }
+public sealed class ContactDialog : Dialog {
+    readonly TextField nombre;
+    readonly TextField[] telefonos = new TextField[5];
+    readonly TextField email;
+    readonly TextView notas;
+    readonly Button favorito;
+    bool esFavorito;
+    readonly Contacto original;
+
+    public bool Aceptado { get; private set; }
+    public Contacto Contacto { get; private set; }
+
+    public ContactDialog(string titulo, Contacto contacto) {
+        original = contacto;
+        Contacto = contacto;
+
+        Title  = titulo;
+        Width  = 64;
+        Height = 20;
+
+        nombre = new TextField { Text = contacto.Nombre, X = 12, Y = 1, Width = Dim.Fill(2) };
+        Add(new Label { Text = "Nombre:", X = 1, Y = 1 }, nombre);
+
+        string[] partes = contacto.Telefonos.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < 5; i++) {
+            telefonos[i] = new TextField {
+                Text = i < partes.Length ? partes[i] : "",
+                X = 12, Y = 3 + i, Width = Dim.Fill(2)
+            };
+            Add(new Label { Text = $"Telefono {i + 1}:", X = 1, Y = 3 + i }, telefonos[i]);
+        }
+
+        email = new TextField { Text = contacto.Email, X = 12, Y = 9, Width = Dim.Fill(2) };
+        Add(new Label { Text = "Email:", X = 1, Y = 9 }, email);
+
+        esFavorito = contacto.Favorito;
+        favorito = new Button { Text = EtiquetaFavorito(), X = 1, Y = 11 };
+        favorito.Accepting += (_, e) => {
+            e.Handled = true;
+            esFavorito = !esFavorito;
+            favorito.Text = EtiquetaFavorito();
+        };
+        Add(favorito);
+
+        Add(new Label { Text = "Notas:", X = 1, Y = 12 });
+        notas = new TextView { X = 1, Y = 13, Width = Dim.Fill(2), Height = 3, Text = contacto.Notas };
+        Add(notas);
+
+        Button aceptar = new() { Text = "_Aceptar" };
+        aceptar.Accepting += (_, e) => {
+            e.Handled = true;
+            Guardar();
+        };
+
+        Button cancelar = new() { Text = "_Cancelar" };
+        cancelar.Accepting += (_, e) => {
+            e.Handled = true;
+            App!.RequestStop();
+        };
+
+        AddButton(aceptar);
+        AddButton(cancelar);
+        nombre.SetFocus();
+    }
+
+    void Guardar() {
+        string nom = (nombre.Text?.ToString() ?? "").Trim();
+        if (nom == "") {
+            MessageBox.Query(App!, "Validacion", "El nombre no puede estar vacio.", "OK");
+            return;
+        }
+
+        string mail = (email.Text?.ToString() ?? "").Trim();
+        if (mail != "" && !mail.Contains('@')) {
+            MessageBox.Query(App!, "Validacion", "El email debe contener @.", "OK");
+            return;
+        }
+
+        string tel = string.Join(", ", telefonos
+            .Select(t => (t.Text?.ToString() ?? "").Trim())
+            .Where(t => t != ""));
+
+        Contacto = new Contacto {
+            Id        = original.Id,
+            Nombre    = nom,
+            Telefonos = tel,
+            Email     = mail,
+            Notas     = notas.Text?.ToString() ?? "",
+            Favorito  = esFavorito
+        };
+        Aceptado = true;
+        App!.RequestStop();
+    }
+
+    string EtiquetaFavorito() => esFavorito ? "[X] Favorito" : "[ ] Favorito";
+}
 
 
 public sealed class SqliteAgendaStore {
