@@ -139,6 +139,80 @@ public sealed class AgendaWindow : Runnable {
 
         Add(menu, etiquetaBuscar, buscar, panelLista, panelDetalle, estado);
     }
+void Refrescar() {
+        string texto = (buscar.Text?.ToString() ?? "").Trim();
+
+        filtrados = contactos
+            .Where(c => !soloFavoritos || c.Favorito)
+            .Where(c => texto == ""
+                || c.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase)
+                || c.Telefonos.Contains(texto, StringComparison.OrdinalIgnoreCase)
+                || c.Email.Contains(texto, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var lineas = filtrados.Select(c => (c.Favorito ? "* " : "  ") + c.Nombre).ToList();
+        lista.SetSource(new ObservableCollection<string>(lineas));
+        MostrarDetalle();
+    }
+
+    void MostrarDetalle() {
+        Contacto? c = ContactoSeleccionado();
+        if (c is null) {
+            detalle.Text = "";
+            return;
+        }
+
+        detalle.Text =
+            "Nombre:    " + c.Nombre + "\n" +
+            "Telefonos: " + c.Telefonos + "\n" +
+            "Email:     " + c.Email + "\n" +
+            "Favorito:  " + (c.Favorito ? "Si" : "No") + "\n\n" +
+            "Notas:\n" + c.Notas;
+    }
+
+    Contacto? ContactoSeleccionado() {
+        int i = lista.SelectedItem ?? -1;
+        if (i < 0 || i >= filtrados.Count) return null;
+        return filtrados[i];
+    }
+
+    void Nuevo() {
+        ContactDialog dialog = new("Nuevo contacto", new Contacto());
+        App!.Run(dialog);
+        if (!dialog.Aceptado) return;
+
+        store.Insertar(dialog.Contacto);
+        contactos = store.Listar();
+        estado.Text = "CNuevo contacto agregado.";
+        Refrescar();
+    }
+
+    void EditarSeleccionado() {
+        Contacto? c = ContactoSeleccionado();
+        if (c is null) { Aviso("Selecciona un contacto."); return; }
+
+        ContactDialog dialog = new("Editar contacto", c.Clone());
+        App!.Run(dialog);
+        if (!dialog.Aceptado) return;
+
+        store.Actualizar(dialog.Contacto);
+        contactos = store.Listar();
+        estado.Text = "Contacto modificado.";
+        Refrescar();
+    }
+
+    void EliminarSeleccionado() {
+        Contacto? c = ContactoSeleccionado();
+        if (c is null) { Aviso("Selecciona un contacto."); return; }
+
+        int r = MessageBox.Query(App!, "Eliminar", $"Eliminar a {c.Nombre}?", "No", "Si") ?? 0;
+        if (r != 1) return;
+
+        store.Eliminar(c);
+        contactos = store.Listar();
+        estado.Text = "Contacto eliminado.";
+        Refrescar();
+    }
 
 
 public sealed class SqliteAgendaStore {
