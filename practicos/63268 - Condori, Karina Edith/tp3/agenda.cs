@@ -309,7 +309,7 @@ public sealed class AgendaWindow : Window {
             SetStatus($"Contactos importados: {imported.Count}");
         }
         catch (Exception ex) {
-            MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+            ShowError("Error al importar", ex.Message);
             SetStatus("No se pudo importar el archivo.");
         }
     }
@@ -326,7 +326,7 @@ public sealed class AgendaWindow : Window {
             SetStatus($"Contactos exportados: {contacts.Count}");
         }
         catch (Exception ex) {
-            MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+            ShowError("Error al exportar", ex.Message);
             SetStatus("No se pudo exportar el archivo.");
         }
     }
@@ -399,6 +399,10 @@ public sealed class AgendaWindow : Window {
 
     private void SetStatus(string message) {
         statusBar.Text = message;
+    }
+
+    private void ShowError(string title, string message) {
+        MessageBox.ErrorQuery(App!, title, message, "Aceptar");
     }
 
     protected override bool OnKeyDown(Key key) {
@@ -545,12 +549,12 @@ public sealed class ContactDialog : Dialog {
         string email = (emailField.Text.ToString() ?? "").Trim();
 
         if (string.IsNullOrWhiteSpace(name)) {
-            MessageBox.ErrorQuery(App!, "Error de validacion", "El nombre no puede estar vacio.", "Aceptar");
+            ShowValidationError("El nombre no puede estar vacio.");
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@')) {
-            MessageBox.ErrorQuery(App!, "Error de validacion", "El email debe contener @.", "Aceptar");
+            ShowValidationError("El email debe contener @.");
             return;
         }
 
@@ -573,6 +577,10 @@ public sealed class ContactDialog : Dialog {
 
         WasAccepted = true;
         RequestStop();
+    }
+
+    private void ShowValidationError(string message) {
+        MessageBox.ErrorQuery(App!, "Error de validacion", message, "Aceptar");
     }
 }
 
