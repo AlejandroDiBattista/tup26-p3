@@ -656,9 +656,20 @@ public static class JsonAgendaIO {
             contact.Telefonos ??= "";
             contact.Email ??= "";
             contact.Notas ??= "";
+            ValidateImportedContact(contact);
         }
 
         return contacts;
+    }
+
+    private static void ValidateImportedContact(Contacto contact) {
+        if (string.IsNullOrWhiteSpace(contact.Nombre)) {
+            throw new InvalidDataException("El JSON contiene un contacto con nombre vacio.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(contact.Email) && !contact.Email.Contains('@')) {
+            throw new InvalidDataException($"El JSON contiene un email invalido: {contact.Email}");
+        }
     }
 
     public static void Write(string path, IEnumerable<Contacto> contacts) {
