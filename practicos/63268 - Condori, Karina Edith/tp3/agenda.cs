@@ -172,6 +172,17 @@ public sealed class AgendaWindow : Window {
         filteredContacts.AddRange(source.OrderByDescending(c => c.Favorito).ThenBy(c => c.Nombre));
         listView.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem)));
 
+        UpdateSelectionAfterFilter();
+        UpdateDetail();
+    }
+
+    private void UpdateSelectionAfterFilter() {
+        if (filteredContacts.Count == 0) {
+            selectedIndex = 0;
+            listView.SelectedItem = null;
+            return;
+        }
+
         if (selectedIndex >= filteredContacts.Count) {
             selectedIndex = filteredContacts.Count - 1;
         }
@@ -180,8 +191,7 @@ public sealed class AgendaWindow : Window {
             selectedIndex = 0;
         }
 
-        listView.SelectedItem = filteredContacts.Count == 0 ? null : selectedIndex;
-        UpdateDetail();
+        listView.SelectedItem = selectedIndex;
     }
 
     private static bool Contains(string value, string query) {
