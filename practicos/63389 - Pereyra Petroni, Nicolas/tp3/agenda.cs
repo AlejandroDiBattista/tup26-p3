@@ -19,6 +19,7 @@ using Dapper.Contrib.Extensions;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Terminal.Gui.App;
+using System.Text.Json;
 
 
 
@@ -65,6 +66,7 @@ private Label detalle = null!;
     new MenuItem("_Nuevo contacto", "", AbrirDialogo),
     new MenuItem("_Eliminar contacto", "", EliminarContacto),
     null!,
+      new MenuItem("_Exportar JSON", "", ExportarJson),
     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
 ])
             ]
@@ -191,6 +193,24 @@ private void ActualizarLista()
             .ToList()
     )
 );
+}
+private void ExportarJson() {
+
+    try {
+
+        JsonAgendaIO.Exportar(
+            "contactos.json",
+            contactos
+        );
+
+        detalle.Text =
+            "Contactos exportados a contactos.json";
+    }
+    catch (Exception ex) {
+
+        detalle.Text =
+            $"Error: {ex.Message}";
+    }
 }
 
                 
@@ -432,7 +452,36 @@ public class SqliteAgendaStore {
     }
 
 }
-public class JsonAgendaIO {}
+public class JsonAgendaIO {
+    public class JsonAgendaIO {
+
+    public static void Exportar(
+        string ruta,
+        List<Contacto> contactos
+    ) {
+
+        JsonSerializerOptions options = new() {
+            WriteIndented = true
+        };
+
+        string json =
+            JsonSerializer.Serialize(
+                contactos,
+                options
+            );
+
+        File.WriteAllText(ruta, json);
+    }
+
+    public static List<Contacto> Importar(string ruta) {
+
+        string json = File.ReadAllText(ruta);
+
+        return JsonSerializer.Deserialize<List<Contacto>>(json)
+               ?? [];
+    }
+}
+}
 
 [Table("Contactos")]
 public class Contacto
