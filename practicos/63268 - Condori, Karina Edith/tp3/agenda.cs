@@ -367,7 +367,7 @@ public sealed class AgendaWindow : Window {
             IsDefault = true
         };
         okButton.Accepting += (_, e) => {
-            result = pathField.Text.ToString();
+            result = pathField.Text.ToString()?.Trim();
             dialog.RequestStop();
             e.Handled = true;
         };
