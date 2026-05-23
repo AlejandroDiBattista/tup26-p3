@@ -570,7 +570,6 @@ public class JsonAgendaIO {
 [Table("Contactos")]
 public class Contacto
 {
-
     [Key] public int    Id        { get; set; }
 
           public string Nombre    { get; set; } = "";
