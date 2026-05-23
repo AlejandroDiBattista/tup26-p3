@@ -65,6 +65,7 @@ private Label detalle = null!;
                 new MenuBarItem("_Archivo", [
     new MenuItem("_Nuevo contacto", "", AbrirDialogo),
     new MenuItem("_Eliminar contacto", "", EliminarContacto),
+    new MenuItem("_Importar JSON", "", ImportarJson),
     null!,
       new MenuItem("_Exportar JSON", "", ExportarJson),
     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
@@ -213,6 +214,35 @@ private void ExportarJson() {
     }
 }
 
+private void ImportarJson() {
+
+    try {
+
+        List<Contacto> importados =
+            JsonAgendaIO.Importar(
+                "contactos.json"
+            );
+
+        foreach (Contacto c in importados) {
+
+            c.Id = 0;
+
+            store.Insert(c);
+        }
+
+        contactos = store.GetAll();
+
+        ActualizarLista();
+
+        detalle.Text =
+            "Contactos importados correctamente";
+    }
+    catch (Exception ex) {
+
+        detalle.Text =
+            $"Error: {ex.Message}";
+    }
+}
                 
     
 
@@ -453,7 +483,7 @@ public class SqliteAgendaStore {
 
 }
 public class JsonAgendaIO {
-    public class JsonAgendaIO {
+    
 
     public static void Exportar(
         string ruta,
@@ -481,7 +511,7 @@ public class JsonAgendaIO {
                ?? [];
     }
 }
-}
+
 
 [Table("Contactos")]
 public class Contacto
