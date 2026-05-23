@@ -1,27 +1,30 @@
-namespace AgendaT;
+using System.ComponentModel.DataAnnotations.Schema;
+using Dapper.Contrib.Extensions;
+
+namespace AgendaTrabajoPracticoTres;
 
 [Table("Contactos")]
 public sealed class Contacto
 {
     [Key]
-    public int Id { get; set; }
+    public int Identificador { get; set; }
     
-    public string Nombre { get; set; } = string.Empty;
-    public string Telefonos { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Notas { get; set; } = string.Empty;
-    public bool Favorito { get; set; }
+    public string NombreCompleto { get; set; } = string.Empty;
+    public string ListaDeTelefonos { get; set; } = string.Empty;
+    public string CorreoElectronico { get; set; } = string.Empty;
+    public string NotasAdicionales { get; set; } = string.Empty;
+    public bool EsFavorito { get; set; }
 
-    public Contacto Clone()
+    public Contacto ObtenerCopia()
     {
         return new Contacto
         {
-            Id = this.Id,
-            Nombre = this.Nombre,
-            Telefonos = this.Telefonos,
-            Email = this.Email,
-            Notas = this.Notas,
-            Favorito = this.Favorito
+            Identificador = this.Identificador,
+            NombreCompleto = this.NombreCompleto,
+            ListaDeTelefonos = this.ListaDeTelefonos,
+            CorreoElectronico = this.CorreoElectronico,
+            NotasAdicionales = this.NotasAdicionales,
+            EsFavorito = this.EsFavorito
         };
     }
 }
