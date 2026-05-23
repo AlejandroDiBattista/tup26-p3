@@ -38,6 +38,108 @@ catch (Exception ex) {
 
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(store));
+public sealed class AgendaWindow : Runnable {
+    readonly SqliteAgendaStore store;
+    readonly ListView lista = new();
+    readonly TextField buscar = new();
+    readonly TextView detalle = new();
+    readonly Label estado = new();
+
+    List<Contacto> contactos = [];
+    List<Contacto> filtrados = [];
+    bool soloFavoritos;
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
+
+        Title  = "Agenda";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+
+        Menu.DefaultBorderStyle = LineStyle.Single;
+        BuildLayout();
+
+        contactos = store.Listar();
+        Refrescar();
+        buscar.SetFocus();
+    }
+
+    void BuildLayout() {
+        MenuBar menu = new() {
+            Menus = [
+                new MenuBarItem("_Archivo", [
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportarJson, Key.I.WithCtrl),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportarJson, Key.E.WithCtrl),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", Salir)
+                ]),
+                new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo", "Ctrl+N", Nuevo, Key.N.WithCtrl),
+                    new MenuItem("_Editar", "F3", EditarSeleccionado, Key.F3),
+                    new MenuItem("E_liminar", "Ctrl+D", EliminarSeleccionado, Key.D.WithCtrl)
+                ]),
+                new MenuBarItem("_Ver", [
+                    new MenuItem("_Solo favoritos", "", ToggleFavoritos)
+                ]),
+                new MenuBarItem("Ay_uda", [
+                    new MenuItem("_Acerca de", "", AcercaDe)
+                ])
+            ]
+        };
+
+        Label etiquetaBuscar = new() { Text = "Buscar:", X = 1, Y = 2 };
+        buscar.X = 10;
+        buscar.Y = 2;
+        buscar.Width = Dim.Fill(2);
+        buscar.TextChanged += (_, _) => Refrescar();
+        buscar.KeyDown += (_, key) => {
+            if (key == Key.Enter || key == Key.Tab) {
+                key.Handled = true;
+                lista.SetFocus();
+            }
+        };
+
+        FrameView panelLista = new() {
+            Title  = "Contactos",
+            X = 0, Y = 4,
+            Width  = Dim.Percent(40),
+            Height = Dim.Fill(1)
+        };
+        lista.Width  = Dim.Fill();
+        lista.Height = Dim.Fill();
+        lista.ValueChanged += (_, _) => MostrarDetalle();
+        lista.KeyDown += (_, key) => {
+            if (key == Key.Enter) {
+                key.Handled = true;
+                EditarSeleccionado();
+            } else if (key == Key.Delete) {
+                key.Handled = true;
+                EliminarSeleccionado();
+            }
+        };
+        panelLista.Add(lista);
+
+        FrameView panelDetalle = new() {
+            Title  = "Detalle",
+            X = Pos.Right(panelLista), Y = 4,
+            Width  = Dim.Fill(),
+            Height = Dim.Fill(1)
+        };
+        detalle.X = 0;
+        detalle.Y = 0;
+        detalle.Width  = Dim.Fill();
+        detalle.Height = Dim.Fill();
+        detalle.ReadOnly = true;
+        panelDetalle.Add(detalle);
+
+        estado.X = 1;
+        estado.Y = Pos.AnchorEnd(1);
+        estado.Width = Dim.Fill();
+        estado.Text = "Agenda Lista.";
+
+        Add(menu, etiquetaBuscar, buscar, panelLista, panelDetalle, estado);
+    }
+
 
 public sealed class SqliteAgendaStore {
     readonly string connectionString;
