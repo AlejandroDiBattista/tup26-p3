@@ -34,6 +34,7 @@ public sealed class AgendaWindow : Window {
     private readonly SqliteAgendaStore store;
     private List<Contacto> contacts = [];
     private List<Contacto> filteredContacts = [];
+    private bool onlyFavorites = false;
 
     private readonly TextField searchField;
     private readonly ListView contactList;
@@ -44,6 +45,28 @@ public sealed class AgendaWindow : Window {
         Title  = "AgendaT";
         Width  = Dim.Fill();
         Height = Dim.Fill();
+
+        MenuBar menu = new() {
+            Menus = [
+                new MenuBarItem("_Archivo", [
+                    new MenuItem("_Importar JSON", "Ctrl+I", () => MessageBox.Query("Info", "Importar — próximamente", "OK")),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", () => MessageBox.Query("Info", "Exportar — próximamente", "OK")),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", Salir)
+                ]),
+                new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo",    "F2",  () => MessageBox.Query("Info", "Nuevo — próximamente", "OK")),
+                    new MenuItem("_Editar",   "F3",  () => MessageBox.Query("Info", "Editar — próximamente", "OK")),
+                    new MenuItem("_Eliminar", "Del", () => MessageBox.Query("Info", "Eliminar — próximamente", "OK"))
+                ]),
+                new MenuBarItem("_Ver", [
+                    new MenuItem("_Solo favoritos", "", ToggleFavoritos)
+                ]),
+                new MenuBarItem("_Ayuda", [
+                    new MenuItem("_Acerca de", "", AcercaDe)
+                ])
+            ]
+        };
 
         Label searchLabel = new() { Text = "Buscar:", X = 1, Y = 1 };
         searchField = new TextField("") { X = 10, Y = 1, Width = Dim.Fill(2) };
@@ -72,12 +95,20 @@ public sealed class AgendaWindow : Window {
             new Shortcut(Key.F2,               "Nuevo",    null),
             new Shortcut(Key.F3,               "Editar",   null),
             new Shortcut(Key.DeleteChar,       "Eliminar", null),
+            new Shortcut(Key.CtrlMask | Key.I, "Importar", null),
+            new Shortcut(Key.CtrlMask | Key.E, "Exportar", null),
             new Shortcut(Key.F4,               "Buscar",   () => searchField.SetFocus()),
-            new Shortcut(Key.CtrlMask | Key.Q, "Salir",    () => Application.RequestStop())
+            new Shortcut(Key.CtrlMask | Key.Q, "Salir",    Salir)
         ]);
 
-        Add(searchLabel, searchField, listFrame, detailFrame, statusBar);
+        Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
         LoadContacts();
+    }
+
+    protected override bool OnKeyDown(Key key) {
+        if (key == (Key.CtrlMask | Key.Q)) { Salir();           return true; }
+        if (key == Key.F4)                 { searchField.SetFocus(); return true; }
+        return base.OnKeyDown(key);
     }
 
     private void LoadContacts() {
@@ -89,9 +120,10 @@ public sealed class AgendaWindow : Window {
         string q = searchField.Text?.ToString()?.ToLower() ?? "";
         filteredContacts = contacts
             .Where(c =>
-                c.Nombre.ToLower().Contains(q) ||
-                c.Telefonos.ToLower().Contains(q) ||
-                c.Email.ToLower().Contains(q))
+                (!onlyFavorites || c.Favorito) &&
+                (c.Nombre.ToLower().Contains(q) ||
+                 c.Telefonos.ToLower().Contains(q) ||
+                 c.Email.ToLower().Contains(q)))
             .ToList();
         contactList.SetSource(filteredContacts.Select(c => $"{(c.Favorito ? "★" : " ")} {c.Nombre}").ToList());
         UpdateDetail();
@@ -120,6 +152,10 @@ Notas:
 {c.Notas}
 """;
     }
+
+    private void ToggleFavoritos() { onlyFavorites = !onlyFavorites; ApplyFilters(); }
+    private void AcercaDe() { MessageBox.Query("Acerca de", "AgendaT\nTP3 — Terminal.Gui + SQLite + JSON", "Aceptar"); }
+    private void Salir()    { Application.RequestStop(); }
 }
 
 public sealed class SqliteAgendaStore {
