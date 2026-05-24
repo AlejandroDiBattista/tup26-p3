@@ -55,9 +55,9 @@ public sealed class AgendaWindow : Window {
                     new MenuItem("_Salir", "Ctrl+Q", Salir)
                 ]),
                 new MenuBarItem("_Contactos", [
-                    new MenuItem("_Nuevo",    "F2",  () => MessageBox.Query("Info", "Nuevo — próximamente", "OK")),
-                    new MenuItem("_Editar",   "F3",  () => MessageBox.Query("Info", "Editar — próximamente", "OK")),
-                    new MenuItem("_Eliminar", "Del", () => MessageBox.Query("Info", "Eliminar — próximamente", "OK"))
+                    new MenuItem("_Nuevo",    "F2",  NuevoContacto),
+                    new MenuItem("_Editar",   "F3",  EditarContacto),
+                    new MenuItem("_Eliminar", "Del", EliminarContacto)
                 ]),
                 new MenuBarItem("_Ver", [
                     new MenuItem("_Solo favoritos", "", ToggleFavoritos)
@@ -80,6 +80,7 @@ public sealed class AgendaWindow : Window {
         };
         contactList = new ListView() { Width = Dim.Fill(), Height = Dim.Fill() };
         contactList.SelectedItemChanged += (_) => UpdateDetail();
+        contactList.OpenSelectedItem    += (_) => EditarContacto();
         listFrame.Add(contactList);
 
         FrameView detailFrame = new() {
@@ -92,9 +93,9 @@ public sealed class AgendaWindow : Window {
         detailFrame.Add(detailView);
 
         StatusBar statusBar = new([
-            new Shortcut(Key.F2,               "Nuevo",    null),
-            new Shortcut(Key.F3,               "Editar",   null),
-            new Shortcut(Key.DeleteChar,       "Eliminar", null),
+            new Shortcut(Key.F2,               "Nuevo",    NuevoContacto),
+            new Shortcut(Key.F3,               "Editar",   EditarContacto),
+            new Shortcut(Key.DeleteChar,       "Eliminar", EliminarContacto),
             new Shortcut(Key.CtrlMask | Key.I, "Importar", null),
             new Shortcut(Key.CtrlMask | Key.E, "Exportar", null),
             new Shortcut(Key.F4,               "Buscar",   () => searchField.SetFocus()),
@@ -106,8 +107,11 @@ public sealed class AgendaWindow : Window {
     }
 
     protected override bool OnKeyDown(Key key) {
-        if (key == (Key.CtrlMask | Key.Q)) { Salir();           return true; }
-        if (key == Key.F4)                 { searchField.SetFocus(); return true; }
+        if (key == (Key.CtrlMask | Key.N) || key == Key.F2)        { NuevoContacto();    return true; }
+        if (key == Key.F3)                                          { EditarContacto();   return true; }
+        if (key == (Key.CtrlMask | Key.D) || key == Key.DeleteChar) { EliminarContacto(); return true; }
+        if (key == Key.F4)                                          { searchField.SetFocus(); return true; }
+        if (key == (Key.CtrlMask | Key.Q))                         { Salir();            return true; }
         return base.OnKeyDown(key);
     }
 
@@ -153,9 +157,124 @@ Notas:
 """;
     }
 
+    private void NuevoContacto() {
+        ContactDialog dlg = new();
+        Application.Run(dlg);
+        if (!dlg.Accepted) return;
+        try {
+            store.Insert(dlg.Contacto!);
+            contacts.Add(dlg.Contacto!);
+            ApplyFilters();
+        } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "Aceptar"); }
+    }
+
+    private void EditarContacto() {
+        Contacto? sel = Selected();
+        if (sel is null) return;
+        ContactDialog dlg = new(sel.Clone());
+        Application.Run(dlg);
+        if (!dlg.Accepted) return;
+        try {
+            store.Update(dlg.Contacto!);
+            int idx = contacts.FindIndex(c => c.Id == dlg.Contacto!.Id);
+            if (idx >= 0) contacts[idx] = dlg.Contacto!;
+            ApplyFilters();
+        } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "Aceptar"); }
+    }
+
+    private void EliminarContacto() {
+        Contacto? sel = Selected();
+        if (sel is null) return;
+        if (MessageBox.Query("Confirmar", $"¿Eliminar a {sel.Nombre}?", "Sí", "No") != 0) return;
+        try {
+            store.Delete(sel.Id);
+            contacts.RemoveAll(c => c.Id == sel.Id);
+            ApplyFilters();
+        } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "Aceptar"); }
+    }
+
     private void ToggleFavoritos() { onlyFavorites = !onlyFavorites; ApplyFilters(); }
     private void AcercaDe() { MessageBox.Query("Acerca de", "AgendaT\nTP3 — Terminal.Gui + SQLite + JSON", "Aceptar"); }
     private void Salir()    { Application.RequestStop(); }
+}
+
+public sealed class ContactDialog : Dialog {
+
+    public Contacto? Contacto { get; private set; }
+    public bool Accepted { get; private set; }
+
+    private readonly TextField nombreField;
+    private readonly TextField emailField;
+    private readonly TextField[] telFields = new TextField[5];
+    private readonly CheckBox favCheck;
+    private readonly TextView notasField;
+
+    public ContactDialog(Contacto? c = null) {
+        c ??= new Contacto();
+        Title  = c.Id == 0 ? "Nuevo Contacto" : "Editar Contacto";
+        Width  = 70;
+        Height = 24;
+
+        Add(new Label("Nombre:") { X = 1, Y = 1 });
+        nombreField = new(c.Nombre) { X = 15, Y = 1, Width = 40 };
+        Add(nombreField);
+
+        string[] tels = c.Telefonos.Split(',');
+        for (int i = 0; i < 5; i++) {
+            Add(new Label($"Tel {i + 1}:") { X = 1, Y = 3 + i });
+            string val = i < tels.Length ? tels[i].Trim() : "";
+            telFields[i] = new TextField(val) { X = 15, Y = 3 + i, Width = 30 };
+            Add(telFields[i]);
+        }
+
+        Add(new Label("Email:") { X = 1, Y = 9 });
+        emailField = new(c.Email) { X = 15, Y = 9, Width = 40 };
+        Add(emailField);
+
+        favCheck = new() {
+            Text = "Favorito", X = 15, Y = 11,
+            CheckedState = c.Favorito ? CheckState.Checked : CheckState.UnChecked
+        };
+        Add(favCheck);
+
+        Add(new Label("Notas:") { X = 1, Y = 13 });
+        notasField = new() { X = 15, Y = 13, Width = 40, Height = 4, Text = c.Notas };
+        Add(notasField);
+
+        Button save   = new() { Text = "Guardar" };
+        Button cancel = new() { Text = "Cancelar" };
+
+        save.Accepting += (_, e) => {
+            string nombre = nombreField.Text?.ToString()?.Trim() ?? "";
+            string email  = emailField.Text?.ToString()?.Trim()  ?? "";
+            if (string.IsNullOrWhiteSpace(nombre)) {
+                MessageBox.ErrorQuery("Error", "El nombre no puede estar vacío.", "Aceptar");
+                return;
+            }
+            if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@')) {
+                MessageBox.ErrorQuery("Error", "El email debe contener @.", "Aceptar");
+                return;
+            }
+            string telsJoined = string.Join(", ",
+                telFields.Select(t => t.Text?.ToString()?.Trim() ?? "").Where(t => t != ""));
+            Contacto = new Contacto {
+                Id        = c.Id,
+                Nombre    = nombre,
+                Telefonos = telsJoined,
+                Email     = email,
+                Notas     = notasField.Text?.ToString() ?? "",
+                Favorito  = favCheck.CheckedState == CheckState.Checked
+            };
+            Accepted = true;
+            Application.RequestStop();
+            e.Handled = true;
+        };
+
+        cancel.Accepting += (_, e) => { Accepted = false; Application.RequestStop(); e.Handled = true; };
+
+        AddButton(save);
+        AddButton(cancel);
+    }
 }
 
 public sealed class SqliteAgendaStore {
