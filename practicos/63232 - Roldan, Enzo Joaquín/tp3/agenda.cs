@@ -49,8 +49,8 @@ public sealed class AgendaWindow : Window {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Importar JSON", "Ctrl+I", () => MessageBox.Query("Info", "Importar — próximamente", "OK")),
-                    new MenuItem("_Exportar JSON", "Ctrl+E", () => MessageBox.Query("Info", "Exportar — próximamente", "OK")),
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportJson),
                     null!,
                     new MenuItem("_Salir", "Ctrl+Q", Salir)
                 ]),
@@ -96,8 +96,8 @@ public sealed class AgendaWindow : Window {
             new Shortcut(Key.F2,               "Nuevo",    NuevoContacto),
             new Shortcut(Key.F3,               "Editar",   EditarContacto),
             new Shortcut(Key.DeleteChar,       "Eliminar", EliminarContacto),
-            new Shortcut(Key.CtrlMask | Key.I, "Importar", null),
-            new Shortcut(Key.CtrlMask | Key.E, "Exportar", null),
+            new Shortcut(Key.CtrlMask | Key.I, "Importar", ImportJson),
+            new Shortcut(Key.CtrlMask | Key.E, "Exportar", ExportJson),
             new Shortcut(Key.F4,               "Buscar",   () => searchField.SetFocus()),
             new Shortcut(Key.CtrlMask | Key.Q, "Salir",    Salir)
         ]);
@@ -107,11 +107,13 @@ public sealed class AgendaWindow : Window {
     }
 
     protected override bool OnKeyDown(Key key) {
-        if (key == (Key.CtrlMask | Key.N) || key == Key.F2)        { NuevoContacto();    return true; }
-        if (key == Key.F3)                                          { EditarContacto();   return true; }
-        if (key == (Key.CtrlMask | Key.D) || key == Key.DeleteChar) { EliminarContacto(); return true; }
-        if (key == Key.F4)                                          { searchField.SetFocus(); return true; }
-        if (key == (Key.CtrlMask | Key.Q))                         { Salir();            return true; }
+        if (key == (Key.CtrlMask | Key.N) || key == Key.F2)        { NuevoContacto();        return true; }
+        if (key == Key.F3)                                          { EditarContacto();        return true; }
+        if (key == (Key.CtrlMask | Key.D) || key == Key.DeleteChar) { EliminarContacto();     return true; }
+        if (key == (Key.CtrlMask | Key.I))                         { ImportJson();            return true; }
+        if (key == (Key.CtrlMask | Key.E))                         { ExportJson();            return true; }
+        if (key == Key.F4)                                          { searchField.SetFocus();  return true; }
+        if (key == (Key.CtrlMask | Key.Q))                         { Salir();                 return true; }
         return base.OnKeyDown(key);
     }
 
@@ -191,6 +193,45 @@ Notas:
             contacts.RemoveAll(c => c.Id == sel.Id);
             ApplyFilters();
         } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "Aceptar"); }
+    }
+
+    private void ImportJson() {
+        string path = AskPath("Importar JSON");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        try {
+            List<Contacto> imported = JsonAgendaIO.Import(path);
+            if (MessageBox.Query("Confirmar", $"Se importarán {imported.Count} contactos.", "Importar", "Cancelar") != 0) return;
+            foreach (Contacto c in imported) {
+                c.Id = 0;
+                store.Insert(c);
+                contacts.Add(c);
+            }
+            ApplyFilters();
+        } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "Aceptar"); }
+    }
+
+    private void ExportJson() {
+        string path = AskPath("Exportar JSON");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        try {
+            JsonAgendaIO.Export(path, contacts);
+            MessageBox.Query("OK", $"Exportados {contacts.Count} contactos.", "Aceptar");
+        } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "Aceptar"); }
+    }
+
+    private string AskPath(string title) {
+        string result = "";
+        Dialog dlg = new() { Title = title, Width = 60, Height = 8 };
+        TextField field = new() { X = 1, Y = 1, Width = Dim.Fill(2) };
+        Button ok     = new() { Text = "OK",       X = Pos.Center() - 8, Y = 3 };
+        Button cancel = new() { Text = "Cancelar", X = Pos.Center() + 2, Y = 3 };
+        ok.Accepting     += (_, e) => { result = field.Text?.ToString() ?? ""; Application.RequestStop(); e.Handled = true; };
+        cancel.Accepting += (_, e) => { result = ""; Application.RequestStop(); e.Handled = true; };
+        dlg.Add(field);
+        dlg.AddButton(ok);
+        dlg.AddButton(cancel);
+        Application.Run(dlg);
+        return result;
     }
 
     private void ToggleFavoritos() { onlyFavorites = !onlyFavorites; ApplyFilters(); }
