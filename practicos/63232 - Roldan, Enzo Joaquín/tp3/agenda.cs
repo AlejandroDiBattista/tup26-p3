@@ -5,6 +5,10 @@
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
+using Terminal.Gui.App;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using Dapper.Contrib.Extensions;
@@ -12,7 +16,111 @@ using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 
-Console.WriteLine("AgendaT — infraestructura lista.");
+string dbPath = args.Length > 0 ? args[0] : "agenda.db";
+
+SqliteAgendaStore store;
+try {
+    store = new SqliteAgendaStore(dbPath);
+} catch (Exception ex) {
+    Console.WriteLine($"Error al abrir la base: {ex.Message}");
+    return;
+}
+
+using IApplication app = Application.Create().Init();
+app.Run(new AgendaWindow(store));
+
+public sealed class AgendaWindow : Window {
+
+    private readonly SqliteAgendaStore store;
+    private List<Contacto> contacts = [];
+    private List<Contacto> filteredContacts = [];
+
+    private readonly TextField searchField;
+    private readonly ListView contactList;
+    private readonly TextView detailView;
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
+        Title  = "AgendaT";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+
+        Label searchLabel = new() { Text = "Buscar:", X = 1, Y = 1 };
+        searchField = new TextField("") { X = 10, Y = 1, Width = Dim.Fill(2) };
+        searchField.TextChanged += (_) => ApplyFilters();
+
+        FrameView listFrame = new() {
+            Title = "Contactos",
+            X = 0, Y = 3,
+            Width = Dim.Percent(40),
+            Height = Dim.Fill(1)
+        };
+        contactList = new ListView() { Width = Dim.Fill(), Height = Dim.Fill() };
+        contactList.SelectedItemChanged += (_) => UpdateDetail();
+        listFrame.Add(contactList);
+
+        FrameView detailFrame = new() {
+            Title = "Detalle",
+            X = Pos.Right(listFrame), Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(1)
+        };
+        detailView = new TextView() { ReadOnly = true, Width = Dim.Fill(), Height = Dim.Fill() };
+        detailFrame.Add(detailView);
+
+        StatusBar statusBar = new([
+            new Shortcut(Key.F2,               "Nuevo",    null),
+            new Shortcut(Key.F3,               "Editar",   null),
+            new Shortcut(Key.DeleteChar,       "Eliminar", null),
+            new Shortcut(Key.F4,               "Buscar",   () => searchField.SetFocus()),
+            new Shortcut(Key.CtrlMask | Key.Q, "Salir",    () => Application.RequestStop())
+        ]);
+
+        Add(searchLabel, searchField, listFrame, detailFrame, statusBar);
+        LoadContacts();
+    }
+
+    private void LoadContacts() {
+        contacts = store.GetAll();
+        ApplyFilters();
+    }
+
+    private void ApplyFilters() {
+        string q = searchField.Text?.ToString()?.ToLower() ?? "";
+        filteredContacts = contacts
+            .Where(c =>
+                c.Nombre.ToLower().Contains(q) ||
+                c.Telefonos.ToLower().Contains(q) ||
+                c.Email.ToLower().Contains(q))
+            .ToList();
+        contactList.SetSource(filteredContacts.Select(c => $"{(c.Favorito ? "★" : " ")} {c.Nombre}").ToList());
+        UpdateDetail();
+    }
+
+    private Contacto? Selected() {
+        int i = contactList.SelectedItem;
+        return (i >= 0 && i < filteredContacts.Count) ? filteredContacts[i] : null;
+    }
+
+    private void UpdateDetail() {
+        Contacto? c = Selected();
+        detailView.Text = c is null ? "" :
+$"""
+Nombre:    {c.Nombre}
+
+Teléfonos:
+{c.Telefonos}
+
+Email:
+{c.Email}
+
+Favorito:  {(c.Favorito ? "Sí" : "No")}
+
+Notas:
+{c.Notas}
+""";
+    }
+}
 
 public sealed class SqliteAgendaStore {
 
