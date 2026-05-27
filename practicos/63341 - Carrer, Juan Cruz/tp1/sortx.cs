@@ -187,6 +187,28 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
     return ordered?.ToList() ?? rows;
 }
 
+string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (rows.Count == 0)
+        return "";
+
+    var headers = rows[0].Keys.ToList();
+    var sb = new StringBuilder();
+
+    if (!config.NoHeader)
+        sb.AppendLine(string.Join(config.Delimiter, headers));
+
+    foreach (var row in rows)
+    {
+        var values = headers.Select(h => row[h]);
+        sb.AppendLine(string.Join(config.Delimiter, values));
+    }
+
+    return sb.ToString();
+}
+
+
+
 SortField ParseSortField(string spec)
 {
     var parts = spec.Split(':');
