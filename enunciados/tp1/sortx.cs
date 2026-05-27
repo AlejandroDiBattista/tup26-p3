@@ -92,7 +92,7 @@ Sortfield ParseField(string spec)
     if(segments.Length > 2) isDescending = segments[2] switch { "asc" => false, "desc" => true, _ => throw new Exception($"Orden de campo desconocido: {segments[2]}")};
     return new SortField(fieldName, isNumeric, isDescending);
 }
-//ReadInput
+// 2. ReadInput      → leer el texto desde el archivo o stdin
 string ReadInput(AppConfig config)
 {
     if(!string.IsNullOrEmpty(config.InputFile));
@@ -108,6 +108,54 @@ string ReadInput(AppConfig config)
         throw new Exception("No se pasó ningun archivo ni datos para leer.");
     }
     return Console.In.ReadToEnd();
+}
+
+//3. ParseDelimited → convertir el texto en una lista de filas (lista de diccionarios)
+List<Dictionary<string, string>> ParseDelimited(string content, AppConfig settings)
+{
+    var result = new List<Dictionary<string, string>>();
+
+    var records = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+    if (records.Length == 0)
+        return result;
+
+    string[] columns;
+
+    if (!settings.NoHeader)
+    {
+        columns = records[0].Split(settings.Delimiter);
+
+        for (int rowIndex = 1; rowIndex < records.Length; rowIndex++)
+        {
+            var fields = records[rowIndex].Split(settings.Delimiter);
+
+            var map = new Dictionary<string, string>();
+
+            for (int colIndex = 0; colIndex < columns.Length; colIndex++)
+                map[columns[colIndex]] = fields[colIndex];
+
+            result.Add(map);
+        }
+    }
+    else
+    {
+        var sample = records[0].Split(settings.Delimiter);
+        columns = Enumerable.Range(0, sample.Length).Select(i => i.ToString()).ToArray();
+
+        foreach (var record in records)
+        {
+            var fields = record.Split(settings.Delimiter);
+            var map = new Dictionary<string, string>();
+
+            for (int colIndex = 0; colIndex < columns.Length; colIndex++)
+                map[columns[colIndex]] = fields[colIndex];
+
+            result.Add(map);
+        }
+    }
+
+    return result;
 }
 //Modelo de configuración
 record AppConfig(
