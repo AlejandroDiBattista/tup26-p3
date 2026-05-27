@@ -44,8 +44,7 @@ AppConfig ParseArgs(string[] args)
                 ));
                 break;
             case "-h": case "--help":
-                Console.WriteLine("Uso: sortx [input [output]] [-b campo[:tipo[:orden]]]... [-i input] [-o output] [-d delimitador] [-nh] [-h]");
-                Environment.Exit(0);
+                MostrarAyuda();
                 break;
             default:
                 if (!args[i].StartsWith("-")) posicionales.Add(args[i]);
@@ -163,6 +162,18 @@ void WriteOutput(string texto, AppConfig config)
     else Console.Write(texto);
 }
 
+void MostrarAyuda()
+{
+    Console.WriteLine("Uso: sortx [input [output]] [-b campo[:tipo[:orden]]]... [-i input] [-o output] [-d delimitador] [-nh] [-h]");
+    Console.WriteLine("\nOpciones:");
+    Console.WriteLine("  -i, --input <archivo>        Archivo de entrada (default: stdin).");
+    Console.WriteLine("  -o, --output <archivo>       Archivo de salida (default: stdout).");
+    Console.WriteLine("  -d, --delimiter <delimitador> Delimitador (default: ,).");
+    Console.WriteLine("  -nh, --no-header             Indica que el archivo no tiene encabezado.");
+    Console.WriteLine("  -b, --by campo[:tipo[:orden]] Criterio de ordenamiento (repetible).");
+    Console.WriteLine("  -h, --help                   Muestra esta ayuda.");
+    Environment.Exit(0);
+}
 
 record SortField(string Name, bool Numeric, bool Descending);
 record AppConfig(
