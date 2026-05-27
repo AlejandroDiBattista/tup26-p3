@@ -113,6 +113,23 @@ int CompararFilas(Dictionary<string, string> a, Dictionary<string, string> b, Li
     return 0;
 }
 
+string Serializar(List<Dictionary<string, string>> filas, ConfiguracionApp config)
+    {
+        var sb = new System.Text.StringBuilder();
+        if (!config.SinEncabezado && filas.Count > 0)
+        {
+            var llaves = new List<string>(filas[0].Keys);
+            sb.AppendLine(string.Join(config.Delimitador, llaves));
+        }
+        foreach (var fila in filas)
+        {
+            var valores = new List<string>();
+            foreach (var llave in fila.Keys) valores.Add(fila[llave]);
+            sb.AppendLine(string.Join(config.Delimitador, valores));
+        }
+        return sb.ToString().TrimEnd();
+    }
+
 record CampoOrden(string Nombre, bool EsNumerico, bool EsDescendente);
 record ConfiguracionApp(
     string? ArchivoEntrada, 
