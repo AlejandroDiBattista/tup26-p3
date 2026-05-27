@@ -16,6 +16,7 @@ AppConfig ParseArgs(string[] args)
     string? output = null;
     string delimiter = ",";
     bool noHeader = false;
+    var sortFields = new List<SortField>();
     var positionals = new List<string>();
     for(int i = 0; i < args.Length; i++)
     {
@@ -43,11 +44,21 @@ AppConfig ParseArgs(string[] args)
                 showHelp();
                 Environment.Exit(0);
                 continue;
+            case "-b":
+            case "--by":
+                var spec = args[++i];
+                sortFields.Add(ParseField(args[++i]));
+                continue;
+            default:
+                if (arg.StartsWith("-")) throw new ArgumentException($"Opcion no valida: {arg}");
+                positionals.Add(arg);
+                continue;
         }
     }
     if(positionals.Count > 0 && input == null) input = positionals[0];
     if(positionals.Count > 1 && output == null) output = positionals[1];
-    return new AppConfig(input, output, delimiter, noHeader);
+    if(sortFields.Count == 0) throw new Exception("Debe indicar al menos un criterio con -b|--by.");
+    return new AppConfig(input, output, delimiter, noHeader, sortFields);
 }
 
 //ShowHelp
@@ -69,6 +80,17 @@ void ShowHelp()
     sortx empleados.csv -b apellido
     sortx empleados.csv -b salario:num:desc
     ");
+}
+//SortField
+Sortfield ParseField(string spec)
+{
+    var segments = input.Split(':');
+    var fieldName = segments[0];
+    bool isNumeric = false;
+    bool isDescending = false;
+    if(segments.Length > 1) isNumeric = segments[1] switch { "num" => true, "alpha" => false, _ => throw new Exception($"Tipo de campo desconocido: {segments[1]}")};
+    if(segments.Length > 2) isDescending = segments[2] switch { "asc" => false, "desc" => true, _ => throw new Exception($"Orden de campo desconocido: {segments[2]}")};
+    return new SortField(fieldName, isNumeric, isDescending);
 }
 //Modelo de configuración
 record AppConfig(
