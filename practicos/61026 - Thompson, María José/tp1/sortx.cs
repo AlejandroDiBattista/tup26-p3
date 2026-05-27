@@ -5,3 +5,4 @@
 //       [-nh|--no-header] [-h|--help]
 
 Console.WriteLine($"sortx {string.Join(" ", args)}");
+
