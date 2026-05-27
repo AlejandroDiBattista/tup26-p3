@@ -147,6 +147,46 @@ List<Dictionary<string, string>> ParseDelimited(string texto, AppConfig config)
     return rows;
 }
 
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (rows.Count == 0)
+        return rows;
+
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+    foreach (var sortField in config.SortFields)
+    {
+        Func<Dictionary<string, string>, IComparable> keySelector = row =>
+        {
+            if (!row.ContainsKey(sortField.Nombre))
+                throw new ArgumentException($"Campo no encontrado: {sortField.Nombre}");
+
+            var value = row[sortField.Nombre];
+            if (sortField.Numerico)
+            {
+                if (!double.TryParse(value, out double num))
+                    throw new ArgumentException($"Valor no numérico en campo '{sortField.Nombre}': {value}");
+                return num;
+            }
+            return value;
+        };
+
+        if (ordered == null)
+        {
+            ordered = sortField.Descendente
+                ? rows.OrderByDescending(keySelector)
+                : rows.OrderBy(keySelector);
+        }
+        else
+        {
+            ordered = sortField.Descendente
+                ? ordered.ThenByDescending(keySelector)
+                : ordered.ThenBy(keySelector);
+        }
+    }
+    return ordered?.ToList() ?? rows;
+}
+
 SortField ParseSortField(string spec)
 {
     var parts = spec.Split(':');
