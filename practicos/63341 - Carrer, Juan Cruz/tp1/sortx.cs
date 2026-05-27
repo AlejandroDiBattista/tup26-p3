@@ -4,6 +4,21 @@ using   System.IO;
 using   System.Linq;
 using   System.Text;
 
+try
+{
+    var config = ParseArgs(args);
+    var inputText = ReadInput(config);
+    var rows = ParseDelimited(inputText, config);
+    var sortedRows = SortRows(rows, config);
+    var outputText = Serialize(sortedRows, config);
+    WriteOutput(outputText, config);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    Environment.Exit(1);
+}
+
 AppConfig ParseArgs(string[] args)
 {
     string? inputFile = null;
