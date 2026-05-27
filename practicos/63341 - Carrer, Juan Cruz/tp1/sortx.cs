@@ -88,3 +88,29 @@ void ShowHelp()
     ");
 }
 
+string ReadInput(AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.InputFile)) {
+        if (!File.Exists(config.InputFile))
+            throw new FileNotFoundException($"Archivo no encontrado: {config.InputFile}");
+
+        return File.ReadAllText(config.InputFile);
+    }
+
+    if (Console.IsInputRedirected)
+        throw new InvalidOperationException("No se puede leer de la entrada estándar redirigida sin un archivo de entrada especificado.");
+
+    using var reader = Console.In;
+    return Console.In.ReadToEnd();
+}
+
+record SortField(string Name, bool Numeric, bool Descending);
+
+record AppConfig(
+    string?         InputFile,
+    string?         OutputFile,
+    string          Delimiter,
+    bool            NoHeader,
+    List<SortField> SortFields
+);
+
