@@ -207,7 +207,15 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
     return sb.ToString();
 }
 
-
+void WriteOutput(string output, AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.OutputFile)) {
+        File.WriteAllText(config.OutputFile, output);
+    }
+    else {
+        Console.Write(output);
+    }
+}
 
 SortField ParseSortField(string spec)
 {
