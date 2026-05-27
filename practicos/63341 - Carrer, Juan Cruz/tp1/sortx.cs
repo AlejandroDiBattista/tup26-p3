@@ -68,12 +68,23 @@ AppConfig ParseArgs(string[] args)
     return new AppConfig(inputFile, outputFile, delimiter, noHeader, sortFields);
 }
 
-record SortField(string Nombre, bool Numerico, bool Descendiente);
+void ShowHelp()
+{
+    Console.WriteLine(@"
+    Uso: 
+        sortx [input [output]] -b campo[ :tipo[:orden]]...
 
-record AppConfig(
-    string? InputFile,
-    string? OutputFile,
-    string Delimiter,
-    bool NoHeader,
-    List<SortField> SortFields
-);
+    Opciones:
+      -b, --by                    Campo de ordenamiento (puede repetirse)
+      -i, --input <archivo>       Archivo de entrada (CSV)
+      -o, --output <archivo>      Archivo de salida (CSV)
+      -d, --delimiter <carácter>  Delimitador (por defecto: ',')
+      -nh, --no-header            Indica que el CSV no tiene fila de encabezado
+      -h, --help                  Muestra esta ayuda
+
+      Ejemplo:
+        sortx empleados.csv -b apellido
+        sortx empleados.csv -b salario:num:desc
+    ");
+}
+
