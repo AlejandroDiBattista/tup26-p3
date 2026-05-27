@@ -92,6 +92,23 @@ Sortfield ParseField(string spec)
     if(segments.Length > 2) isDescending = segments[2] switch { "asc" => false, "desc" => true, _ => throw new Exception($"Orden de campo desconocido: {segments[2]}")};
     return new SortField(fieldName, isNumeric, isDescending);
 }
+//ReadInput
+string ReadInput(AppConfig config)
+{
+    if(!string.IsNullOrEmpty(config.InputFile));
+    {
+        if(!File.Exists(config.InputFile))
+        {
+            throw new FileNotFoundException($"No pude encontrar el archivo: {config.InputFile}");
+        }
+        return File.ReadAllText(config.InputFile);
+    }
+    if(!Console.IsInputRedirected)
+    {
+        throw new Exception("No se pasó ningun archivo ni datos para leer.");
+    }
+    return Console.In.ReadToEnd();
+}
 //Modelo de configuración
 record AppConfig(
     string? InputFile,
