@@ -206,6 +206,27 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
     }
     return (ordered ?? Enumerable.Empty<Dictionary<string, string>>()).ToList();
 }
+//5. Serialize      → convertir las filas ordenadas de vuelta a texto
+string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    if (rows.Count == 0)
+        return "";
+
+    var builder = new StringBuilder();
+    var columnNames = rows[0].Keys.ToList();
+
+    if (!config.NoHeader)
+        builder.AppendLine(string.Join(config.Delimiter, columnNames));
+
+    foreach (var item in rows)
+    {
+        var fieldValues = columnNames.Select(col => item[col]);
+        builder.AppendLine(string.Join(config.Delimiter, fieldValues));
+    }
+
+    return builder.ToString();
+}
+
 //Modelo de configuración
 record AppConfig(
     string? InputFile,
