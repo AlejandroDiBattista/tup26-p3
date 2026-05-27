@@ -2,6 +2,21 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
+try
+{
+    var config = ParsearArgumentos(args);
+    var texto = LeerEntrada(config);
+    var filas = ParsearDelimitado(texto, config);
+    var filasOrdenadas = OrdenarFilas(filas, config);
+    var resultado = Serializar(filasOrdenadas, config);
+    EscribirSalida(resultado, config);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    Environment.Exit(1);
+}
+
 ConfiguracionApp ParsearArgumentos(string[] args)
 {
     string? entrada = null, salida = null, delimitador = ",";
