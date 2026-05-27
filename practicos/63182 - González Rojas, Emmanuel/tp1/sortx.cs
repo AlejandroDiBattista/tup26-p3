@@ -130,6 +130,14 @@ string Serializar(List<Dictionary<string, string>> filas, ConfiguracionApp confi
         return sb.ToString().TrimEnd();
     }
 
+
+void EscribirSalida(string texto, ConfiguracionApp config)
+{
+    if (config.ArchivoSalida != null) File.WriteAllText(config.ArchivoSalida, texto);
+    else Console.Write(texto);
+}
+
+
 record CampoOrden(string Nombre, bool EsNumerico, bool EsDescendente);
 record ConfiguracionApp(
     string? ArchivoEntrada, 
