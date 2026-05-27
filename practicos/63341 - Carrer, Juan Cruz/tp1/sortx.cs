@@ -12,6 +12,8 @@ AppConfig ParseArgs(string[] args)
     bool noHeader = false;
     var sortFields = new List<SortField>();
 
+    var positionals = new List<string>();
+
     for (int i = 0; i < args.Length; i++)
     {
         var arg = args[i];
@@ -20,7 +22,7 @@ AppConfig ParseArgs(string[] args)
         {
             case "-i":
             case"--input":
-                input = args[++i];
+                inputFile = args[++i];
                 break;
 
             case "-o":
@@ -144,7 +146,38 @@ List<Dictionary<string, string>> ParseDelimited(string texto, AppConfig config)
 
     return rows;
 }
-record SortField(string Name, bool Numeric, bool Descending);
+
+SortField ParseSortField(string spec)
+{
+    var parts = spec.Split(':');
+    string nombre = parts[0];
+    bool numerico = false;
+    bool descendente = false;
+
+    if (parts.Length > 1)
+    {
+        numerico = parts[1] switch
+        {
+            "num" => true,
+            "str" => false,
+            _ => throw new ArgumentException($"Tipo inválido: {parts[1]}")
+        };
+    }
+
+    if (parts.Length > 2)
+    {
+        descendente = parts[2] switch
+        {
+            "asc" => false,
+            "desc" => true,
+            _ => throw new ArgumentException($"Orden inválido: {parts[2]}")
+        };
+    }
+
+    return new SortField(nombre, numerico, descendente);
+}
+
+record SortField(string Nombre, bool Numerico, bool Descendente);
 
 record AppConfig(
     string?         InputFile,
