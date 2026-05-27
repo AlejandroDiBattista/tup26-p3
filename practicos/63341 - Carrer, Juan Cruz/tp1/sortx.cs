@@ -1,7 +1,16 @@
+using   System;
+using   System.Collections.Generic;
+using   System.IO;
+using   System.Linq;
+using   System.Text;
 
-// sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
-//       [-i|--input input] [-o|--output output]
-//       [-d|--delimiter delimitador]
-//       [-nh|--no-header] [-h|--help]
 
-Console.WriteLine($"sortx {string.Join(" ", args)}");
+record SortField(string Nombre, bool Numerico, bool Descendiente);
+
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields
+);
