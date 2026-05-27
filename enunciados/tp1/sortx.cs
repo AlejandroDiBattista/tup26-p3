@@ -9,6 +9,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+try
+{
+    var settings = ParseArgs(args);
+    var inputData = ReadInput(config);
+    var records = ParseDelimited(text, config);;
+}
+catch (Exception error)
+{
+    Console.Error.WriteLine($"Error: {error.Message}");
+    Environment.Exit(1);
+}
+
 // 1. ParseArgs      → leer la configuración desde los argumentos
 AppConfig ParseArgs(string[] args)
 {
@@ -111,11 +123,11 @@ string ReadInput(AppConfig config)
 }
 
 //3. ParseDelimited → convertir el texto en una lista de filas (lista de diccionarios)
-List<Dictionary<string, string>> ParseDelimited(string content, AppConfig settings)
+List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
 {
     var result = new List<Dictionary<string, string>>();
 
-    var records = content.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    var records = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
     if (records.Length == 0)
         return result;
