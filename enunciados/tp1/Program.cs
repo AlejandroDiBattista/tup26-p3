@@ -62,7 +62,7 @@ AppConfig ParseArgs(string[] args)
             case "-b":
             case "--by":
                 var spec = args[++i];
-                sortFields.Add(ParseField(args[++i]));
+                sortFields.Add(ParseField(spec));
                 continue;
             default:
                 if (arg.StartsWith("-")) throw new ArgumentException($"Opcion no valida: {arg}");
