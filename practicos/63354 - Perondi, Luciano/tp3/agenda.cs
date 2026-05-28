@@ -16,6 +16,8 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text.Json; //para el JsonSerializer y JsonSerializerOptions
+using System.Text.Encodings.Web; // para el encoder 
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -114,7 +116,19 @@ public sealed class EjemploDialog : Dialog {
 
 public class SqliteAgendaStore {}
 public class JsonAgendaIO {
-    
+    public List<Contacto> importar(string ruta) {
+        string texto = File.ReadAllText(ruta);
+        var lista = JsonSerializer.Deserialize<List<Contacto>>(texto);
+        return lista ?? new List<Contacto>();
+    }
+    public void exportar(string ruta, List<Contacto> contactos) {
+        var opciones = new JsonSerializerOptions {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+            
+        string texto = JsonSerializer.Serialize(contactos, opciones);
+        File.WriteAllText(ruta, texto);
+    }
 }
 
 [Table("Contactos")]
