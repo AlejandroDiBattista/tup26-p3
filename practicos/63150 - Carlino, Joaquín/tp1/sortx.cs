@@ -108,4 +108,9 @@ public class DatasetProcessor
 
         return string.Join(Environment.NewLine, outputLines);
     }
+    private void DispatchOutput(string data, string? targetPath)
+    {
+        if (targetPath is null) Console.Write(data);
+        else File.WriteAllText(targetPath, data);
+    }
 }
