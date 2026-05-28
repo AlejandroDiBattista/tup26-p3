@@ -194,4 +194,9 @@ public static class CommandLineParser
 
         return new RuntimeSettings(src, dest, delim, skipHeader, sortingList);
     }
+     private static string FetchNext(string[] args, ref int index)
+    {
+        if (index + 1 >= args.Length) throw new InvalidOperationException($"Falta un valor para la opcion {args[index]}");
+        return args[++index];
+    }
 }
