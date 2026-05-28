@@ -123,3 +123,75 @@ public class DatasetProcessor
         throw new InvalidOperationException($"No se pudo interpretar '{input}' como numero en la columna '{targetColumn}'");
     }
 }
+
+public static class CommandLineParser
+{
+    public static RuntimeSettings Analyze(string[] args)
+    {
+        string? src = null;
+        string? dest = null;
+        var delim = ",";
+        var skipHeader = false;
+        var sortingList = new List<SortCriteria>();
+        var standaloneArgs = new List<string>();
+
+        int cursor = 0;
+        while (cursor < args.Length)
+        {
+            var argument = args[cursor];
+            switch (argument)
+            {
+                case "-h" or "--help":
+                    Console.WriteLine(GetManualText());
+                    Environment.Exit(0);
+                    return default!;
+
+                case "-nh" or "--no-header":
+                    skipHeader = true;
+                    break;
+
+                case "-i" or "--input":
+                    if (src is not null) throw new InvalidOperationException("El archivo de entrada se especifico mas de una vez");
+                    src = FetchNext(args, ref cursor);
+                    break;
+
+                case "-o" or "--output":
+                    if (dest is not null) throw new InvalidOperationException("El archivo de salida se especifico mas de una vez");
+                    dest = FetchNext(args, ref cursor);
+                    break;
+
+                case "-d" or "--delimiter":
+                    var rawDelim = FetchNext(args, ref cursor);
+                    delim = rawDelim.Length == 0 ? throw new InvalidOperationException("El delimitador no puede ser vacio") : (rawDelim == "\\t" ? "\t" : rawDelim);
+                    break;
+
+                case "-b" or "--by":
+                    sortingList.Add(CompileCriteria(FetchNext(args, ref cursor)));
+                    break;
+
+                default:
+                    if (argument.StartsWith("-", StringComparison.Ordinal)) 
+                        throw new InvalidOperationException($"Opcion desconocida: {argument}");
+                    
+                    standaloneArgs.Add(argument);
+                    break;
+            }
+            cursor++;
+        }
+
+        if (standaloneArgs.Count > 2) throw new InvalidOperationException("Solo se permiten dos argumentos posicionales: input y output");
+        
+        if (standaloneArgs.Count > 0)
+        {
+            if (src is not null) throw new InvalidOperationException("El archivo de entrada se especifico tanto por posicion como por opcion");
+            src = standaloneArgs[0];
+        }
+        if (standaloneArgs.Count > 1)
+        {
+            if (dest is not null) throw new InvalidOperationException("El archivo de salida se especifico tanto por posicion como por opcion");
+            dest = standaloneArgs[1];
+        }
+
+        return new RuntimeSettings(src, dest, delim, skipHeader, sortingList);
+    }
+}
