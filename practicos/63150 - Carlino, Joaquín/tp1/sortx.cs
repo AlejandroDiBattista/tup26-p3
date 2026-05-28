@@ -95,4 +95,17 @@ public class DatasetProcessor
 
         return records;
     }
+     private string BuildOutputString(List<string> headers, List<Dictionary<string, string>> records, RuntimeSettings settings)
+    {
+        var outputLines = records
+            .Select(row => string.Join(settings.Separator, headers.Select(h => row.TryGetValue(h, out var v) ? v : string.Empty)))
+            .ToList();
+
+        if (!settings.HasNoHeader && headers.Count > 0)
+        {
+            outputLines.Insert(0, string.Join(settings.Separator, headers));
+        }
+
+        return string.Join(Environment.NewLine, outputLines);
+    }
 }
