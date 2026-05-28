@@ -114,7 +114,36 @@ public sealed class EjemploDialog : Dialog {
 }
 
 
-public class SqliteAgendaStore {}
+public class SqliteAgendaStore {
+    private const string CrearTablaSql = @"
+        CREATE TABLE IF NOT EXISTS Contactos (
+            Id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            Nombre    TEXT NOT NULL,
+            Telefonos TEXT NOT NULL DEFAULT '',
+            Email     TEXT NOT NULL DEFAULT '',
+            Notas     TEXT NOT NULL DEFAULT '',
+            Favorito  INTEGER NOT NULL DEFAULT 0
+        ); ";
+
+    private readonly SqliteConnection conexion;
+    public SqliteAgendaStore(string rutaArchivo) {
+        conexion = new SqliteConnection($"Data Source={rutaArchivo}");
+        conexion.Open();
+        conexion.Execute(CrearTablaSql);
+    }
+    public List<Contacto> ObtenerTodos() {
+        return conexion.GetAll<Contacto>().ToList();
+    }
+    public void Agregar(Contacto c) {
+        conexion.Insert(c);
+    }
+    public void Actualizar(Contacto c) {
+        conexion.Update(c);
+    }
+    public void Eliminar(Contacto c) {
+        conexion.Delete(c);
+    }
+}
 public class JsonAgendaIO {
     public List<Contacto> importar(string ruta) {
         string texto = File.ReadAllText(ruta);
@@ -125,7 +154,7 @@ public class JsonAgendaIO {
         var opciones = new JsonSerializerOptions {
             WriteIndented = true,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-            
+
         string texto = JsonSerializer.Serialize(contactos, opciones);
         File.WriteAllText(ruta, texto);
     }
