@@ -11,10 +11,12 @@ using System.Text;
 
 try
 {
-    var settings = ParseArgs(args);
-    var inputData = ReadInput(config);
-    var records = ParseDelimited(text, config);
-    var sorted = SortRows(records, config);
+    var config = ParseArgs(args);
+    var text = ReadInput(config);
+    var rows = ParseDelimited(text, config);
+    var sorted = SortRows(rows, config);
+    var output = Serialize(sorted, config);
+    WriteOutput(output, config);
 }
 catch (Exception error)
 {
@@ -54,7 +56,7 @@ AppConfig ParseArgs(string[] args)
                 continue;
             case "-h":
             case "--help":
-                showHelp();
+                ShowHelp();
                 Environment.Exit(0);
                 continue;
             case "-b":
@@ -95,9 +97,9 @@ void ShowHelp()
     ");
 }
 //SortField
-Sortfield ParseField(string spec)
+SortField ParseField(string spec)
 {
-    var segments = input.Split(':');
+    var segments = spec.Split(':');
     var fieldName = segments[0];
     bool isNumeric = false;
     bool isDescending = false;
@@ -108,7 +110,7 @@ Sortfield ParseField(string spec)
 // 2. ReadInput      → leer el texto desde el archivo o stdin
 string ReadInput(AppConfig config)
 {
-    if(!string.IsNullOrEmpty(config.InputFile));
+    if(!string.IsNullOrEmpty(config.InputFile))
     {
         if(!File.Exists(config.InputFile))
         {
@@ -124,7 +126,7 @@ string ReadInput(AppConfig config)
 }
 
 //3. ParseDelimited → convertir el texto en una lista de filas (lista de diccionarios)
-List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+List<Dictionary<string, string>> ParseDelimited(string text, AppConfig settings)
 {
     var result = new List<Dictionary<string, string>>();
 
@@ -226,7 +228,18 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
     return builder.ToString();
 }
-
+//6. WriteOutput    → escribir en el archivo de salida o stdout
+void WriteOutput(string output, AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.OutputFile))
+    {
+        File.WriteAllText(config.OutputFile, output);
+    }
+    else
+    {
+        Console.WriteLine(output);
+    }
+}
 //Modelo de configuración
 record AppConfig(
     string? InputFile,
