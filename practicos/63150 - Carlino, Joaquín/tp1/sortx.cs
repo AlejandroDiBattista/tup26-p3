@@ -113,4 +113,13 @@ public class DatasetProcessor
         if (targetPath is null) Console.Write(data);
         else File.WriteAllText(targetPath, data);
     }
+      private decimal ConvertToDecimal(string input, string targetColumn)
+    {
+        const NumberStyles criteria = NumberStyles.Float | NumberStyles.AllowThousands;
+        
+        if (decimal.TryParse(input, criteria, CultureInfo.InvariantCulture, out var value)) return value;
+        if (decimal.TryParse(input, criteria, CultureInfo.CurrentCulture, out value)) return value;
+
+        throw new InvalidOperationException($"No se pudo interpretar '{input}' como numero en la columna '{targetColumn}'");
+    }
 }
