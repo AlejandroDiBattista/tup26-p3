@@ -113,14 +113,27 @@ public sealed class EjemploDialog : Dialog {
 
 
 public class SqliteAgendaStore {}
-public class JsonAgendaIO {}
+public class JsonAgendaIO {
+    
+}
 
 [Table("Contactos")]
-public class Contacto {
+public sealed class Contacto { //clase sealed porque asi daba la clase contactos de ejemplo en el enunciado, intuyo que es para que no sea heredada 
     [Key] public int    Id        { get; set; }
           public string Nombre    { get; set; } = "";
           public string Telefonos { get; set; } = "";
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+          public Contacto Clone() { //para no modificar el contacto original 
+              return new Contacto {
+                  Id        = this.Id,
+                  Nombre    = this.Nombre,
+                  Telefonos = this.Telefonos,
+                  Email     = this.Email,
+                  Notas     = this.Notas,
+                  Favorito  = this.Favorito
+              };
+          }
 }
