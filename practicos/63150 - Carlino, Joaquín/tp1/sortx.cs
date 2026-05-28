@@ -199,4 +199,24 @@ public static class CommandLineParser
         if (index + 1 >= args.Length) throw new InvalidOperationException($"Falta un valor para la opcion {args[index]}");
         return args[++index];
     }
+    private static SortCriteria CompileCriteria(string expression)
+    {
+        var segments = expression.Split(':');
+        if (segments.Length is < 1 or > 3 || string.IsNullOrWhiteSpace(segments[0]))
+            throw new InvalidOperationException($"La especificacion de campo '{expression}' es invalida.");
+
+        bool numericMode = segments.Length > 1 && segments[1] switch {
+            "alpha" => false,
+            "num" => true,
+            _ => throw new InvalidOperationException($"Tipo de ordenamiento invalido en '{expression}'.")
+        };
+
+        bool descendingMode = segments.Length > 2 && segments[2] switch {
+            "asc" => false,
+            "desc" => true,
+            _ => throw new InvalidOperationException($"Orden invalido en '{expression}'.")
+        };
+
+        return new SortCriteria(segments[0], numericMode, descendingMode);
+    }
 }
