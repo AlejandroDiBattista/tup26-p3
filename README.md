@@ -1,44 +1,56 @@
-﻿# Aprobar Programación 3
+﻿# Programación 3
+
+>[!IMPORTANT]
+> Está publicado el TP4: Catálogo REST.
+> Deben presentarlo hasta el martes 2 de junio.
+
+(Ver enunciado completo: [enunciados/tp4/enunciado.md](enunciados/tp4/enunciado.md))
+(Ver instrucción de entrega: [como-entregar-practico.md](como-entregar-practico.md))
 
 
-## Asistencias
-- La materia es presencial; la asistencia es obligatoria.
-- Los trabajos prácticos aprobados se pueden considerar como asistencia a clase a los fines de la promoción.
-- A la fecha, quedan 15 clases para finalizar el cursado.
+# ¿Cómo aprobar la materia?
 
+Para aprobar la materia se debe asistir, presentar los prácticos y aprobar los parciales.
+Dependiendo del desempeño en cada uno de estos aspectos, el alumno podrá quedar libre, regular o promocionar la materia.
 
-## Evaluación de prácticos
-- Los trabajos prácticos serán aprobados o rechazados en función de que se ejecuten sin error. No se les dará una nota numérica.
-- El trabajo es estrictamente individual y debe ser realizado en persona por el alumno.
-- La práctica se realizará en la computadora del alumno.
-- El alumno tiene libertad para usar cualquier recurso de aprendizaje, pero no podrá usar la IA para resolver los trabajos prácticos.
-
-
-## Evaluación de parciales
-- Los alumnos que tengan todos los prácticos aprobados y no alcancen la nota para la promoción podrán rendir un recuperatorio del primer parcial para mejorar su nota.
-- El último trabajo práctico actuará como examen final, que deberá defenderse en forma presencial ante el docente.
-- Si el sistema ejecuta sin error el trabajo práctico, la nota será un 5.
-- La defensa consistirá en la resolución de 5 consignas; cada una le dará un punto, por lo que podrá obtener hasta un 10.
-- La consigna consistirá en explicar el código y/o realizar cambios en él para resolver un problema o agregar una funcionalidad.
-
-
-## Regularización de la materia (para no recursar la materia)
+## ¿Cómo regularizo la materia?
 - Debe tener al menos 15 asistencias a clase verificadas.
 - Debe aprobar al menos 3 trabajos prácticos.
 - Debe aprobar ambos parciales con 4 o más.
 
-
-## Promoción de la materia (para no rendir el examen final)
+## ¿Cómo promociono la materia?
 - Debe tener al menos 30 asistencias a clase verificadas.
 - Debe aprobar todos los trabajos prácticos.
 - Debe aprobar ambos parciales con 8 o más.
 - Los trabajos prácticos se contabilizarán como 2 asistencias a clase, a los fines de la promoción.
 
 
-# Recuperación Trabajos prácticos
+## Sobre la asistencia a clase
+- La materia es presencial; la asistencia es obligatoria.
+- Los trabajos prácticos aprobados se pueden considerar como asistencia a clase a los fines de la promoción.
+- A la fecha, quedan 15 clases para finalizar el cursado.
+
+
+## Sobre la evaluación de los trabajos prácticos
+- Los trabajos prácticos serán aprobados o rechazados en función de que se ejecuten sin error. 
+- No se les dará una nota numérica.
+- El trabajo es *estrictamente individual* y debe ser realizado en persona por el alumno.
+- La práctica se realizará en la computadora del alumno.
+- El alumno tiene libertad para usar cualquier recurso de aprendizaje, pero *no podrá usar la IA para hacer* los trabajos prácticos.
+
+
+## ¿Cómo se evaluarán los parciales?
+- Los alumnos que tengan todos los prácticos aprobados y no alcancen la nota para la promoción podrán rendir un recuperatorio del primer parcial para mejorar su nota.
+- El último trabajo práctico actuará como examen final, que deberá defenderse en forma presencial ante el docente.
+- Si el sistema ejecuta sin error el trabajo práctico, la nota será un 5.
+- La defensa consistirá en la resolución de 5 consignas; cada una le dará un punto, por lo que podrá obtener hasta un 10.
+- La consigna consistirá en explicar el código y/o realizar cambios en él para resolver un problema o agregar una funcionalidad.
+- La defensa se realizará en la fecha acordada para cada grupo, en forma pública y presencial.
+
+
+## Recuperación Trabajos prácticos
 
 Dada la enorme cantidad de irregularidades detectadas en el TP3, se procedió a analizar detalladamente los trabajos prácticos anteriores.
-
 
 ## Rehacer TP3 _(para Promocionar)_
 > [!IMPORTANT]
@@ -63,6 +75,7 @@ Legajo  Alumno                     TP     As.  1P  Grupos
 > Plazo para entregar el TP1: 
 > **sábado 29 de mayo**
 
+
 ```text
 Legajo  Alumno                     TP     As.  1P  Grupos
 ------  -------------------------- -----  ---  --  ------
@@ -79,12 +92,13 @@ Legajo  Alumno                     TP     As.  1P  Grupos
 > Plazo para entregar el TP1 y TP2:
 > **miércoles 2 de junio**
 
+
 ```text
 Legajo  Alumno                     TP     As.  1P  Grupos
 ------  -------------------------- -----  ---  --  ------
 61026   Thompson, María José       🟠🟠🟢   12   9  F C -
-61490   Valdez Bustamante, Tomás   🟠🟠🔴   13   6  A A -
-63150   Carlino, Joaquín           🟠🟠🔴   13  10  A A -
+61490   Valdez Bustamante, Tomás   🟠🟠🔴   13  13  A A -
+63150   Carlino, Joaquín           🟠🟠🔴   13  13  A A -
 ```
 
 

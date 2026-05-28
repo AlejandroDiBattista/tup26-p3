@@ -48,7 +48,7 @@ Legajo  Nombre y Apellido               Teléfono       Fot  GitHub             
 63150   Carlino, Joaquín                (381)605-7383  Sí   vincent-coffe              🟠🟠🔴⚪️⚪️⚪️          🟢⚪️      No      13    10  C1A C2A
 63341   Carrer, Juan Cruz               (381)632-5727  Sí   juancarrer11               🟠🟠🟠⚪️⚪️⚪️          🟢⚪️      No       8    10  C1G C2B C3B
 63461   Cativa, Facundo Simón           (381)391-4222  Sí   cativafacundo9-gif         🟢🟢🔴⚪️⚪️⚪️          🟢⚪️      No      10     8  —
-63218   Cortés, Guillermo Augusto       (381)606-0586  Sí   guillecortes01             🟠🟠🟠⚪️⚪️⚪️          🟢⚪️      No      11    10  C1G C2B C3B
+63218   Cortés, Guillermo Augusto       (381)606-0586  Sí   guillecortes01             🟡🟡🟡⚪️⚪️⚪️          🟢⚪️      No      11    10  C1G C2B C3B
 64016   Cura, Rocío Aylen               (381)478-8799  Sí   rocura26                   🔴🟢🔴⚪️⚪️⚪️          🟡⚪️      No       6     7  —
 63266   Decima, Juan Cruz               (381)558-9063  Sí   devjuancruz003-com         🟢🟢🟢⚪️⚪️⚪️          🟢⚪️      No      12    10  —
 63137   Díaz, José Simón                (381)617-9958  Sí   josesimondiaz              🟢🟢🟢⚪️⚪️⚪️          🟡⚪️      No      10     6  —
