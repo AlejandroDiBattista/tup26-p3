@@ -1,21 +1,22 @@
-#!/usr/bin/env dotnet
 #:property PublishAot=false
 
-#:package Terminal.Gui@*
+#:package Terminal.Gui@2.0.1
 #:package Microsoft.Data.Sqlite@*
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
-
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Collections.ObjectModel;
+using Dapper;
+using Dapper.Contrib.Extensions;
+using Microsoft.Data.Sqlite;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-using Microsoft.Data.Sqlite;
-using Dapper;
-using System.Data.Common;
-using Dapper.Contrib.Extensions;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -23,9 +24,18 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
 
+string databasePath = args.Length > 0 ? args[0] : "agenda.db";
+
+try {
+    using SqliteAgendaStore store = new(databasePath);
+    using IApplication app = Application.Create().Init();
+    app.Run(new AgendaWindow(store));
+}
+catch (Exception ex) {
+    Console.Error.WriteLine($"No se pudo iniciar la agenda: {ex.Message}");
+    Environment.ExitCode = 1;
+}
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
