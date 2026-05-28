@@ -55,4 +55,44 @@ public class DatasetProcessor
 
         return (headers, records);
     }
+     private List<Dictionary<string, string>> ApplySorting(List<Dictionary<string, string>> records, List<string> headers, RuntimeSettings settings)
+    {
+        var criteria = new List<SortCriteria>();
+
+        foreach (var rule in settings.OrderingRules)
+        {
+            if (settings.HasNoHeader)
+            {
+                if (!int.TryParse(rule.Identifier, out var pos) || pos < 0 || pos >= headers.Count)
+                    throw new InvalidOperationException($"La columna '{rule.Identifier}' no existe");
+                
+                criteria.Add(rule with { Identifier = headers[pos] });
+            }
+            else
+            {
+                var matchedHeader = headers.FirstOrDefault(h => string.Equals(h, rule.Identifier, StringComparison.OrdinalIgnoreCase)) 
+                    ?? throw new InvalidOperationException($"La columna '{rule.Identifier}' no existe");
+                
+                criteria.Add(rule with { Identifier = matchedHeader });
+            }
+        }
+
+        records.Sort((rowX, rowY) => {
+            foreach (var rule in criteria)
+            {
+                var valX = rowX.TryGetValue(rule.Identifier, out var x) ? x : string.Empty;
+                var valY = rowY.TryGetValue(rule.Identifier, out var y) ? y : string.Empty;
+
+                int outcome = rule.IsNumerical
+                    ? ConvertToDecimal(valX, rule.Identifier).CompareTo(ConvertToDecimal(valY, rule.Identifier))
+                    : StringComparer.OrdinalIgnoreCase.Compare(valX, valY);
+
+                if (outcome != 0) 
+                    return rule.ReverseOrder ? -outcome : outcome;
+            }
+            return 0;
+        });
+
+        return records;
+    }
 }
