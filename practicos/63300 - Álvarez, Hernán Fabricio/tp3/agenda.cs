@@ -45,86 +45,213 @@ app.Run(new AgendaWindow(bd));
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+        private readonly SqliteAgendaStore _bd;
+        private List<Contacto> todos = new();
+        private List<Contacto> filtrados = new();
+
+        private ListView lista;
+        private TextField txtBuscar;
+        private CheckBox chkFav;
+        private Label estado;
+
+        private Label lblNom, labelTel, lblEmail;
+        private TextField txtNotas;
+
+    public AgendaWindow(SqliteAgendaStore bd) {
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        Cargar();
     }
 
     private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
+                    new MenuItem("_Importar JSON", "Ctrl+I", Importar),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", Exportar),
                     null!, // Separador
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ]),
+                new MenuBarItem("_Contactos",[
+                    new MenuItem("_Nuevo","F2 / Ctrl+N", AbrirDialogo),
+                    new MenuItem("_Editar","F3 / Enter", Editar),
+                    new MenuItem("_Eliminar","Del / Ctrl+D",Borrar)
+            ]),
+                new MenuBarItem("_Ayuda", [
+                    new MenuItem("_Acerca de", "", () => MostrarMsg("Acerca de ", "Agenda Terminal - TP3"))
                 ])
+                
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
-        };
+        Label etiBuscar = new() { Text = "Buscar:", X = 0, Y = 1 };
+        txtBuscar = new TextField() { X = Pos.Right(etiBuscar) + 1, Y = 1, Width = Dim.Percent(30) };
+        txtBuscar.TextChanged += (_, _) => Filtrar();
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
+        chkFav = new CheckBox() { Text = "Solo _favoritos", X = Pos.Right(txtBuscar) + 2, Y = 1 };
+        chkFav.Toggled += (_, _) => Filtrar();
 
-        Add(menu, openButton);
+        FrameView panelIzq = new() { Title = "Contactos", X = 0, Y = 2, Width = Dim.Percent(40), Height = Dim.Fill(1) };
+        lista = new ListView() { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
+        lista.SelectedItemChanged += (_, _) => VerDetalle();
+        panelIzq.Add(lista);
+
+        FrameView panelDer = new() { Title = "Detalles del Contacto", X = Pos.Right(panelIzq), Y = 2, Width = Dim.Fill(), Height = Dim.Fill(1) };
+        lblNom  = new Label() { X = 1, Y = 1, Width = Dim.Fill() };
+        lblTel  = new Label() { X = 1, Y = 3, Width = Dim.Fill() };
+        lblMail = new Label() { X = 1, Y = 5, Width = Dim.Fill() };
+        txtNotas = new TextView() { X = 1, Y = 8, Width = Dim.Fill() - 1, Height = Dim.Fill(), ReadOnly = true };
+
+        panelDer.Add(lblNom, lblTel, lblMail, new Label() { Text = "Notas:", X = 1, Y = 7 }, txtNotas);
+
+        estado = new Label() { Text = " Listo", X = 0, Y = Pos.AnchorEnd(1), Width = Dim.Fill(), Height = 1, ColorScheme = Colors.ColorSchemes["Menu"] };
+
+        Add(menu, etiBuscar, txtBuscar, chkFav, panelIzq, panelDer, estado);
+
     }
 
+    private void Cargar() {
+        try {
+            todos = _bd.LeerTodos().ToList();
+            Filtrar();
+        } catch (Exception ex) { MostrarMsg("Error", ex.Message);}
+    }
+    
+    private void Filtrar() {
+        string q txtBuscar.Text?.ToLower() ?? "";
+        bool fav = chkFav.Checked == true;
+
+        filtrados = todos.Where(c => {
+            if (favs && !c.Favorito) return false;
+            if (string.IsNullOrEmpty(q)) return true;
+            return (c.Nombre?.ToLower().Contains(q) == true) ||
+                   (c.Telefonos?.ToLower().Contains(q) == true) ||
+                   (c.Email?.ToLower().Contains(q) == true);
+        }).ToList();
+
+        lista.SetSource(filtrados);
+        VerDetalle();
+    }
+
+        private void VerDetalle() {
+            if(lista.SelectedItem >= 0 && lista.SelectedItem < filtrados.Count) {
+                var c = filtrados[lista.SelectedItem];
+                lblNom.Text = $"Nombre: {c.Nombre} {(c.Favorito ? "★" : "")}";
+                lblTel.Text = $"Teléfonos: {c.Telefonos}";
+                lblMail.Text = $"Email: {c.Email}";
+                txtNotas.Text = c.Notas ?? "";
+        } else {
+            lblNom.Text = lblTel.Text = lblMail.Text = txtNotas.Text = "";
+        }
+    }
+
+     private void MostrarMsg(string titulo, string msj) => MessageBox.Query(titulo, msj, "Ok");
+    private void SetEstado(string msj) => estado.Text = $" {msj}";
+
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
+        ContactDialog dialog = new();
         App!.Run(dialog);
+        if (dialog.Salida != null) {
+            try {
+                _bd.Crear(dialog.Salida);
+                Cargar();
+                SetEstado("Contacto creado.");
+            } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
+        }
+    }
+    private void Editar() {
+        if (lista.SelectedItem < 0 || lista.SelectedItem >= filtrados.Count) return;
+        var actual = filtrados[lista.SelectedItem];
+        var dialog = new ContactDialog(actual);
+        App!.Run(dialog);
+        
+        if (dialog.Salida != null) {
+            dialog.Salida.Id = actual.Id;
+            try {
+                _bd.Modificar(dialog.Salida);
+                Cargar();
+                SetEstado("Contacto actualizado.");
+            } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
+        }
+    }
+
+    private void Borrar() {
+        if (lista.SelectedItem < 0 || lista.SelectedItem >= filtrados.Count) return;
+        var c = filtrados[lista.SelectedItem];
+        if (MessageBox.Query("Confirmar", $"¿Eliminar a '{c.Nombre}'?", "Sí", "No") == 0) {
+            try {
+                _bd.Borrar(c);
+                Cargar();
+                SetEstado("Contacto eliminado.");
+            } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
+        }
+    }
+
+    private void Importar() {
+        string ruta = PedirRuta("Importar JSON", "Ruta de origen:");
+        if (string.IsNullOrWhiteSpace(ruta)) return;
+
+        try {
+            var lista = JsonAgendaIO.Importar(ruta).ToList();
+            if (MessageBox.Query("Confirmar", $"Importar {lista.Count} contactos?", "Sí", "No") == 0) {
+                foreach (var c in lista) { c.Id = 0; _bd.Crear(c); }
+                Cargar();
+                SetEstado($"Importados {lista.Count} contactos.");
+            }
+        } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
+    }
+
+    private void Exportar() {
+        string ruta = PedirRuta("Exportar JSON", "Ruta de destino:");
+        if (string.IsNullOrWhiteSpace(ruta)) return;
+        try {
+            JsonAgendaIO.Exportar(todos, ruta);
+            SetEstado($"Exportados a {ruta}.");
+        } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
+    }
+    private string PedirRuta(string titulo, string msj) {
+        string res = null;
+        Dialog diag = new() { Title = titulo, Width = 50, Height = 8 };
+        TextField txt = new() { X = 1, Y = 3, Width = Dim.Fill(1) };
+        Button btnOk = new() { Text = "Ok", IsDefault = true };
+        Button btnCan = new() { Text = "Cancelar" };
+        
+        btnOk.Accepting += (_, e) => { res = txt.Text; App!.RequestStop(); e.Handled = true; };
+        btnCan.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        
+        diag.Add(new Label() { Text = msj, X = 1, Y = 1 }, txt);
+        diag.AddButton(btnCan); diag.AddButton(btnOk);
+        App!.Run(diag);
+        return res;
     }
 
     private void SolicitarSalir() {
         App!.RequestStop();
     }
 
+
+        
+
+    
+
     protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) {
-            SolicitarSalir();
-            return true;
-        }
+        if (key == Key.F2 || key == Key.N.WithCtrl) { AbrirDialogo(); return true; }
+        if (key == Key.F3 || (key == Key.Enter && lista.HasFocus)) { Editar(); return true; }
+        if (key == Key.DeleteChar || key == Key.D.WithCtrl) { Borrar(); return true; }
+        if (key == Key.I.WithCtrl) { Importar(); return true; }
+        if (key == Key.E.WithCtrl) { Exportar(); return true; }
+        if (key == Key.F4) { txtBuscar.SetFocus(); return true; }
+        if (key == Key.Q.WithCtrl) { SolicitarSalir(); return true; }
 
         return base.OnKeyDown(key);
     }
 }
 
-// Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
-
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
-
-        Add(message);
-        AddButton(closeButton);
-    }
-}
 
 
 public class SqliteAgendaStore {}
