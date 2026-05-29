@@ -721,3 +721,157 @@ public sealed class ContactDialog : Dialog
 
         return true;
     }
+
+     private static Label CrearRotulo(string texto, int x, int y)
+    {
+        return new Label
+        {
+            Text = texto,
+            X = x,
+            Y = y,
+            Width = 11
+        };
+    }
+
+    private static TextField CrearEntrada(Pos x, int y, string texto)
+    {
+        return new TextField
+        {
+            Text = texto,
+            X = x,
+            Y = y,
+            Width = Dim.Fill(1)
+        };
+    }
+}
+
+public sealed class SqliteAgendaStore : IDisposable
+{
+    private readonly SqliteConnection conexionActiva;
+
+    public string DatabasePath { get; }
+
+    public SqliteAgendaStore(string databasePath)
+    {
+        DatabasePath = databasePath;
+
+        SqliteConnectionStringBuilder datosConexion = new()
+        {
+            DataSource = databasePath
+        };
+
+        conexionActiva = new SqliteConnection(datosConexion.ConnectionString);
+        conexionActiva.Open();
+
+        EnsureSchema();
+    }
+
+    public IEnumerable<Contacto> GetAll()
+    {
+        return conexionActiva.GetAll<Contacto>();
+    }
+
+    public int Insert(Contacto contact)
+    {
+        Validate(contact);
+        long id = conexionActiva.Insert(contact);
+        return checked((int)id);
+    }
+
+    public void Update(Contacto contact)
+    {
+        Validate(contact);
+        conexionActiva.Update(contact);
+    }
+
+    public void Delete(Contacto contact)
+    {
+        conexionActiva.Delete(contact);
+    }
+
+    public void Dispose()
+    {
+        conexionActiva.Dispose();
+    }
+
+    private void EnsureSchema()
+    {
+        conexionActiva.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL DEFAULT '',
+                Email TEXT NOT NULL DEFAULT '',
+                Notas TEXT NOT NULL DEFAULT '',
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+            """);
+    }
+
+    private static void Validate(Contacto contact)
+    {
+        contact.Nombre = contact.Nombre?.Trim() ?? "";
+        contact.Telefonos = PhoneTextTools.Normalizar(contact.Telefonos);
+        contact.Email = contact.Email?.Trim() ?? "";
+        contact.Notas ??= "";
+
+        if (string.IsNullOrWhiteSpace(contact.Nombre))
+        {
+            throw new InvalidOperationException("El nombre no puede estar vacio.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(contact.Email) && !contact.Email.Contains('@'))
+        {
+            throw new InvalidOperationException("El email debe contener @.");
+        }
+    }
+
+}
+
+public static class JsonAgendaIO
+{
+    private static readonly JsonSerializerOptions OpcionesJson = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = null,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    public static IReadOnlyList<Contacto> Read(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException("El archivo JSON no existe.", path);
+        }
+
+        try
+        {
+            string json = File.ReadAllText(path, Encoding.UTF8);
+            List<Contacto>? contactosLeidos = JsonSerializer.Deserialize<List<Contacto>>(json, OpcionesJson);
+
+            return contactosLeidos?.Select(LimpiarContactoImportado).ToList() ?? [];
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"JSON con formato invalido: {ex.Message}", ex);
+        }
+    }
+
+    public static void Write(string path, IEnumerable<Contacto> contacts)
+    {
+        string json = JsonSerializer.Serialize(contacts, OpcionesJson);
+        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+
+    private static Contacto LimpiarContactoImportado(Contacto contact)
+    {
+        contact.Id = 0;
+        contact.Nombre = contact.Nombre?.Trim() ?? "";
+        contact.Telefonos = PhoneTextTools.Normalizar(contact.Telefonos);
+        contact.Email = contact.Email?.Trim() ?? "";
+        contact.Notas ??= "";
+        return contact;
+    }
+}
+
