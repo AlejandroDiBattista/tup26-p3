@@ -20,6 +20,7 @@ using System.Text.Json;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Dapper.Contrib.Extensions;
 
 /// ==== 
@@ -278,11 +279,6 @@ public sealed class AgendaWindow : Runnable {
         VerDetalle();
         return handled;
     }
-
-        
-
-    
-
    
 }
 /* 3- clase contactDialog */
