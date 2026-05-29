@@ -38,152 +38,222 @@ catch (Exception ex) {
 }
 
 // Ventana principal
-public sealed class AgendaWindow : Runnable {
+public sealed class AgendaWindow : Window {
+    private readonly SqliteAgendaStore store;
+    private readonly List<Contacto> contacts;
+    private readonly List<Contacto> filteredContacts = [];
 
-    public AgendaWindow() {
-        Title  = "Agenda - Terminal.Gui";
-        Width  = Dim.Fill();
+    private TextField searchField = null!;
+    private ListView listView = null!;
+    private Label detailLabel = null!;
+    private StatusBar statusBar = null!;
+    private bool onlyFavorites;
+    private int selectedIndex;
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
+        contacts = store.GetAll().ToList();
+
+        Title = $"Agenda - {store.DatabasePath}";
+        Width = Dim.Fill();
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        RefreshFilteredContacts();
+        SetStatus($"Agenda abierta. {contacts.Count} contacto(s).");
     }
 
     private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportJson),
+                    null!,
+                    new MenuItem("_Salir", "Ctrl+Q", RequestExit)
+                ]),
+                new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo", "F2 / Ctrl+N", NewContact),
+                    new MenuItem("_Editar", "F3 / Enter", EditSelectedContact),
+                    new MenuItem("_Eliminar", "Del / Ctrl+D", DeleteSelectedContact)
+                ]),
+                new MenuBarItem("_Ver", [
+                    new MenuItem("_Solo favoritos", null!, ToggleOnlyFavorites)
+                ]),
+                new MenuBarItem("_Ayuda", [
+                    new MenuItem("_Acerca de", null!, ShowAbout)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        Label searchLabel = new() {
+            Text = "Buscar:",
+            X = 1,
+            Y = 1,
+            Width = 8
         };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        searchField = new TextField {
+            X = Pos.Right(searchLabel) + 1,
+            Y = 1,
+            Width = Dim.Fill(1)
+        };
+        searchField.TextChanged += (_, _) => RefreshFilteredContacts();
+
+        FrameView listFrame = new() {
+            Title = "Contactos",
+            X = 1,
+            Y = 3,
+            Width = Dim.Percent(38),
+            Height = Dim.Fill(1)
         };
 
-        Add(menu, openButton);
+        listView = new ListView {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        listFrame.Add(listView);
+
+        FrameView detailFrame = new() {
+            Title = "Detalle",
+            X = Pos.Right(listFrame) + 1,
+            Y = 3,
+            Width = Dim.Fill(1),
+            Height = Dim.Fill(1)
+        };
+
+        detailLabel = new Label {
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(1),
+            Height = Dim.Fill()
+        };
+        detailFrame.Add(detailLabel);
+
+        statusBar = new StatusBar([
+            new Shortcut(Key.F2, "Nuevo", NewContact),
+            new Shortcut(Key.F3, "Editar", EditSelectedContact),
+            new Shortcut(Key.Delete, "Eliminar", DeleteSelectedContact),
+            new Shortcut(Key.F4, "Buscar", FocusSearch),
+            new Shortcut(Key.Q.WithCtrl, "Salir", RequestExit)
+        ]);
+
+        Add(menu, searchLabel, searchField, listFrame, detailFrame, statusBar);
     }
 
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
+    private void RefreshFilteredContacts() {
+        string query = searchField?.Text?.ToString() ?? "";
+        int currentId = SelectedContact()?.Id ?? 0;
+
+        filteredContacts.Clear();
+        filteredContacts.AddRange(contacts
+            .Where(c => (!onlyFavorites || c.Favorito) && MatchesSearch(c, query))
+            .OrderByDescending(c => c.Favorito)
+            .ThenBy(c => c.Nombre, StringComparer.CurrentCultureIgnoreCase));
+
+        listView?.SetSource(new ObservableCollection<string>(filteredContacts.Select(FormatContactListItem).ToList()));
+
+        selectedIndex = 0;
+        if (currentId != 0) {
+            int found = filteredContacts.FindIndex(c => c.Id == currentId);
+            selectedIndex = found >= 0 ? found : 0;
+        }
+
+        if (listView is not null && filteredContacts.Count > 0) {
+            listView.SelectedItem = Math.Min(selectedIndex, filteredContacts.Count - 1);
+        }
+
+        UpdateDetails();
     }
 
-    private void SolicitarSalir() {
-        App!.RequestStop();
-    }
-
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) {
-            SolicitarSalir();
+    private static bool MatchesSearch(Contacto contact, string query) {
+        if (string.IsNullOrWhiteSpace(query)) {
             return true;
         }
 
-        return base.OnKeyDown(key);
-    }
-}
-
-// Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
-
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
-
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
-
-        Add(message);
-        AddButton(closeButton);
-    }
-}
-
-
-public sealed class SqliteAgendaStore : IDisposable {
-    private readonly SqliteConnection connection;
-
-    public string DatabasePath { get; }
-
-    public SqliteAgendaStore(string databasePath) {
-        DatabasePath = databasePath;
-        SqliteConnectionStringBuilder builder = new() {
-            DataSource = databasePath
-        };
-
-        connection = new SqliteConnection(builder.ConnectionString);
-        connection.Open();
-        EnsureSchema();
+        return contact.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || contact.Telefonos.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || contact.Email.Contains(query, StringComparison.CurrentCultureIgnoreCase);
     }
 
-    public IEnumerable<ListaContacto> GetAll() {
-        return connection.GetAll<ListaContacto>();
+    private static string FormatContactListItem(Contacto contact) {
+        string favorite = contact.Favorito ? "* " : "  ";
+        string email = string.IsNullOrWhiteSpace(contact.Email) ? "" : $" <{contact.Email}>";
+        return $"{favorite}{contact.Nombre}{email}";
     }
 
-    public int Insertar(ListaContacto contact) {
-        Validate(contact);
-        long id = connection.Insert(contact);
-        return checked((int)id);
-    }
-
-    public void Actualizar(ListaContacto contact) {
-        Validate(contact);
-        connection.Update(contact);
-    }
-
-    public void Borrar(ListaContacto contact) {
-        connection.Delete(contact);
-    }
-
-    public void Dispose() {
-        connection.Dispose();
-    }
-
-    private void EnsureSchema() {
-        connection.Execute("""
-            CREATE TABLE IF NOT EXISTS Contactos (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Nombre TEXT NOT NULL,
-                Telefonos TEXT NOT NULL DEFAULT '',
-                Email TEXT NOT NULL DEFAULT '',
-                Notas TEXT NOT NULL DEFAULT '',
-                Favorito INTEGER NOT NULL DEFAULT 0
-            );
-            """);
-    }
-
-    private static void Validate(ListaContacto contactos) {
-        if (string.IsNullOrWhiteSpace(contactos.Nombre)) {
-            throw new InvalidOperationException("El nombre no puede estar vacio.");
+    private Contacto? SelectedContact() {
+        if (filteredContacts.Count == 0) {
+            return null;
         }
 
-        if (!string.IsNullOrWhiteSpace(contactos.Email) && !contactos.Email.Contains('@')) {
-            throw new InvalidOperationException("El email debe contener @.");
+        int index = listView is null ? selectedIndex : listView.SelectedItem ?? selectedIndex;
+        if (index < 0 || index >= filteredContacts.Count) {
+            index = 0;
+        }
+
+        return filteredContacts[index];
+    }
+
+    private void UpdateDetails() {
+        Contacto? contact = SelectedContact();
+        if (detailLabel is null) {
+            return;
+        }
+
+        detailLabel.Text = contact is null
+            ? "No hay contactos para mostrar."
+            : BuildDetails(contact);
+    }
+
+    private static string BuildDetails(Contacto contact) {
+        string favorite = contact.Favorito ? "Si" : "No";
+        return
+            $"Id: {contact.Id}\n" +
+            $"Nombre: {contact.Nombre}\n" +
+            $"Telefonos: {contact.Telefonos}\n" +
+            $"Email: {contact.Email}\n" +
+            $"Favorito: {favorite}\n\n" +
+            $"Notas:\n{contact.Notas}";
+    }
+
+    private void NewContact() {
+        ContactDialog dialog = new();
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null) {
+            SetStatus("Alta cancelada.");
+            return;
+        }
+
+        try {
+            Contacto saved = dialog.Contact;
+            int id = store.Insert(saved);
+            saved.Id = id;
+            contacts.Add(saved);
+            RefreshFilteredContacts();
+            SelectContact(id);
+            SetStatus($"Contacto agregado: {saved.Nombre}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al guardar", ex.Message, "Aceptar");
         }
     }
+
+    private void EditSelectedContact() {
+        Contacto? selected = SelectedContact();
+        if (selected is null) {
+            SetStatus("No hay contacto seleccionado para editar.");
+            return;
+        }
+    }
+
 }
+
+
 public static class JsonAgendaIO {
     private static readonly JsonSerializerOptions Options = new() {
         WriteIndented = true,
@@ -191,14 +261,14 @@ public static class JsonAgendaIO {
         DefaultIgnoreCondition = JsonIgnoreCondition.Never
     };
 
-    public static IReadOnlyList<ListaContacto> Read(string path) {
+    public static IReadOnlyList<Contacto> Read(string path) {
         if (!File.Exists(path)) {
             throw new FileNotFoundException("El archivo JSON no existe.", path);
         }
 
         try {
             string json = File.ReadAllText(path, Encoding.UTF8);
-            List<ListaContacto>? contactos = JsonSerializer.Deserialize<List<ListaContacto>>(json, Options);
+            List<Contacto>? contactos = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
             return contactos?.Select(c => {
                 c.Id = 0;
                 c.Nombre = c.Nombre?.Trim() ?? "";
@@ -213,14 +283,14 @@ public static class JsonAgendaIO {
         }
     }
 
-    public static void Write(string path, IEnumerable<ListaContacto> contacts) {
+    public static void Write(string path, IEnumerable<Contacto> contacts) {
         string json = JsonSerializer.Serialize(contacts, Options);
         File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 }
 
 [Table("Contactos")]
-public sealed class ListaContacto {
+public sealed class Contacto {
     [Key]
     public int Id { get; set; }
 
@@ -234,8 +304,8 @@ public sealed class ListaContacto {
 
     public bool Favorito { get; set; }
 
-    public ListaContacto Clone() {
-        return new ListaContacto {
+    public Contacto Clone() {
+        return new Contacto {
             Id = Id,
             Nombre = Nombre,
             Telefonos = Telefonos,
