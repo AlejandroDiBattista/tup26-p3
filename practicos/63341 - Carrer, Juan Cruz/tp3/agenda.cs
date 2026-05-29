@@ -629,6 +629,76 @@ public sealed class ContactDialog : Dialog {
     }
 }
 
+public sealed class SqliteAgendaStore : IDisposable {
+    private readonly SqliteConnection dbConnection;
+
+    public string DatabasePath { get; }
+
+    public SqliteAgendaStore(string databasePath) {
+        DatabasePath = databasePath;
+
+        SqliteConnectionStringBuilder connectionBuilder = new() {
+            DataSource = databasePath
+        };
+
+        dbConnection = new SqliteConnection(connectionBuilder.ConnectionString);
+
+        dbConnection.Open();
+
+        EnsureSchema();
+    }
+
+    public IEnumerable<Contacto> GetAll() {
+        return dbConnection.GetAll<Contacto>();
+    }
+
+    public int Insert(Contacto contacto) {
+        Validate(contacto);
+
+        long newId = dbConnection.Insert(contacto);
+
+        return checked((int)newId);
+    }
+
+    public void Update(Contacto contacto) {
+        Validate(contacto);
+
+        dbConnection.Update(contacto);
+    }
+
+    public void Delete(Contacto contacto) {
+        dbConnection.Delete(contacto);
+    }
+
+    public void Dispose() {
+        dbConnection.Dispose();
+    }
+
+    private void EnsureSchema() {
+        dbConnection.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL DEFAULT '',
+                Email TEXT NOT NULL DEFAULT '',
+                Notas TEXT NOT NULL DEFAULT '',
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+            """);
+    }
+
+    private static void Validate(Contacto contacto) {
+        if (string.IsNullOrWhiteSpace(contacto.Nombre)) {
+            throw new InvalidOperationException("El nombre no puede estar vacio.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(contacto.Email)
+            && !contacto.Email.Contains('@')) {
+
+            throw new InvalidOperationException("El email debe contener @.");
+        }
+    }
+}
 
 
 
