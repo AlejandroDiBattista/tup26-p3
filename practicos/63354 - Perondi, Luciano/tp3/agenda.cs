@@ -17,26 +17,43 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 using System.Text.Json; //para el JsonSerializer y JsonSerializerOptions
-using System.Text.Encodings.Web; // para el encoder 
+using System.Text.Encodings.Web; // para el encoder
+using System.Collections.ObjectModel; //se actualizo la terminalGUIv2 y ahora el ListView no acepta List<string>, solo ObservableCollection<string>, 
+                                    //la IA me dijo que solucione importando esta libreria
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
 /// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
 /// ====
 
-// Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+// Punto de entrada - modificado
+string ruta = args.Length > 0 ? args[0] : "agenda.db";
+SqliteAgendaStore almacen = new(ruta);
 
-// Ventana principal
+using IApplication app = Application.Create().Init();
+app.Run(new AgendaWindow(almacen));
+
+// Ventana principal - modificado
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+    private readonly SqliteAgendaStore almacen;
+    private List<Contacto> contactosTodos = new();
+    private List<Contacto> contactosFiltrados = new();
+    private ListView<string> listaContactos = null!;
+    private TextField campoBusqueda = null!;
+    private Label panelDetalle = null!;
+
+    public AgendaWindow(SqliteAgendaStore almacen) {
+        this.almacen = almacen;
+
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
-
         Menu.DefaultBorderStyle = LineStyle.Single;
+
+        contactosTodos = almacen.ObtenerTodos();
+        contactosFiltrados = contactosTodos;
+
         BuildLayout();
     }
 
@@ -51,18 +68,65 @@ public sealed class AgendaWindow : Runnable {
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        Label etiquetaBuscar = new() { Text = "Buscar:", X = 0, Y = 1 };
+        campoBusqueda = new() {
+            X     = Pos.Right(etiquetaBuscar) + 1,
+            Y     = 1,
+            Width = Dim.Fill()
         };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        listaContactos = new() {
+            X      = 0,
+            Y      = 3,
+            Width  = Dim.Fill(),
+            Height = Dim.Fill() - 6
+        };
+        panelDetalle = new() {
+            X      = 0,
+            Y      = Pos.Bottom(listaContactos),
+            Width  = Dim.Fill(),
+            Height = 6
         };
 
-        Add(menu, openButton);
+        Add(menu, etiquetaBuscar, campoBusqueda, listaContactos, panelDetalle);
+        campoBusqueda.TextChanged += (_, _) => RefrescarLista();
+        listaContactos.ValueChanged += (_, _) => RefrescarDetalle();
+        RefrescarLista(); 
+    }
+
+    private void RefrescarLista() {
+        string filtro = (campoBusqueda.Text ?? "").Trim();
+
+        contactosFiltrados = contactosTodos
+            .Where(c => filtro == ""
+                     || c.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+                     || c.Telefonos.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+                     || c.Email.Contains(filtro, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var lineas = contactosFiltrados
+            .Select(c => c.Nombre)
+            .ToList();
+        listaContactos.SetSource(new ObservableCollection<string>(lineas));
+    }
+    private void RefrescarDetalle() {
+        Contacto? c = ContactoSeleccionado();
+        if (c == null) {
+            panelDetalle.Text = "";
+            return;
+        }
+        string fav = c.Favorito ? "Sí" : "No";
+        panelDetalle.Text =
+            $"Nombre: {c.Nombre}\n" +
+            $"Teléfonos: {c.Telefonos}\n" +
+            $"Email: {c.Email}\n" +
+            $"Notas: {c.Notas}\n" +
+            $"Favorito: {fav}";
+    }
+    private Contacto? ContactoSeleccionado() {
+        string? nombre = listaContactos.SelectedItem;
+        if (nombre == null) return null;
+        return contactosFiltrados.FirstOrDefault(c => c.Nombre == nombre);
     }
 
     private void AbrirDialogo() {
@@ -85,8 +149,8 @@ public sealed class AgendaWindow : Runnable {
 }
 
 public sealed class ContactDialog : Dialog {
-    public Contacto? resultado { get; private set; }
-    public bool cancelado { get; private set; } = true;
+    public Contacto? Resultado { get; private set; }
+    public bool Cancelado { get; private set; } = true;
     // campos de un contacto
     private readonly TextField campoNombre;
     private readonly TextField campoTelefonos;
@@ -148,7 +212,7 @@ public sealed class ContactDialog : Dialog {
                 return;
             }
 
-            resultado = new Contacto {
+            Resultado = new Contacto {
                 Id        = contacto.Id,
                 Nombre    = nombre,
                 Telefonos = (campoTelefonos.Text ?? "").Trim(),
@@ -156,7 +220,7 @@ public sealed class ContactDialog : Dialog {
                 Notas     = (campoNotas.Text ?? "").Trim(),
                 Favorito  = campoFavorito.Value == CheckState.Checked
             };
-            cancelado = false;
+            Cancelado = false; 
             App!.RequestStop();
         };
 
