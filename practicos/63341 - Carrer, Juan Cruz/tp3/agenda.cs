@@ -699,41 +699,56 @@ public sealed class SqliteAgendaStore : IDisposable {
         }
     }
 }
-
-
-
 public static class JsonAgendaIO {
-    private static readonly JsonSerializerOptions Options = new() {
+    private static readonly JsonSerializerOptions JsonOptions = new() {
         WriteIndented = true,
         PropertyNamingPolicy = null,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never
     };
 
-    public static IReadOnlyList<Contacto> Read(string path) {
-        if (!File.Exists(path)) {
-            throw new FileNotFoundException("El archivo JSON no existe.", path);
+    public static IReadOnlyList<Contacto> Read(string filePath) {
+        if (!File.Exists(filePath)) {
+            throw new FileNotFoundException(
+                "El archivo JSON no existe.",
+                filePath);
         }
 
         try {
-            string json = File.ReadAllText(path, Encoding.UTF8);
-            List<Contacto>? contactos = JsonSerializer.Deserialize<List<Contacto>>(json, Options);
-            return contactos?.Select(c => {
-                c.Id = 0;
-                c.Nombre = c.Nombre?.Trim() ?? "";
-                c.Telefonos ??= "";
-                c.Email ??= "";
-                c.Notas ??= ""; 
-                return c;
+            string jsonContent = File.ReadAllText(filePath, Encoding.UTF8);
+
+            List<Contacto>? contactos =
+                JsonSerializer.Deserialize<List<Contacto>>(
+                    jsonContent,
+                    JsonOptions);
+
+            return contactos?.Select(contacto => {
+                contacto.Id = 0;
+                contacto.Nombre = contacto.Nombre?.Trim() ?? "";
+                contacto.Telefonos ??= "";
+                contacto.Email ??= "";
+                contacto.Notas ??= "";
+
+                return contacto;
             }).ToList() ?? [];
         }
         catch (JsonException ex) {
-            throw new InvalidOperationException($"JSON con formato invalido: {ex.Message}", ex);
+            throw new InvalidOperationException(
+                $"JSON con formato invalido: {ex.Message}",
+                ex);
         }
     }
 
-    public static void Write(string path, IEnumerable<Contacto> contacts) {
-        string json = JsonSerializer.Serialize(contacts, Options);
-        File.WriteAllText(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    public static void Write(
+        string filePath,
+        IEnumerable<Contacto> contactos) {
+
+        string jsonContent =
+            JsonSerializer.Serialize(contactos, JsonOptions);
+
+        File.WriteAllText(
+            filePath,
+            jsonContent,
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 }
 
