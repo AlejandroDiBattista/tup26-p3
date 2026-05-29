@@ -57,6 +57,8 @@ public sealed class AgendaWindow : Runnable {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
+                    new MenuItem(" _Importar JSON ", "", ImportarJson),
+                    new MenuItem(" _Exportar JSON ", "", ExportarJson),
                     null!,
                     new MenuItem(" _Salir ", "Ctrl+Q", Salir)
                 ]),
@@ -222,6 +224,46 @@ public sealed class AgendaWindow : Runnable {
 
         ActualizarLista();
     }
+    void ExportarJson() {
+
+        try {
+            JsonAgendaIO.Exportar(
+                "agenda_exportada.json",
+                contactos
+            );
+            estado.Text = "JSON exportado";
+        }
+        catch (Exception ex) {
+            Mensaje(ex.Message);
+        }
+    }
+
+    void ImportarJson() {
+        try {
+            List<Contacto> nuevos =
+                JsonAgendaIO.Importar(
+                    "agenda_exportada.json"
+                );
+            int r = MessageBox.Query(
+                App!,
+                "Importar",
+                $"Se agregaran {nuevos.Count} contactos",
+                "Cancelar",
+                "Importar"
+            ) ?? 0;
+            if (r != 1) return;
+            foreach (Contacto c in nuevos) {
+                c.Id = 0;
+                baseDatos.Insertar(c);
+            }
+            Recargar();
+            estado.Text = "Importacion completada";
+        }
+        catch (Exception ex) {
+            Mensaje(ex.Message);
+        }
+    }
+
     void Mensaje(string texto) {
 
         MessageBox.ErrorQuery(
@@ -491,7 +533,26 @@ public sealed class SqliteAgendaStore {
         db.Delete(c);
     }
 }
-public static class JsonAgendaIO {}
+public static class JsonAgendaIO {
+    static readonly JsonSerializerOptions opciones =
+        new() { WriteIndented = true };
+    public static void Exportar(
+        string ruta,
+        List<Contacto> contactos
+    ) {
+        File.WriteAllText(
+            ruta,
+            JsonSerializer.Serialize(contactos, opciones)
+        );
+    }
+    public static List<Contacto> Importar(string ruta) {
+        if (!File.Exists(ruta))
+            throw new Exception("No existe el archivo JSON");
+        return JsonSerializer.Deserialize<List<Contacto>>(
+            File.ReadAllText(ruta)
+        ) ?? [];
+    }
+}
 [Table("Contactos")]
 public sealed class Contacto {
     [Key]
