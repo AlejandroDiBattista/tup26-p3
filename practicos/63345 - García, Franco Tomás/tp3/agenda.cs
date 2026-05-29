@@ -69,12 +69,13 @@ public sealed class AgendaWindow : Window{
     private List<Contacto> contacts = [];
     private ListView listView = null!;
     private void AbrirDialogo() {
-        var nuevo = new Contacto {
-            Nombre = "Contacto " + (contacts.Count + 1)
-        };
+    var dialog = new ContactoDialog();
+    App!.Run(dialog);
 
-        store.Insert(nuevo);
-        contacts.Add(nuevo);
+    if (dialog.Resultado != null) {
+        store.Insert(dialog.Resultado);
+
+        contacts.Add(dialog.Resultado);
 
         listView.SetSource(
             new ObservableCollection<string>(
@@ -82,6 +83,7 @@ public sealed class AgendaWindow : Window{
             )
         );
     }
+}
 
     private void SolicitarSalir() {
         App!.RequestStop();
@@ -98,30 +100,56 @@ public sealed class AgendaWindow : Window{
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
+public sealed class ContactoDialog : Dialog {
+
+    private TextField nombreField;
+    private TextField telefonoField;
+    private TextField emailField;
+    private TextView notasField;
+
+    public Contacto? Resultado { get; private set; }
+
+    public ContactoDialog() {
+        Title  = "Nuevo Contacto";
         Width  = 50;
-        Height = 8;
+        Height = 18;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
+        Add(new Label() { Text = "Nombre:", X = 1, Y = 1 });
+        nombreField = new TextField() { Text = "", X = 15, Y = 1, Width = 30 };
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
+        Add(new Label() { Text = "Teléfono:", X = 1, Y = 3 });
+        telefonoField = new TextField() { Text = "", X = 15, Y = 3, Width = 30 };
 
-        closeButton.Accepting += (_, e) => {
+        Add(new Label() { Text = "Email:", X = 1, Y = 5 });
+        emailField = new TextField() { Text = "", X = 15, Y = 5, Width = 30 };
+
+        Add(new Label() { Text = "Notas:", X = 1, Y = 7 });
+        notasField = new TextView() { X = 15, Y = 7, Width = 30, Height = 4 };
+
+        Button guardar = new() { Text = "_Guardar", IsDefault = true };
+        Button cancelar = new() { Text = "_Cancelar" };
+
+        guardar.Accepting += (_, e) => {
+            Resultado = new Contacto {
+                Nombre = nombreField.Text.ToString() ?? "",
+                Telefonos = telefonoField.Text.ToString() ?? "",
+                Email = emailField.Text.ToString() ?? "",
+                Notas = notasField.Text.ToString() ?? ""
+            };
+
             App!.RequestStop();
             e.Handled = true;
         };
 
-        Add(message);
-        AddButton(closeButton);
+        cancelar.Accepting += (_, e) => {
+            Resultado = null;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Add(nombreField, telefonoField, emailField, notasField);
+        AddButton(guardar);
+        AddButton(cancelar);
     }
 }
 
