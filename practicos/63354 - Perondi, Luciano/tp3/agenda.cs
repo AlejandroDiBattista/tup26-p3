@@ -42,6 +42,7 @@ public sealed class AgendaWindow : Runnable {
     private ListView<string> listaContactos = null!;
     private TextField campoBusqueda = null!;
     private Label panelDetalle = null!;
+    private bool soloFavoritos = false;
 
     public AgendaWindow(SqliteAgendaStore almacen) {
         this.almacen = almacen;
@@ -62,35 +63,49 @@ public sealed class AgendaWindow : Runnable {
             Menus = [
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
+                    new MenuItem("_Editar", null!, EditarSeleccionado),
+                    new MenuItem("E_liminar", null!, EliminarSeleccionado),
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportarJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportarJson),
+                    null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ]),
+                new MenuBarItem("_Ver", [
+                    new MenuItem("Solo _favoritos", null!, AlternarFavoritos)
                 ])
             ]
         };
 
         Label etiquetaBuscar = new() { Text = "Buscar:", X = 0, Y = 1 };
         campoBusqueda = new() {
-            X     = Pos.Right(etiquetaBuscar) + 1,
-            Y     = 1,
+            X = Pos.Right(etiquetaBuscar) + 1,
+            Y = 1,
             Width = Dim.Fill()
         };
 
         listaContactos = new() {
-            X      = 0,
-            Y      = 3,
-            Width  = Dim.Fill(),
-            Height = Dim.Fill() - 6
+            X = 0,
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill() - 7
+        };
+
+        Label tituloDetalle = new() {
+            Text = "── Detalle ──",
+            X = 0,
+            Y = Pos.Bottom(listaContactos)
         };
         panelDetalle = new() {
-            X      = 0,
-            Y      = Pos.Bottom(listaContactos),
-            Width  = Dim.Fill(),
+            X = 0,
+            Y = Pos.Bottom(tituloDetalle),
+            Width = Dim.Fill(),
             Height = 6
         };
 
-        Add(menu, etiquetaBuscar, campoBusqueda, listaContactos, panelDetalle);
+        Add(menu, etiquetaBuscar, campoBusqueda, listaContactos, tituloDetalle, panelDetalle);
         campoBusqueda.TextChanged += (_, _) => RefrescarLista();
         listaContactos.ValueChanged += (_, _) => RefrescarDetalle();
+        listaContactos.Activated += (_, _) => EditarSeleccionado();
         RefrescarLista(); 
     }
 
@@ -102,6 +117,7 @@ public sealed class AgendaWindow : Runnable {
                      || c.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase)
                      || c.Telefonos.Contains(filtro, StringComparison.OrdinalIgnoreCase)
                      || c.Email.Contains(filtro, StringComparison.OrdinalIgnoreCase))
+            .Where(c => !soloFavoritos || c.Favorito)
             .ToList();
 
         var lineas = contactosFiltrados
@@ -129,9 +145,46 @@ public sealed class AgendaWindow : Runnable {
         return contactosFiltrados.FirstOrDefault(c => c.Nombre == nombre);
     }
 
+    private void AlternarFavoritos() {
+        soloFavoritos = !soloFavoritos;
+        RefrescarLista();
+    }
+
     private void AbrirDialogo() {
         ContactDialog dialog = new(new Contacto());
         App!.Run(dialog);
+
+        if (dialog.Cancelado || dialog.Resultado == null) return;
+
+        almacen.Agregar(dialog.Resultado);
+        contactosTodos = almacen.ObtenerTodos();
+        RefrescarLista();
+    }
+
+    private void EditarSeleccionado() {
+        Contacto? c = ContactoSeleccionado();
+        if (c == null) return;
+
+        ContactDialog dialog = new(c.Clone());
+        App!.Run(dialog);
+
+        if (dialog.Cancelado || dialog.Resultado == null) return;
+
+        almacen.Actualizar(dialog.Resultado);
+        contactosTodos = almacen.ObtenerTodos();
+        RefrescarLista();
+    }
+
+    private void EliminarSeleccionado() {
+        Contacto? c = ContactoSeleccionado();
+        if (c == null) return;
+
+        int? r = MessageBox.Query(App!, "Confirmar", $"¿Eliminar a {c.Nombre}?", "Sí", "No");
+        if (r != 0) return;
+
+        almacen.Eliminar(c);
+        contactosTodos = almacen.ObtenerTodos();
+        RefrescarLista();
     }
 
     private void SolicitarSalir() {
@@ -139,13 +192,48 @@ public sealed class AgendaWindow : Runnable {
     }
 
     protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) {
-            SolicitarSalir();
-            return true;
-        }
-
+        if (key == Key.Q.WithCtrl) { SolicitarSalir();        return true; }
+        if (key == Key.N.WithCtrl) { AbrirDialogo();          return true; }
+        if (key == Key.F2)         { AbrirDialogo();          return true; }
+        if (key == Key.F3)         { EditarSeleccionado();    return true; }
+        if (key == Key.D.WithCtrl) { EliminarSeleccionado();  return true; }
+        if (key == Key.DeleteChar) { EliminarSeleccionado();  return true; }
+        if (key == Key.F4)         { campoBusqueda.SetFocus(); return true; }
+        if (key == Key.F5)         { AlternarFavoritos();     return true; }
+        if (key == Key.I.WithCtrl) { ImportarJson(); return true; }
+        if (key == Key.E.WithCtrl) { ExportarJson(); return true; }
         return base.OnKeyDown(key);
     }
+
+    private void ExportarJson() {
+        JsonAgendaIO io = new();
+        try {
+            io.exportar("contactos.json", contactosTodos);
+            MessageBox.Query(App!, "Exportar", "Contactos exportados a contactos.json", "Aceptar");
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+        }
+    }
+    private void ImportarJson() {
+        JsonAgendaIO io = new();
+        try {
+            List<Contacto> importados = io.importar("contactos.json");
+
+            int r = MessageBox.Query(App!, "Importar",
+                $"Se encontraron {importados.Count} contactos. ¿Importar?", "Sí", "No") ?? 1;
+            if (r != 0) return;
+
+            foreach (Contacto c in importados) {
+                c.Id = 0;                 // que la base asigne un Id nuevo
+                almacen.Agregar(c);       // base
+            }
+            contactosTodos = almacen.ObtenerTodos();   // memoria
+            RefrescarLista();                          // vista
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+        }
+    }
+
 }
 
 public sealed class ContactDialog : Dialog {
@@ -158,8 +246,8 @@ public sealed class ContactDialog : Dialog {
     private readonly TextField campoNotas;
     private readonly CheckBox  campoFavorito;
     public ContactDialog(Contacto contacto) {
-        Title  = "Contacto";
-        Width  = 60;
+        Title = "Contacto";
+        Width = 60;
         Height = 15;
 
         Label etiquetaNombre = new() { Text = "Nombre:", X = 1, Y = 1 };
@@ -189,7 +277,7 @@ public sealed class ContactDialog : Dialog {
 
         campoFavorito = new() {
             Text = "Favorito",
-            X = 12, Y = 9};
+            X = 12, Y = 8};
         campoFavorito.Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked;
         
         Add(etiquetaNombre, etiquetaTelefonos, etiquetaEmail, etiquetaNotas, campoNombre, campoTelefonos, campoEmail, campoNotas, campoFavorito);
@@ -213,12 +301,12 @@ public sealed class ContactDialog : Dialog {
             }
 
             Resultado = new Contacto {
-                Id        = contacto.Id,
-                Nombre    = nombre,
+                Id = contacto.Id,
+                Nombre = nombre,
                 Telefonos = (campoTelefonos.Text ?? "").Trim(),
-                Email     = email,
-                Notas     = (campoNotas.Text ?? "").Trim(),
-                Favorito  = campoFavorito.Value == CheckState.Checked
+                Email = email,
+                Notas = (campoNotas.Text ?? "").Trim(),
+                Favorito = campoFavorito.Value == CheckState.Checked
             };
             Cancelado = false; 
             App!.RequestStop();
@@ -237,12 +325,12 @@ public sealed class ContactDialog : Dialog {
 public class SqliteAgendaStore {
     private const string CrearTablaSql = @"
         CREATE TABLE IF NOT EXISTS Contactos (
-            Id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            Nombre    TEXT NOT NULL,
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Nombre TEXT NOT NULL,
             Telefonos TEXT NOT NULL DEFAULT '',
-            Email     TEXT NOT NULL DEFAULT '',
-            Notas     TEXT NOT NULL DEFAULT '',
-            Favorito  INTEGER NOT NULL DEFAULT 0
+            Email TEXT NOT NULL DEFAULT '',
+            Notas TEXT NOT NULL DEFAULT '',
+            Favorito INTEGER NOT NULL DEFAULT 0
         ); ";
 
     private readonly SqliteConnection conexion;
@@ -282,21 +370,21 @@ public class JsonAgendaIO {
 
 [Table("Contactos")]
 public sealed class Contacto { //clase sealed porque asi daba la clase contactos de ejemplo en el enunciado, intuyo que es para que no sea heredada 
-    [Key] public int    Id        { get; set; }
-          public string Nombre    { get; set; } = "";
+    [Key] public int Id { get; set; }
+          public string Nombre { get; set; } = "";
           public string Telefonos { get; set; } = "";
-          public string Email     { get; set; } = "";
-          public string Notas     { get; set; } = "";
-          public bool   Favorito  { get; set; }
+          public string Email { get; set; } = "";
+          public string Notas { get; set; } = "";
+          public bool Favorito { get; set; }
 
           public Contacto Clone() { //para no modificar el contacto original 
               return new Contacto {
-                  Id        = this.Id,
-                  Nombre    = this.Nombre,
+                  Id = this.Id,
+                  Nombre = this.Nombre,
                   Telefonos = this.Telefonos,
-                  Email     = this.Email,
-                  Notas     = this.Notas,
-                  Favorito  = this.Favorito
+                  Email = this.Email,
+                  Notas = this.Notas,
+                  Favorito = this.Favorito
               };
           }
 }
