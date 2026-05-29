@@ -16,7 +16,7 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
-
+using System.Collections.ObjectModel;
 
 // Punto de entrada
 string dbPath = args.Length > 0 ? args[0] : "agenda.db";
@@ -33,7 +33,7 @@ public sealed class AgendaWindow : Window{
     private readonly SqliteAgendaStore store;
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
-        contacts = store.GetAll().ToList();
+        contacts = store.GetAll();
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -47,27 +47,27 @@ public sealed class AgendaWindow : Window{
             Menus = [
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
+                    null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        listView = new ListView() {
+            X = 0,
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
-
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
-
-        Add(menu, openButton);
+        listView.SetSource(
+            new ObservableCollection<string>(
+                contacts.Select(c => c.Nombre)
+            )
+        );
+        Add(menu, listView);
     }
     private List<Contacto> contacts = [];
-    
+    private ListView listView = null!;
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
         App!.Run(dialog);
