@@ -226,15 +226,49 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void NuevoContacto() {
-        SetStatus("Nuevo contacto: pendiente de implementar (Parte 3/4).");
+        ContactDialog dialog = new("Nuevo contacto", new Contacto());
+        App!.Run(dialog);
+
+        if (!dialog.Saved || dialog.Contact is null) {
+            return;
+        }
+
+        try {
+            int newId = _store.Insert(dialog.Contact);
+            dialog.Contact.Id = newId;
+            _contacts.Add(dialog.Contact);
+            SetStatus($"Contacto '{dialog.Contact.Nombre}' creado.");
+            RefreshContacts(newId);
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo crear el contacto: {ex.Message}", "Ok");
+        }
     }
 
     private void EditarContacto() {
-        if (GetSelectedContact() is null) {
+        Contacto? selected = GetSelectedContact();
+        if (selected is null) {
             MessageBox.Query(App!, "Editar", "Seleccion├í un contacto.", "Ok");
             return;
         }
-        SetStatus("Editar contacto: pendiente de implementar (Parte 3/4).");
+
+        ContactDialog dialog = new("Editar contacto", selected.Clone());
+        App!.Run(dialog);
+
+        if (!dialog.Saved || dialog.Contact is null) {
+            return;
+        }
+
+        try {
+            _store.Update(dialog.Contact);
+            int index = _contacts.FindIndex(c => c.Id == selected.Id);
+            if (index >= 0) {
+                _contacts[index] = dialog.Contact;
+            }
+            SetStatus($"Contacto '{dialog.Contact.Nombre}' actualizado.");
+            RefreshContacts(dialog.Contact.Id);
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo actualizar el contacto: {ex.Message}", "Ok");
+        }
     }
 
     private void EliminarContacto() {
@@ -304,6 +338,140 @@ public sealed class AgendaWindow : Runnable {
         }
 
         return base.OnKeyDown(key);
+    }
+}
+
+public sealed class ContactDialog : Dialog {
+
+    private readonly TextField _nameField;
+    private readonly TextField _emailField;
+    private readonly TextView _notesField;
+    private readonly CheckBox _favoriteField;
+    private readonly TextField[] _phoneFields = new TextField[5];
+
+    public bool Saved { get; private set; }
+    public Contacto Contact { get; private set; }
+
+    public ContactDialog(string title, Contacto contact) {
+        Title = title;
+        Width = 70;
+        Height = 22;
+
+        Contact = contact;
+
+        Label nameLabel = new() { Text = "Nombre *:", X = 2, Y = 1 };
+        _nameField = new() {
+            Text     = contact.Nombre,
+            X        = 15,
+            Y        = 1,
+            Width    = Dim.Fill(4),
+            CanFocus = true
+        };
+
+        Label emailLabel = new() { Text = "Email:", X = 2, Y = 3 };
+        _emailField = new() {
+            Text     = contact.Email,
+            X        = 15,
+            Y        = 3,
+            Width    = Dim.Fill(4),
+            CanFocus = true
+        };
+
+        Label favoriteLabel = new() { Text = "Favorito:", X = 2, Y = 5 };
+        _favoriteField = new() {
+            X        = 15,
+            Y        = 5,
+            Value    = contact.Favorito ? CheckState.Checked : CheckState.UnChecked,
+            CanFocus = true
+        };
+
+        Label notesLabel = new() { Text = "Notas:", X = 2, Y = 7 };
+        _notesField = new() {
+            Text     = contact.Notas,
+            X        = 15,
+            Y        = 7,
+            Width    = Dim.Fill(4),
+            Height   = 3,
+            CanFocus = true
+        };
+
+        Label phonesLabel = new() { Text = "Tel├®fonos (hasta 5):", X = 2, Y = 11 };
+
+        string[] phoneParts = (contact.Telefonos ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        for (int i = 0; i < 5; i++) {
+            _phoneFields[i] = new TextField {
+                Text     = phoneParts.Length > i ? phoneParts[i] : "",
+                X        = 15 + (i * 10),
+                Y        = 11,
+                Width    = 9,
+                CanFocus = true
+            };
+        }
+
+        Add(nameLabel, _nameField);
+        Add(emailLabel, _emailField);
+        Add(favoriteLabel, _favoriteField);
+        Add(notesLabel, _notesField);
+        Add(phonesLabel);
+        foreach (TextField phoneField in _phoneFields) {
+            Add(phoneField);
+        }
+
+        Button saveButton = new() { Text = "Guardar", IsDefault = true };
+        saveButton.Accepting += (_, e) => {
+            if (TrySave()) {
+                e.Handled = true;
+                App!.RequestStop();
+            } else {
+                e.Handled = true;
+            }
+        };
+
+        Button cancelButton = new() { Text = "Cancelar" };
+        cancelButton.Accepting += (_, e) => {
+            Saved = false;
+            e.Handled = true;
+            App!.RequestStop();
+        };
+
+        AddButton(saveButton);
+        AddButton(cancelButton);
+        _nameField.SetFocus();
+    }
+
+    private bool TrySave() {
+        string name = _nameField.Text?.ToString()?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(name)) {
+            MessageBox.ErrorQuery(App!, "Validaci├│n", "El nombre es obligatorio.", "Ok");
+            _nameField.SetFocus();
+            return false;
+        }
+
+        string email = _emailField.Text?.ToString()?.Trim() ?? "";
+        if (!string.IsNullOrEmpty(email) && !email.Contains('@')) {
+            MessageBox.ErrorQuery(App!, "Validaci├│n", "El email debe contener '@'.", "Ok");
+            _emailField.SetFocus();
+            return false;
+        }
+
+        List<string> phones = new();
+        foreach (TextField phoneField in _phoneFields) {
+            string phone = phoneField.Text?.ToString()?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(phone)) {
+                phones.Add(phone);
+            }
+        }
+
+        Contact.Nombre    = name;
+        Contact.Email     = email;
+        Contact.Favorito  = _favoriteField.Value == CheckState.Checked;
+        Contact.Notas     = _notesField.Text?.ToString() ?? "";
+        Contact.Telefonos = string.Join(",", phones);
+
+        Saved = true;
+        return true;
     }
 }
 
