@@ -33,6 +33,7 @@ public sealed class AgendaWindow : Window{
     private readonly SqliteAgendaStore store;
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
+        contacts = store.GetAll().ToList();
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -65,7 +66,8 @@ public sealed class AgendaWindow : Window{
 
         Add(menu, openButton);
     }
-
+    private List<Contacto> contacts = [];
+    
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
         App!.Run(dialog);
@@ -129,6 +131,9 @@ public class SqliteAgendaStore : IDisposable {
                 Favorito INTEGER NOT NULL DEFAULT 0
             );
         ");
+    }
+    public List<Contacto> GetAll() {
+        return connection.Query<Contacto>("SELECT * FROM Contactos").ToList();
     }
     public void Dispose() => connection.Dispose();
 }
