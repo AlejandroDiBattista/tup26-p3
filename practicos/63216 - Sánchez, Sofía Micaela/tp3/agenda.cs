@@ -493,3 +493,102 @@ public sealed class AgendaWindow : Window
         app.Run(dialog);
         return string.IsNullOrWhiteSpace(rutaElegida) ? null : rutaElegida;
     }
+       private void AlternarFavoritos()
+    {
+        verSoloFavoritos = !verSoloFavoritos;
+        RefrescarListado();
+
+        Informar(verSoloFavoritos
+            ? "Filtro activo: solo favoritos."
+            : "Filtro de favoritos desactivado.");
+    }
+
+    private void ShowAbout()
+    {
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "AgendaT\nTUI con Terminal.Gui v2, SQLite y JSON.",
+            "Aceptar");
+    }
+
+    private void ActivarBusqueda()
+    {
+        buscador.SetFocus();
+        Informar("Busqueda activa.");
+    }
+
+    private void CerrarAgenda()
+    {
+        App!.RequestStop();
+    }
+
+    private void EnfocarPorId(int id)
+    {
+        int posicion = vistaActual.FindIndex(contacto => contacto.Id == id);
+        if (posicion >= 0)
+        {
+            grillaContactos.SelectedItem = posicion;
+            indiceRecordado = posicion;
+            DibujarFicha();
+        }
+    }
+
+    private void Informar(string mensaje)
+    {
+        if (barraInferior is not null)
+        {
+            barraInferior.Text = mensaje;
+        }
+    }
+
+    protected override bool OnKeyDown(Key key)
+    {
+        if (key == Key.N.WithCtrl || key == Key.F2)
+        {
+            CrearContacto();
+            return true;
+        }
+
+        if (key == Key.F3 || key == Key.Enter)
+        {
+            ModificarContacto();
+            return true;
+        }
+
+        if (key == Key.D.WithCtrl || key == Key.Delete)
+        {
+            BorrarContacto();
+            return true;
+        }
+
+        if (key == Key.I.WithCtrl)
+        {
+            ImportarJson();
+            return true;
+        }
+
+        if (key == Key.E.WithCtrl)
+        {
+            ExportarJson();
+            return true;
+        }
+
+        if (key == Key.F4)
+        {
+            ActivarBusqueda();
+            return true;
+        }
+
+        if (key == Key.Q.WithCtrl)
+        {
+            CerrarAgenda();
+            return true;
+        }
+
+        bool handled = base.OnKeyDown(key);
+        indiceRecordado = grillaContactos?.SelectedItem ?? indiceRecordado;
+        DibujarFicha();
+        return handled;
+    }
+}
