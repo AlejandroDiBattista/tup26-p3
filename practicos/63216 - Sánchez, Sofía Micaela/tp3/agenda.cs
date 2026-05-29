@@ -874,4 +874,52 @@ public static class JsonAgendaIO
         return contact;
     }
 }
+public static class PhoneTextTools
+{
+    public static IEnumerable<string> Separar(string? textoTelefonos)
+    {
+        return (textoTelefonos ?? "")
+            .Split([',', ';', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(numero => !string.IsNullOrWhiteSpace(numero));
+    }
+
+    public static string Normalizar(string? textoTelefonos)
+    {
+        return Normalizar(Separar(textoTelefonos));
+    }
+
+    public static string Normalizar(IEnumerable<string> telefonos)
+    {
+        return string.Join(", ", telefonos
+            .Select(numero => numero.Trim())
+            .Where(numero => !string.IsNullOrWhiteSpace(numero))
+            .Take(5));
+    }
+}
+
+[Table("Contactos")]
+public sealed class Contacto
+{
+    [Key]
+    public int Id { get; set; }
+
+    public string Nombre { get; set; } = "";
+    public string Telefonos { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Notas { get; set; } = "";
+    public bool Favorito { get; set; }
+
+    public Contacto Clone()
+    {
+        return new Contacto
+        {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
+        };
+    }
+}
 
