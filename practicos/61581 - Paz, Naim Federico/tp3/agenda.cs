@@ -23,6 +23,9 @@ using Dapper;
 using Dapper.Contrib.Extensions;
 
 // Punto de entrada: procesar argumentos, abrir la base y arrancar la app
+Console.OutputEncoding = Encoding.UTF8;
+Menu.DefaultBorderStyle = LineStyle.Single;
+
 string dbPath = args.Length > 0 ? args[0] : "agenda.db";
 
 using IApplication app = Application.Create().Init();
@@ -64,7 +67,6 @@ public sealed class AgendaWindow : Runnable {
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
-        Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
         RefreshContacts();
         SetStatus($"{_contacts.Count} contacto(s) cargado(s) desde '{dbPath}'.");
@@ -195,9 +197,9 @@ public sealed class AgendaWindow : Runnable {
             return true;
         }
 
-        return contact.Nombre.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || contact.Telefonos.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || contact.Email.Contains(search, StringComparison.OrdinalIgnoreCase);
+        return (contact.Nombre ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
+            || (contact.Telefonos ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
+            || (contact.Email ?? "").Contains(search, StringComparison.OrdinalIgnoreCase);
     }
 
     private void UpdateDetail() {
@@ -368,7 +370,12 @@ public sealed class AgendaWindow : Runnable {
         MessageBox.Query(
             App!,
             "Acerca de",
-            "AgendaT ÔÇö Trabajo Pr├íctico 3\nGesti├│n de contactos con SQLite y JSON.",
+            """
+            AgendaT ÔÇö Trabajo Pr├íctico 3
+            Gesti├│n de contactos con SQLite y JSON.
+
+            Paz, Naim Federico ÔÇö Legajo 61581
+            """,
             "Ok");
     }
 
@@ -544,50 +551,6 @@ public sealed class ContactDialog : Dialog {
     }
 }
 
-public sealed class FilePathDialog : Dialog {
-
-    private readonly TextField _pathField;
-
-    public bool Confirmed { get; private set; }
-    public string Path => _pathField.Text?.ToString()?.Trim() ?? "";
-
-    public FilePathDialog(string title, string initialPath) {
-        Title  = title;
-        Width  = 60;
-        Height = 8;
-
-        Label pathLabel = new() { Text = "Ruta del archivo:", X = 2, Y = 1 };
-        _pathField = new() {
-            Text     = initialPath,
-            X        = 2,
-            Y        = 2,
-            Width    = Dim.Fill(2),
-            CanFocus = true
-        };
-
-        Button acceptButton = new() { Text = "Aceptar", IsDefault = true };
-        acceptButton.Accepting += (_, e) => {
-            if (!string.IsNullOrWhiteSpace(Path)) {
-                Confirmed = true;
-                e.Handled = true;
-                App!.RequestStop();
-            }
-        };
-
-        Button cancelButton = new() { Text = "Cancelar" };
-        cancelButton.Accepting += (_, e) => {
-            Confirmed = false;
-            e.Handled = true;
-            App!.RequestStop();
-        };
-
-        Add(pathLabel, _pathField);
-        AddButton(acceptButton);
-        AddButton(cancelButton);
-        _pathField.SetFocus();
-    }
-}
-
 public sealed class SqliteAgendaStore {
 
     private readonly string _connectionString;
@@ -664,6 +627,50 @@ public sealed class JsonAgendaIO {
             JsonOptions);
 
         File.WriteAllText(path, json, Encoding.UTF8);
+    }
+}
+
+public sealed class FilePathDialog : Dialog {
+
+    private readonly TextField _pathField;
+
+    public bool Confirmed { get; private set; }
+    public string Path => _pathField.Text?.ToString()?.Trim() ?? "";
+
+    public FilePathDialog(string title, string initialPath) {
+        Title  = title;
+        Width  = 60;
+        Height = 8;
+
+        Label pathLabel = new() { Text = "Ruta del archivo:", X = 2, Y = 1 };
+        _pathField = new() {
+            Text     = initialPath,
+            X        = 2,
+            Y        = 2,
+            Width    = Dim.Fill(2),
+            CanFocus = true
+        };
+
+        Button acceptButton = new() { Text = "Aceptar", IsDefault = true };
+        acceptButton.Accepting += (_, e) => {
+            if (!string.IsNullOrWhiteSpace(Path)) {
+                Confirmed = true;
+                e.Handled = true;
+                App!.RequestStop();
+            }
+        };
+
+        Button cancelButton = new() { Text = "Cancelar" };
+        cancelButton.Accepting += (_, e) => {
+            Confirmed = false;
+            e.Handled = true;
+            App!.RequestStop();
+        };
+
+        Add(pathLabel, _pathField);
+        AddButton(acceptButton);
+        AddButton(cancelButton);
+        _pathField.SetFocus();
     }
 }
 
