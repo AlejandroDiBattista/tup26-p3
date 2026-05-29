@@ -48,6 +48,7 @@ public sealed class AgendaWindow : Window{
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
                     null!,
+                    new MenuItem("_Eliminar contacto", null!, EliminarContacto),
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ])
             ]
@@ -69,13 +70,35 @@ public sealed class AgendaWindow : Window{
     private List<Contacto> contacts = [];
     private ListView listView = null!;
     private void AbrirDialogo() {
-    var dialog = new ContactoDialog();
-    App!.Run(dialog);
+        var dialog = new ContactoDialog();
+        App!.Run(dialog);
 
-    if (dialog.Resultado != null) {
-        store.Insert(dialog.Resultado);
+        if (dialog.Resultado != null) {
+            store.Insert(dialog.Resultado);
 
-        contacts.Add(dialog.Resultado);
+            contacts.Add(dialog.Resultado);
+
+            listView.SetSource(
+                new ObservableCollection<string>(
+                    contacts.Select(c => c.Nombre)
+                )
+            );
+        }
+    }
+    private void EliminarContacto() {
+        if (contacts.Count == 0)
+            return;
+
+        if (listView.SelectedItem is not int index)
+            return;
+
+        if (index < 0 || index >= contacts.Count)
+            return;
+
+        var contacto = contacts[index];
+
+        store.Delete(contacto);
+        contacts.RemoveAt(index);
 
         listView.SetSource(
             new ObservableCollection<string>(
@@ -83,8 +106,6 @@ public sealed class AgendaWindow : Window{
             )
         );
     }
-}
-
     private void SolicitarSalir() {
         App!.RequestStop();
     }
@@ -176,6 +197,9 @@ public class SqliteAgendaStore : IDisposable {
     public void Insert(Contacto c) {
         var id = connection.Insert(c);
         c.Id = (int)id;
+    }
+    public void Delete(Contacto c) {
+        connection.Delete(c);
     }
     public void Dispose() => connection.Dispose();
 }
