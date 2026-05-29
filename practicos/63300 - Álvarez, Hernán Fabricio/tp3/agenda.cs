@@ -332,7 +332,7 @@ public class SqliteAgendaStore {
                 Telefonos TEXT, Email TEXT, Notas TEXT, Favorito INTEGER)");
     }
     public IEnumerable<Contacto> LeerTodos() {
-        
+
      using var db = new SqliteConnection(conStr); return db.GetAll<Contacto>(); }
     public long Crear(Contacto c) { using var db = new SqliteConnection(conStr); return db.Insert(c); }
 
@@ -343,8 +343,19 @@ public class SqliteAgendaStore {
 }
 
 
+/* 5- clase JsonAgendaIO */
+public class JsonAgendaIO {
+    private static readonly JsonSerializerOptions opts = new() {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        PropertyNameCaseInsensitive = true
+    };
 
-public class JsonAgendaIO {}
+    public static void Exportar(IEnumerable<Contacto> lista, string ruta) => File.WriteAllText(ruta JsonSerializer.Serialize(lista, opts));
+    public static IEnumerable<Contacto> Importar(string ruta) => 
+        File.Exists(ruta) ? JsonSerializer.Deserialize<IEnumerable<Contacto>>(File.ReadAllText(ruta), opts) ?? new List<Contacto>()
+        : throw new FileNotFoundException("Archivo no encontrado.");
+}       
 
 [Table("Contactos")]
 public class Contacto {
