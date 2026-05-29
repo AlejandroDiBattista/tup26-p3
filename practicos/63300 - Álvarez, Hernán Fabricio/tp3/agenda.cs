@@ -318,8 +318,32 @@ public sealed class ContactDialog : Dialog {
     }
 }
 
+/* 4 - clase sqliteAgendaStore*/
+public class SqliteAgendaStore {
+    
+        private readonly string conStr;
 
-public class SqliteAgendaStore {}
+        public SqliteAgendaStore(string ruta) {
+            conStr = $"Data Source={ruta}";
+            using var db = new SqliteConnection(conStr);
+            db.Open();
+            db.Execute(@"CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT, NOMBRE TEXT NOT NULL,
+                Telefonos TEXT, Email TEXT, Notas TEXT, Favorito INTEGER)");
+    }
+    public IEnumerable<Contacto> LeerTodos() {
+        
+     using var db = new SqliteConnection(conStr); return db.GetAll<Contacto>(); }
+    public long Crear(Contacto c) { using var db = new SqliteConnection(conStr); return db.Insert(c); }
+
+    public bool Modificar(Contacto c) { using var db = new SqliteConnection(conStr); return db.Update(c); }
+
+    public bool Borrar(Contacto c) { using var db = new SqliteConnection(conStr); return db.Delete(c); }
+
+}
+
+
+
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
