@@ -6,7 +6,7 @@
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
-
+using System.Text.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -17,12 +17,7 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
 
-// Punto de entrada
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow());
 
@@ -31,7 +26,7 @@ app.Run(new AgendaWindow());
 public sealed class AgendaWindow : Runnable {
 
     public AgendaWindow() {
-        Title  = "Agenda - Terminal.Gui";
+        Title  = "Agenda TUI";
         Width  = Dim.Fill();
         Height = Dim.Fill();
 
@@ -44,28 +39,30 @@ public sealed class AgendaWindow : Runnable {
             Menus = [
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
+                    null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        FrameView panel = new() {
+            Title = "agenda",
+            X = 1,
+            Y=2,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
-
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        Label info = new() {
+            Text= "No hay contactos cargados",
+            X = Pos.Center(),
+            Y= Pos.Center
         };
-
-        Add(menu, openButton);
+            panel.Add(info);
+            Add(menu, panel); 
     }
 
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
+        ContactDialog dialog = new();
         App!.Run(dialog);
     }
 
@@ -84,33 +81,65 @@ public sealed class AgendaWindow : Runnable {
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog {
+    public ContactDialog() {
+        Title  = "Nuevo contacto";
+        Width  = 60;
+        Height = 20;
+        Add(new Label() {
+            Text= "Nombre:",
+            X=1,
+            Y=1
+        });
+        TextField nombre = new() {
+            X = 12,
+            Y = 1,
+            Width = 40
+            };
+        Add(nombre);
+        Add(new Label() {
+            Text = "Telefono:",
+            X = 1,
+            Y = 3
+            });
+        TextField telefono = new() {
+            X = 12,
+            Y = 3,
+            Width = 40
+            };
+        Add(telefono);
+        Add(new Label() {
+            Text = "Email:",
+            X = 1,
+            Y = 5
+            });
+        TextField email = new() {
+            X = 12,
+            Y = 5,
+            Width = 40
+            };
+            Add(email);
+        Button guardar = new() {
+            Text = "_Guardar"
+            };
+        
+        guardar.Accepting += (_, e) => {App!.RequestStop();
+        e.Handled = true;
+};
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
+Button cancelar = new() {
+    Text = "_Cancelar"
+};
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
+cancelar.Accepting += (_, e) => {
+    App!.RequestStop();
+    e.Handled = true;
+};
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
-
-        Add(message);
-        AddButton(closeButton);
+AddButton(guardar);
+AddButton(cancelar);
     }
 }
-
 
 public class SqliteAgendaStore {}
 public class JsonAgendaIO {}
