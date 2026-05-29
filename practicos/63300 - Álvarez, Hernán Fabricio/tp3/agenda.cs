@@ -45,17 +45,18 @@ app.Run(new AgendaWindow(bd));
 // Ventana principal clase AgendaWindow
 public sealed class AgendaWindow : Runnable {
 
-        private readonly SqliteAgendaStore _bd;
+        private readonly SqliteAgendaStore _bd = null!;
         private List<Contacto> todos = new();
         private List<Contacto> filtrados = new();
 
-        private ListView lista;
-        private TextField txtBuscar;
-        private CheckBox chkFav;
-        private Label estado;
+        private ListView lista = null!;
+        private TextField txtBuscar = null!;
+        private Button btnFav = null!;
+        private bool soloFavoritos = false;
+        private Label estado = null!;
 
-        private Label lblNom, labelTel, lblEmail;
-        private TextField txtNotas;
+        private Label lblNom = null!, lblTel = null!, lblMail = null!;
+        private TextView txtNotas = null!;
 
     public AgendaWindow(SqliteAgendaStore bd) {
         Title  = "Agenda - Terminal.Gui";
@@ -67,7 +68,7 @@ public sealed class AgendaWindow : Runnable {
         Cargar();
     }
 
-    private void BuildLayout() {
+     private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
@@ -82,9 +83,8 @@ public sealed class AgendaWindow : Runnable {
                     new MenuItem("_Eliminar","Del / Ctrl+D",Borrar)
             ]),
                 new MenuBarItem("_Ayuda", [
-                    new MenuItem("_Acerca de", "", () => MostrarMsg("Acerca de ", "Agenda Terminal - TP3"))
+                    new MenuItem("_Acerca de", "", () => MostrarMsg("Acerca de", "Agenda Terminal - TP3"))
                 ])
-                
             ]
         };
 
@@ -92,12 +92,17 @@ public sealed class AgendaWindow : Runnable {
         txtBuscar = new TextField() { X = Pos.Right(etiBuscar) + 1, Y = 1, Width = Dim.Percent(30) };
         txtBuscar.TextChanged += (_, _) => Filtrar();
 
-        chkFav = new CheckBox() { Text = "Solo _favoritos", X = Pos.Right(txtBuscar) + 2, Y = 1 };
-        chkFav.Toggled += (_, _) => Filtrar();
+        // Botón toggle que emula CheckBox y evita crasheos por cambios de API
+        btnFav = new Button() { Text = "[ ] Solo favoritos", X = Pos.Right(txtBuscar) + 2, Y = 1 };
+        btnFav.Accepting += (_, e) => {
+            soloFavoritos = !soloFavoritos;
+            btnFav.Text = soloFavoritos ? "[X] Solo favoritos" : "[ ] Solo favoritos";
+            Filtrar();
+            e.Handled = true;
+        };
 
         FrameView panelIzq = new() { Title = "Contactos", X = 0, Y = 2, Width = Dim.Percent(40), Height = Dim.Fill(1) };
         lista = new ListView() { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
-        lista.SelectedItemChanged += (_, _) => VerDetalle();
         panelIzq.Add(lista);
 
         FrameView panelDer = new() { Title = "Detalles del Contacto", X = Pos.Right(panelIzq), Y = 2, Width = Dim.Fill(), Height = Dim.Fill(1) };
@@ -108,10 +113,10 @@ public sealed class AgendaWindow : Runnable {
 
         panelDer.Add(lblNom, lblTel, lblMail, new Label() { Text = "Notas:", X = 1, Y = 7 }, txtNotas);
 
-        estado = new Label() { Text = " Listo", X = 0, Y = Pos.AnchorEnd(1), Width = Dim.Fill(), Height = 1, ColorScheme = Colors.ColorSchemes["Menu"] };
+        // Quitado el ColorScheme="Menu" obsoleto de la V2
+        estado = new Label() { Text = " Listo", X = 0, Y = Pos.AnchorEnd(1), Width = Dim.Fill(), Height = 1 };
 
-        Add(menu, etiBuscar, txtBuscar, chkFav, panelIzq, panelDer, estado);
-
+        Add(menu, etiBuscar, txtBuscar, btnFav, panelIzq, panelDer, estado);
     }
 
     private void Cargar() {
@@ -122,34 +127,57 @@ public sealed class AgendaWindow : Runnable {
     }
     
     private void Filtrar() {
-        string q txtBuscar.Text?.ToLower() ?? "";
-        bool fav = chkFav.Checked == true;
+        string q = txtBuscar.Text?.ToLower() ?? "";
 
         filtrados = todos.Where(c => {
-            if (favs && !c.Favorito) return false;
+            if (soloFavoritos && !c.Favorito) return false;
             if (string.IsNullOrEmpty(q)) return true;
             return (c.Nombre?.ToLower().Contains(q) == true) ||
                    (c.Telefonos?.ToLower().Contains(q) == true) ||
                    (c.Email?.ToLower().Contains(q) == true);
         }).ToList();
 
-        lista.SetSource(filtrados);
+        
+        lista.SetSource<Contacto>(new System.Collections.ObjectModel.ObservableCollection<Contacto>(filtrados));
         VerDetalle();
     }
 
-        private void VerDetalle() {
-            if(lista.SelectedItem >= 0 && lista.SelectedItem < filtrados.Count) {
-                var c = filtrados[lista.SelectedItem];
-                lblNom.Text = $"Nombre: {c.Nombre} {(c.Favorito ? "★" : "")}";
-                lblTel.Text = $"Teléfonos: {c.Telefonos}";
-                lblMail.Text = $"Email: {c.Email}";
-                txtNotas.Text = c.Notas ?? "";
+     private void VerDetalle() {
+        
+        if(lista.SelectedItem.HasValue && lista.SelectedItem.Value >= 0 && lista.SelectedItem.Value < filtrados.Count) {
+            var c = filtrados[lista.SelectedItem.Value];
+            lblNom.Text = $"Nombre: {c.Nombre} {(c.Favorito ? "★" : "")}";
+            lblTel.Text = $"Teléfonos: {c.Telefonos}";
+            lblMail.Text = $"Email: {c.Email}";
+            txtNotas.Text = c.Notas ?? "";
         } else {
             lblNom.Text = lblTel.Text = lblMail.Text = txtNotas.Text = "";
         }
     }
 
-     private void MostrarMsg(string titulo, string msj) => MessageBox.Query(titulo, msj, "Ok");
+     private void MostrarMsg(string titulo, string msj) {
+        Dialog diag = new Dialog() { Title = titulo, Width = 50, Height = 8 };
+        Button btnOk = new Button() { Text = "Ok", IsDefault = true };
+        btnOk.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        diag.Add(new Label() { Text = msj, X = 1, Y = 1 });
+        diag.AddButton(btnOk);
+        App!.Run(diag);
+    }
+    private int Confirmar(string titulo, string msj) {
+        int result = -1;
+        Dialog diag = new Dialog() { Title = titulo, Width = 50, Height = 8 };
+        Button btnSi = new Button() { Text = "Sí", IsDefault = true };
+        Button btnNo = new Button() { Text = "No" };
+        btnSi.Accepting += (_, e) => { result = 0; App!.RequestStop(); e.Handled = true; };
+        btnNo.Accepting += (_, e) => { result = 1; App!.RequestStop(); e.Handled = true; };
+        diag.Add(new Label() { Text = msj, X = 1, Y = 1 });
+        diag.AddButton(btnNo);
+        diag.AddButton(btnSi);
+        App!.Run(diag);
+        return result;
+    }
+
+
     private void SetEstado(string msj) => estado.Text = $" {msj}";
 
     private void AbrirDialogo() {
@@ -164,10 +192,10 @@ public sealed class AgendaWindow : Runnable {
         }
     }
     private void Editar() {
-        if (lista.SelectedItem < 0 || lista.SelectedItem >= filtrados.Count) return;
-        var actual = filtrados[lista.SelectedItem];
+        if (!lista.SelectedItem.HasValue || lista.SelectedItem.Value < 0 || lista.SelectedItem.Value >= filtrados.Count) return;
+        var actual = filtrados[lista.SelectedItem.Value];
         var dialog = new ContactDialog(actual);
-        App!.Run(dialog);
+          App!.Run(dialog);
         
         if (dialog.Salida != null) {
             dialog.Salida.Id = actual.Id;
@@ -180,9 +208,9 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void Borrar() {
-        if (lista.SelectedItem < 0 || lista.SelectedItem >= filtrados.Count) return;
-        var c = filtrados[lista.SelectedItem];
-        if (MessageBox.Query("Confirmar", $"¿Eliminar a '{c.Nombre}'?", "Sí", "No") == 0) {
+        if (!lista.SelectedItem.HasValue || lista.SelectedItem.Value < 0 || lista.SelectedItem.Value >= filtrados.Count) return;
+        var c = filtrados[lista.SelectedItem.Value];
+        if (Confirmar("Confirmar", $"¿Eliminar a '{c.Nombre}'?") == 0) {
             try {
                 _bd.Borrar(c);
                 Cargar();
@@ -192,29 +220,29 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void Importar() {
-        string ruta = PedirRuta("Importar JSON", "Ruta de origen:");
+        string? ruta = PedirRuta("Importar JSON", "Ruta de origen:");
         if (string.IsNullOrWhiteSpace(ruta)) return;
 
         try {
-            var lista = JsonAgendaIO.Importar(ruta).ToList();
-            if (MessageBox.Query("Confirmar", $"Importar {lista.Count} contactos?", "Sí", "No") == 0) {
-                foreach (var c in lista) { c.Id = 0; _bd.Crear(c); }
+            var listaImportados = JsonAgendaIO.Importar(ruta).ToList();
+            if (Confirmar("Confirmar", $"¿Importar {listaImportados.Count} contactos?") == 0) {
+                foreach (var c in listaImportados) { c.Id = 0; _bd.Crear(c); }
                 Cargar();
-                SetEstado($"Importados {lista.Count} contactos.");
+                SetEstado($"Importados {listaImportados.Count} contactos.");
             }
         } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
     }
 
     private void Exportar() {
-        string ruta = PedirRuta("Exportar JSON", "Ruta de destino:");
+        string? ruta = PedirRuta("Exportar JSON", "Ruta de destino:");
         if (string.IsNullOrWhiteSpace(ruta)) return;
         try {
             JsonAgendaIO.Exportar(todos, ruta);
             SetEstado($"Exportados a {ruta}.");
         } catch (Exception ex) { MostrarMsg("Error", ex.Message); }
     }
-    private string PedirRuta(string titulo, string msj) {
-        string res = null;
+    private string? PedirRuta(string titulo, string msj) {
+        string? res = null;
         Dialog diag = new() { Title = titulo, Width = 50, Height = 8 };
         TextField txt = new() { X = 1, Y = 3, Width = Dim.Fill(1) };
         Button btnOk = new() { Text = "Ok", IsDefault = true };
@@ -232,34 +260,43 @@ public sealed class AgendaWindow : Runnable {
     private void SolicitarSalir() {
         App!.RequestStop();
     }
+    protected override bool OnKeyDown(Key key) {
+        bool handled = false;
+        if (key == Key.F2 || key == Key.N.WithCtrl) { AbrirDialogo(); handled = true; }
+        else if (key == Key.F3 || (key == Key.Enter && lista.HasFocus)) { Editar(); handled = true; }
+        else if (key == Key.DeleteChar || key == Key.D.WithCtrl) { Borrar(); handled = true; }
+        else if (key == Key.I.WithCtrl) { Importar(); handled = true; }
+        else if (key == Key.E.WithCtrl) { Exportar(); handled = true; }
+        else if (key == Key.F4) { txtBuscar.SetFocus(); handled = true; }
+        else if (key == Key.Q.WithCtrl) { SolicitarSalir(); handled = true; }
 
+        if (!handled) {
+            handled = base.OnKeyDown(key);
+        }
+        
+        
+        VerDetalle();
+        return handled;
+    }
 
         
 
     
 
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.F2 || key == Key.N.WithCtrl) { AbrirDialogo(); return true; }
-        if (key == Key.F3 || (key == Key.Enter && lista.HasFocus)) { Editar(); return true; }
-        if (key == Key.DeleteChar || key == Key.D.WithCtrl) { Borrar(); return true; }
-        if (key == Key.I.WithCtrl) { Importar(); return true; }
-        if (key == Key.E.WithCtrl) { Exportar(); return true; }
-        if (key == Key.F4) { txtBuscar.SetFocus(); return true; }
-        if (key == Key.Q.WithCtrl) { SolicitarSalir(); return true; }
-
-        return base.OnKeyDown(key);
-    }
+   
 }
 /* 3- clase contactDialog */
 public sealed class ContactDialog : Dialog {
-    private TextField txtNom, txtMail;
+   private TextField txtNom = null!, txtMail = null!;
     private TextField[] txtTels = new TextField[5];
-    private TextView txtNotas;
-    private CheckBox chkFav;
+    private TextView txtNotas = null!;
+    
+    private Button btnFav = null!;
+    private bool esFavorito = false;
 
-    public Contacto Salida { get; private set; }
+    public Contacto? Salida { get; private set; }
 
-    public ContactDialog(Contacto c = null) {
+    public ContactDialog(Contacto? c = null) {
         Title = c == null ? "Nuevo Contacto" : "Editar Contacto";
         Width = 50; 
         Height = 22;
@@ -273,15 +310,23 @@ public sealed class ContactDialog : Dialog {
         Add(new Label() { Text = "Email:", X = 1, Y = y });  txtMail = new TextField() { X = 12, Y = y++, Width = Dim.Fill(1) };
 
         Add(new Label() { Text = "Teléfonos:", X = 1, Y = y++ });
-        for (int i = 0; i < 5; i++) txtTels[i] = new TextField() { X = 12, Y = y++, Width = Dim.Fill(1) };
+        for (int i = 0; i < 5; i++) { 
+            txtTels[i] = new TextField() { X = 12, Y = y++, Width = Dim.Fill(1) }; 
+        }
 
         Add(new Label() { Text = "Notas:", X = 1, Y = y++ });
         txtNotas = new TextView() { X = 12, Y = y, Width = Dim.Fill(1), Height = 4 }; y += 4;
-        chkFav = new CheckBox() { Text = "Es Favorito", X = 12, Y = y };
+        
+        btnFav = new Button() { Text = "[ ] Es Favorito", X = 12, Y = y };
+        btnFav.Accepting += (_, e) => {
+            esFavorito = !esFavorito;
+            btnFav.Text = esFavorito ? "[X] Es Favorito" : "[ ] Es Favorito";
+            e.Handled = true;
+        };
 
         Add(txtNom, txtMail);
         foreach (var t in txtTels) Add(t);
-        Add(txtNotas, chkFav);
+        Add(txtNotas, btnFav);
 
         Button btnGuardar = new() { Text = "_Guardar", IsDefault = true };
         Button btnCancelar = new() { Text = "_Cancelar" };
@@ -293,25 +338,38 @@ public sealed class ContactDialog : Dialog {
     }
 
     private void Llenar(Contacto c) {
-        txtNom.Text = c.Nombre; txtMail.Text = c.Email; txtNotas.Text = c.Notas; chkFav.Checked = c.Favorito;
+        txtNom.Text = c.Nombre; txtMail.Text = c.Email; txtNotas.Text = c.Notas; 
+        
+        esFavorito = c.Favorito;
+        btnFav.Text = esFavorito ? "[X] Es Favorito" : "[ ] Es Favorito";
+
         if (!string.IsNullOrWhiteSpace(c.Telefonos)) {
             var tels = c.Telefonos.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < Math.Min(tels.Length, 5); i++) txtTels[i].Text = tels[i];
         }
     }
 
+    private void MostrarMsgInterno(string titulo, string msj) {
+        Dialog diag = new Dialog() { Title = titulo, Width = 50, Height = 8 };
+        Button btnOk = new Button() { Text = "Ok", IsDefault = true };
+        btnOk.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        diag.Add(new Label() { Text = msj, X = 1, Y = 1 });
+        diag.AddButton(btnOk);
+         App!.Run(diag);
+    }
+
     private bool Guardar() {
-        string nom = txtNom.Text ?? "";
-        string mail = txtMail.Text ?? "";
+        string nom = txtNom.Text?.ToString() ?? "";
+        string mail = txtMail.Text?.ToString() ?? "";
 
-        if (string.IsNullOrWhiteSpace(nom)) { MessageBox.Query("Error", "El Nombre no puede estar vacío.", "Ok"); return false; }
-        if (!string.IsNullOrWhiteSpace(mail) && !mail.Contains("@")) { MessageBox.Query("Error", "El Email debe contener '@'.", "Ok"); return false; }
+        if (string.IsNullOrWhiteSpace(nom)) { MostrarMsgInterno("Error", "El Nombre no puede estar vacío."); return false; }
+        if (!string.IsNullOrWhiteSpace(mail) && !mail.Contains("@")) { MostrarMsgInterno("Error", "El Email debe contener '@'."); return false; }
 
-        var validos = txtTels.Select(t => t.Text ?? "").Where(t => !string.IsNullOrWhiteSpace(t));
+        var validos = txtTels.Select(t => t.Text?.ToString() ?? "").Where(t => !string.IsNullOrWhiteSpace(t));
 
         Salida = new Contacto {
             Nombre = nom, Email = mail, Notas = txtNotas.Text ?? "",
-            Favorito = chkFav.Checked == true,
+            Favorito = esFavorito,
             Telefonos = string.Join(", ", validos)
         };
         return true;
@@ -351,12 +409,12 @@ public class JsonAgendaIO {
         PropertyNameCaseInsensitive = true
     };
 
-    public static void Exportar(IEnumerable<Contacto> lista, string ruta) => File.WriteAllText(ruta JsonSerializer.Serialize(lista, opts));
+    public static void Exportar(IEnumerable<Contacto> lista, string ruta) => File.WriteAllText(ruta, JsonSerializer.Serialize(lista, opts));
     public static IEnumerable<Contacto> Importar(string ruta) => 
         File.Exists(ruta) ? JsonSerializer.Deserialize<IEnumerable<Contacto>>(File.ReadAllText(ruta), opts) ?? new List<Contacto>()
         : throw new FileNotFoundException("Archivo no encontrado.");
 }       
-
+/* 6 - clase Contacto */
 [Table("Contactos")]
 public class Contacto {
     [Key] public int    Id        { get; set; }
@@ -365,4 +423,9 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+          public Contacto Clone() => (Contacto)this.MemberwiseClone();
+          public override string ToString() => $"{(Favorito ?  "★ " : "")}{Nombre} ({Email})";
+
+
 }
