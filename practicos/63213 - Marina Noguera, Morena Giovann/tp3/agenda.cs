@@ -1,39 +1,325 @@
+#:package Terminal.Gui@2.0.0
+#:package Microsoft.Data.Sqlite@9.0.0
+#:package Dapper@2.1.35
+#:package Dapper.Contrib@2.0.78
+#:property PublishAot=false
+#:property PublishTrimmed=false
+
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel; 
 using System.IO;
 using System.Linq;
-using System.Collections.ObjectModel;
 using System.Text.Json;
 using Terminal.Gui;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using Dapper.Contrib.Extensions;
 
-string dbPath = args.Length > 0 && !args[0].EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ? args[0] : "agenda.db";
-try {
-    Application.Init();
-    var store = new SqliteAgendaStore(dbPath);
-    Application.Run(new AgendaWindow(store));
-    Application.Shutdown();
-}
-catch (Exception ex) {
-    Console.WriteLine($"Error crítico: {ex.Message}");
-}
+var dbPath = args.Length > 0 ? args[0] : "agenda.db";
+var store = new SqliteAgendaStore(dbPath);
 
-public class SqliteAgendaStore {
-    private string _cs;
+Application.Init();
 
-    public SqliteAgendaStore(string path) {
-        _cs = $"Data Source={path}";
-        using var cn = new SqliteConnection(_cs);
-        cn.Execute(@"CREATE TABLE IF NOT EXISTS Contactos (
-            Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT NOT NULL,
-            Telefonos TEXT, Email TEXT, Notas TEXT, Favorito INTEGER)");
+Application.Run(new AgendaWindow(store));
+Application.Shutdown();
+
+public class AgendaWindow : Window
+{
+    private readonly SqliteAgendaStore _store;
+    private List<Contacto> _contactosEnMemoria = new();
+    
+    private ListView _listView;
+    private TextField _txtSearch;
+    private TextView _txtDetail;
+    private Label _lblStatus;
+    private bool _soloFavoritos = false;
+
+    public AgendaWindow(SqliteAgendaStore store)
+    {
+        _store = store;
+        Title = "AgendaT - Gestión de Contactos";
+
+        var menu = new MenuBar();
+        // PASO 1: Agregamos las descripciones de los atajos en el menú
+        menu.Menus = new MenuBarItem[] {
+            new MenuBarItem("_Archivo", new MenuItem[] { 
+                new MenuItem("_Importar JSON (Ctrl+I)", "", Importar), 
+                new MenuItem("E_xportar JSON (Ctrl+E)", "", Exportar), 
+                new MenuItem("_Salir (Ctrl+Q)", "", () => Application.RequestStop()) 
+            }),
+            new MenuBarItem("_Contactos", new MenuItem[] { 
+                new MenuItem("_Nuevo (F2 / Ctrl+N)", "", NuevoContacto), 
+                new MenuItem("E_ditar (F3 / Enter)", "", EditarContacto), 
+                new MenuItem("E_liminar (Del / Ctrl+D)", "", EliminarContacto) 
+            }),
+            new MenuBarItem("_Ver", new MenuItem[] { 
+                new MenuItem("Solo _Favoritos", "", AlternarFavoritos) 
+            })
+        };
+        Add(menu);
+
+        KeyDown += (s, e) => {
+            if (e.KeyCode == KeyCode.F2 || e.KeyCode == (KeyCode.N | KeyCode.CtrlMask)) { NuevoContacto(); e.Handled = true; }
+            if (e.KeyCode == KeyCode.F3 || e.KeyCode == KeyCode.Enter) { EditarContacto(); e.Handled = true; }
+            if (e.KeyCode == KeyCode.Delete || e.KeyCode == (KeyCode.D | KeyCode.CtrlMask)) { EliminarContacto(); e.Handled = true; }
+            if (e.KeyCode == (KeyCode.I | KeyCode.CtrlMask)) { Importar(); e.Handled = true; }
+            if (e.KeyCode == (KeyCode.E | KeyCode.CtrlMask)) { Exportar(); e.Handled = true; }
+            if (e.KeyCode == KeyCode.F4) { _txtSearch.SetFocus(); e.Handled = true; }
+            if (e.KeyCode == (KeyCode.Q | KeyCode.CtrlMask)) { Application.RequestStop(); e.Handled = true; }
+        };
+
+        var lblSearch = new Label { Text = "Buscar (F4):", X = 1, Y = 1 };
+        _txtSearch = new TextField { Text = "", X = Pos.Right(lblSearch) + 1, Y = 1, Width = Dim.Fill() };
+        
+        _txtSearch.TextChanged += (s, e) => ActualizarLista();
+        Add(lblSearch, _txtSearch);
+
+        var panelLista = new FrameView { Title = "Contactos", X = 0, Y = 3, Width = Dim.Percent(40), Height = Dim.Fill(1) };
+        _listView = new ListView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
+        
+        _listView.SelectedItemChanged += (s, e) => MostrarDetalle();
+        _listView.OpenSelectedItem += (s, e) => EditarContacto();
+        panelLista.Add(_listView);
+
+        var panelDetalle = new FrameView { Title = "Detalles", X = Pos.Right(panelLista), Y = 3, Width = Dim.Fill(), Height = Dim.Fill(1) };
+        _txtDetail = new TextView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(), ReadOnly = true };
+        panelDetalle.Add(_txtDetail);
+
+        Add(panelLista, panelDetalle);
+
+        _lblStatus = new Label { Text = "Listo", X = 1, Y = Pos.AnchorEnd(1) };
+        Add(_lblStatus);
+
+        ActualizarLista();
     }
 
-    public List<Contacto> GetAll() {
+    private void ActualizarLista()
+    {
+        var termino = _txtSearch.Text.ToString().ToLower();
+        var todos = _store.GetAll().ToList();
+        
+        _contactosEnMemoria = todos.Where(c => 
+            (!_soloFavoritos || c.Favorito) &&
+            (c.Nombre.ToLower().Contains(termino) || c.Telefonos.ToLower().Contains(termino) || c.Email.ToLower().Contains(termino))
+        ).ToList();
+
+        var displayList = _contactosEnMemoria.Select(c => $"{(c.Favorito ? "★" : " ")} {c.Nombre}").ToList();
+        
+        _listView.SetSource(new ObservableCollection<string>(displayList));
+        MostrarDetalle();
+    }
+
+    private void MostrarDetalle()
+    {
+        if (_listView.SelectedItem >= 0 && _listView.SelectedItem < _contactosEnMemoria.Count)
+        {
+            var c = _contactosEnMemoria[_listView.SelectedItem];
+            _txtDetail.Text = $"Nombre: {c.Nombre}\n" +
+                              $"Teléfonos: {c.Telefonos}\n" +
+                              $"Email: {c.Email}\n" +
+                              $"ID Interno: {c.Id}\n\n" +
+                              $"Notas:\n{c.Notas}";
+        }
+        else
+        {
+            _txtDetail.Text = "";
+        }
+    }
+
+    private void NuevoContacto()
+    {
+        var dialog = new ContactDialog();
+        Application.Run(dialog);
+        if (!dialog.Cancelado)
+        {
+            _store.Insert(dialog.Result);
+            _lblStatus.Text = "Contacto guardado con éxito.";
+            ActualizarLista();
+        }
+    }
+
+    private void EditarContacto()
+    {
+        if (_listView.SelectedItem >= 0 && _listView.SelectedItem < _contactosEnMemoria.Count)
+        {
+            var c = _contactosEnMemoria[_listView.SelectedItem];
+            var dialog = new ContactDialog(c);
+            Application.Run(dialog);
+            if (!dialog.Cancelado)
+            {
+                _store.Update(dialog.Result);
+                _lblStatus.Text = "Contacto actualizado.";
+                ActualizarLista();
+            }
+        }
+    }
+
+    private void EliminarContacto()
+    {
+        if (_listView.SelectedItem >= 0 && _listView.SelectedItem < _contactosEnMemoria.Count)
+        {
+            var c = _contactosEnMemoria[_listView.SelectedItem];
+            if (MessageBox.Query("Confirmar", $"¿Seguro de eliminar a {c.Nombre}?", "Sí", "No") == 0)
+            {
+                _store.Delete(c);
+                _lblStatus.Text = "Eliminado y lista reordenada.";
+                ActualizarLista();
+            }
+        }
+    }
+
+    private void AlternarFavoritos()
+    {
+        _soloFavoritos = !_soloFavoritos;
+        _lblStatus.Text = _soloFavoritos ? "Mostrando solo favoritos." : "Mostrando todos.";
+        ActualizarLista();
+    }
+
+    private void Importar()
+    {
+        var d = new Dialog { Title = "Importar JSON" };
+        var txtPath = new TextField { Text = "datos.json", X = 1, Y = 2, Width = 30 };
+        d.Add(new Label { Text = "Ruta del archivo:", X = 1, Y = 1 }, txtPath);
+
+        var btnOk = new Button { Text = "Importar" };
+        btnOk.Accepting += (s, e) => {
+            Application.RequestStop();
+            try {
+                var nuevos = JsonAgendaIO.Import(txtPath.Text.ToString());
+                if (MessageBox.Query("Importar", $"Se hallaron {nuevos.Count()} contactos. ¿Importar?", "Sí", "No") == 0)
+                {
+                    foreach (var c in nuevos) { c.Id = 0; _store.Insert(c); }
+                    _lblStatus.Text = "Importación completada.";
+                    ActualizarLista();
+                }
+            } catch (Exception ex) { MessageBox.ErrorQuery("Error", $"Al importar: {ex.Message}", "Ok"); }
+        };
+        var btnCancel = new Button { Text = "Cancelar" };
+        btnCancel.Accepting += (s, e) => Application.RequestStop();
+        
+        d.AddButton(btnOk);
+        d.AddButton(btnCancel);
+        Application.Run(d);
+    }
+
+    private void Exportar()
+    {
+        var d = new Dialog { Title = "Exportar JSON" };
+        var txtPath = new TextField { Text = "salida.json", X = 1, Y = 2, Width = 30 };
+        d.Add(new Label { Text = "Ruta para guardar:", X = 1, Y = 1 }, txtPath);
+
+        var btnOk = new Button { Text = "Exportar" };
+        btnOk.Accepting += (s, e) => {
+            Application.RequestStop();
+            try {
+                JsonAgendaIO.Export(txtPath.Text.ToString(), _store.GetAll());
+                _lblStatus.Text = "Exportación completada con éxito.";
+            } catch (Exception ex) { MessageBox.ErrorQuery("Error", $"Al exportar: {ex.Message}", "Ok"); }
+        };
+        var btnCancel = new Button { Text = "Cancelar" };
+        btnCancel.Accepting += (s, e) => Application.RequestStop();
+        
+        d.AddButton(btnOk);
+        d.AddButton(btnCancel);
+        Application.Run(d);
+    }
+}
+
+public class ContactDialog : Dialog
+{
+    public Contacto Result { get; private set; }
+    public bool Cancelado { get; private set; } = true;
+
+    private TextField _txtNombre, _txtEmail, _txtTelefonos;
+    private TextView _txtNotas;
+    private Button _btnFavorito;
+
+    public ContactDialog(Contacto c = null)
+    {
+        Title = c == null ? "Nuevo Contacto" : "Editar Contacto";
+        // Ajustamos las medidas de la ventana para que entre el texto nuevo
+        Width = 70;
+        Height = 22;
+
+        Result = c != null ? new Contacto { Id = c.Id, Nombre = c.Nombre, Telefonos = c.Telefonos, Email = c.Email, Notas = c.Notas, Favorito = c.Favorito } : new Contacto();
+
+        var lblNombre = new Label { Text = "Nombre:", X = 1, Y = 1 };
+        _txtNombre = new TextField { Text = Result.Nombre, X = Pos.Right(lblNombre) + 1, Y = 1, Width = 30 };
+
+        var lblEmail = new Label { Text = "Email:", X = 1, Y = 3 };
+        _txtEmail = new TextField { Text = Result.Email, X = Pos.Right(lblEmail) + 2, Y = 3, Width = 30 };
+
+        // PASO 2: El botón del Arroba y su descripción
+        var btnArroba = new Button { Text = "@", X = Pos.Right(_txtEmail) + 1, Y = 3 };
+        btnArroba.Accepting += (s, e) => {
+            _txtEmail.Text = _txtEmail.Text.ToString() + "@";
+            _txtEmail.CursorPosition = _txtEmail.Text.Length; // Mueve el cursor al final
+            _txtEmail.SetFocus();
+            
+            e.Cancel = true; // <--- ESTO EVITA QUE SE CIERRE LA VENTANA
+        };
+
+        var lblArrobaAyuda = new Label { Text = "(Usa el botón '@' si no puedes escribirlo en tu teclado)", X = Pos.Left(_txtEmail), Y = 4 };
+
+        // Como sumamos el texto en Y = 4, empujamos los teléfonos a Y = 6 (antes estaban en 5)
+        var lblTel = new Label { Text = "Teléfonos:", X = 1, Y = 6 };
+        _txtTelefonos = new TextField { Text = Result.Telefonos, X = Pos.Right(lblTel) + 1, Y = 6, Width = 30 };
+
+        _btnFavorito = new Button { Text = Result.Favorito ? "[★] Es Favorito" : "[ ] No Favorito", X = 1, Y = 8 };
+        _btnFavorito.Accepting += (s, e) => {
+            Result.Favorito = !Result.Favorito;
+            _btnFavorito.Text = Result.Favorito ? "[★] Es Favorito" : "[ ] No Favorito";
+            e.Cancel = true;
+        };
+
+        var lblNotas = new Label { Text = "Notas:", X = 1, Y = 10 };
+        _txtNotas = new TextView { Text = Result.Notas, X = 1, Y = 11, Width = Dim.Fill(1), Height = Dim.Fill(3) };
+
+        // Agregamos todos los elementos (ahora sumando el btnArroba y el lblArrobaAyuda)
+        Add(lblNombre, _txtNombre, lblEmail, _txtEmail, btnArroba, lblArrobaAyuda, lblTel, _txtTelefonos, _btnFavorito, lblNotas, _txtNotas);
+
+        var btnGuardar = new Button { Text = "Guardar", IsDefault = true }; // Hacemos que sea el botón por defecto con Enter
+        btnGuardar.Accepting += (s, e) => 
+        {
+            if (string.IsNullOrWhiteSpace(_txtNombre.Text.ToString())) {
+                MessageBox.ErrorQuery("Validación", "El campo Nombre es obligatorio.", "Ok");
+                return;
+            }
+            if (!string.IsNullOrWhiteSpace(_txtEmail.Text.ToString()) && !_txtEmail.Text.ToString().Contains("@")) {
+                MessageBox.ErrorQuery("Validación", "El Email debe contener '@'.", "Ok");
+                return;
+            }
+
+            Result.Nombre = _txtNombre.Text.ToString().Trim();
+            Result.Email = _txtEmail.Text.ToString().Trim();
+            Result.Telefonos = _txtTelefonos.Text.ToString().Trim();
+            Result.Notas = _txtNotas.Text.ToString().Trim();
+            
+            Cancelado = false;
+            Application.RequestStop();
+        };
+
+        var btnCancelar = new Button { Text = "Cancelar" };
+        btnCancelar.Accepting += (s, e) => Application.RequestStop();
+
+        AddButton(btnGuardar);
+        AddButton(btnCancelar);
+    }
+}
+
+public class SqliteAgendaStore
+{
+    private string _cs;
+    public SqliteAgendaStore(string path) { 
+        _cs = $"Data Source={path}"; 
         using var cn = new SqliteConnection(_cs);
-        return cn.GetAll<Contacto>().ToList();
+        cn.Execute("CREATE TABLE IF NOT EXISTS Contactos (Id INTEGER PRIMARY KEY AUTOINCREMENT, Nombre TEXT NOT NULL, Telefonos TEXT, Email TEXT, Notas TEXT, Favorito INTEGER)"); 
+    }
+
+    public IEnumerable<Contacto> GetAll() {
+        using var cn = new SqliteConnection(_cs);
+        return cn.GetAll<Contacto>().OrderBy(c => c.Id).ToList();
     }
 
     public void Insert(Contacto c) {
@@ -49,223 +335,33 @@ public class SqliteAgendaStore {
     public void Delete(Contacto c) {
         using var cn = new SqliteConnection(_cs);
         cn.Delete(c);
+        ReordenarIds(); 
+    }
+
+    private void ReordenarIds() {
+        using var cn = new SqliteConnection(_cs); 
+        var restantes = cn.GetAll<Contacto>().OrderBy(c => c.Id).ToList();
+        int nuevoId = 1;
+        foreach (var c in restantes) {
+            if (c.Id != nuevoId) cn.Execute("UPDATE Contactos SET Id=@nId WHERE Id=@vId", new { nId = nuevoId, vId = c.Id });
+            nuevoId++;
+        }
+        try { cn.Execute("UPDATE sqlite_sequence SET seq = @c WHERE name = 'Contactos'", new { c = restantes.Count }); } catch {}
     }
 }
 
 public class JsonAgendaIO {
-    private static readonly JsonSerializerOptions opts = new() {
-        WriteIndented = true,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-    };
-    public static void Export(string ruta, IEnumerable<Contacto> c) => File.WriteAllText(ruta, JsonSerializer.Serialize(c, opts));
-    public static List<Contacto> Import(string ruta) => File.Exists(ruta) ? JsonSerializer.Deserialize<List<Contacto>>(File.ReadAllText(ruta), opts) ?? [] : throw new FileNotFoundException("El archivo no existe.");
+    public static void Export(string ruta, IEnumerable<Contacto> c) => File.WriteAllText(ruta, JsonSerializer.Serialize(c, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+    public static IEnumerable<Contacto> Import(string ruta) => File.Exists(ruta) ? JsonSerializer.Deserialize<IEnumerable<Contacto>>(File.ReadAllText(ruta)) ?? new List<Contacto>() : throw new Exception("El archivo no existe.");
 }
 
-public class ContactDialog : Dialog {
-    public Contacto Result { get; private set; }
-    public bool IsSaved { get; private set; }
-
-    private Contacto _editable;
-    private TextField _txtName, _txtEmail;
-    private TextField[] _txtPhones = new TextField[5];
-    private TextView _txtNotes;
-    private bool _isFav;
-
-    public ContactDialog(string title, Contacto c) {
-        Title = title; Width = 60; Height = 22;
-        _editable = c;
-        _isFav = c.Favorito;
-
-        Add(new Label { Text = "Nombre (*):", X = 1, Y = 1 });
-        _txtName = new TextField { X = 15, Y = 1, Width = Dim.Fill(1), Text = c.Nombre ?? "" };
-
-        Add(new Label { Text = "Email:", X = 1, Y = 3 });
-        _txtEmail = new TextField { X = 15, Y = 3, Width = Dim.Fill(1), Text = c.Email ?? "" };
-
-        var phones = (c.Telefonos ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        Add(new Label { Text = "Teléfonos:", X = 1, Y = 5 });
-        for (int i = 0; i < 5; i++) {
-            _txtPhones[i] = new TextField { X = 15, Y = 5 + i, Width = Dim.Fill(1), Text = i < phones.Length ? phones[i] : "" };
-            Add(new Label { Text = $"{i + 1}:", X = 11, Y = 5 + i }, _txtPhones[i]);
-        }
-
-        Add(new Label { Text = "Notas:", X = 1, Y = 11 });
-        _txtNotes = new TextView { X = 15, Y = 11, Width = Dim.Fill(1), Height = 3, Text = c.Notas ?? "" };
-
-        var btnFav = new Button { Text = _isFav ? "[★] Es Favorito" : "[ ] Es Favorito", X = 15, Y = 15 };
-        btnFav.Accepting += (_, _) => {
-            _isFav = !_isFav;
-            btnFav.Text = _isFav ? "[★] Es Favorito" : "[ ] Es Favorito";
-        };
-
-        var btnSave = new Button { Text = "Guardar", IsDefault = true, X = Pos.Center() - 10, Y = Pos.AnchorEnd(2) };
-        var btnCancel = new Button { Text = "Cancelar", X = Pos.Center() + 2, Y = Pos.AnchorEnd(2) };
-
-        btnSave.Accepting += (_, _) => {
-            string n = _txtName.Text?.ToString()?.Trim() ?? "";
-            if (string.IsNullOrEmpty(n)) { MessageBox.ErrorQuery("Error", "El nombre es obligatorio.", "OK"); return; }
-            string e = _txtEmail.Text?.ToString()?.Trim() ?? "";
-            if (e != "" && !e.Contains("@")) { MessageBox.ErrorQuery("Error", "El email debe tener '@'.", "OK"); return; }
-
-            _editable.Nombre = n; _editable.Email = e;
-            _editable.Notas = _txtNotes.Text?.ToString() ?? "";
-            _editable.Favorito = _isFav;
-            _editable.Telefonos = string.Join(", ", _txtPhones.Select(x => x.Text?.ToString()?.Trim()).Where(x => !string.IsNullOrEmpty(x)));
-
-            Result = _editable; IsSaved = true; Application.RequestStop();
-        };
-        btnCancel.Accepting += (_, _) => { IsSaved = false; Application.RequestStop(); };
-
-        Add(_txtName, _txtEmail, _txtNotes, btnFav, btnSave, btnCancel);
-    }
-}
-
-public class AgendaWindow : Window {
-    private SqliteAgendaStore _store;
-    private List<Contacto> _contacts, _filtered = new();
-    private ListView _list;
-    private TextField _search;
-    private bool _onlyFavs;
-    private Label _status;
-    private Label _lblNombre, _lblTels, _lblEmail, _lblFav;
-    private TextView _lblNotas;
-    private MenuItem _mnuFavs;
-
-    public AgendaWindow(SqliteAgendaStore store) {
-        _store = store; Title = "AgendaT - TUI"; Width = Dim.Fill(); Height = Dim.Fill();
-        _contacts = _store.GetAll();
-
-        _mnuFavs = new MenuItem("Solo _favoritos", "", ToggleFavs) { CheckType = MenuItemCheckStyle.Checked };
-        var menu = new MenuBar {
-            Menus = new MenuBarItem[] {
-            new MenuBarItem("_Archivo", new MenuItem[] {
-                new MenuItem("_Importar JSON", "Ctrl+I", Importar),
-                new MenuItem("_Exportar JSON", "Ctrl+E", Exportar),
-                new MenuItem("_Salir", "Ctrl+Q", Salir)
-            }),
-            new MenuBarItem("_Contactos", new MenuItem[] {
-                new MenuItem("_Nuevo", "F2 / Ctrl+N", Nuevo),
-                new MenuItem("E_ditar", "F3 / Enter", Editar),
-                new MenuItem("_Eliminar", "Del / Ctrl+D", Eliminar)
-            }),
-            new MenuBarItem("_Ver", new MenuItem[] { _mnuFavs }),
-            new MenuBarItem("A_yuda", new MenuItem[] { new MenuItem("_Acerca de", "", AcercaDe) })
-            }
-        };
-
-        var lblBuscar = new Label { Text = "Buscar (F4):", X = 0, Y = Pos.Bottom(menu) };
-        _search = new TextField { X = Pos.Right(lblBuscar) + 1, Y = Pos.Top(lblBuscar), Width = Dim.Fill() };
-        _search.TextChanged += (_, _) => RefreshList();
-
-        var frmList = new FrameView { Title = "Lista", X = 0, Y = Pos.Bottom(_search), Width = Dim.Percent(40), Height = Dim.Fill(1) };
-        _list = new ListView { Width = Dim.Fill(), Height = Dim.Fill(), AllowsMarking = false };
-        _list.SelectedItemChanged += (_, _) => UpdateDetails();
-        _list.OpenSelectedItem += (_, _) => Editar();
-        frmList.Add(_list);
-
-        var frmDet = new FrameView { Title = "Detalle", X = Pos.Right(frmList), Y = Pos.Top(frmList), Width = Dim.Fill(), Height = Dim.Fill(1) };
-        _lblNombre = new Label { X = 1, Y = 1, Width = Dim.Fill() };
-        _lblTels = new Label { X = 1, Y = 3, Width = Dim.Fill() };
-        _lblEmail = new Label { X = 1, Y = 5, Width = Dim.Fill() };
-        _lblFav = new Label { X = 1, Y = 7, Width = Dim.Fill() };
-        _lblNotas = new TextView { X = 1, Y = 9, Width = Dim.Fill(1), Height = Dim.Fill(), ReadOnly = true };
-        frmDet.Add(_lblNombre, _lblTels, _lblEmail, _lblFav, new Label { Text = "Notas:", X = 1, Y = 8 }, _lblNotas);
-
-        _status = new Label { Text = " Listo", X = 0, Y = Pos.Bottom(frmList), Width = Dim.Fill() };
-
-        Add(menu, lblBuscar, _search, frmList, frmDet, _status);
-        RefreshList();
-    }
-
-    private void ToggleFavs() { _onlyFavs = !_onlyFavs; _mnuFavs.Checked = _onlyFavs; RefreshList(); }
-
-    private void RefreshList() {
-        var q = _search.Text?.ToString()?.ToLower() ?? "";
-        _filtered = _contacts.Where(c => (!_onlyFavs || c.Favorito) && ((c.Nombre ?? "").ToLower().Contains(q) || (c.Telefonos ?? "").ToLower().Contains(q) || (c.Email ?? "").ToLower().Contains(q))).OrderBy(c => c.Nombre).ToList();
-        _list.SetSource(new ObservableCollection<Contacto>(_filtered));
-        UpdateDetails();
-    }
-
-    private void UpdateDetails() {
-        if (_list.SelectedItem >= 0 && _list.SelectedItem < _filtered.Count) {
-            var c = _filtered[_list.SelectedItem];
-            _lblNombre.Text = $"Nombre: {c.Nombre}"; _lblTels.Text = $"Tel: {c.Telefonos}"; _lblEmail.Text = $"Email: {c.Email}"; _lblFav.Text = c.Favorito ? "★ Favorito" : ""; _lblNotas.Text = c.Notas ?? "";
-        }
-        else {
-            _lblNombre.Text = _lblTels.Text = _lblEmail.Text = _lblFav.Text = _lblNotas.Text = "";
-        }
-    }
-
-    private void Nuevo() {
-        var dlg = new ContactDialog("Nuevo Contacto", new Contacto());
-        Application.Run(dlg);
-        if (dlg.IsSaved) { _store.Insert(dlg.Result); _contacts.Add(dlg.Result); RefreshList(); _status.Text = " Creado."; }
-    }
-
-    private void Editar() {
-        if (_list.SelectedItem < 0 || _list.SelectedItem >= _filtered.Count) return;
-        var dlg = new ContactDialog("Editar Contacto", _filtered[_list.SelectedItem].Clone());
-        Application.Run(dlg);
-        if (dlg.IsSaved) { _store.Update(dlg.Result); var i = _contacts.FindIndex(x => x.Id == dlg.Result.Id); if (i >= 0) _contacts[i] = dlg.Result; RefreshList(); _status.Text = " Modificado."; }
-    }
-
-    private void Eliminar() {
-        if (_list.SelectedItem < 0 || _list.SelectedItem >= _filtered.Count) return;
-        var c = _filtered[_list.SelectedItem];
-        if (MessageBox.Query("Eliminar", $"¿Borrar a {c.Nombre}?", "Sí", "No") == 0) { _store.Delete(c); _contacts.RemoveAll(x => x.Id == c.Id); RefreshList(); _status.Text = " Eliminado."; }
-    }
-
-    private void Importar() {
-        var r = InputBox("Importar", "Ruta del JSON:"); if (string.IsNullOrEmpty(r)) return;
-        try {
-            var l = JsonAgendaIO.Import(r);
-            if (MessageBox.Query("Importar", $"¿Importar {l.Count} contactos?", "Sí", "No") == 0) {
-                foreach (var c in l) { c.Id = 0; _store.Insert(c); _contacts.Add(c); }
-                RefreshList(); _status.Text = " Importados.";
-            }
-        }
-        catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "OK"); }
-    }
-
-    private void Exportar() {
-        var r = InputBox("Exportar", "Ruta a guardar:"); if (string.IsNullOrEmpty(r)) return;
-        try { JsonAgendaIO.Export(r, _contacts); MessageBox.Query("Exportado", "Exitoso.", "OK"); _status.Text = " Exportado."; } catch (Exception ex) { MessageBox.ErrorQuery("Error", ex.Message, "OK"); }
-    }
-
-    private string InputBox(string t, string p) {
-        string r = ""; var d = new Dialog { Title = t, Width = 50, Height = 10 };
-        var txt = new TextField { X = 1, Y = 3, Width = Dim.Fill(1) };
-        var bOk = new Button { Text = "Ok", IsDefault = true, X = Pos.Center() - 8, Y = 6 };
-        var bCa = new Button { Text = "Cancelar", X = Pos.Center() + 2, Y = 6 };
-        bOk.Accepting += (_, _) => { r = txt.Text?.ToString() ?? ""; Application.RequestStop(); };
-        bCa.Accepting += (_, _) => { r = ""; Application.RequestStop(); };
-        d.Add(new Label { Text = p, X = 1, Y = 1 }, txt, bOk, bCa); Application.Run(d); return r;
-    }
-
-    private void Salir() => Application.RequestStop();
-    private void AcercaDe() => MessageBox.Query("AgendaT", "App TUI\n.NET 10", "OK");
-
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.Q.WithCtrl) { Application.RequestStop(); return true; }
-        if (key == Key.N.WithCtrl || key == Key.F2) { Nuevo(); return true; }
-        if (key == Key.Enter || key == Key.F3) { if (!_search.HasFocus) { Editar(); return true; } }
-        if (key == Key.D.WithCtrl || (key == Key.Delete && !_search.HasFocus)) { Eliminar(); return true; }
-        if (key == Key.I.WithCtrl) { Importar(); return true; }
-        if (key == Key.E.WithCtrl) { Exportar(); return true; }
-        if (key == Key.F4) { _search.SetFocus(); return true; }
-        return base.OnKeyDown(key);
-    }
-}
-
-[Table("Contactos")]
-public sealed class Contacto {
-    [Key] public int Id { get; set; }
+[System.ComponentModel.DataAnnotations.Schema.Table("Contactos")]
+public class Contacto {
+    [System.ComponentModel.DataAnnotations.Key] 
+    public int Id { get; set; }
     public string Nombre { get; set; } = "";
     public string Telefonos { get; set; } = "";
     public string Email { get; set; } = "";
     public string Notas { get; set; } = "";
     public bool Favorito { get; set; }
-
-    public Contacto Clone() => (Contacto)this.MemberwiseClone();
-    public override string ToString() => $"{(Favorito ? "[★]" : "[ ]")} {Nombre}";
 }
