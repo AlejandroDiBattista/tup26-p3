@@ -28,7 +28,6 @@ using System.Text.Encodings.Web; // para el encoder
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow());
 
-
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
@@ -67,7 +66,7 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
+        ContactDialog dialog = new(new Contacto());
         App!.Run(dialog);
     }
 
@@ -85,34 +84,91 @@ public sealed class AgendaWindow : Runnable {
     }
 }
 
-// Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog {
+    public Contacto? resultado { get; private set; }
+    public bool cancelado { get; private set; } = true;
+    // campos de un contacto
+    private readonly TextField campoNombre;
+    private readonly TextField campoTelefonos;
+    private readonly TextField campoEmail;
+    private readonly TextField campoNotas;
+    private readonly CheckBox  campoFavorito;
+    public ContactDialog(Contacto contacto) {
+        Title  = "Contacto";
+        Width  = 60;
+        Height = 15;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
-        };
+        Label etiquetaNombre = new() { Text = "Nombre:", X = 1, Y = 1 };
+        Label etiquetaTelefonos = new() { Text = "Teléfonos:", X = 1, Y = 3 };
+        Label etiquetaEmail = new() { Text = "Email:", X = 1, Y = 5 };
+        Label etiquetaNotas = new() { Text = "Notas:", X = 1, Y = 7 };
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
+        campoNombre = new() {
+            Text = contacto.Nombre,
+            X = 12, Y = 1,
+            Width = Dim.Fill() - 2};
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
+        campoTelefonos = new() {
+            Text = contacto.Telefonos,
+            X = 12, Y = 3,
+            Width = Dim.Fill() - 2};
+
+        campoEmail = new() {
+            Text = contacto.Email,
+            X = 12, Y = 5,
+            Width = Dim.Fill() - 2};
+
+        campoNotas = new() {
+            Text = contacto.Notas,
+            X = 12, Y = 7,
+            Width = Dim.Fill() - 2};
+
+        campoFavorito = new() {
+            Text = "Favorito",
+            X = 12, Y = 9};
+        campoFavorito.Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked;
+        
+        Add(etiquetaNombre, etiquetaTelefonos, etiquetaEmail, etiquetaNotas, campoNombre, campoTelefonos, campoEmail, campoNotas, campoFavorito);
+
+        Button botonAceptar = new() {Text = "_Aceptar", IsDefault = true};
+        Button botonCancelar = new() {Text = "_Cancelar"};
+        botonAceptar.Accepting += (_, e) => {
             e.Handled = true;
+
+            string nombre = (campoNombre.Text ?? "").Trim();
+            string email  = (campoEmail.Text  ?? "").Trim();
+
+            if (nombre == "") {
+                MessageBox.Query(App!, "Falta el nombre", "El nombre no puede quedar vacío.", "Aceptar");
+                return;
+            }
+
+            if (email != "" && !email.Contains("@")) {
+                MessageBox.Query(App!, "Email inválido", "El email debe contener una @.", "Aceptar");
+                return;
+            }
+
+            resultado = new Contacto {
+                Id        = contacto.Id,
+                Nombre    = nombre,
+                Telefonos = (campoTelefonos.Text ?? "").Trim(),
+                Email     = email,
+                Notas     = (campoNotas.Text ?? "").Trim(),
+                Favorito  = campoFavorito.Value == CheckState.Checked
+            };
+            cancelado = false;
+            App!.RequestStop();
         };
 
-        Add(message);
-        AddButton(closeButton);
+        botonCancelar.Accepting += (_, e) => {
+            e.Handled = true;
+            App!.RequestStop();
+        };
+
+        AddButton(botonAceptar);
+        AddButton(botonCancelar);
     }
 }
-
 
 public class SqliteAgendaStore {
     private const string CrearTablaSql = @"
