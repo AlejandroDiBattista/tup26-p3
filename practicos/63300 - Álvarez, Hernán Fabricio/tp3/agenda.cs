@@ -6,7 +6,7 @@
 #:package Dapper@*
 #:package Dapper.Contrib@*
 
-
+/* USING */
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -14,7 +14,12 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
+using System;
 using System.Data.Common;
+using System.Text.Json;
+using System.Linq;
+using System.IO;
+using System.Collections.Generic;
 using Dapper.Contrib.Extensions;
 
 /// ==== 
@@ -23,8 +28,18 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
+/* 1- PUNTO DE ENTRADA (proceso de argumentos)*/
+string rutadb = args.Length > 0 ? args[0] : "agenda.db";
+SqliteAgendaStore bd;
+try {
+    bd = new SqliteAgendaStore(rutadb);
+}
+catch (Exception ex) {
+    Console.Error.WriteLine($"Error al iniciar la base de datos: {ex.Message}");
+    return;
+}
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(bd));
 
 
 // Ventana principal
