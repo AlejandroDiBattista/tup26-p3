@@ -8,7 +8,11 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -32,13 +36,15 @@ try {
 }
 
 List<Contacto> contacts = store.GetAll();
-app.Run(new AgendaWindow(store, contacts, dbPath));
+JsonAgendaIO jsonIO = new();
+app.Run(new AgendaWindow(store, contacts, dbPath, jsonIO));
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
     private readonly SqliteAgendaStore _store;
+    private readonly JsonAgendaIO _jsonIO;
     private readonly List<Contacto> _contacts;
     private List<Contacto> _filteredContacts = new();
 
@@ -49,8 +55,9 @@ public sealed class AgendaWindow : Runnable {
 
     private bool _soloFavoritos;
 
-    public AgendaWindow(SqliteAgendaStore store, List<Contacto> contacts, string dbPath) {
+    public AgendaWindow(SqliteAgendaStore store, List<Contacto> contacts, string dbPath, JsonAgendaIO jsonIO) {
         _store    = store;
+        _jsonIO   = jsonIO;
         _contacts = contacts;
 
         Title  = "AgendaT";
@@ -272,19 +279,81 @@ public sealed class AgendaWindow : Runnable {
     }
 
     private void EliminarContacto() {
-        if (GetSelectedContact() is null) {
+        Contacto? selected = GetSelectedContact();
+        if (selected is null) {
             MessageBox.Query(App!, "Eliminar", "Seleccion├í un contacto.", "Ok");
             return;
         }
-        SetStatus("Eliminar contacto: pendiente de implementar (Parte 4).");
+
+        int answer = MessageBox.Query(
+            App!,
+            "Eliminar contacto",
+            $"┬┐Eliminar el contacto '{selected.Nombre}'?",
+            "No", "S├¡") ?? 0;
+
+        if (answer != 1) {
+            return;
+        }
+
+        try {
+            _store.Delete(selected);
+            _contacts.RemoveAll(c => c.Id == selected.Id);
+            SetStatus($"Contacto '{selected.Nombre}' eliminado.");
+            RefreshContacts();
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error", $"No se pudo eliminar el contacto: {ex.Message}", "Ok");
+        }
     }
 
     private void ImportarJson() {
-        SetStatus("Importar JSON: pendiente de implementar (Parte 6).");
+        FilePathDialog dialog = new("Importar JSON", "agenda.json");
+        App!.Run(dialog);
+
+        if (!dialog.Confirmed) {
+            return;
+        }
+
+        try {
+            List<Contacto> imported = _jsonIO.Read(dialog.Path);
+
+            int answer = MessageBox.Query(
+                App!,
+                "Importar JSON",
+                $"Se agregar├ín {imported.Count} contacto(s) del archivo. ┬┐Continuar?",
+                "No", "S├¡") ?? 0;
+
+            if (answer != 1) {
+                return;
+            }
+
+            foreach (Contacto contact in imported) {
+                contact.Id = 0;
+                int newId = _store.Insert(contact);
+                contact.Id = newId;
+                _contacts.Add(contact);
+            }
+
+            SetStatus($"{imported.Count} contacto(s) importado(s) desde '{dialog.Path}'.");
+            RefreshContacts();
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Importar JSON", ex.Message, "Ok");
+        }
     }
 
     private void ExportarJson() {
-        SetStatus("Exportar JSON: pendiente de implementar (Parte 6).");
+        FilePathDialog dialog = new("Exportar JSON", "salida.json");
+        App!.Run(dialog);
+
+        if (!dialog.Confirmed) {
+            return;
+        }
+
+        try {
+            _jsonIO.Write(dialog.Path, _contacts);
+            SetStatus($"{_contacts.Count} contacto(s) exportado(s) a '{dialog.Path}'.");
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Exportar JSON", ex.Message, "Ok");
+        }
     }
 
     private void ToggleSoloFavoritos() {
@@ -475,6 +544,50 @@ public sealed class ContactDialog : Dialog {
     }
 }
 
+public sealed class FilePathDialog : Dialog {
+
+    private readonly TextField _pathField;
+
+    public bool Confirmed { get; private set; }
+    public string Path => _pathField.Text?.ToString()?.Trim() ?? "";
+
+    public FilePathDialog(string title, string initialPath) {
+        Title  = title;
+        Width  = 60;
+        Height = 8;
+
+        Label pathLabel = new() { Text = "Ruta del archivo:", X = 2, Y = 1 };
+        _pathField = new() {
+            Text     = initialPath,
+            X        = 2,
+            Y        = 2,
+            Width    = Dim.Fill(2),
+            CanFocus = true
+        };
+
+        Button acceptButton = new() { Text = "Aceptar", IsDefault = true };
+        acceptButton.Accepting += (_, e) => {
+            if (!string.IsNullOrWhiteSpace(Path)) {
+                Confirmed = true;
+                e.Handled = true;
+                App!.RequestStop();
+            }
+        };
+
+        Button cancelButton = new() { Text = "Cancelar" };
+        cancelButton.Accepting += (_, e) => {
+            Confirmed = false;
+            e.Handled = true;
+            App!.RequestStop();
+        };
+
+        Add(pathLabel, _pathField);
+        AddButton(acceptButton);
+        AddButton(cancelButton);
+        _pathField.SetFocus();
+    }
+}
+
 public sealed class SqliteAgendaStore {
 
     private readonly string _connectionString;
@@ -525,7 +638,34 @@ public sealed class SqliteAgendaStore {
     }
 }
 
-public class JsonAgendaIO {}
+public sealed class JsonAgendaIO {
+
+    private static readonly JsonSerializerOptions JsonOptions = new() {
+        WriteIndented = true,
+        Encoder       = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    public List<Contacto> Read(string path) {
+        if (!File.Exists(path)) {
+            throw new FileNotFoundException($"Archivo no encontrado: '{path}'");
+        }
+
+        string json = File.ReadAllText(path, Encoding.UTF8);
+        try {
+            return JsonSerializer.Deserialize<List<Contacto>>(json, JsonOptions) ?? new();
+        } catch (JsonException ex) {
+            throw new InvalidDataException($"JSON con formato inv├ílido: {ex.Message}", ex);
+        }
+    }
+
+    public void Write(string path, IEnumerable<Contacto> contacts) {
+        string json = JsonSerializer.Serialize(
+            contacts.OrderBy(c => c.Id),
+            JsonOptions);
+
+        File.WriteAllText(path, json, Encoding.UTF8);
+    }
+}
 
 [Table("Contactos")]
 public sealed class Contacto {
