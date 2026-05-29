@@ -592,3 +592,132 @@ public sealed class AgendaWindow : Window
         return handled;
     }
 }
+public sealed class ContactDialog : Dialog
+{
+    private readonly TextField entradaNombre;
+    private readonly TextField[] entradasTelefonicas;
+    private readonly TextField entradaCorreo;
+    private readonly TextView entradaNotas;
+    private readonly CheckBox marcaFavorito;
+
+    public new bool Accepted { get; private set; }
+    public Contacto? Contact { get; private set; }
+
+    public ContactDialog(Contacto? contact = null)
+    {
+        Contacto borrador = contact?.Clone() ?? new Contacto();
+
+        Title = contact is null ? "Nuevo contacto" : "Editar contacto";
+        Width = 76;
+        Height = 22;
+
+        Label rotuloNombre = CrearRotulo("Nombre:", 1, 1);
+        entradaNombre = CrearEntrada(Pos.Right(rotuloNombre) + 1, 1, borrador.Nombre);
+
+        entradasTelefonicas = new TextField[5];
+        List<Label> rotulosTelefono = [];
+        string[] telefonosPrevios = PhoneTextTools.Separar(borrador.Telefonos).Take(5).ToArray();
+
+        for (int vuelta = 0; vuelta < entradasTelefonicas.Length; vuelta++)
+        {
+            Label rotuloTelefono = CrearRotulo($"Telefono {vuelta + 1}:", 1, 3 + vuelta);
+            rotulosTelefono.Add(rotuloTelefono);
+            entradasTelefonicas[vuelta] = CrearEntrada(
+                Pos.Right(rotuloTelefono) + 1,
+                3 + vuelta,
+                vuelta < telefonosPrevios.Length ? telefonosPrevios[vuelta] : "");
+        }
+
+        Label rotuloCorreo = CrearRotulo("Email:", 1, 9);
+        entradaCorreo = CrearEntrada(Pos.Right(rotuloCorreo) + 1, 9, borrador.Email);
+
+        marcaFavorito = new CheckBox
+        {
+            Text = "Favorito",
+            X = 13,
+            Y = 11,
+            Value = borrador.Favorito ? CheckState.Checked : CheckState.UnChecked
+        };
+
+        Label rotuloNotas = CrearRotulo("Notas:", 1, 13);
+        entradaNotas = new TextView
+        {
+            X = 13,
+            Y = 13,
+            Width = Dim.Fill(1),
+            Height = 4,
+            Text = borrador.Notas
+        };
+
+        Button botonGuardar = new()
+        {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+        botonGuardar.Accepting += (_, evento) =>
+        {
+            if (IntentarArmarContacto(borrador.Id, out Contacto? resultado))
+            {
+                Contact = resultado;
+                Accepted = true;
+                App!.RequestStop();
+            }
+
+            evento.Handled = true;
+        };
+
+        Button botonCancelar = new()
+        {
+            Text = "_Cancelar"
+        };
+        botonCancelar.Accepting += (_, evento) =>
+        {
+            Accepted = false;
+            App!.RequestStop();
+            evento.Handled = true;
+        };
+
+        Add(rotuloNombre, entradaNombre, rotuloCorreo, entradaCorreo, marcaFavorito, rotuloNotas, entradaNotas);
+        for (int vuelta = 0; vuelta < entradasTelefonicas.Length; vuelta++)
+        {
+            Add(rotulosTelefono[vuelta], entradasTelefonicas[vuelta]);
+        }
+
+        AddButton(botonGuardar);
+        AddButton(botonCancelar);
+    }
+
+    private bool IntentarArmarContacto(int id, out Contacto? contacto)
+    {
+        contacto = null;
+
+        string nombreIngresado = entradaNombre.Text?.ToString()?.Trim() ?? "";
+        string correoIngresado = entradaCorreo.Text?.ToString()?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(nombreIngresado))
+        {
+            MessageBox.ErrorQuery(App!, "Validacion", "El nombre no puede estar vacio.", "Aceptar");
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(correoIngresado) && !correoIngresado.Contains('@'))
+        {
+            MessageBox.ErrorQuery(App!, "Validacion", "El email debe contener @.", "Aceptar");
+            return false;
+        }
+
+        string telefonosIngresados = PhoneTextTools.Normalizar(entradasTelefonicas
+            .SelectMany(campo => PhoneTextTools.Separar(campo.Text?.ToString())));
+
+        contacto = new Contacto
+        {
+            Id = id,
+            Nombre = nombreIngresado,
+            Telefonos = telefonosIngresados,
+            Email = correoIngresado,
+            Notas = entradaNotas.Text?.ToString() ?? "",
+            Favorito = marcaFavorito.Value == CheckState.Checked
+        };
+
+        return true;
+    }
