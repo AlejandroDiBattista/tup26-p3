@@ -48,6 +48,7 @@ public sealed class AgendaWindow : Window{
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
                     null!,
+                    new MenuItem("_Editar contacto", null!, EditarContacto),
                     new MenuItem("_Eliminar contacto", null!, EliminarContacto),
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ])
@@ -71,11 +72,11 @@ public sealed class AgendaWindow : Window{
     private ListView listView = null!;
     private void AbrirDialogo() {
         var dialog = new ContactoDialog();
-        App!.Run(dialog);
+
+        Application.Run(dialog);
 
         if (dialog.Resultado != null) {
             store.Insert(dialog.Resultado);
-
             contacts.Add(dialog.Resultado);
 
             listView.SetSource(
@@ -106,8 +107,32 @@ public sealed class AgendaWindow : Window{
             )
         );
     }
+    private void EditarContacto() {
+        if (contacts.Count == 0)
+            return;
+
+        if (listView.SelectedItem is not int index)
+            return;
+
+        var original = contacts[index];
+
+        var dialog = new ContactoDialog(original);
+        Application.Run(dialog);
+
+        if (dialog.Resultado != null) {
+            store.Update(dialog.Resultado);
+
+            contacts[index] = dialog.Resultado;
+
+            listView.SetSource(
+                new ObservableCollection<string>(
+                    contacts.Select(c => c.Nombre)
+                )
+            );
+        }
+    }
     private void SolicitarSalir() {
-        App!.RequestStop();
+        Application.RequestStop();
     }
 
     protected override bool OnKeyDown(Key key) {
@@ -129,12 +154,14 @@ public sealed class ContactoDialog : Dialog {
     private TextView notasField;
 
     public Contacto? Resultado { get; private set; }
+    private Contacto? contactoOriginal;
 
-    public ContactoDialog() {
+    public ContactoDialog(Contacto? contacto = null) {
         Title  = "Nuevo Contacto";
         Width  = 50;
         Height = 18;
 
+        contactoOriginal = contacto;
         Add(new Label() { Text = "Nombre:", X = 1, Y = 1 });
         nombreField = new TextField() { Text = "", X = 15, Y = 1, Width = 30 };
 
@@ -146,25 +173,32 @@ public sealed class ContactoDialog : Dialog {
 
         Add(new Label() { Text = "Notas:", X = 1, Y = 7 });
         notasField = new TextView() { X = 15, Y = 7, Width = 30, Height = 4 };
+    
+        if (contacto != null) {
+            nombreField.Text = contacto.Nombre ?? "";
+            telefonoField.Text = contacto.Telefonos ?? "";
+            emailField.Text = contacto.Email ?? "";
+            notasField.Text = contacto.Notas ?? "";
+        }
 
         Button guardar = new() { Text = "_Guardar", IsDefault = true };
         Button cancelar = new() { Text = "_Cancelar" };
 
         guardar.Accepting += (_, e) => {
-            Resultado = new Contacto {
-                Nombre = nombreField.Text.ToString() ?? "",
-                Telefonos = telefonoField.Text.ToString() ?? "",
-                Email = emailField.Text.ToString() ?? "",
-                Notas = notasField.Text.ToString() ?? ""
-            };
+            Resultado = contactoOriginal?.Clone() ?? new Contacto();
 
-            App!.RequestStop();
+            Resultado.Nombre = nombreField.Text.ToString() ?? "";
+            Resultado.Telefonos = telefonoField.Text.ToString() ?? "";
+            Resultado.Email = emailField.Text.ToString() ?? "";
+            Resultado.Notas = notasField.Text.ToString() ?? "";
+
+            Application.RequestStop();
             e.Handled = true;
         };
 
         cancelar.Accepting += (_, e) => {
             Resultado = null;
-            App!.RequestStop();
+            Application.RequestStop();
             e.Handled = true;
         };
 
@@ -200,6 +234,9 @@ public class SqliteAgendaStore : IDisposable {
     }
     public void Delete(Contacto c) {
         connection.Delete(c);
+    }
+    public void Update(Contacto c) {
+        connection.Update(c);
     }
     public void Dispose() => connection.Dispose();
 }
