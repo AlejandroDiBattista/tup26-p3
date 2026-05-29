@@ -313,9 +313,156 @@ public class AgendaWindow : Window {
 }
 
 
-public class ContactDialog : Dialog {
+
+public class ContactDialog : Dialog
+{
+    private readonly TextField _nameField;
+    private readonly TextField _phoneField;
+    private readonly TextField _emailField;
+    private readonly TextView _notesField;
+    private readonly CheckBox _favoriteField;
+
     public Contacto? Result { get; private set; }
-    public ContactDialog(Contacto contacto) { }
+
+    public ContactDialog(Contacto contacto)
+    {
+        Title = contacto.Id == 0 ? "Nuevo contacto" : "Editar contacto";
+
+        Width = 60;
+        Height = 20;
+
+        
+        var nameLabel = new Label {
+            Text = "Nombre:",
+            X = 1,
+            Y = 1
+        };
+
+        var phoneLabel = new Label {
+            Text = "Teléfono:",
+            X = 1,
+            Y = 3
+        };
+
+        var emailLabel = new Label {
+            Text = "Email:",
+            X = 1,
+            Y = 5
+        };
+
+        var notesLabel = new Label {
+            Text = "Notas:",
+            X = 1,
+            Y = 7
+        };
+
+        
+        _nameField = new TextField {
+            X = 12,
+            Y = 1,
+            Width = 40,
+            Text = contacto.Nombre
+        };
+
+        _phoneField = new TextField {
+            X = 12,
+            Y = 3,
+            Width = 40,
+            Text = contacto.Telefonos
+        };
+
+        _emailField = new TextField {
+            X = 12,
+            Y = 5,
+            Width = 40,
+            Text = contacto.Email
+        };
+
+        _notesField = new TextView {
+            X = 12,
+            Y = 7,
+            Width = 40,
+            Height = 5,
+            Text = contacto.Notas
+        };
+
+        _favoriteField = new CheckBox {
+            Text = "Favorito",
+            X = 12,
+            Y = 13,
+            Value= contacto.Favorito
+                ? CheckState.Checked
+                : CheckState.UnChecked
+        };
+
+        
+        var saveButton = new Button {
+            Text = "_Guardar",
+            X = Pos.Center() - 10,
+            Y = Pos.AnchorEnd(2),
+            IsDefault = true
+        };
+
+        saveButton.Accepting += (_, e) =>
+        {
+            string nombre = _nameField.Text.ToString()?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                MessageBox.ErrorQuery(
+                    Application.Instance,
+                    "Validación",
+                    "El nombre es obligatorio",
+                    "OK");
+
+                _nameField.SetFocus();
+                e.Handled = true;
+                return;
+            }
+
+            Result = new Contacto {
+                Id = contacto.Id,
+                Nombre = nombre,
+                Telefonos = _phoneField.Text.ToString() ?? "",
+                Email = _emailField.Text.ToString() ?? "",
+                Notas = _notesField.Text.ToString() ?? "",
+                Favorito = _favoriteField.Value == CheckState.Checked
+            };
+
+            RequestStop();
+            e.Handled = true;
+        };
+
+    
+        var cancelButton = new Button {
+            Text = "_Cancelar",
+            X = Pos.Center() + 2,
+            Y = Pos.AnchorEnd(2)
+        };
+
+        cancelButton.Accepting += (_, e) =>
+        {
+            Result = null;
+            RequestStop();
+            e.Handled = true;
+        };
+
+        Add(
+            nameLabel,
+            phoneLabel,
+            emailLabel,
+            notesLabel,
+
+            _nameField,
+            _phoneField,
+            _emailField,
+            _notesField,
+            _favoriteField,
+
+            saveButton,
+            cancelButton
+        );
+    }
 }
 
 public class SqliteAgendaStore {
