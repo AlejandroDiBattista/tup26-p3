@@ -219,4 +219,24 @@ public static class CommandLineParser
 
         return new SortCriteria(segments[0], numericMode, descendingMode);
     }
+    private static string GetManualText() => """
+        sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
+              [-i|--input input] [-o|--output output]
+              [-d|--delimiter delimitador]
+              [-nh|--no-header] [-h|--help]
+
+        Opciones:
+          -b,  --by        Campo por el que ordenar Puede repetirse.
+          -i,  --input     Archivo de entrada Si falta, usa stdin.
+          -o,  --output    Archivo de salida Si falta, usa stdout.
+          -d,  --delimiter Delimitador Default: ','; usar \t para tab.
+          -nh, --no-header Trata la primera fila como dato.
+          -h,  --help      Muestra esta ayuda.
+
+        Especificacion de campo: campo[:tipo[:orden]]
+          tipo  = alpha | num
+          orden = asc   | desc
+        """;
 }
+public record SortCriteria(string Identifier, bool IsNumerical, bool ReverseOrder);
+public record RuntimeSettings(string? SourceFile, string? TargetFile, string Separator, bool HasNoHeader, List<SortCriteria> OrderingRules);
