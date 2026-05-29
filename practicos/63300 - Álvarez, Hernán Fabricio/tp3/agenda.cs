@@ -42,7 +42,7 @@ using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(bd));
 
 
-// Ventana principal
+// Ventana principal clase AgendaWindow
 public sealed class AgendaWindow : Runnable {
 
         private readonly SqliteAgendaStore _bd;
@@ -250,8 +250,73 @@ public sealed class AgendaWindow : Runnable {
         return base.OnKeyDown(key);
     }
 }
+/* 3- clase contactDialog */
+public sealed class ContactDialog : Dialog {
+    private TextField txtNom, txtMail;
+    private TextField[] txtTels = new TextField[5];
+    private TextView txtNotas;
+    private CheckBox chkFav;
 
+    public Contacto Salida { get; private set; }
 
+    public ContactDialog(Contacto c = null) {
+        Title = c == null ? "Nuevo Contacto" : "Editar Contacto";
+        Width = 50; 
+        Height = 22;
+
+        CrearUI();
+        if (c != null) Llenar(c);
+    }
+    private void CrearUI() {
+        int y = 0;
+        Add(new Label() { Text = "Nombre:", X = 1, Y = y }); txtNom = new TextField() { X = 12, Y = y++, Width = Dim.Fill(1) };
+        Add(new Label() { Text = "Email:", X = 1, Y = y });  txtMail = new TextField() { X = 12, Y = y++, Width = Dim.Fill(1) };
+
+        Add(new Label() { Text = "Teléfonos:", X = 1, Y = y++ });
+        for (int i = 0; i < 5; i++) txtTels[i] = new TextField() { X = 12, Y = y++, Width = Dim.Fill(1) };
+
+        Add(new Label() { Text = "Notas:", X = 1, Y = y++ });
+        txtNotas = new TextView() { X = 12, Y = y, Width = Dim.Fill(1), Height = 4 }; y += 4;
+        chkFav = new CheckBox() { Text = "Es Favorito", X = 12, Y = y };
+
+        Add(txtNom, txtMail);
+        foreach (var t in txtTels) Add(t);
+        Add(txtNotas, chkFav);
+
+        Button btnGuardar = new() { Text = "_Guardar", IsDefault = true };
+        Button btnCancelar = new() { Text = "_Cancelar" };
+
+        btnGuardar.Accepting += (_, e) => { if (Guardar()) App!.RequestStop(); e.Handled = true; };
+        btnCancelar.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+
+        AddButton(btnCancelar); AddButton(btnGuardar);
+    }
+
+    private void Llenar(Contacto c) {
+        txtNom.Text = c.Nombre; txtMail.Text = c.Email; txtNotas.Text = c.Notas; chkFav.Checked = c.Favorito;
+        if (!string.IsNullOrWhiteSpace(c.Telefonos)) {
+            var tels = c.Telefonos.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < Math.Min(tels.Length, 5); i++) txtTels[i].Text = tels[i];
+        }
+    }
+
+    private bool Guardar() {
+        string nom = txtNom.Text ?? "";
+        string mail = txtMail.Text ?? "";
+
+        if (string.IsNullOrWhiteSpace(nom)) { MessageBox.Query("Error", "El Nombre no puede estar vacío.", "Ok"); return false; }
+        if (!string.IsNullOrWhiteSpace(mail) && !mail.Contains("@")) { MessageBox.Query("Error", "El Email debe contener '@'.", "Ok"); return false; }
+
+        var validos = txtTels.Select(t => t.Text ?? "").Where(t => !string.IsNullOrWhiteSpace(t));
+
+        Salida = new Contacto {
+            Nombre = nom, Email = mail, Notas = txtNotas.Text ?? "",
+            Favorito = chkFav.Checked == true,
+            Telefonos = string.Join(", ", validos)
+        };
+        return true;
+    }
+}
 
 
 public class SqliteAgendaStore {}
