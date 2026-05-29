@@ -376,3 +376,120 @@ public sealed class AgendaWindow : Window
             MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
         }
     }
+       private void ImportarJson()
+    {
+        string? ruta = PedirRuta(App!, "Importar JSON", "Archivo JSON:", "Importar");
+        if (string.IsNullOrWhiteSpace(ruta))
+        {
+            Informar("Importacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            List<Contacto> importados = JsonAgendaIO.Read(ruta).ToList();
+            int answer = MessageBox.Query(
+                App!,
+                "Confirmar importacion",
+                $"Se agregaran {importados.Count} contacto(s). Continuar?",
+                "Importar",
+                "Cancelar") ?? 1;
+
+            if (answer != 0)
+            {
+                Informar("Importacion cancelada.");
+                return;
+            }
+
+            foreach (Contacto contacto in importados)
+            {
+                contacto.Id = 0;
+                contacto.Id = repositorio.Insert(contacto);
+                agendaCompleta.Add(contacto);
+            }
+
+            RefrescarListado();
+            Informar($"Importados {importados.Count} contacto(s) desde {ruta}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al importar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void ExportarJson()
+    {
+        string? ruta = PedirRuta(App!, "Exportar JSON", "Ruta de salida:", "Exportar");
+        if (string.IsNullOrWhiteSpace(ruta))
+        {
+            Informar("Exportacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            JsonAgendaIO.Write(ruta, agendaCompleta);
+            Informar($"Exportados {agendaCompleta.Count} contacto(s) a {ruta}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al exportar", ex.Message, "Aceptar");
+        }
+    }
+
+    private static string? PedirRuta(IApplication app, string titulo, string consigna, string textoAccion)
+    {
+        Dialog dialog = new()
+        {
+            Title = titulo,
+            Width = 74,
+            Height = 8
+        };
+
+        Label label = new()
+        {
+            Text = consigna,
+            X = 1,
+            Y = 1,
+            Width = 16
+        };
+
+        TextField campoRuta = new()
+        {
+            X = Pos.Right(label) + 1,
+            Y = 1,
+            Width = Dim.Fill(1)
+        };
+
+        string? rutaElegida = null;
+
+        Button accept = new()
+        {
+            Text = $"_{textoAccion}",
+            IsDefault = true
+        };
+        accept.Accepting += (_, e) =>
+        {
+            rutaElegida = campoRuta.Text?.ToString()?.Trim();
+            app.RequestStop();
+            e.Handled = true;
+        };
+
+        Button cancel = new()
+        {
+            Text = "_Cancelar"
+        };
+        cancel.Accepting += (_, e) =>
+        {
+            rutaElegida = null;
+            app.RequestStop();
+            e.Handled = true;
+        };
+
+        dialog.Add(label, campoRuta);
+        dialog.AddButton(accept);
+        dialog.AddButton(cancel);
+
+        app.Run(dialog);
+        return string.IsNullOrWhiteSpace(rutaElegida) ? null : rutaElegida;
+    }
