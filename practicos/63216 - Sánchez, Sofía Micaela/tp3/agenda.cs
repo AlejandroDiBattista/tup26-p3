@@ -183,3 +183,80 @@ public sealed class AgendaWindow : Window
 
         Add(menuPrincipal, etiquetaBusqueda, buscador, panelAgenda, panelFicha, barraInferior);
     }
+         private void RefrescarListado()
+    {
+        int idPrevio = ContactoEnFoco()?.Id ?? 0;
+        string filtro = buscador?.Text?.ToString() ?? "";
+
+        vistaActual.Clear();
+        vistaActual.AddRange(agendaCompleta
+            .Where(contacto => (!verSoloFavoritos || contacto.Favorito) && PasaFiltro(contacto, filtro))
+            .OrderByDescending(contacto => contacto.Favorito)
+            .ThenBy(contacto => contacto.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(contacto => contacto.Id));
+
+        grillaContactos?.SetSource(new ObservableCollection<string>(
+            vistaActual.Select(LineaAgenda).ToList()));
+
+        indiceRecordado = 0;
+        if (idPrevio != 0)
+        {
+            int posicionConservada = vistaActual.FindIndex(contacto => contacto.Id == idPrevio);
+            indiceRecordado = posicionConservada >= 0 ? posicionConservada : 0;
+        }
+
+        if (grillaContactos is not null && vistaActual.Count > 0)
+        {
+            grillaContactos.SelectedItem = Math.Min(indiceRecordado, vistaActual.Count - 1);
+        }
+
+        DibujarFicha();
+    }
+
+    private static bool PasaFiltro(Contacto contacto, string filtro)
+    {
+        if (string.IsNullOrWhiteSpace(filtro))
+        {
+            return true;
+        }
+
+        return contacto.Nombre.Contains(filtro, StringComparison.CurrentCultureIgnoreCase)
+            || contacto.Telefonos.Contains(filtro, StringComparison.CurrentCultureIgnoreCase)
+            || contacto.Email.Contains(filtro, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static string LineaAgenda(Contacto contacto)
+    {
+        string marca = contacto.Favorito ? "* " : "  ";
+        string correo = string.IsNullOrWhiteSpace(contacto.Email) ? "" : $" | {contacto.Email}";
+        return $"{marca}{contacto.Nombre}{correo}";
+    }
+
+    private Contacto? ContactoEnFoco()
+    {
+        if (vistaActual.Count == 0)
+        {
+            return null;
+        }
+
+        int posicion = grillaContactos?.SelectedItem ?? indiceRecordado;
+        if (posicion < 0 || posicion >= vistaActual.Count)
+        {
+            posicion = 0;
+        }
+
+        return vistaActual[posicion];
+    }
+
+    private void DibujarFicha()
+    {
+        if (fichaContacto is null)
+        {
+            return;
+        }
+
+        Contacto? seleccionado = ContactoEnFoco();
+        fichaContacto.Text = seleccionado is null
+            ? "No hay contactos para mostrar."
+            : TextoFicha(seleccionado);
+    }
