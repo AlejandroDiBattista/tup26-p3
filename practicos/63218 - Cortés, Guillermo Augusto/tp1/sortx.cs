@@ -8,6 +8,7 @@ using System.Collections.Generic;
 try
 {
     var config = ParseArgs(args);
+    Console.WriteLine(config);
     var InputText = ReadInput(config);
     var rows = ParseDelimited(InputText, config);
     var sortedRows = SortRows(rows, config);
@@ -21,14 +22,69 @@ catch (Exception ex)
 }
 AppConfig ParseArgs(string[] args)
 {
-    Console.WriteLine($"sortx {string.Join(" ", args)}");
+    string? inputFile = null;
+    string? outputFile = null;
+    string delimiter = ",";
+    bool noHeader = false;
 
+    var sortOptions = new List<SortOption>();
+
+    int positionalCount = 0;
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "-b":
+            case "--by":
+                var field = args[++i];
+
+                sortOptions.Add(
+                    new SortOption(field, "alpha", "asc")
+                );
+            break;
+
+            case "-d":
+            case "--delimiter":
+         
+                delimiter = args[++i];
+            break;
+
+            case "-i":
+            case "--input":
+                
+                inputFile = args[++i];
+            break;
+
+            case "-o":
+            case "--output":
+
+                outputFile = args[++i];
+            break;
+
+            default:
+                if (!args[i].StartsWith("-"))
+                {
+                    if(positionalCount == 0)
+                    {
+                        inputFile = args [i];
+                    }
+                    else if(positionalCount == 1)
+                    {
+                        outputFile = args [i];
+                    }
+                    positionalCount++;
+                }
+
+            break;
+        }
+    }
     return new AppConfig(
-        null,
-        null,
-        ",",
-        false,
-        new List<SortOption>()
+        inputFile,
+        outputFile,
+        delimiter,
+        noHeader,
+        sortOptions
     );    
 }
 
