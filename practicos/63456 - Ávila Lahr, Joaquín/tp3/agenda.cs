@@ -18,14 +18,28 @@ using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
 
+
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+String archivoBase = args.Length > 0 ? args[0] :  "agenda.db";
+SqliteAgendaStore baseDatos = new ($"Data Source={archivoBase}");
+
+try {
+    baseDatos.Inicializar();
+}
+catch (Exception ex) {
+    Console.WriteLine(ex.Message);
+    return;
+}
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(baseDatos));
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
+    readonly SqliteAgendaStore baseDatos;
 
-    public AgendaWindow() {
+    public AgendaWindow(SqliteAgendaStore baseDatos) {
+        this.baseDatos = baseDatos;
         Title  = "Agenda TUI";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -55,7 +69,7 @@ public sealed class AgendaWindow : Runnable {
         Label info = new() {
             Text= "No hay contactos cargados",
             X = Pos.Center(),
-            Y= Pos.Center
+            Y= Pos.Center()
         };
             panel.Add(info);
             Add(menu, panel); 
@@ -82,6 +96,9 @@ public sealed class AgendaWindow : Runnable {
 
 // Diálogo de ejemplo
 public sealed class ContactDialog : Dialog {
+    readonly TextField nombre = new();
+readonly TextField telefono = new();
+readonly TextField email = new();
     public ContactDialog() {
         Title  = "Nuevo contacto";
         Width  = 60;
@@ -91,7 +108,7 @@ public sealed class ContactDialog : Dialog {
             X=1,
             Y=1
         });
-        TextField nombre = new() {
+        nombre = new() {
             X = 12,
             Y = 1,
             Width = 40
@@ -102,7 +119,7 @@ public sealed class ContactDialog : Dialog {
             X = 1,
             Y = 3
             });
-        TextField telefono = new() {
+        telefono = new() {
             X = 12,
             Y = 3,
             Width = 40
@@ -113,7 +130,7 @@ public sealed class ContactDialog : Dialog {
             X = 1,
             Y = 5
             });
-        TextField email = new() {
+        email = new() {
             X = 12,
             Y = 5,
             Width = 40
@@ -138,10 +155,36 @@ cancelar.Accepting += (_, e) => {
 
 AddButton(guardar);
 AddButton(cancelar);
+nombre.SetFocus();
     }
 }
 
-public class SqliteAgendaStore {}
+public class SqliteAgendaStore {
+    readonly string conexion;
+    public SqliteAgendaStore(string conexion) {
+        this.conexion = conexion;
+    }
+    SqliteConnection Abrir() {
+        SqliteConnection db = new(conexion);
+        db.Open();
+        return db;
+    }
+    public void Inicializar() {
+
+        using SqliteConnection db = Abrir();
+
+        db.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL,
+                Email TEXT NOT NULL,
+                Notas TEXT NOT NULL,
+                Favorito INTEGER NOT NULL
+            );
+        """);
+    }
+}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
@@ -152,4 +195,13 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+          public Contacto Clone() => new() {
+              Id = Id,
+               Nombre = Nombre,
+    Telefonos = Telefonos,
+    Email = Email,
+    Notas = Notas,
+    Favorito = Favorito
+          };
 }
