@@ -60,6 +60,7 @@ public sealed class AgendaWindow : Runnable {
         private TextView txtNotas = null!;
 
     public AgendaWindow(SqliteAgendaStore bd) {
+        _bd = bd;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -93,7 +94,7 @@ public sealed class AgendaWindow : Runnable {
         txtBuscar = new TextField() { X = Pos.Right(etiBuscar) + 1, Y = 1, Width = Dim.Percent(30) };
         txtBuscar.TextChanged += (_, _) => Filtrar();
 
-        // Botón toggle que emula CheckBox y evita crasheos por cambios de API
+       
         btnFav = new Button() { Text = "[ ] Solo favoritos", X = Pos.Right(txtBuscar) + 2, Y = 1 };
         btnFav.Accepting += (_, e) => {
             soloFavoritos = !soloFavoritos;
@@ -114,7 +115,7 @@ public sealed class AgendaWindow : Runnable {
 
         panelDer.Add(lblNom, lblTel, lblMail, new Label() { Text = "Notas:", X = 1, Y = 7 }, txtNotas);
 
-        // Quitado el ColorScheme="Menu" obsoleto de la V2
+        
         estado = new Label() { Text = " Listo", X = 0, Y = Pos.AnchorEnd(1), Width = Dim.Fill(), Height = 1 };
 
         Add(menu, etiBuscar, txtBuscar, btnFav, panelIzq, panelDer, estado);
@@ -124,7 +125,10 @@ public sealed class AgendaWindow : Runnable {
         try {
             todos = _bd.LeerTodos().ToList();
             Filtrar();
-        } catch (Exception ex) { MostrarMsg("Error", ex.Message);}
+        } catch (Exception ex) { 
+            Console.Error.WriteLine($"Error al cargar: {ex.Message}");
+            throw;
+        }
     }
     
     private void Filtrar() {
