@@ -1,5 +1,6 @@
 #!/usr/bin/env dotnet
 #:property LangVersion=preview
+#:property PublishAot=false
 
 #:package Terminal.Gui@2.0.1
 #:package Microsoft.Data.Sqlite@*
@@ -214,23 +215,29 @@ public class AgendaWindow : Window {
     }
 
     private void EliminarContacto() {
-        int selectedIndex = SelectedIndex();
-        if (selectedIndex < 0 || selectedIndex >= _filteredContacts.Count) {
-            return;
-        }
-
-        var contacto = _filteredContacts[selectedIndex];
-        int? confirm = MessageBox.Query(Application.Instance, "Eliminar", $"Eliminar a {contacto.Nombre}?", "Si", "No");
-
-        if (confirm != 0) {
-            return;
-        }
-
-        _store.Delete(contacto);
-        _contacts.RemoveAll(c => c.Id == contacto.Id);
-        ApplyFilter();
-        SetStatus("CONTACTO ELIMINADO");
+    int selectedIndex = SelectedIndex();
+    if (selectedIndex < 0 || selectedIndex >= _filteredContacts.Count) {
+        return;
     }
+
+    var contacto = _filteredContacts[selectedIndex];
+
+    int? confirm = MessageBox.Query(
+        App!,
+        "Eliminar",
+        $"Eliminar a {contacto.Nombre}?",
+        "Si",
+        "No");
+
+    if (confirm != 0) {
+        return;
+    }
+
+    _store.Delete(contacto);
+    _contacts.RemoveAll(c => c.Id == contacto.Id);
+    ApplyFilter();
+    SetStatus("CONTACTO ELIMINADO");
+}
 
     private void ToggleFavoritos() {
         _soloFavoritos = !_soloFavoritos;
@@ -255,7 +262,7 @@ public class AgendaWindow : Window {
             var nuevos = io.Import(path);
             int cantidad = nuevos.Count;
             int? confirm = MessageBox.Query(
-                Application.Instance,
+                App!,
                 "Importar",
                 $"Se agregaran {cantidad} contactos. Continuar?",
                 "Si",
@@ -274,7 +281,7 @@ public class AgendaWindow : Window {
             SetStatus($"{cantidad} contacto(s) importado(s)");
         }
         catch (Exception ex) {
-            MessageBox.ErrorQuery(Application.Instance, "Error", ex.Message, "Ok");
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "Ok");
         }
     }
 
@@ -295,14 +302,19 @@ public class AgendaWindow : Window {
             SetStatus("Contactos exportados correctamente");
         }
         catch (Exception ex) {
-            MessageBox.ErrorQuery(Application.Instance, "Error", ex.Message, "Ok");
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "Ok");
         }
     }
 
 
-    private void MostrarAcercaDe() {
-        MessageBox.Query(Application.Instance, "Acerca de", "Agenda de Contactos\nTrabajo Practico 3\nTerminal.Gui + SQLite + JSON", "Ok");
-    }
+   private void MostrarAcercaDe() {
+    MessageBox.Query(
+        App!,
+        "Acerca de",
+        "Agenda de Contactos\nTrabajo Practico 3\nTerminal.Gui + SQLite + JSON",
+        "Ok");
+
+}
     private void SetStatus(string mensaje) {
         _statusBar.Title = mensaje;
         _statusBar.SetNeedsDraw();
@@ -465,12 +477,60 @@ public class ContactDialog : Dialog
     }
 }
 
-public class SqliteAgendaStore {
-    public SqliteAgendaStore(string databasePath) { }
-    public List<Contacto> GetAll() => new();
-    public void Insert(Contacto c) { }
-    public void Update(Contacto c) { }
-    public void Delete(Contacto c) { }
+public class SqliteAgendaStore
+{
+    private readonly string _connectionString;
+
+    public SqliteAgendaStore(string databasePath)  {
+        _connectionString = $"Data Source={databasePath}";
+        EnsureSchema();
+    }
+
+    private SqliteConnection Open() {
+        var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        return connection;
+    }
+
+    private void EnsureSchema() {
+        using var db = Open();
+
+        db.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre      TEXT NOT NULL,
+                Telefonos   TEXT NOT NULL DEFAULT '',
+                Email       TEXT NOT NULL DEFAULT '',
+                Notas       TEXT NOT NULL DEFAULT '',
+                Favorito    INTEGER NOT NULL DEFAULT 0
+            );
+        """);
+    }
+
+    public List<Contacto> GetAll(){
+        using var db = Open();
+
+        return db.GetAll<Contacto>().ToList();
+    }
+
+    public void Insert(Contacto contacto) {
+        using var db = Open();
+
+        int newId = (int)db.Insert(contacto);
+        contacto.Id = newId;
+    }
+
+    public void Update(Contacto contacto) {
+        using var db = Open();
+
+        db.Update(contacto);
+    }
+
+    public void Delete(Contacto contacto) {
+        using var db = Open();
+
+        db.Delete(contacto);
+    }
 }
 
 public class JsonAgendaIO {
