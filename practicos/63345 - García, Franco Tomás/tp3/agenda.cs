@@ -142,4 +142,15 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+      public Contacto Clone() {
+        return new Contacto {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
+        };
+    }
 }
