@@ -286,29 +286,28 @@ public class AgendaWindow : Window {
     }
 
     private void ExportJson() {
-        var dialog = new SaveDialog {
-            Title = "Exportar JSON",
-            Path = Directory.GetCurrentDirectory()
-        };
+    try {
+        var io = new JsonAgendaIO();
+        io.Export(_contacts, "contactos.json");
 
-        App.Run(dialog);
-        if (string.IsNullOrWhiteSpace(dialog.FileName)) {
-            return;
-        }
-
-        try {
-            var io = new JsonAgendaIO();
-            io.Export(_contacts, dialog.FileName);
-            SetStatus("Contactos exportados correctamente");
-        }
-        catch (Exception ex) {
-            MessageBox.ErrorQuery(App!, "Error", ex.Message, "Ok");
-        }
+        MessageBox.Query(
+            App!,
+            "Prueba",
+            "Exportación realizada",
+            "OK");
     }
+    catch (Exception ex) {
+        MessageBox.ErrorQuery(
+            App!,
+            "Error",
+            ex.Message,
+            "OK");
+    }
+}
 
 
    private void MostrarAcercaDe() {
-    MessageBox.Query(
+    MessageBox.Query(       
         App!,
         "Acerca de",
         "Agenda de Contactos\nTrabajo Practico 3\nTerminal.Gui + SQLite + JSON",
@@ -416,35 +415,46 @@ public class ContactDialog : Dialog
         };
 
         saveButton.Accepting += (_, e) =>
-        {
-            string nombre = _nameField.Text.ToString()?.Trim() ?? "";
+{
+    string nombre = _nameField.Text.ToString()?.Trim() ?? "";
 
-            if (string.IsNullOrWhiteSpace(nombre))
-            {
-                MessageBox.ErrorQuery(
-                    Application.Instance,
-                    "Validación",
-                    "El nombre es obligatorio",
-                    "OK");
+    if (string.IsNullOrWhiteSpace(nombre))
+    {
+        MessageBox.ErrorQuery(
+            App!,
+            "Validación",
+            "El nombre es obligatorio",
+            "OK");
+        _nameField.SetFocus();
+        e.Handled = true;
+        return;
+    }
 
-                _nameField.SetFocus();
-                e.Handled = true;
-                return;
-            }
+    string email = _emailField.Text.ToString()?.Trim() ?? "";
+    if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@'))
+    {
+        MessageBox.ErrorQuery(
+            App!,
+            "Validación",
+            "El email debe contener @",
+            "OK");
+        _emailField.SetFocus();
+        e.Handled = true;
+        return;
+    }
 
-            Result = new Contacto {
-                Id = contacto.Id,
-                Nombre = nombre,
-                Telefonos = _phoneField.Text.ToString() ?? "",
-                Email = _emailField.Text.ToString() ?? "",
-                Notas = _notesField.Text.ToString() ?? "",
-                Favorito = _favoriteField.Value == CheckState.Checked
-            };
+    Result = new Contacto {
+        Id        = contacto.Id,
+        Nombre    = nombre,
+        Telefonos = _phoneField.Text.ToString() ?? "",
+        Email     = email,
+        Notas     = _notesField.Text.ToString() ?? "",
+        Favorito  = _favoriteField.Value == CheckState.Checked
+    };
 
-            RequestStop();
-            e.Handled = true;
-        };
-
+    RequestStop();
+    e.Handled = true;
+};
     
         var cancelButton = new Button {
             Text = "_Cancelar",
@@ -534,8 +544,26 @@ public class SqliteAgendaStore
 }
 
 public class JsonAgendaIO {
-    public List<Contacto> Import(string path) => new();
-    public void Export(List<Contacto> contactos, string path) { }
+    private readonly JsonSerializerOptions _options = new() {
+        WriteIndented = true
+    };
+
+    public List<Contacto> Import(string path) {
+        if (!File.Exists(path)) {
+            throw new FileNotFoundException($"No existe el archivo '{path}'");
+        }
+
+        string json = File.ReadAllText(path);
+
+        return JsonSerializer.Deserialize<List<Contacto>>(json, _options)
+               ?? new List<Contacto>();
+    }
+
+    public void Export(List<Contacto> contactos, string path) {
+        string json = JsonSerializer.Serialize(contactos, _options);
+
+        File.WriteAllText(path, json);
+    }
 }
 
 [Table("Contactos")]
