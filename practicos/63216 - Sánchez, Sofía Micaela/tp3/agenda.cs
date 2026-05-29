@@ -259,4 +259,120 @@ public sealed class AgendaWindow : Window
         fichaContacto.Text = seleccionado is null
             ? "No hay contactos para mostrar."
             : TextoFicha(seleccionado);
+    } 
+
+      private static string TextoFicha(Contacto contacto)
+    {
+        string destacado = contacto.Favorito ? "Si" : "No";
+
+        return $"Codigo: {contacto.Id}\n"
+            + $"Nombre: {contacto.Nombre}\n"
+            + $"Telefonos: {contacto.Telefonos}\n"
+            + $"Email: {contacto.Email}\n"
+            + $"Favorito: {destacado}\n\n"
+            + "Notas:\n"
+            + contacto.Notas;
+    }
+
+    private void CrearContacto()
+    {
+        ContactDialog dialog = new();
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null)
+        {
+            Informar("Alta cancelada.");
+            return;
+        }
+
+        try
+        {
+            Contacto alta = dialog.Contact;
+            alta.Id = repositorio.Insert(alta);
+
+            agendaCompleta.Add(alta);
+            RefrescarListado();
+            EnfocarPorId(alta.Id);
+
+            Informar($"Contacto agregado: {alta.Nombre}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al guardar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void ModificarContacto()
+    {
+        Contacto? seleccionado = ContactoEnFoco();
+        if (seleccionado is null)
+        {
+            Informar("No hay contacto seleccionado para editar.");
+            return;
+        }
+
+        ContactDialog dialog = new(seleccionado);
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Contact is null)
+        {
+            Informar("Edicion cancelada.");
+            return;
+        }
+
+        try
+        {
+            Contacto editado = dialog.Contact;
+            repositorio.Update(editado);
+
+            int posicion = agendaCompleta.FindIndex(contacto => contacto.Id == editado.Id);
+            if (posicion >= 0)
+            {
+                agendaCompleta[posicion] = editado;
+            }
+
+            RefrescarListado();
+            EnfocarPorId(editado.Id);
+            Informar($"Contacto actualizado: {editado.Nombre}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al actualizar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void BorrarContacto()
+    {
+        Contacto? seleccionado = ContactoEnFoco();
+        if (seleccionado is null)
+        {
+            Informar("No hay contacto seleccionado para eliminar.");
+            return;
+        }
+
+        int answer = MessageBox.Query(
+            App!,
+            "Confirmar eliminacion",
+            $"Eliminar el contacto \"{seleccionado.Nombre}\"?",
+            "Eliminar",
+            "Cancelar") ?? 1;
+
+        if (answer != 0)
+        {
+            Informar("Eliminacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            repositorio.Delete(seleccionado);
+            agendaCompleta.RemoveAll(contacto => contacto.Id == seleccionado.Id);
+
+            RefrescarListado();
+            Informar($"Contacto eliminado: {seleccionado.Nombre}.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
+        }
     }
