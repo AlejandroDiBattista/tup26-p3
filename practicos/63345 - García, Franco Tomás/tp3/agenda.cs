@@ -17,20 +17,22 @@ using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
 
 // Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+string dbPath = args.Length > 0 ? args[0] : "agenda.db";
 
+using (SqliteAgendaStore store = new(dbPath)) {
+    Application.Init();
+    Application.Run(new AgendaWindow(store));
+    Application.Shutdown();
+}
 
 // Ventana principal
-public sealed class AgendaWindow : Runnable {
+public sealed class AgendaWindow : Window{
 
-    public AgendaWindow() {
+    private readonly SqliteAgendaStore store;
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store ?? throw new ArgumentNullException(nameof(store));
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -112,7 +114,24 @@ public sealed class EjemploDialog : Dialog {
 }
 
 
-public class SqliteAgendaStore {}
+public class SqliteAgendaStore : IDisposable {
+    private readonly DbConnection connection;
+    public SqliteAgendaStore(string path) {
+        connection = new SqliteConnection($"Data Source={path}");
+        connection.Open();
+        connection.Execute(@"
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT,
+                Email TEXT,
+                Notas TEXT,
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+        ");
+    }
+    public void Dispose() => connection.Dispose();
+}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
