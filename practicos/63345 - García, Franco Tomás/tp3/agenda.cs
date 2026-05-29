@@ -69,8 +69,18 @@ public sealed class AgendaWindow : Window{
     private List<Contacto> contacts = [];
     private ListView listView = null!;
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
+        var nuevo = new Contacto {
+            Nombre = "Contacto " + (contacts.Count + 1)
+        };
+
+        store.Insert(nuevo);
+        contacts.Add(nuevo);
+
+        listView.SetSource(
+            new ObservableCollection<string>(
+                contacts.Select(c => c.Nombre)
+            )
+        );
     }
 
     private void SolicitarSalir() {
@@ -134,6 +144,10 @@ public class SqliteAgendaStore : IDisposable {
     }
     public List<Contacto> GetAll() {
         return connection.Query<Contacto>("SELECT * FROM Contactos").ToList();
+    }
+    public void Insert(Contacto c) {
+        var id = connection.Insert(c);
+        c.Id = (int)id;
     }
     public void Dispose() => connection.Dispose();
 }
