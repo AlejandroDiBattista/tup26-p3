@@ -16,6 +16,8 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 
 
@@ -37,6 +39,11 @@ app.Run(new AgendaWindow(baseDatos));
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
     readonly SqliteAgendaStore baseDatos;
+    readonly ListView lista = new();
+    readonly TextView detalle = new();
+    readonly Label estado = new();
+
+List<Contacto> contactos = [];
 
     public AgendaWindow(SqliteAgendaStore baseDatos) {
         this.baseDatos = baseDatos;
@@ -45,36 +52,102 @@ public sealed class AgendaWindow : Runnable {
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
-        BuildLayout();
+        CrearInterfaz();
+        Recargar();
     }
 
-    private void BuildLayout() {
-        MenuBar menu = new() {
-            Menus = [
-                new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!,
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
-        };
+    private void CrearInterfaz() {
+       MenuBar menu = new() {
+        Menus = [
+            new MenuBarItem("_Archivo", [
+                new MenuItem("_Nuevo contacto", "F2", AbrirDialogo),
+                null!,
+                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+            ])
+        ]
+    };
 
-        FrameView panel = new() {
-            Title = "agenda",
-            X = 1,
-            Y=2,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        Label info = new() {
-            Text= "No hay contactos cargados",
-            X = Pos.Center(),
-            Y= Pos.Center()
-        };
-            panel.Add(info);
-            Add(menu, panel); 
+    Add(menu);
+
+    FrameView panelLista = new() {
+        Title = "Contactos",
+        X = 0,
+        Y = 1,
+        Width = 30,
+        Height = Dim.Fill(2)
+    };
+
+    lista.Width = Dim.Fill();
+    lista.Height = Dim.Fill();
+
+    lista.ValueChanged += (_, _) => {
+        MostrarDetalle();
+    };
+
+    panelLista.Add(lista);
+
+    Add(panelLista);
+
+    FrameView panelDetalle = new() {
+        Title = "Detalle",
+        X = Pos.Right(panelLista),
+        Y = 1,
+        Width = Dim.Fill(),
+        Height = Dim.Fill(2)
+    };
+
+    detalle.X = 1;
+    detalle.Y = 0;
+    detalle.Width = Dim.Fill(1);
+    detalle.Height = Dim.Fill();
+    detalle.ReadOnly = true;
+
+    panelDetalle.Add(detalle);
+
+    Add(panelDetalle);
+
+    estado.X = 1;
+    estado.Y = Pos.AnchorEnd(1);
+    estado.Width = Dim.Fill();
+    estado.Text = "Agenda iniciada";
+
+    Add(estado);
     }
+void Recargar() {
 
+    contactos = baseDatos.Listar();
+
+    lista.SetSource(
+        new ObservableCollection<string>(
+            contactos.Select(c => c.Nombre).ToList()
+        )
+    );
+
+    MostrarDetalle();
+}
+void MostrarDetalle() {
+
+    Contacto? c = ObtenerSeleccionado();
+
+    detalle.Text = c == null
+        ? ""
+        :
+        $"Nombre:\n{c.Nombre}\n\n" +
+        $"Telefonos:\n{c.Telefonos}\n\n" +
+        $"Email:\n{c.Email}\n\n" +
+        $"Notas:\n{c.Notas}";
+}
+Contacto? ObtenerSeleccionado() {
+
+    int pos =
+        lista.SelectedItem.HasValue
+        ? lista.SelectedItem.Value
+        : -1;
+
+    return pos < 0 || pos >= contactos.Count
+        ? null
+        : contactos[pos];
+}
     private void AbrirDialogo() {
         ContactDialog dialog = new();
         App!.Run(dialog);
@@ -182,7 +255,13 @@ public class SqliteAgendaStore {
                 Notas TEXT NOT NULL,
                 Favorito INTEGER NOT NULL
             );
-        """);
+        """);}
+        public List<Contacto> Listar() {
+    using SqliteConnection db = Abrir();
+    return db
+        .GetAll<Contacto>()
+        .OrderBy(x => x.Nombre)
+        .ToList();
     }
 }
 public class JsonAgendaIO {}
@@ -195,6 +274,7 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
 
           public Contacto Clone() => new() {
               Id = Id,
