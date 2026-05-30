@@ -189,7 +189,7 @@ public sealed class CatalogoWindow : Runnable {
     private void Salir() {
         App!.RequestStop();
     }
-    
+
     protected override bool OnKeyDown(Key key) {
         if (key == Key.F2) { AgregarProducto(); return true; }
         if (key == Key.F3) { ModificarProducto(); return true; }
@@ -200,5 +200,36 @@ public sealed class CatalogoWindow : Runnable {
         if (key == Key.A.WithCtrl) { RegistrarMovimiento("Ajuste"); return true; }
         if (key == Key.Q.WithCtrl || key == Key.Esc) { Salir(); return true; }
         return base.OnKeyDown(key);
+    }
+
+    private void AgregarProducto() {
+        ProductoDialog dialogo = new("Agregar producto", null);
+        App!.Run(dialogo);
+        if (dialogo.Resultado is null) return;
+        var respuesta = http.PostAsJsonAsync("productos", dialogo.Resultado).GetAwaiter().GetResult();
+        if (!RespuestaCorrecta(respuesta)) return;
+        RecargarProductos();
+    }
+
+    private void ModificarProducto() {
+        var producto = ProductoSeleccionado();
+        if (producto is null) { MostrarMensaje("Aviso", "Selecciona un producto."); return; }
+        ProductoDialog dialogo = new("Modificar producto", producto);
+        App!.Run(dialogo);
+        if (dialogo.Resultado is null) return;
+        var respuesta = http.PutAsJsonAsync($"productos/{producto.Id}", dialogo.Resultado).GetAwaiter().GetResult();
+        if (!RespuestaCorrecta(respuesta)) return;
+        RecargarProductos();
+    }
+
+    private void EliminarProducto() {
+        var producto = ProductoSeleccionado();
+        if (producto is null) { MostrarMensaje("Aviso", "Selecciona un producto."); return; }
+        ConfirmDialog confirmar = new("Eliminar producto", $"Eliminar {producto.Codigo} - {producto.Nombre}?");
+        App!.Run(confirmar);
+        if (!confirmar.Confirmado) return;
+        var respuesta = http.DeleteAsync($"productos/{producto.Id}").GetAwaiter().GetResult();
+        if (!RespuestaCorrecta(respuesta)) return;
+        RecargarProductos();
     }
 }
