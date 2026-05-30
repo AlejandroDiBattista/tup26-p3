@@ -177,7 +177,17 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
 void WriteOutput(string outputText, AppConfig config)
 {
-    
+    if (!string.IsNullOrWhiteSpace(config.Output))
+    {
+        File.WriteAllText(
+            config.Output,
+            outputText
+        );
+    }
+    else
+    {
+        Console.Write(outputText);
+    }
 }
 record SortOption(string Campo, string Tipo, string Orden);
 
