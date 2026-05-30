@@ -7,13 +7,16 @@ using Terminal.Gui.Views;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-ProductoDto producto;
+using System.Collections.ObjectModel;
+using System.Globalization;
+
+using var http = new HttpClient { BaseAddress = new Uri("http://127.0.0.1:5050") };
+
 try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
+    await http.GetFromJsonAsync<List<ProductoDto>>("productos");
 } catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
+    Console.Error.WriteLine("Primero ejecuta: dotnet run servidor.cs");
     return;
 }
 
