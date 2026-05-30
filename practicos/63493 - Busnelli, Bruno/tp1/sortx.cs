@@ -164,32 +164,36 @@ ParsedTable ParseDelimited(string text, AppConfig config)
 
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    var field = config.SortFields[0];
-
     return rows
         .OrderBy(
             row => row,
-            Comparer<Dictionary<string, string>>.Create(
-                (a, b) =>
-                {
-                    string left = a[field.Name];
-                    string right = b[field.Name];
-
-                    int result = field.Numeric
-                        ? CompareNumeric(left, right, field.Name)
-                        : string.Compare(
-                            left,
-                            right,
-                            StringComparison.CurrentCultureIgnoreCase
-                        );
-
-                    return field.Descending
-                        ? -result
-                        : result;
-                }
-            )
+            Comparer<Dictionary<string, string>>.Create(CompareRows)
         )
         .ToList();
+
+    int CompareRows(
+        Dictionary<string, string> a,
+        Dictionary<string, string> b)
+    {
+        foreach (var field in config.SortFields)
+        {
+            string left = a[field.Name];
+            string right = b[field.Name];
+
+            int result = field.Numeric
+                ? CompareNumeric(left, right, field.Name)
+                : string.Compare(
+                    left,
+                    right,
+                    StringComparison.CurrentCultureIgnoreCase
+                );
+
+            if (result != 0)
+                return field.Descending ? -result : result;
+        }
+
+        return 0;
+    }
 }
 
 string Serialize(List<string> headers, List<Dictionary<string, string>> rows, AppConfig config)
@@ -254,10 +258,8 @@ void ValidateSortFields(List<string> headers, AppConfig config)
         }
     }
 }
-int CompareNumeric(
-    string left,
-    string right,
-    string fieldName)
+
+int CompareNumeric(string left, string right, string fieldName)
 {
     if (!decimal.TryParse(
             left,
