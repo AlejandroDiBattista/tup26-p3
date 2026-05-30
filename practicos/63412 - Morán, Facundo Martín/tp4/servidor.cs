@@ -42,6 +42,12 @@ app.MapGet("/productos/{id:int}",
 
     return Results.Ok(producto);
 });
+app.MapPost("/productos", (ProductoRequest request, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.CrearProducto(request);
+
+    return Results.Created($"/productos/{producto.Id}", producto);
+});
 
 app.Run("http://localhost:5050");
 
@@ -50,6 +56,7 @@ app.Run("http://localhost:5050");
 // ── Modelo ────────────────────────────────────────────────────────────────
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record class ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
@@ -84,4 +91,25 @@ class CatalogoRepositorio {
     db.Productos
         .OrderBy(p => p.Codigo)
         .ToList();
+        
+        public Producto CrearProducto(ProductoRequest request)
+{
+    var nuevoId = db.Productos.Any()
+        ? db.Productos.Max(p => p.Id) + 1
+        : 1;
+
+    var producto = new Producto(
+        nuevoId,
+        request.Codigo,
+        request.Nombre,
+        request.Precio,
+        request.Stock
+    );
+
+    db.Productos.Add(producto);
+    db.SaveChanges();
+
+    return producto;
+}
+        
 }
