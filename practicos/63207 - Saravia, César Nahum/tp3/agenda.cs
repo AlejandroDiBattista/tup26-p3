@@ -28,6 +28,16 @@ app.Run(new AgendaWindow(store));
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
+private readonly SqliteAgendaStore store;
+private List<Contacto> contacts = [];
+private List<Contacto> filteredContacts = [];
+private ListView contactsList = null!;
+ private TextView detailView = null!;
+private TextField searchField = null!;
+private bool onlyFavorites = false;
+private MenuItem itemFavoritos = null!;
+
+private Label statusLabel = null!;
 
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
@@ -80,6 +90,45 @@ public sealed class AgendaWindow : Runnable {
 
         Add(menu, openButton);
     }
+
+    private void LoadContacts() {
+       contacts = store.GetAll();
+       ApplyFilters();
+    }
+
+    private void ApplyFilters() {
+        string search = searchField.Text.ToString()?.ToLower() ?? "";
+        filteredContacts = contacts.Where(c => {
+            bool matchesSearch = c.Nombre.ToLower().Contains(search) ||
+                                 c.Telefonos.ToLower().Contains(search) ||
+                                 c.Email.ToLower().Contains(search);
+            bool matchesFavorite = !onlyFavorites || c.Favorito;
+            return matchesSearch && matchesFavorite;
+        })
+        .ToList();
+        observableCollection<string> items = new(filteredContacts.Select(c => c.Favorito ? $"★ {c.Nombre}" : c.Nombre));
+        contactsList.SetSource<string>(items);
+        UpdateDetail();
+    }
+
+    private void UpdateDetail() {
+        if (filteredContacts.Count == 0) {
+            detailView.Text = "No hay contactos para mostrar.";
+            return;
+        }
+        int index = contactsList.SelectedItem ? contactsList.SelectedItem.Value0 : 0;
+        if (index < 0 || index >= filteredContacts.Count) {
+            return;
+            Contacto c = filteredContacts[index];
+            detailView.Text = $"Nombre: {c.Nombre}\n" +
+                              $"Teléfonos: {c.Telefonos}\n" +
+                              $"Email: {c.Email}\n" +
+                              $"Favorito: {(c.Favorito ? "Sí" : "No")}"+
+                              $"Notas: {c.Notas}\n";                   
+        }
+    }
+
+
 
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
