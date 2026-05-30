@@ -1,6 +1,6 @@
 #!/usr/bin/env dotnet
 #:property PublishAot=false
-#:package Terminal.Gui@*
+#:package Terminal.Gui@2.0.1
 #:package Microsoft.Data.Sqlite@*
 #:package Dapper@*
 #:package Dapper.Contrib@*
@@ -163,7 +163,7 @@ private Label statusLabel = null!;
             return;
         }
         int index = contactsList.SelectedItem.HasValue ? contactsList.SelectedItem.Value : 0;
-        if (index < 0 || index >= filteredContacts.Count) {
+        if (index < 0 || index >= filteredContacts.Count)
             return;
             Contacto c = filteredContacts[index];
             detailView.Text = $"Nombre: {c.Nombre}\n" +
@@ -171,7 +171,6 @@ private Label statusLabel = null!;
                               $"Email: {c.Email}\n" +
                               $"Favorito: {(c.Favorito ? "Sí" : "No")}"+
                               $"Notas: {c.Notas}\n";                   
-        }
     }
 
     private Contacto? GetSelected() {
@@ -200,7 +199,7 @@ private Label statusLabel = null!;
             return;
         ContactDialog dialog = new(selected.Clone());
         App!.Run(dialog);
-        if (dialog.Accepted)
+        if (!dialog.Accepted)
             return;
             store.Update(dialog.Contacto);
             LoadContacts();
@@ -229,14 +228,14 @@ private Label statusLabel = null!;
     }
 
     private string? PedirNombreArchivo(string titulo, string valorDefault) {
-        string? result = null;
+        string? resultado = null;
         Dialog dialog = new() {
             Title = titulo,
             Width = 50,
             Height = 8
         };
         Label label = new() {Text = "Archivo:", X = 1, Y = 1};
-        TextField textField = new() {
+        TextField field = new() {
             X= 11,
             Y= 1,
             Width = 30,
@@ -323,7 +322,7 @@ private Label statusLabel = null!;
         }
     }
 
-    private void setStatus(string mensaje) {
+    private void SetStatus(string mensaje) {
         statusLabel.Text = $"{mensaje}  | F2 Nuevo | F3 Editar | F4 Buscar | Del Eliminar | Ctrl+Q Salir | Ctrl+I Importar | Ctrl+E Exportar";
     }
 
@@ -340,7 +339,7 @@ private Label statusLabel = null!;
             NuevoContacto();
             return true;
         }
-        if(key == key.N.WithCtrl) {
+        if(key == Key.N.WithCtrl) {
             NuevoContacto();
             return true;
         }
@@ -377,7 +376,7 @@ private Label statusLabel = null!;
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
+public sealed class ContactDialog : Dialog {
     public new bool Accepted { get; private set; }
     public Contacto Contacto { get; private set; }
     private readonly TextField nombreField;
