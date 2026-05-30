@@ -189,4 +189,16 @@ public sealed class CatalogoWindow : Runnable {
     private void Salir() {
         App!.RequestStop();
     }
+    
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.F2) { AgregarProducto(); return true; }
+        if (key == Key.F3) { ModificarProducto(); return true; }
+        if (key == Key.F4) { EliminarProducto(); return true; }
+        if (key == Key.F5) { RecargarProductos(); return true; }
+        if (key == Key.C.WithCtrl) { RegistrarMovimiento("Compra"); return true; }
+        if (key == Key.V.WithCtrl) { RegistrarMovimiento("Venta"); return true; }
+        if (key == Key.A.WithCtrl) { RegistrarMovimiento("Ajuste"); return true; }
+        if (key == Key.Q.WithCtrl || key == Key.Esc) { Salir(); return true; }
+        return base.OnKeyDown(key);
+    }
 }
