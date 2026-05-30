@@ -232,4 +232,22 @@ public sealed class CatalogoWindow : Runnable {
         if (!RespuestaCorrecta(respuesta)) return;
         RecargarProductos();
     }
+
+    private void RegistrarMovimiento(string tipo) {
+        var producto = ProductoSeleccionado();
+        if (producto is null) { MostrarMensaje("Aviso", "Selecciona un producto."); return; }
+        MovimientoDialog dialogo = new(tipo, producto);
+        App!.Run(dialogo);
+        if (dialogo.Resultado is null) return;
+        var respuesta = http.PostAsJsonAsync($"productos/{producto.Id}/movimientos", dialogo.Resultado).GetAwaiter().GetResult();
+        if (!RespuestaCorrecta(respuesta)) return;
+        RecargarProductos();
+    }
+
+    private bool RespuestaCorrecta(HttpResponseMessage respuesta) {
+        if (respuesta.IsSuccessStatusCode) return true;
+        string error = respuesta.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        MostrarMensaje("Error", string.IsNullOrWhiteSpace(error) ? "La operacion no se pudo completar." : error);
+        return false;
+    }
 }
