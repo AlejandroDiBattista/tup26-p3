@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 // sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
 //       [-i|--input input] [-o|--output output]
 //       [-d|--delimiter delimitador]
@@ -48,6 +49,11 @@ AppConfig ParseArgs(string[] args)
             case "--delimiter":
          
                 delimiter = args[++i];
+            break;
+
+            case "-nh":
+            case "--no-header":
+                noHeader = true;
             break;
 
             case "-i":
@@ -142,7 +148,13 @@ List<Dictionary<string, string>> ParseDelimited(string inputText, AppConfig conf
 
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    return rows;
+    if (config.SortOptions.Count == 0)
+    {
+        return rows;
+    }
+    var sortField = config.SortOptions[0];
+
+    return rows.OrderBy(row => row[sortField.Campo]).ToList();
 }
 
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
