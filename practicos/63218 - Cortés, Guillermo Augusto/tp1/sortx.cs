@@ -159,7 +159,20 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    return "";
+    if (rows.Count == 0)
+    {
+        return "";
+    }
+    var lines = new List<string>();
+    var headers = rows[0].Keys.ToArray();
+    lines.Add(string.Join(config.Delimiter, headers));
+
+    foreach (var row in rows)
+    {
+        var values = headers.Select(h => row[h]);
+        lines.Add(string.Join(config.Delimiter, values));
+    }
+    return string.Join(Environment.NewLine, lines);
 }
 
 void WriteOutput(string outputText, AppConfig config)
