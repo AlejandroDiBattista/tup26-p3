@@ -23,24 +23,18 @@ try {
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
+app.Run(new CatalogoWindow(http));
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
+public sealed class CatalogoWindow : Runnable {
+    private readonly HttpClient http;
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
-};
-
-ventana.Add(detalleProducto);
-
-app.Run(ventana);
+    public CatalogoWindow(HttpClient http) {
+        this.http = http;
+        Title = "Catalogo REST - ESC para salir";
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+    }
+}
 
 static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
     const string url = "http://localhost:5050/producto";
