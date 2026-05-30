@@ -15,6 +15,7 @@ using System.Collections.ObjectModel;
 using Dapper;
 using Dapper.Contrib.Extensions;
 using Microsoft.Data.Sqlite;
+using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -52,6 +53,7 @@ public class AgendaWindow : Window {
     private ListView _listView = null!;
     private TextView _detailView = null!;
     private StatusBar _statusBar = null!;
+    private MenuItem _toggleFavoritosItem = null!;
 
     public AgendaWindow(SqliteAgendaStore store) {
         _store = store;
@@ -63,6 +65,8 @@ public class AgendaWindow : Window {
         Y = 0;
         Width = Dim.Fill();
         Height = Dim.Fill();
+
+
         BuildMenu();
         BuildLayout();
         BuildStatusBar();
@@ -70,6 +74,8 @@ public class AgendaWindow : Window {
     }
 
     private void BuildMenu() {
+        _toggleFavoritosItem = new MenuItem("_Solo favoritos", null!, () => ToggleFavoritos());
+
         _menuBar = new MenuBar {
             Menus =
             [
@@ -78,7 +84,7 @@ public class AgendaWindow : Window {
                 new MenuItem("_Importar JSON", "Ctrl+I",  () => ImportJson()),
                 new MenuItem("_Exportar JSON", "Ctrl+E",  () => ExportJson()),
                 null!,
-                new MenuItem("_Salir",         "Ctrl+Q",  () => App.RequestStop())
+                new MenuItem("_Salir",         "Ctrl+Q",  () => App!.RequestStop()),
             ]),
             new MenuBarItem("_Contactos",
             [
@@ -86,10 +92,11 @@ public class AgendaWindow : Window {
                 new MenuItem("_Editar",   "F3 / Enter",   () => EditarContacto()),
                 new MenuItem("_Eliminar", "Del / Ctrl+D", () => EliminarContacto())
             ]),
-            new MenuBarItem("_Ver",
-            [
-                new MenuItem("_Solo favoritos", null!, () => ToggleFavoritos())
-            ]),
+  new MenuBarItem("_Ver",
+[
+    _toggleFavoritosItem,
+    new MenuItem("_Todos los contactos", null!, () => MostrarTodos())
+]),
             new MenuBarItem("_Ayuda",
             [
                 new MenuItem("_Acerca de", null!, () => MostrarAcercaDe())
@@ -140,7 +147,7 @@ public class AgendaWindow : Window {
         new Shortcut(Key.F3,         "Editar",   () => EditarContacto()),
         new Shortcut(Key.Delete,     "Eliminar", () => EliminarContacto()),
         new Shortcut(Key.F4,         "Buscar",   () => _searchField.SetFocus()),
-        new Shortcut(Key.Q.WithCtrl, "Salir",    () => App.RequestStop())
+        new Shortcut(Key.Q.WithCtrl, "Salir",    () => App!.RequestStop()),
         ]);
         Add(_statusBar);
     }
@@ -180,7 +187,7 @@ public class AgendaWindow : Window {
 
     private void NuevoContacto() {
         var dialog = new ContactDialog(new Contacto());
-        App.Run(dialog);
+        App!.Run(dialog);
         if (dialog.Result == null) return;
         _store.Insert(dialog.Result);
         _contacts.Add(dialog.Result);
@@ -197,7 +204,7 @@ public class AgendaWindow : Window {
 
         var original = _filteredContacts[selectedIndex];
         var dialog = new ContactDialog(original.Clone());
-        App.Run(dialog);
+       App!.Run(dialog);
 
         if (dialog.Result is null) {
             return;
@@ -239,18 +246,28 @@ public class AgendaWindow : Window {
     SetStatus("CONTACTO ELIMINADO");
 }
 
-    private void ToggleFavoritos() {
-        _soloFavoritos = !_soloFavoritos;
-        ApplyFilter();
-        SetStatus(_soloFavoritos ? "Mostrando solo favoritos" : "Mostrando todos");
-    }
+private void ToggleFavoritos() {
+    _soloFavoritos = !_soloFavoritos;
+    _toggleFavoritosItem.Title = _soloFavoritos ? "✓ Solo favoritos" : "_Solo favoritos";
+    _menuBar.SetNeedsDraw();
+    ApplyFilter();
+    SetStatus(_soloFavoritos ? "Mostrando solo favoritos" : "Mostrando todos");
+}
+
+private void MostrarTodos() {
+    _soloFavoritos = false;
+    _toggleFavoritosItem.Title = "_Solo favoritos";
+    _menuBar.SetNeedsDraw();
+    ApplyFilter();
+    SetStatus("Mostrando todos los contactos");
+}
 
     private void ImportJson() {
         var dialog = new OpenDialog {
             Title = "Importar JSON",
             Path = Directory.GetCurrentDirectory()
         };
-        App.Run(dialog);
+        App!.Run(dialog);
 
         string? path = dialog.FilePaths.FirstOrDefault() ?? dialog.Path;
         if (string.IsNullOrWhiteSpace(path)) {
@@ -332,7 +349,7 @@ var label = new Label {
     };
 
    dialog.Add(label, input, btnOk, btnCancelar); 
-    App.Run(dialog);
+    App!.Run(dialog);
 
     if (string.IsNullOrWhiteSpace(input.Text)) return;
 
@@ -375,14 +392,14 @@ public class ContactDialog : Dialog
     private readonly TextView _notesField;
     private readonly CheckBox _favoriteField;
 
-    public Contacto? Result { get; private set; }
+    public new Contacto? Result { get; private set; }
 
     public ContactDialog(Contacto contacto)
     {
         Title = contacto.Id == 0 ? "Nuevo contacto" : "Editar contacto";
 
         Width = 60;
-        Height = 20;
+        Height = 25;
 
         
         var nameLabel = new Label {
