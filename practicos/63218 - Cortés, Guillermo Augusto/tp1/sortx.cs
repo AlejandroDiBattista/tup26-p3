@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 // sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
 //       [-i|--input input] [-o|--output output]
 //       [-d|--delimiter delimitador]
@@ -90,7 +91,11 @@ AppConfig ParseArgs(string[] args)
 
 string ReadInput(AppConfig config)
 {
-    return "";
+    if (config.Input != null)
+    {
+        return File.ReadAllText(config.Input);
+    }
+    return Console.In.ReadToEnd();
 }
 
 List<Dictionary<string, string>> ParseDelimited(string inputText, AppConfig config)
