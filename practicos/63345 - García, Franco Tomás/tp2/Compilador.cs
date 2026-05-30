@@ -3,7 +3,7 @@ class Compilador {
     private int indice = 0;
     public static Nodo Parse(string expresion) {
         if (string.IsNullOrWhiteSpace(expresion))
-            throw new FormatException("Token inesperado");
+            throw parser.Error("Token inesperado");
 
         var parser = new Compilador {
             texto = expresion,
@@ -15,7 +15,7 @@ class Compilador {
         parser.SaltarEspacios();
 
         if (parser.indice < parser.texto.Length)
-            throw new FormatException("Token inesperado");
+            throw parser.Error("Token inesperado");
 
         return nodo;
     }
@@ -59,18 +59,27 @@ class Compilador {
     return nodo;
     }
     private Nodo ParseValor() {
+         SaltarEspacios();
+
+    char actual = VerActual();
+    if (actual == '(') {
+        indice++;
+        var nodo = ParseExpresion();
         SaltarEspacios();
 
-        char actual = VerActual();
+        if (!Match(')'))
+            throw new FormatException("Falta cerrar paréntesis");
 
-        if (char.IsDigit(actual))
-            return ParseNumero();
+        return nodo;
+    }
+    if (char.IsDigit(actual))
+        return ParseNumero();
+    if (char.ToLower(actual) == 'x') {
+        indice++;
+        return new NodoVariable();
+    }
 
-        if (char.ToLower(actual) == 'x') {
-            indice++;
-            return new NodoVariable();
-        }
-        throw new FormatException("Token inesperado");
+    throw parser.Error("Token inesperado");
     }
     private Nodo ParseNumero() {
         int inicio = indice;
