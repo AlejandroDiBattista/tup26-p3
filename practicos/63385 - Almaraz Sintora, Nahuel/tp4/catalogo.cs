@@ -67,9 +67,25 @@ public sealed class CatalogoWindow : Runnable {
             ]
         };
 
-        estado = new Label { Text = "Cargando interfaz...", X = 1, Y = 27, Width = 120 };
+        Label buscarLabel = new() { Text = "Buscar:", X = 1, Y = 2 };
+        buscarTexto = new TextField { X = 9, Y = 2, Width = 38 };
 
-        Add(menu, estado);
+        Button buscarBoton = new() { Text = "_Buscar", X = 49, Y = 2 };
+        buscarBoton.Accepting += (_, e) => { AplicarFiltro(); e.Handled = true; };
+        buscarTexto.Accepting += (_, e) => { AplicarFiltro(); e.Handled = true; };
+
+        Label productosTitulo = new() { Text = "Productos (F2 agregar, F3 modificar, F4 eliminar)", X = 1, Y = 4 };
+        listaProductos = new ListView { X = 1, Y = 5, Width = 72, Height = 18 };
+        listaProductos.SetSource(lineasProductos);
+        listaProductos.ValueChanged += (_, _) => CargarMovimientosDelSeleccionado();
+
+        Label movimientosTitulo = new() { Text = "Historial de movimientos", X = 75, Y = 4 };
+        listaMovimientos = new ListView { X = 75, Y = 5, Width = 52, Height = 18 };
+        listaMovimientos.SetSource(lineasMovimientos);
+
+        estado = new Label { Text = "", X = 1, Y = 27, Width = 120 };
+
+        Add(menu, buscarLabel, buscarTexto, buscarBoton, productosTitulo, listaProductos, movimientosTitulo, listaMovimientos, estado);
     }
 }
 
