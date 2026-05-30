@@ -328,7 +328,7 @@ public class AgendaWindow : Window {
 public class ContactDialog : Dialog
 {
     private readonly TextField _nameField;
-    private readonly TextField _phoneField;
+    private readonly TextField[] _phoneFields = new TextField[5];
     private readonly TextField _emailField;
     private readonly TextView _notesField;
     private readonly CheckBox _favoriteField;
@@ -350,21 +350,32 @@ public class ContactDialog : Dialog
         };
 
         var phoneLabel = new Label {
-            Text = "Teléfono:",
-            X = 1,
-            Y = 3
-        };
+        Text = "Teléfonos:",
+        X = 1,
+        Y = 3
+    };
+
+       string[] tels = contacto.Telefonos.Split(',');
+      for (int i = 0; i < 5; i++)
+    {
+    _phoneFields[i] = new TextField {
+        X = 12,
+        Y = 3 + i,
+        Width = 40,
+        Text = i < tels.Length ? tels[i].Trim() : ""
+    };
+}
 
         var emailLabel = new Label {
             Text = "Email:",
             X = 1,
-            Y = 5
+            Y = 9
         };
 
         var notesLabel = new Label {
             Text = "Notas:",
             X = 1,
-            Y = 7
+            Y = 11
         };
 
         
@@ -375,23 +386,17 @@ public class ContactDialog : Dialog
             Text = contacto.Nombre
         };
 
-        _phoneField = new TextField {
-            X = 12,
-            Y = 3,
-            Width = 40,
-            Text = contacto.Telefonos
-        };
 
         _emailField = new TextField {
             X = 12,
-            Y = 5,
+            Y = 9,
             Width = 40,
             Text = contacto.Email
         };
 
         _notesField = new TextView {
             X = 12,
-            Y = 7,
+            Y = 11,
             Width = 40,
             Height = 5,
             Text = contacto.Notas
@@ -400,7 +405,7 @@ public class ContactDialog : Dialog
         _favoriteField = new CheckBox {
             Text = "Favorito",
             X = 12,
-            Y = 13,
+            Y = 17,
             Value= contacto.Favorito
                 ? CheckState.Checked
                 : CheckState.UnChecked
@@ -446,7 +451,9 @@ public class ContactDialog : Dialog
     Result = new Contacto {
         Id        = contacto.Id,
         Nombre    = nombre,
-        Telefonos = _phoneField.Text.ToString() ?? "",
+        Telefonos = string.Join(",", _phoneFields
+        .Select(t => t.Text.ToString()?.Trim() ?? "")
+        .Where(t => t != "")),
         Email     = email,
         Notas     = _notesField.Text.ToString() ?? "",
         Favorito  = _favoriteField.Value == CheckState.Checked
@@ -476,7 +483,11 @@ public class ContactDialog : Dialog
             notesLabel,
 
             _nameField,
-            _phoneField,
+            _phoneFields[0],
+            _phoneFields[1],
+            _phoneFields[2],
+            _phoneFields[3],
+            _phoneFields[4],
             _emailField,
             _notesField,
             _favoriteField,
