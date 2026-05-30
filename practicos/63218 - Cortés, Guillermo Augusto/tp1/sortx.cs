@@ -9,7 +9,6 @@ using System.IO;
 try
 {
     var config = ParseArgs(args);
-    Console.WriteLine(config);
     var InputText = ReadInput(config);
     var rows = ParseDelimited(InputText, config);
     var sortedRows = SortRows(rows, config);
@@ -100,7 +99,45 @@ string ReadInput(AppConfig config)
 
 List<Dictionary<string, string>> ParseDelimited(string inputText, AppConfig config)
 {
-    return new List<Dictionary<string, string>>();
+    var rows = new List<Dictionary<string, string>>();
+
+    var lines = inputText.Split(
+        Environment.NewLine, StringSplitOptions.RemoveEmptyEntries
+    );
+
+    if (lines.Length == 0)
+    {
+        return rows;
+    }
+    string[] headers;
+    int startRow;
+
+    if (config.NoHeader)
+    {
+        var firstRow = lines[0].Split(config.Delimiter);
+        headers = new string[firstRow.Length];
+        for (int i=0; i < firstRow.Length; i++)
+        {
+            headers[i] = i.ToString();
+        }
+        startRow = 0; 
+    }
+    else
+    {
+        headers = lines[0].Split(config.Delimiter);
+        startRow = 1;
+    }
+    for (int i = startRow; i < lines.Length; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+        var row = new Dictionary<string, string>();
+        for (int j=0; j < headers.Length; j++)
+        {
+            row[headers[j]] = values[j];
+        }
+        rows.Add(row);
+    }
+    return rows;
 }
 
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
