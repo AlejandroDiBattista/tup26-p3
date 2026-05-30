@@ -38,16 +38,25 @@ AppConfig ParseArgs(string[] args)
         {
             case "-b":
             case "--by":
-                var field = args[++i];
 
-                sortOptions.Add(
-                    new SortOption(field, "alpha", "asc")
-                );
+            if (i + 1 >= args.Length)
+            throw new Exception("Falta valor para -b");
+
+            var field = args[++i];
+
+            var parts = field.Split(':');
+
+            string campo = parts[0];
+            string tipo = parts.Length > 1 ? parts[1] : "alpha";
+            string orden = parts.Length > 2 ? parts[2] : "asc";
+
+            sortOptions.Add(new SortOption(campo, tipo, orden));
             break;
 
             case "-d":
             case "--delimiter":
-         
+            if (i + 1 >= args.Length)
+            throw new Exception("Falta valor para -d");
                 delimiter = args[++i];
             break;
 
@@ -57,15 +66,34 @@ AppConfig ParseArgs(string[] args)
             break;
 
             case "-i":
-            case "--input":
-                
+            case "--input":  
+            if (i + 1 >= args.Length)
+            throw new Exception("Falta valor para -i");
                 inputFile = args[++i];
             break;
 
             case "-o":
             case "--output":
-
+            if (i + 1 >= args.Length)
+            throw new Exception("Falta valor para -o");
                 outputFile = args[++i];
+            break;
+            
+            case "-h":
+            case "--help":
+
+            Console.WriteLine("""
+            sortx [input [output]]
+                [-b|--by campo[:tipo[:orden]]]
+                [-i|--input archivo]
+                [-o|--output archivo]
+                [-d|--delimiter delimitador]
+                [-nh|--no-header]
+                [-h|--help]
+            """);
+
+            Environment.Exit(0);
+
             break;
 
             default:
@@ -139,22 +167,67 @@ List<Dictionary<string, string>> ParseDelimited(string inputText, AppConfig conf
         var row = new Dictionary<string, string>();
         for (int j=0; j < headers.Length; j++)
         {
-            row[headers[j]] = values[j];
+            row[headers[j]] = j < values.Length? values[j]: "";
         }
         rows.Add(row);
     }
     return rows;
 }
 
-List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,AppConfig config)
 {
+    if (rows.Count == 0)
+    return rows;
+    
     if (config.SortOptions.Count == 0)
-    {
         return rows;
-    }
-    var sortField = config.SortOptions[0];
 
-    return rows.OrderBy(row => row[sortField.Campo]).ToList();
+    foreach(var sort in config.SortOptions)
+    {
+        if (!rows[0].ContainsKey(sort.Campo))
+            throw new Exception($"Campo inexistente: {sort.Campo}");
+    }
+
+    IOrderedEnumerable<Dictionary<string,string>>? ordered = null;
+
+    foreach(var sort in config.SortOptions)
+    {
+        bool numeric = sort.Tipo == "num";
+        bool desc = sort.Orden == "desc";
+
+        if (ordered == null)
+        {
+            if (numeric)
+            {
+                ordered = desc
+                    ? rows.OrderByDescending(r => double.Parse(r[sort.Campo]))
+                    : rows.OrderBy(r => double.Parse(r[sort.Campo]));
+            }
+            else
+            {
+                ordered = desc
+                    ? rows.OrderByDescending(r => r[sort.Campo])
+                    : rows.OrderBy(r => r[sort.Campo]);
+            }
+        }
+        else
+        {
+            if (numeric)
+            {
+                ordered = desc
+                    ? ordered.ThenByDescending(r => double.Parse(r[sort.Campo]))
+                    : ordered.ThenBy(r => double.Parse(r[sort.Campo]));
+            }
+            else
+            {
+                ordered = desc
+                    ? ordered.ThenByDescending(r => r[sort.Campo])
+                    : ordered.ThenBy(r => r[sort.Campo]);
+            }
+        }
+    }
+
+    return ordered!.ToList();
 }
 
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
@@ -165,7 +238,10 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
     }
     var lines = new List<string>();
     var headers = rows[0].Keys.ToArray();
+    if (!config.NoHeader)
+{
     lines.Add(string.Join(config.Delimiter, headers));
+}
 
     foreach (var row in rows)
     {
