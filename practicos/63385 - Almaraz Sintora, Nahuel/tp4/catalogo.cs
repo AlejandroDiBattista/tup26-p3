@@ -27,7 +27,16 @@ app.Run(new CatalogoWindow(http));
 
 public sealed class CatalogoWindow : Runnable {
     private readonly HttpClient http;
+    private readonly ObservableCollection<string> lineasProductos = [];
+    private readonly ObservableCollection<string> lineasMovimientos = [];
 
+    private List<ProductoDto> productos = [];
+    private List<ProductoDto> productosFiltrados = [];
+
+    private TextField buscarTexto = null!;
+    private ListView listaProductos = null!;
+    private ListView listaMovimientos = null!;
+    private Label estado = null!;
     public CatalogoWindow(HttpClient http) {
         this.http = http;
         Title = "Catalogo REST - ESC para salir";
