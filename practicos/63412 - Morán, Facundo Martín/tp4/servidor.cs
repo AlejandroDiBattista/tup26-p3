@@ -28,6 +28,10 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
 
     return Results.Ok(producto);
 });
+app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
+{
+    return Results.Ok(repositorio.TraerProductos());
+});
 
 app.Run("http://localhost:5050");
 
@@ -62,4 +66,8 @@ class CatalogoRepositorio {
 
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+        public List<Producto> TraerProductos() =>
+    db.Productos
+        .OrderBy(p => p.Codigo)
+        .ToList();
 }
