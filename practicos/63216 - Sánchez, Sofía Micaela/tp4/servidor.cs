@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+#:sdk Microsoft.NET.Sdk.Web
+#:package Microsoft.EntityFrameworkCore.Sqlite@*
+#:property PublishAot=false
 
 // ── Configuración ──────────────────────────────────────────────────────────
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -301,6 +305,7 @@ class CatalogoRepositorio
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }        return await db.Movimientos
+        return await db.Movimientos
             .AsNoTracking()
             .Where(m => m.ProductoId == productoId)
             .OrderByDescending(m => m.Fecha)

@@ -21,10 +21,18 @@ try {
     using var http = new HttpClient();
     producto = await CargarProductoAsync(http);
 } catch (HttpRequestException ex) {
+try
+{
+    productos = await CargarProductos(http);
+}
+catch (HttpRequestException ex)
+{
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
     Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
+    Console.Error.WriteLine($"Verifica que servidor.cs este corriendo en {ApiUrl}");
     return;
 }
+
 List<ProductoDto> filtrados = new(productos);
 
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
@@ -125,7 +133,35 @@ await MostrarDetalle();
             - Stock  :  {producto.Stock,10}
             """,
     X = 4, Y = 2,
+raiz.KeyDown += (sender, e) =>
+{
+    if (e.KeyCode == Key.A.WithCtrl)
+    {
+        AgregarProducto();
+        e.Handled = true;
+    }
+    else if (e.KeyCode == Key.E.WithCtrl)
+    {
+        EditarProducto();
+        e.Handled = true;
+    }
+    else if (e.KeyCode == Key.D.WithCtrl)
+    {
+        EliminarProducto();
+        e.Handled = true;
+    }
+    else if (e.KeyCode == Key.M.WithCtrl)
+    {
+        RegistrarMovimiento();
+        e.Handled = true;
+    }
+    else if (e.KeyCode == Key.Q.WithCtrl)
+    {
+        app.RequestStop();
+        e.Handled = true;
+    }
 };
+
 app.Run(raiz);
 
 
