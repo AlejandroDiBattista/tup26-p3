@@ -44,6 +44,39 @@ public sealed class CatalogoWindow : Runnable {
         Height = Dim.Fill();
         Menu.DefaultBorderStyle = LineStyle.Single;
         CrearInterfaz();
+        private void RecargarProductos() {
+        try {
+            productos = http.GetFromJsonAsync<List<ProductoDto>>("productos")
+                .GetAwaiter()
+                .GetResult() ?? [];
+
+            AplicarFiltro();
+            estado.Text = $"Productos cargados: {productos.Count}";
+        } catch (Exception ex) {
+            MostrarMensaje("Error", $"No se pudieron cargar los productos.\n{ex.Message}");
+        }
+    }
+
+    private void AplicarFiltro() {
+        string texto = buscarTexto.Text.ToString().Trim().ToLowerInvariant();
+
+        productosFiltrados = productos
+            .Where(p =>
+                string.IsNullOrEmpty(texto) ||
+                p.Codigo.ToLowerInvariant().Contains(texto) ||
+                p.Nombre.ToLowerInvariant().Contains(texto))
+            .ToList();
+
+        lineasProductos.Clear();
+
+        foreach (var producto in productosFiltrados) {
+            lineasProductos.Add(FormatearProducto(producto));
+        }
+
+        listaProductos.SelectedItem = lineasProductos.Count > 0 ? 0 : null;
+        CargarMovimientosDelSeleccionado();
+    }
+        RecargarProductos();
     }
 
     private void CrearInterfaz() {
