@@ -394,9 +394,69 @@ public sealed class EjemploDialog : Dialog {
         };
         favoritoCheck.Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked;
         Add(favoritoCheck);
-    }
+        Add(new Label() {
+            Text = "Notas:",
+            X = 1,
+            Y = 17
+        });
+        notasField = new TextView() {
+            X = 15,
+            Y = 17,
+            Width = 40,
+            Height = 4,
+            Text = contacto.Notas            
+        };
+        Add(notasField);
+        Button saveButton = new() {
+            Text = "_Guardar",
+            X = 15,
+            Y = 22
+        };
+        saveButton.Accepting += (_, e) => {
+            Save();
+            e.Handled = true;
+        };
+        AddButton(saveButton);
+        Button cancelButton = new() {
+            Text = "_Cancelar"
+        };
+        cancelButton.Accepting += (_, e) => {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+        AddButton(cancelButton);
 }
 
+    private void Save() {
+        string nombre = nombreField.Text.ToString()?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(nombre)) {
+            MessageBox.ErrorQuery(App!, "Error", "El nombre no puede estar vacío.", "OK");
+            return;
+        }
+        string email = emailField.Text.ToString() ?? "";
+        if (
+            email.Length > 0 &&
+            !email.Contains("@")
+        ) {
+            MessageBox.ErrorQuery(App!, "Error", "El email debe contener @", "OK");
+            return;
+        }
+        Contacto.Nombre = nombre;
+        string primero = telefonosFields[0].Text.ToString()?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(primero)) {
+            MessageBox.ErrorQuery(App!, "Error", "Al menos un teléfono es requerido", "OK");
+            return;
+        }
+        Contacto.Telefonos = string.Join(",", telefonosFields.Select(f => f.Text.ToString()?.Trim() ?? "")
+        .Where(t => !string.IsNullOrWhiteSpace(t))
+        );
+        Contacto.Email = email;
+        Contacto.Notas = notasField.Text.ToString() ?? "";
+        Contacto.Favorito = (favoritoCheck.Value == CheckState.Checked);
+        Accepted = true;
+        App!.RequestStop();
+    }
+}
 
 public class SqliteAgendaStore {}
 public class JsonAgendaIO {}
