@@ -76,13 +76,31 @@ app.MapDelete("/productos/{id:int}", async (int id, CatalogoRepositorio repo) =>
     return eliminado ? Results.NoContent() : Results.NotFound();
 });
 
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoRepositorio repo) =>
+{
+    List<MovimientoDeProducto>? movimientos = await repo.ListarMovimientos(productoId);
+    return movimientos is null ? Results.NotFound() : Results.Ok(movimientos);
+});
 
+app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, MovimientoDatos datos, CatalogoRepositorio repo) =>
+{
+    if (datos.Cantidad <= 0)
+    {
+        return Results.BadRequest("La cantidad debe ser positiva.");
+    }
 
 // ── Modelo ────────────────────────────────────────────────────────────────
+    MovimientoDeProducto? movimiento = await repo.RegistrarMovimiento(productoId, datos);
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+    if (movimiento is null)
+    {
+        return Results.BadRequest("No se pudo registrar el movimiento.");
+    }
 
 // ── DbContext ─────────────────────────────────────────────────────────────
+    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+});
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
@@ -145,6 +163,8 @@ class MovimientoDeProducto
     public Producto? Producto { get; set; }
 }
 record ProductoDatos(string Codigo, string Nombre, decimal Precio, int Stock);
+
+record MovimientoDatos(TipoMovimiento Tipo, int Cantidad);
 class CatalogoDb : DbContext
 {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options)
@@ -269,7 +289,59 @@ class CatalogoRepositorio
 
         return true;
     }
+    public async Task<List<MovimientoDeProducto>?> ListarMovimientos(int productoId)
+    {
+        bool existeProducto = await db.Productos.AnyAsync(p => p.Id == productoId);
+
+        if (!existeProducto)
+        {
+            return null;
+        }
 
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+}        return await db.Movimientos
+            .AsNoTracking()
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .ToListAsync();
+    }
+
+    public async Task<MovimientoDeProducto?> RegistrarMovimiento(int productoId, MovimientoDatos datos)
+    {
+        Producto? producto = await db.Productos.FindAsync(productoId);
+
+        if (producto is null)
+        {
+            return null;
+        }
+
+        int nuevoStock = datos.Tipo switch
+        {
+            TipoMovimiento.Compra => producto.Stock + datos.Cantidad,
+            TipoMovimiento.Venta => producto.Stock - datos.Cantidad,
+            TipoMovimiento.Ajuste => datos.Cantidad,
+            _ => producto.Stock
+        };
+
+        if (nuevoStock < 0)
+        {
+            return null;
+        }
+
+        MovimientoDeProducto movimiento = new()
+        {
+            ProductoId = productoId,
+            Tipo = datos.Tipo,
+            Cantidad = datos.Cantidad,
+            Fecha = DateTime.Now
+        };
+
+        producto.Stock = nuevoStock;
+        db.Movimientos.Add(movimiento);
+
+        await db.SaveChangesAsync();
+
+        return movimiento;
+    }
 }

@@ -48,6 +48,10 @@ MenuBar menu = new(new MenuBarItem[]
         null!,
         new("_Salir", "Ctrl+Q Salir", () => app.RequestStop(), Key.Q.WithCtrl),
     }),
+    new("Movimiento", new MenuItem[]
+    {
+        new("_Registrar movimiento", "Ctrl+M Movimiento", () => RegistrarMovimiento(), Key.M.WithCtrl),
+    }),
 });
 
 
@@ -148,6 +152,11 @@ async Task MostrarDetalle()
     }
 
     ProductoDto producto = filtrados[indice];
+    List<MovimientoDto> movimientos = await CargarMovimientos(http, producto.Id);
+
+    string textoMovimientos = movimientos.Count == 0
+        ? "Sin movimientos registrados."
+        : string.Join(Environment.NewLine, movimientos.Select(FormatearMovimiento));
     detalle.Text = $"""
         PRODUCTO
 
@@ -283,13 +292,60 @@ void EliminarProducto()
         }
     });
 }
+void RegistrarMovimiento()
+{
+    int indice = listaProductos.SelectedItem ?? -1;
+    if (indice < 0 || indice >= filtrados.Count)
+    {
+        MessageBox.Query(app, "Movimiento", "Seleccione un producto primero.", "OK");
+        return;
+    }
+
+    ProductoDto actual = filtrados[indice];
+    using DialogoMovimiento dialogo = new(actual.Nombre);
+    app.Run(dialogo);
+
+    if (dialogo.Result is null) return;
+
+    MovimientoDatos datos = dialogo.Result;
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            HttpResponseMessage resp = await http.PostAsJsonAsync(
+                $"/productos/{actual.Id}/movimientos", datos);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                await RecargarYActualizar(actual.Id);
+            }
+            else
+            {
+                string error = await resp.Content.ReadAsStringAsync();
+                MessageBox.ErrorQuery(app, "Error", error, "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(app, "Error", ex.Message, "OK");
+        }
+    });
+}
 
 static async Task<List<ProductoDto>> CargarProductos(HttpClient http)
     => await http.GetFromJsonAsync<List<ProductoDto>>("/productos") ?? [];
+static async Task<List<MovimientoDto>> CargarMovimientos(HttpClient http, int productoId)
+    => await http.GetFromJsonAsync<List<MovimientoDto>>(
+        $"/productos/{productoId}/movimientos") ?? [];
 static string FormatearProducto(ProductoDto p)
     => $"{p.Codigo,-6} {p.Nombre,-25} ${p.Precio,8:N2} Stock: {p.Stock,4}";
+static string FormatearMovimiento(MovimientoDto m)
+    => $"{m.Fecha:dd/MM/yyyy HH:mm}  {m.Tipo,-7}  Cantidad: {m.Cantidad}";
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
 record ProductoDatos(string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoDatos(string Tipo, int Cantidad);
 class DialogoProducto : Dialog<ProductoDatos?>
 {
     public DialogoProducto(string titulo, ProductoDto? existente)
@@ -369,5 +425,59 @@ class DialogoProducto : Dialog<ProductoDatos?>
             Result = new ProductoDatos(tCodigo.Text.Trim(), tNombre.Text.Trim(), precio, stock);
         };
         AddButton(btnGuardar);
+    }
+}
+class DialogoMovimiento : Dialog<MovimientoDatos?>
+{
+    public DialogoMovimiento(string nombreProducto)
+    {
+        Title = $"Movimiento: {nombreProducto}";
+        Width = 55;
+        Height = 12;
+
+        Label lTipo = new() { Text = "Tipo (1=Compra 2=Venta 3=Ajuste):", X = 1, Y = 1 };
+        TextField tTipo = new() { X = 1, Y = 2, Width = 10, Text = "1" };
+
+        Label lCantidad = new() { Text = "Cantidad:", X = 1, Y = 4 };
+        TextField tCantidad = new() { X = 11, Y = 4, Width = 10 };
+
+        Label lError = new() { Text = "", X = 1, Y = 6, Width = Dim.Fill(2) };
+
+        Add(lTipo, tTipo, lCantidad, tCantidad, lError);
+
+        Button btnCancelar = new() { Title = "Cancelar" };
+        btnCancelar.Accepting += (_, _) => Result = null;
+        AddButton(btnCancelar);
+
+        Button btnRegistrar = new() { Title = "Registrar" };
+        btnRegistrar.Accepting += (_, e) =>
+        {
+            string tipo = tTipo.Text?.Trim() switch
+            {
+                "1" => "Compra",
+                "2" => "Venta",
+                "3" => "Ajuste",
+                _ => ""
+            };
+
+            if (string.IsNullOrEmpty(tipo))
+            {
+                lError.Text = "Tipo invalido. Ingrese 1, 2 o 3.";
+                e.Handled = true;
+                tTipo.SetFocus();
+                return;
+            }
+
+            if (!int.TryParse(tCantidad.Text, out int cantidad) || cantidad <= 0)
+            {
+                lError.Text = "La cantidad debe ser un numero positivo.";
+                e.Handled = true;
+                tCantidad.SetFocus();
+                return;
+            }
+
+            Result = new MovimientoDatos(tipo, cantidad);
+        };
+        AddButton(btnRegistrar);
     }
 }
