@@ -83,6 +83,9 @@ AppConfig ParseArgs(string[] args)
     inputFile ??= positionals.Count >= 1 ? positionals[0] : null;
     outputFile ??= positionals.Count >= 2 ? positionals[1] : null;
 
+    if (sortFields.Count == 0)
+        throw new ArgumentException("Debe indicar al menos un criterio de ordenamiento con -b o --by.");
+
     return new AppConfig(
         inputFile,
         outputFile,
@@ -198,17 +201,65 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
 string Serialize(List<string> headers, List<Dictionary<string, string>> rows, AppConfig config)
 {
-    throw new NotImplementedException();
+    var outputLines = new List<string>();
+
+    if (!config.NoHeader)
+        outputLines.Add(string.Join(config.Delimiter, headers));
+
+    foreach (var row in rows)
+    {
+        var values = headers.Select(header => row[header]);
+        outputLines.Add(string.Join(config.Delimiter, values));
+    }
+
+    return string.Join(Environment.NewLine, outputLines) + Environment.NewLine;
 }
 
 void WriteOutput(string output, AppConfig config)
 {
-    throw new NotImplementedException();
+    if (!string.IsNullOrWhiteSpace(config.OutputFile))
+        File.WriteAllText(config.OutputFile, output);
+    else
+        Console.Write(output);
 }
 
 string GetHelpText()
 {
-    return "sortx - ayuda";
+    return """
+sortx - Herramienta CLI para ordenar archivos delimitados
+
+Uso:
+  sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
+        [-i|--input input] [-o|--output output]
+        [-d|--delimiter delimitador]
+        [-nh|--no-header] [-h|--help]
+
+Opciones:
+  -b,  --by           Campo por el que ordenar. Se puede repetir.
+  -i,  --input        Archivo de entrada.
+  -o,  --output       Archivo de salida.
+  -d,  --delimiter    Delimitador. Default: ",". Usar "\t" para tabulación.
+  -nh, --no-header    Indica que el archivo no tiene encabezado.
+  -h,  --help         Muestra esta ayuda y termina.
+
+Formato de --by:
+  campo[:tipo[:orden]]
+
+Tipos:
+  alpha    Comparación alfabética. Default.
+  num      Comparación numérica.
+
+Órdenes:
+  asc      Ascendente. Default.
+  desc     Descendente.
+
+Ejemplos:
+  sortx empleados.csv -b apellido
+  sortx empleados.csv salida.csv -b salario:num:desc
+  sortx empleados.csv -b departamento -b salario:num:desc
+  sortx datos.tsv -d "\t" -nh -b 1:alpha:asc
+  cat empleados.csv | sortx -b apellido > ordenado.csv
+""";
 }
 
 string RequireValue(string[] args, ref int index, string option)
@@ -224,19 +275,39 @@ SortField ParseSortField(string value)
 {
     var parts = value.Split(':');
 
-    string name = parts[0];
-    string type = parts.Length >= 2 ? parts[1] : "alpha";
-    string order = parts.Length >= 3 ? parts[2] : "asc";
+    if (parts.Length < 1 || parts.Length > 3 || string.IsNullOrWhiteSpace(parts[0]))
+        throw new ArgumentException($"Especificación de campo inválida: {value}");
 
-    bool numeric = type == "num";
-    bool descending = order == "desc";
+    string name = parts[0];
+    string type = parts.Length >= 2 && parts[1] != "" ? parts[1] : "alpha";
+    string order = parts.Length >= 3 && parts[2] != "" ? parts[2] : "asc";
+
+    bool numeric = type switch
+    {
+        "alpha" => false,
+        "num" => true,
+        _ => throw new ArgumentException($"Tipo de comparación inválido: {type}. Use alpha o num.")
+    };
+
+    bool descending = order switch
+    {
+        "asc" => false,
+        "desc" => true,
+        _ => throw new ArgumentException($"Orden inválido: {order}. Use asc o desc.")
+    };
 
     return new SortField(name, numeric, descending);
 }
 
 string NormalizeDelimiter(string value)
 {
-    return value == "\\t" ? "\t" : value;
+    return value switch
+    {
+        "\\t" => "\t",
+        "tab" => "\t",
+        _ when value.Length > 0 => value,
+        _ => throw new ArgumentException("El delimitador no puede estar vacío.")
+    };
 }
 
 List<string> SplitLine(string line, string delimiter)
