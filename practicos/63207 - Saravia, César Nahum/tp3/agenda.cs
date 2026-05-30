@@ -264,10 +264,21 @@ private Label statusLabel = null!;
         }
     }
 
+    private void AcercaDe() {
+        MessageBox.Query(App!, 
+            "Acerca de", 
+            "AgendaT - TP3",
+            "OK");
+    }
 
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
+    private void FocoBusqueda() {
+        if (searchField != null) {
+            searchField.SetFocus();
+        }
+    }
+
+    private void setStatus(string mensaje) {
+        statusLabel.Text = $"{mensaje}  | F2 Nuevo | F3 Editar | F4 Buscar | Del Eliminar | Ctrl+Q Salir | Ctrl+I Importar | Ctrl+E Exportar";
     }
 
     private void SolicitarSalir() {
@@ -279,14 +290,57 @@ private Label statusLabel = null!;
             SolicitarSalir();
             return true;
         }
-
+        if(key == Key.F2) {
+            NuevoContacto();
+            return true;
+        }
+        if(key == key.N.WithCtrl) {
+            NuevoContacto();
+            return true;
+        }
+        if(key == Key.F3) {
+            EditarContacto();
+            return true;
+        }
+        if (key == Key.Enter) {
+            EditarContacto();
+            return true;
+        }
+        if (key == Key.DeleteChar) {
+            EliminarContacto();
+            return true;
+        }
+        if (key == Key.D.WithCtrl) {
+            EliminarContacto();
+            return true;
+        }
+        if (key == Key.I.WithCtrl) {
+            ImportJson();
+            return true;
+        }
+        if (key == Key.E.WithCtrl) {
+            ExportJson();
+            return true;
+        }
+        if(key == Key.F4) {
+            FocoBusqueda();
+            return true;
+        }
         return base.OnKeyDown(key);
     }
 }
 
 // Diálogo de ejemplo
 public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
+    public new bool Accepted { get; private set; }
+    public Contacto Contacto { get; private set; }
+    private readonly TextField nombreField;
+    private readonly TextField[] telefonosFields = new TextField[5];
+    private readonly TextField emailField;
+    private readonly TextView notasField;
+    private CheckBox favoritoCheck;
+    public ContactDialog(Contacto contacto) {
+        Contacto = contacto;
         Title  = "Diálogo de ejemplo";
         Width  = 50;
         Height = 8;
