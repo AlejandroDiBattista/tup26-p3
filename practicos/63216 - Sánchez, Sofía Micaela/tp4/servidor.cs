@@ -21,6 +21,16 @@ using (var scope = app.Services.CreateScope())
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 app.MapGet("/", () => "CatalogoREST funcionando");
+app.MapGet("/productos", async (CatalogoRepositorio repo) =>
+{
+    return Results.Ok(await repo.ListarProductos());
+});
+
+app.MapGet("/productos/{id:int}", async (int id, CatalogoRepositorio repo) =>
+{
+    Producto? producto = await repo.BuscarProducto(id);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
+});
 
 app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto();
@@ -130,6 +140,20 @@ class CatalogoRepositorio
 
             db.SaveChanges();
         }
+    }
+    public Task<List<Producto>> ListarProductos()
+    {
+        return db.Productos
+            .AsNoTracking()
+            .OrderBy(p => p.Nombre)
+            .ToListAsync();
+    }
+
+    public Task<Producto?> BuscarProducto(int id)
+    {
+        return db.Productos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public Producto? TraerProducto() =>
