@@ -1,6 +1,5 @@
 #!/usr/bin/env dotnet
 #:property PublishAot=false
-
 #:package Terminal.Gui@*
 #:package Microsoft.Data.Sqlite@*
 #:package Dapper@*
@@ -16,38 +15,56 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text.Json;
+using System.Collections.ObjectModel;
 
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
+string dbPath = args.Length > 0 ? args[0]
+ : "agenda.db";
 
-// Punto de entrada
+SqliteAgendaStore store = new(dbPath);
+
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
-
+app.Run(new AgendaWindow(store));
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
-
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
+        LoadContacts();
     }
 
     private void BuildLayout() {
+         string textoInicial = onlyFavorites ? "_Solo favoritos [x]" : "_Solo favoritos [ ]";
+        itemFavoritos = new MenuItem(textoInicial, "", () => {
+        ToggleFavorites();
+        itemFavoritos.Title = onlyFavorites ? "_Solo favoritos [x]" : "_Solo favoritos [ ]";
+    });
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
+                    new MenuItem("_Importar JSON",  "", ImportJson),
+                    new MenuItem("_Exportar JSON",  "", ExportJson),
                     null!, // Separador
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
-                ])
-            ]
+                ]),
+                 new MenuBarItem("_Contactos", [
+                    new MenuItem("_Nuevo", "F2", NuevoContacto),
+                    new MenuItem("_Editar", "F3", EditarContacto),
+                    new MenuItem("_Eliminar", "Del", EliminarContacto),
+            ]),
+                new MenuBarItem("_Ver", [
+                    itemFavoritos
+                ]),
+                new MenuBarItem("Ayuda", [
+                    new MenuItem("_Acerca de", "", AcercaDe)
+                    ])
+                ]
         };
 
         Button openButton = new() {
