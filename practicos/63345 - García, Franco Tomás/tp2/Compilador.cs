@@ -1,7 +1,6 @@
 class Compilador {
     private string texto = "";
     private int indice = 0;
-
     public static Nodo Parse(string expresion) {
         if (string.IsNullOrWhiteSpace(expresion))
             throw new FormatException("Token inesperado");
@@ -11,7 +10,7 @@ class Compilador {
             indice = 0
         };
 
-        var nodo = parser.ParseValor();
+        var nodo = parser.ParseExpresion();
 
         parser.SaltarEspacios();
 
@@ -21,6 +20,25 @@ class Compilador {
         return nodo;
     }
 
+    private Nodo ParseExpresion() {
+        var nodo = ParseValor();
+
+        while (true) {
+            SaltarEspacios();
+
+            if (Match('+')) {
+                nodo = new NodoSuma(nodo, ParseValor());
+            }
+            else if (Match('-')) {
+                nodo = new NodoResta(nodo, ParseValor());
+            }
+            else {
+                break;
+            }
+        }
+
+        return nodo;
+    }
     private Nodo ParseValor() {
         SaltarEspacios();
 
@@ -33,10 +51,8 @@ class Compilador {
             indice++;
             return new NodoVariable();
         }
-
         throw new FormatException("Token inesperado");
     }
-
     private Nodo ParseNumero() {
         int inicio = indice;
 
@@ -50,6 +66,14 @@ class Compilador {
 
     private char VerActual() {
         return indice < texto.Length ? texto[indice] : '\0';
+    }
+
+    private bool Match(char esperado) {
+        if (VerActual() == esperado) {
+            indice++;
+            return true;
+        }
+        return false;
     }
 
     private void SaltarEspacios() {
