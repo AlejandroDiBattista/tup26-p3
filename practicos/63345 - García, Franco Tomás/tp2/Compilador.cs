@@ -21,16 +21,16 @@ class Compilador {
     }
 
     private Nodo ParseExpresion() {
-        var nodo = ParseValor();
+        var nodo = ParseTermino();
 
         while (true) {
             SaltarEspacios();
 
             if (Match('+')) {
-                nodo = new NodoSuma(nodo, ParseValor());
+                nodo = new NodoSuma(nodo, ParseTermino());
             }
             else if (Match('-')) {
-                nodo = new NodoResta(nodo, ParseValor());
+                nodo = new NodoResta(nodo, ParseTermino());
             }
             else {
                 break;
@@ -38,6 +38,25 @@ class Compilador {
         }
 
         return nodo;
+    }
+    private Nodo ParseTermino() {
+    var nodo = ParseValor();
+
+    while (true) {
+        SaltarEspacios();
+
+        if (Match('*')) {
+            nodo = new NodoMultiplicacion(nodo, ParseValor());
+        }
+        else if (Match('/')) {
+            nodo = new NodoDivision(nodo, ParseValor());
+        }
+        else {
+            break;
+        }
+    }
+
+    return nodo;
     }
     private Nodo ParseValor() {
         SaltarEspacios();
