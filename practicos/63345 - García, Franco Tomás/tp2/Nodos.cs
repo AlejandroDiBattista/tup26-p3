@@ -12,7 +12,27 @@ class NodoNumero : Nodo {
         return valor;
     }
 }
+class NodoUnario : Nodo {
+    private char operador;
+    private Nodo operando;
 
+    public NodoUnario(char operador, Nodo operando) {
+        this.operador = operador;
+        this.operando = operando;
+    }
+
+    public override int Evaluar(int x) {
+        int valor = operando.Evaluar(x);
+
+        if (operador == '+')
+            return valor;
+
+        if (operador == '-')
+            return -valor;
+
+        throw new InvalidOperationException("Operador unario inválido");
+    }
+}
 class NodoVariable : Nodo {
     public override int Evaluar(int x = 0) {
         return x;

@@ -1,9 +1,12 @@
 class Compilador {
     private string texto = "";
     private int indice = 0;
+    private Exception Error(string mensaje) {
+    return new FormatException($"{mensaje} en posición {indice}");
+    }
     public static Nodo Parse(string expresion) {
         if (string.IsNullOrWhiteSpace(expresion))
-            throw parser.Error("Token inesperado");
+            throw new FormatException("Token inesperado");
 
         var parser = new Compilador {
             texto = expresion,
@@ -59,27 +62,36 @@ class Compilador {
     return nodo;
     }
     private Nodo ParseValor() {
-         SaltarEspacios();
-
-    char actual = VerActual();
-    if (actual == '(') {
-        indice++;
-        var nodo = ParseExpresion();
         SaltarEspacios();
 
-        if (!Match(')'))
-            throw new FormatException("Falta cerrar paréntesis");
+        char actual = VerActual();
 
-        return nodo;
-    }
-    if (char.IsDigit(actual))
-        return ParseNumero();
-    if (char.ToLower(actual) == 'x') {
-        indice++;
-        return new NodoVariable();
-    }
+        if (actual == '\0')
+        throw Error("Fin inesperado de la expresión");
+        
+        if (actual == '+' || actual == '-') {
+            indice++;
+            var valor = ParseValor();
+            return new NodoUnario(actual, valor);
+        }
+        if (actual == '(') {
+            indice++;
+            var nodo = ParseExpresion();
+            SaltarEspacios();
 
-    throw parser.Error("Token inesperado");
+            if (!Match(')'))
+                throw new FormatException("Se esperaba ')'");
+
+            return nodo;
+        }
+        if (char.IsDigit(actual))
+            return ParseNumero();
+        if (char.ToLower(actual) == 'x') {
+            indice++;
+            return new NodoVariable();
+        }
+
+        throw Error("Token inesperado");
     }
     private Nodo ParseNumero() {
         int inicio = indice;
