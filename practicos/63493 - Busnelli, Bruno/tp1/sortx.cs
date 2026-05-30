@@ -164,7 +164,32 @@ ParsedTable ParseDelimited(string text, AppConfig config)
 
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
 {
-    throw new NotImplementedException();
+    var field = config.SortFields[0];
+
+    return rows
+        .OrderBy(
+            row => row,
+            Comparer<Dictionary<string, string>>.Create(
+                (a, b) =>
+                {
+                    string left = a[field.Name];
+                    string right = b[field.Name];
+
+                    int result = field.Numeric
+                        ? CompareNumeric(left, right, field.Name)
+                        : string.Compare(
+                            left,
+                            right,
+                            StringComparison.CurrentCultureIgnoreCase
+                        );
+
+                    return field.Descending
+                        ? -result
+                        : result;
+                }
+            )
+        )
+        .ToList();
 }
 
 string Serialize(List<string> headers, List<Dictionary<string, string>> rows, AppConfig config)
@@ -228,6 +253,35 @@ void ValidateSortFields(List<string> headers, AppConfig config)
             );
         }
     }
+}
+int CompareNumeric(
+    string left,
+    string right,
+    string fieldName)
+{
+    if (!decimal.TryParse(
+            left,
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out var n1))
+    {
+        throw new ArgumentException(
+            $"El valor '{left}' del campo '{fieldName}' no es numérico."
+        );
+    }
+
+    if (!decimal.TryParse(
+            right,
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out var n2))
+    {
+        throw new ArgumentException(
+            $"El valor '{right}' del campo '{fieldName}' no es numérico."
+        );
+    }
+
+    return n1.CompareTo(n2);
 }
 
 record SortField(string Name, bool Numeric, bool Descending);
