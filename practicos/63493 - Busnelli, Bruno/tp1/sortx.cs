@@ -108,7 +108,58 @@ string ReadInput(AppConfig config)
 
 ParsedTable ParseDelimited(string text, AppConfig config)
 {
-    throw new NotImplementedException();
+    var lines = text
+        .Replace("\r\n", "\n")
+        .Replace("\r", "\n")
+        .Split('\n')
+        .Where(line => line.Length > 0)
+        .ToList();
+
+    if (lines.Count == 0)
+        throw new ArgumentException("La entrada está vacía.");
+
+    var firstRow = SplitLine(lines[0], config.Delimiter);
+
+    List<string> headers;
+    int startIndex;
+
+    if (config.NoHeader)
+    {
+        headers = Enumerable
+            .Range(0, firstRow.Count)
+            .Select(i => i.ToString())
+            .ToList();
+
+        startIndex = 0;
+    }
+    else
+    {
+        headers = firstRow;
+        startIndex = 1;
+    }
+
+    ValidateSortFields(headers, config);
+
+    var rows = new List<Dictionary<string, string>>();
+
+    for (int i = startIndex; i < lines.Count; i++)
+    {
+        var values = SplitLine(lines[i], config.Delimiter);
+
+        if (values.Count != headers.Count)
+            throw new ArgumentException(
+                $"La fila {i + 1} tiene {values.Count} columnas, pero se esperaban {headers.Count}."
+            );
+
+        var row = new Dictionary<string, string>();
+
+        for (int j = 0; j < headers.Count; j++)
+            row[headers[j]] = values[j];
+
+        rows.Add(row);
+    }
+
+    return new ParsedTable(headers, rows);
 }
 
 List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
@@ -157,6 +208,26 @@ SortField ParseSortField(string value)
 string NormalizeDelimiter(string value)
 {
     return value == "\\t" ? "\t" : value;
+}
+
+List<string> SplitLine(string line, string delimiter)
+{
+    return line.Split(delimiter).ToList();
+}
+
+void ValidateSortFields(List<string> headers, AppConfig config)
+{
+    foreach (var field in config.SortFields)
+    {
+        if (!headers.Contains(field.Name))
+        {
+            string available = string.Join(", ", headers);
+
+            throw new ArgumentException(
+                $"Campo inexistente: {field.Name}. Campos disponibles: {available}"
+            );
+        }
+    }
 }
 
 record SortField(string Name, bool Numeric, bool Descending);
