@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 3,
+    "Nombre": "juli",
+    "Telefonos": "287,278",
+    "Email": "hdsha@gmail.com",
+    "Notas": "wdji",
+    "Favorito": false
+  },
+  {
+    "Id": 4,
+    "Nombre": "santi",
+    "Telefonos": "2784",
+    "Email": "jd@gmail.com",
+    "Notas": "hs",
+    "Favorito": false
+  },
+  {
+    "Id": 5,
+    "Nombre": "migur",
+    "Telefonos": "7842",
+    "Email": "djcd@gmail.com",
+    "Notas": "jd",
+    "Favorito": false
+  }
+]

@@ -278,30 +278,72 @@ public class AgendaWindow : Window {
             }
 
             ApplyFilter();
-            SetStatus($"{cantidad} contacto(s) importado(s)");
+
+           MessageBox.Query(App!, "Importar", $"{cantidad} contacto(s) importado(s) correctamente", "Ok");
+          SetStatus($"{cantidad} contacto(s) importado(s)");
         }
         catch (Exception ex) {
             MessageBox.ErrorQuery(App!, "Error", ex.Message, "Ok");
         }
+        
     }
+    
+private void ExportJson() {
+    
 
-    private void ExportJson() {
+var label = new Label {    
+    Text = "Nombre del archivo:",
+    X = 1,
+    Y = 1
+};
+    var input = new TextField {
+        X = 1,
+        Y = 2,
+        Width = Dim.Fill(1),
+        Text = "contactos.json"
+    };
+
+    var dialog = new Dialog {
+        Title = "Exportar JSON",
+        Width = 50,
+        Height = 10
+    };
+
+    var btnOk = new Button {
+        Text = "Exportar",
+        X = Pos.Center(),
+        Y = 4,
+        IsDefault = true
+    };
+    btnOk.Accepting += (_, e) => {
+        dialog.RequestStop();
+        e.Handled = true;
+    };
+
+    var btnCancelar = new Button {
+        Text = "Cancelar",
+        X = Pos.Right(btnOk) + 2,
+        Y = 4
+    };
+    btnCancelar.Accepting += (_, e) => {
+        input.Text = "";
+        dialog.RequestStop();
+        e.Handled = true;
+    };
+
+   dialog.Add(label, input, btnOk, btnCancelar); 
+    App.Run(dialog);
+
+    if (string.IsNullOrWhiteSpace(input.Text)) return;
+
     try {
         var io = new JsonAgendaIO();
-        io.Export(_contacts, "contactos.json");
-
-        MessageBox.Query(
-            App!,
-            "Prueba",
-            "Exportación realizada",
-            "OK");
+        io.Export(_contacts, input.Text);
+ MessageBox.Query(App!, "Exportar", $"Contactos exportados correctamente a:\n{input.Text}", "Ok");
+SetStatus($"Exportados {_contacts.Count} contacto(s) a {input.Text}");
     }
     catch (Exception ex) {
-        MessageBox.ErrorQuery(
-            App!,
-            "Error",
-            ex.Message,
-            "OK");
+        MessageBox.ErrorQuery(App!, "Error", ex.Message, "Ok");
     }
 }
 
