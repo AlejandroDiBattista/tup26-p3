@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tateti2</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #251c16;
+      --paper: #fff4d7;
+      --paper-2: #ffe7a8;
+      --line: #2f231a;
+      --x: #e84f3d;
+      --o: #177d72;
+      --x-soft: #ffd0c8;
+      --o-soft: #c8eee7;
+      --shadow: rgba(47, 35, 26, .22);
+      --cell: clamp(84px, 22vw, 156px);
+      --gap: clamp(8px, 2vw, 16px);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(232, 79, 61, .28) 0 12%, transparent 13%),
+        radial-gradient(circle at 83% 18%, rgba(23, 125, 114, .28) 0 11%, transparent 12%),
+        radial-gradient(circle at 78% 84%, rgba(255, 199, 59, .34) 0 13%, transparent 14%),
+        linear-gradient(135deg, #fff8df, var(--paper-2));
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .22;
+      background-image:
+        linear-gradient(90deg, var(--line) 1px, transparent 1px),
+        linear-gradient(var(--line) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+    }
+
+    .app {
+      width: min(1120px, calc(100% - 28px));
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: clamp(22px, 5vw, 72px);
+      align-items: center;
+      padding: clamp(22px, 5vw, 56px) 0;
+      position: relative;
+    }
+
+    .intro {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+    }
+
+    .badge {
+      width: fit-content;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 13px;
+      background: #fffaf0;
+      box-shadow: 4px 4px 0 var(--line);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 8ch;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(64px, 11vw, 132px);
+      line-height: .78;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      max-width: 48ch;
+      margin: 0;
+      font-size: clamp(17px, 2.4vw, 22px);
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .rule-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 540px;
+    }
+
+    .rule {
+      min-height: 92px;
+      padding: 12px;
+      border: 2px solid var(--line);
+      background: #fff9ea;
+      box-shadow: 5px 5px 0 var(--line);
+      transform: rotate(var(--tilt));
+    }
+
+    .rule strong {
+      display: block;
+      font-size: 26px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .rule span {
+      display: block;
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .game {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .scoreboard {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .player,
+    .rounds {
+      border: 2px solid var(--line);
+      background: #fffaf0;
+      box-shadow: 5px 5px 0 var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .player {
+      display: grid;
+      gap: 7px;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .player.active {
+      transform: translateY(-4px) rotate(-1deg);
+    }
+
+    .player.x.active {
+      background: var(--x-soft);
+    }
+
+    .player.o.active {
+      background: var(--o-soft);
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .mark-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 900;
+      font-size: 22px;
+    }
+
+    .score {
+      min-width: 34px;
+      height: 34px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fffdf7;
+    }
+
+    .rounds {
+      display: grid;
+      place-items: center;
+      min-width: 82px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .rounds b {
+      display: block;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .board-wrap {
+      position: relative;
+      padding: clamp(10px, 2vw, 18px);
+      border: 3px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,.15)),
+        repeating-linear-gradient(-35deg, rgba(47,35,26,.07) 0 8px, transparent 8px 18px);
+      box-shadow: 13px 13px 0 var(--line);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, var(--cell));
+      grid-template-rows: repeat(3, var(--cell));
+      gap: var(--gap);
+    }
+
+    .cell {
+      border: 3px solid var(--line);
+      border-radius: var(--radius);
+      background: #fffdf5;
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 -8px 0 rgba(47, 35, 26, .08);
+      transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .cell:hover:not(:disabled),
+    .cell:focus-visible {
+      transform: translateY(-5px) rotate(.8deg);
+      outline: none;
+      background: #fff8dd;
+      box-shadow: inset 0 -8px 0 rgba(47, 35, 26, .08), 0 10px 0 rgba(47,35,26,.12);
+    }
+
+    .cell:disabled {
+      cursor: default;
+    }
+
+    .symbol {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(54px, 14vw, 112px);
+      font-weight: 900;
+      line-height: 1;
+      transform: scale(.2) rotate(-18deg);
+      opacity: 0;
+      transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
+      text-shadow: 3px 3px 0 rgba(47,35,26,.13);
+    }
+
+    .cell.filled .symbol {
+      transform: scale(1) rotate(var(--spin));
+      opacity: 1;
+    }
+
+    .cell.x .symbol {
+      color: var(--x);
+    }
+
+    .cell.o .symbol {
+      color: var(--o);
+    }
+
+    .cell.oldest::after {
+      content: "se va";
+      position: absolute;
+      right: 7px;
+      bottom: 7px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 7px;
+      background: #ffe45c;
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      transform: rotate(-8deg);
+    }
+
+    .cell.vanish {
+      animation: vanish .32s ease forwards;
+    }
+
+    .cell.win {
+      animation: winPulse .78s ease-in-out infinite alternate;
+    }
+
+    .status {
+      width: 100%;
+      min-height: 58px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 13px 16px;
+      background: #fffaf0;
+      box-shadow: 5px 5px 0 var(--line);
+      font-size: clamp(16px, 2vw, 20px);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    button.control {
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      min-height: 48px;
+      background: var(--ink);
+      color: #fffaf0;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 5px 5px 0 rgba(47,35,26,.35);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    button.control.secondary {
+      background: #fffaf0;
+      color: var(--ink);
+    }
+
+    button.control:hover,
+    button.control:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: 8px 8px 0 rgba(47,35,26,.28);
+      outline: none;
+    }
+
+    .confetti {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .piece {
+      position: absolute;
+      width: 12px;
+      height: 18px;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      animation: fall 900ms ease-out forwards;
+    }
+
+    @keyframes vanish {
+      0% { transform: rotate(0) scale(1); opacity: 1; }
+      100% { transform: rotate(14deg) scale(.2); opacity: 0; }
+    }
+
+    @keyframes winPulse {
+      from { transform: translateY(0) rotate(-1deg); background: #fffdf5; }
+      to { transform: translateY(-7px) rotate(1deg); background: #ffe45c; }
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(520deg); opacity: 0; }
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .intro {
+        align-self: auto;
+        padding-top: 4px;
+      }
+
+      h1 {
+        max-width: none;
+        font-size: clamp(56px, 18vw, 92px);
+      }
+
+      .rule-strip {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .game {
+        width: min-content;
+        justify-self: center;
+      }
+    }
+
+    @media (max-width: 520px) {
+      :root {
+        --cell: min(27vw, 112px);
+        --gap: 8px;
+      }
+
+      .app {
+        width: min(100% - 18px, 480px);
+      }
+
+      .rule-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .rule {
+        min-height: auto;
+      }
+
+      .scoreboard {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .rounds {
+        grid-column: 1 / -1;
+        min-height: 48px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .board-wrap {
+        box-shadow: 8px 8px 0 var(--line);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="intro" aria-labelledby="title">
+      <div class="badge">Tateti que respira</div>
+      <h1 id="title">Tateti2</h1>
+      <p class="subtitle">Cada jugador conserva solo tres marcas. Cuando pones la cuarta, la primera desaparece y el tablero sigue girando.</p>
+      <div class="rule-strip" aria-label="Reglas rapidas">
+        <div class="rule" style="--tilt:-1.5deg"><strong>1</strong><span>Turnos alternados: X empieza.</span></div>
+        <div class="rule" style="--tilt:1.2deg"><strong>3</strong><span>Maximo tres marcas vivas por jugador.</span></div>
+        <div class="rule" style="--tilt:-.7deg"><strong>4</strong><span>La cuarta borra la mas vieja.</span></div>
+      </div>
+    </section>
+
+    <section class="game" aria-label="Juego Tateti2">
+      <div class="scoreboard">
+        <div class="player x active" id="panelX">
+          <span class="label">Jugador X</span>
+          <div class="mark-row"><span>Cruces</span><span class="score" id="scoreX">0</span></div>
+        </div>
+        <div class="rounds">
+          <span class="label">Ronda</span>
+          <b id="round">1</b>
+        </div>
+        <div class="player o" id="panelO">
+          <span class="label">Jugador O</span>
+          <div class="mark-row"><span>Circulos</span><span class="score" id="scoreO">0</span></div>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" role="grid" aria-label="Tablero de tateti">
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 1"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 2"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 3"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 4"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 5"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 6"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 7"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 8"></button>
+          <button class="cell" type="button" role="gridcell" aria-label="Casilla 9"></button>
+        </div>
+      </div>
+
+      <div class="status" id="status" role="status" aria-live="polite">Turno de X. Las marcas mas viejas se avisan antes de irse.</div>
+
+      <div class="controls">
+        <button class="control" type="button" id="newRound">Nueva ronda</button>
+        <button class="control secondary" type="button" id="resetAll">Reiniciar marcador</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+  <script>
+    const cells = [...document.querySelectorAll(".cell")];
+    const statusEl = document.getElementById("status");
+    const scoreXEl = document.getElementById("scoreX");
+    const scoreOEl = document.getElementById("scoreO");
+    const roundEl = document.getElementById("round");
+    const panelX = document.getElementById("panelX");
+    const panelO = document.getElementById("panelO");
+    const confetti = document.getElementById("confetti");
+
+    const wins = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    const state = {
+      board: Array(9).fill(null),
+      queues: { X: [], O: [] },
+      turn: "X",
+      locked: false,
+      score: { X: 0, O: 0 },
+      round: 1
+    };
+
+    cells.forEach((cell, index) => {
+      cell.addEventListener("click", () => play(index));
+    });
+
+    document.getElementById("newRound").addEventListener("click", () => resetBoard(true));
+    document.getElementById("resetAll").addEventListener("click", () => {
+      state.score.X = 0;
+      state.score.O = 0;
+      state.round = 1;
+      resetBoard(false);
+    });
+
+    function play(index) {
+      if (state.locked || state.board[index]) return;
+
+      const player = state.turn;
+      let removed = null;
+
+      if (state.queues[player].length === 3) {
+        removed = state.queues[player].shift();
+        state.board[removed] = null;
+      }
+
+      state.board[index] = player;
+      state.queues[player].push(index);
+      render(removed);
+
+      const line = getWinningLine(player);
+      if (line) {
+        finishRound(player, line);
+        return;
+      }
+
+      state.turn = player === "X" ? "O" : "X";
+      updateStatus();
+      markOldest();
+      updatePanels();
+    }
+
+    function render(removedIndex = null) {
+      cells.forEach((cell, index) => {
+        cell.className = "cell";
+        cell.disabled = state.locked || Boolean(state.board[index]);
+        cell.innerHTML = "";
+        cell.style.setProperty("--spin", index % 2 === 0 ? "-4deg" : "5deg");
+
+        const value = state.board[index];
+        if (value) {
+          cell.classList.add("filled", value.toLowerCase());
+          cell.innerHTML = `<span class="symbol">${value}</span>`;
+          cell.setAttribute("aria-label", `Casilla ${index + 1}: ${value}`);
+        } else {
+          cell.setAttribute("aria-label", `Casilla ${index + 1}: vacia`);
+        }
+      });
+
+      if (removedIndex !== null) {
+        cells[removedIndex].classList.add("vanish");
+        setTimeout(() => cells[removedIndex].classList.remove("vanish"), 340);
+      }
+    }
+
+    function markOldest() {
+      cells.forEach(cell => cell.classList.remove("oldest"));
+      for (const player of ["X", "O"]) {
+        if (state.queues[player].length === 3) {
+          cells[state.queues[player][0]].classList.add("oldest");
+        }
+      }
+    }
+
+    function getWinningLine(player) {
+      return wins.find(line => line.every(index => state.board[index] === player));
+    }
+
+    function finishRound(player, line) {
+      state.locked = true;
+      state.score[player] += 1;
+      scoreXEl.textContent = state.score.X;
+      scoreOEl.textContent = state.score.O;
+      line.forEach(index => cells[index].classList.add("win"));
+      cells.forEach(cell => cell.disabled = true);
+      statusEl.textContent = `${player} hizo tateti. Nueva ronda cuando quieras.`;
+      updatePanels();
+      burst(player);
+    }
+
+    function resetBoard(countRound) {
+      state.board = Array(9).fill(null);
+      state.queues.X = [];
+      state.queues.O = [];
+      state.turn = "X";
+      state.locked = false;
+      if (countRound) state.round += 1;
+      roundEl.textContent = state.round;
+      scoreXEl.textContent = state.score.X;
+      scoreOEl.textContent = state.score.O;
+      render();
+      updateStatus();
+      updatePanels();
+    }
+
+    function updateStatus() {
+      const nextQueue = state.queues[state.turn];
+      if (nextQueue.length === 3) {
+        statusEl.textContent = `Turno de ${state.turn}. Al jugar, se borra su marca mas vieja.`;
+      } else {
+        statusEl.textContent = `Turno de ${state.turn}. Tiene ${nextQueue.length} de 3 marcas vivas.`;
+      }
+    }
+
+    function updatePanels() {
+      panelX.classList.toggle("active", state.turn === "X" && !state.locked);
+      panelO.classList.toggle("active", state.turn === "O" && !state.locked);
+    }
+
+    function burst(player) {
+      const colors = player === "X"
+        ? ["#e84f3d", "#ffe45c", "#fffaf0"]
+        : ["#177d72", "#ffe45c", "#fffaf0"];
+
+      for (let i = 0; i < 34; i++) {
+        const piece = document.createElement("i");
+        piece.className = "piece";
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.top = `${-20 - Math.random() * 80}px`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.animationDelay = `${Math.random() * 180}ms`;
+        piece.style.transform = `rotate(${Math.random() * 180}deg)`;
+        confetti.appendChild(piece);
+        setTimeout(() => piece.remove(), 1200);
+      }
+    }
+
+    render();
+    markOldest();
+  </script>
+</body>
+</html>

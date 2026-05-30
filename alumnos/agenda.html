@@ -16,6 +16,7 @@
       --line:     rgba(33, 25, 18, .13);
       --radius:   22px;
       --avatar:   88px;
+      --grid-gap: 16px;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -127,6 +128,16 @@
       gap: 6px;
     }
 
+    .tabs-divider {
+      align-self: center;
+      color: rgba(33, 25, 18, .35);
+      font-size: .9rem;
+      font-weight: 700;
+      padding: 0 2px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     .tab {
       padding: .45rem .9rem;
       border: 1.5px solid rgba(33, 25, 18, .18);
@@ -160,8 +171,9 @@
     /* ── Grid ─────────────────────────────────────────── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(350px, calc((100% - (2 * var(--grid-gap))) / 3)));
+      justify-content: center;
+      gap: var(--grid-gap);
     }
 
     /* ── Card ─────────────────────────────────────────── */
@@ -198,6 +210,23 @@
         color-mix(in oklab, var(--accent, #8c3b2a) 16%, transparent), transparent 40%);
       pointer-events: none;
     }
+
+    /* ── Grade badge ─────────────────────────────────── */
+    .grade-badge {
+      position: absolute;
+      top: 4px;
+      right: 12px;
+      font-size: 2.0rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.05em;
+      z-index: 2;
+      pointer-events: none;
+      opacity: .88;
+    }
+    .grade-green  { color: #1f7a49; }
+    .grade-yellow { color: #a07b10; }
+    .grade-red    { color: #9f2d2d; }
 
     /* ── Card top ─────────────────────────────────────── */
     .card-top {
@@ -307,6 +336,21 @@
       gap: 7px;
     }
 
+    .card-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: stretch;
+      gap: 12px 16px;
+    }
+
+    .detail-list {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      align-self: start;
+    }
+
     .divider {
       border: none;
       border-top: 1px solid rgba(33, 25, 18, .09);
@@ -338,9 +382,128 @@
 
     .detail-value a:hover { color: #8c3b2a; }
 
+    .detail-code {
+      width: 100%;
+      padding-top: 4px;
+      border-top: 1px solid rgba(33, 25, 18, .08);
+    }
+
+    .detail-code .detail-value {
+      font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, Liberation Mono, monospace;
+      font-size: .78rem;
+      letter-spacing: .01em;
+    }
+
     .detail-empty {
       font-style: italic;
       opacity: .5;
+    }
+
+    .practicos-status {
+      display: flex;
+      flex-wrap: nowrap;
+      width: 100%;
+      justify-content: flex-end;
+      align-items: center;
+      align-self: start;
+      max-width: min(100%, 11.5rem);
+    }
+
+    .practicos-track {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: flex-end;
+      gap: 1px;
+      font-size: .82rem;
+      line-height: 1;
+      max-width: 11.5rem;
+      text-shadow: 0 1px 0 rgba(255,255,255,.65);
+    }
+
+    .status-rail {
+      min-width: 9.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-self: end;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .attendance-summary {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    .attendance-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      /* min-width: 60px; */
+      padding: 0 8px;
+      /* border-radius: 999px; */
+      /* border: 1px solid rgba(33, 25, 18, .12); */
+      /* background: rgba(255, 255, 255, .7); */
+      color: var(--muted);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .attendance-pill-x2 {
+      padding: 0 6px;
+      font-size: 1.5rem;
+      /* font-weight: 800; */
+    }
+
+    .attendance-pill.is-present {
+      background: rgba(56, 142, 60, .12);
+      border-color: rgba(56, 142, 60, .22);
+      color: #2e6b31;
+    }
+
+    .attendance-pill.is-absent {
+      background: rgba(140, 59, 42, .1);
+      border-color: rgba(140, 59, 42, .16);
+      color: #8c3b2a;
+    }
+
+    .practico-dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.02em;
+      height: 1.02em;
+    }
+
+    .practico-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: inherit;
+      text-decoration: none;
+      border-radius: 6px;
+      padding: 1px;
+      transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .practico-link:hover {
+      background: rgba(255, 255, 255, .55);
+      transform: translateY(-1px);
+    }
+
+    .practico-link:focus-visible {
+      outline: none;
+      background: rgba(255, 255, 255, .72);
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent, #8c3b2a) 45%, white);
     }
 
     /* ── Loading / Error state ────────────────────────── */
@@ -378,13 +541,24 @@
       :root { --avatar: 72px; }
       .page { padding: 16px 0 40px; }
       .header { padding: 18px 16px; }
-      .grid { gap: 12px; }
+      .grid { --grid-gap: 12px; }
       h1 { font-size: clamp(2rem, 10vw, 3rem); }
-    }
-
-    @media (min-width: 1040px) {
-      .grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+      .card-meta { grid-template-columns: 1fr; }
+      .practicos-status {
+        justify-content: flex-start;
+        align-items: flex-start;
+        max-width: 100%;
+      }
+      .practicos-track {
+        justify-content: flex-start;
+        max-width: none;
+      }
+      .status-rail {
+        min-width: 0;
+        align-items: flex-start;
+      }
+      .attendance-summary {
+        justify-content: flex-start;
       }
     }
 
@@ -411,14 +585,14 @@
             <circle cx="6.5" cy="6.5" r="5.2"/>
             <line x1="10.3" y1="10.3" x2="14" y2="14"/>
           </svg>
-          <input type="search" id="search" placeholder="Buscar nombre, legajo, GitHub… o sin-foto/sin-github/sin-telefono" autocomplete="off">
+          <input type="search" id="search" placeholder="Buscar por nombre, legajo, código, GitHub, sin-telefono o tp1 aprobado / tp2 revision" autocomplete="off">
         </div>
         <div class="tabs">
-          <button class="tab active" data-filter="todos">Todos</button>
-          <button class="tab" data-filter="C7">C7</button>
-          <button class="tab" data-filter="C9">C9</button>
-          <button class="tab" data-filter="sin-foto">Sin Foto</button>
-          <button class="tab" data-filter="sin-github">Sin GitHub</button>
+          <button class="tab active" data-filter="C7" data-filter-group="commission" data-label="C7">C7</button>
+          <button class="tab active" data-filter="C9" data-filter-group="commission" data-label="C9">C9</button>
+          <span class="tabs-divider" aria-hidden="true">|</span>
+          <button class="tab active" data-filter="presentes" data-filter-group="attendance" data-label="Presentes">Presentes</button>
+          <button class="tab active" data-filter="ausentes" data-filter-group="attendance" data-label="Ausentes">Ausentes</button>
         </div>
       </div>
     </header>
@@ -437,6 +611,61 @@
       '#8c3b2a', '#a85a1d', '#7c6826', '#4f6f3b',
       '#2b6671', '#3b5a8c', '#6e3b8c', '#8c3b6e',
     ];
+
+    const GITHUB_OWNER = 'AlejandroDiBattista';
+    const GITHUB_REPO = 'tup26-p3';
+    const GITHUB_BRANCH = 'main';
+    const FILTERS_STORAGE_KEY = 'agenda-filters-state';
+    const LEGACY_PRESENTES_FILTER_STORAGE_KEY = 'agenda-filter-presentes';
+    const COMMISSION_FILTER_DEFINITIONS = [
+      { value: 'C7', label: 'C7' },
+      { value: 'C9', label: 'C9' },
+    ];
+    const ATTENDANCE_FILTER_DEFINITIONS = [
+      { value: 'presentes', label: 'Presentes' },
+      { value: 'ausentes', label: 'Ausentes' },
+    ];
+    const VALID_COMMISSION_FILTERS = new Set(COMMISSION_FILTER_DEFINITIONS.map(filter => filter.value));
+    const VALID_ATTENDANCE_FILTERS = new Set(ATTENDANCE_FILTER_DEFINITIONS.map(filter => filter.value));
+
+    function encodedRepoPath(...segmentos) {
+      return segmentos.map(segmento => encodeURIComponent(segmento)).join('/');
+    }
+
+    function githubRawUrl(...segmentos) {
+      return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${encodedRepoPath(...segmentos)}`;
+    }
+
+    function localPracticosBasePath() {
+      if (window.location.protocol === 'file:') {
+        return '../practicos';
+      }
+
+      return window.location.pathname.includes('/alumnos/') ? '../practicos' : '';
+    }
+
+    function fotoCandidates(carpetaNombre) {
+      const archivos = ['foto.png', 'foto.jpg', 'foto.jpeg'];
+      const ubicaciones = ['', 'tp1/'];
+      const paths = [];
+      const localBase = localPracticosBasePath();
+
+      if (localBase) {
+        for (const ubicacion of ubicaciones) {
+          for (const archivo of archivos) {
+            paths.push(`${localBase}/${carpetaNombre}/${ubicacion}${archivo}`);
+          }
+        }
+      }
+
+      for (const ubicacion of ubicaciones) {
+        for (const archivo of archivos) {
+          paths.push(githubRawUrl('practicos', carpetaNombre, `${ubicacion}${archivo}`));
+        }
+      }
+
+      return paths;
+    }
 
     function accentFor(legajo) {
       return ACCENTS[legajo % ACCENTS.length];
@@ -469,7 +698,7 @@
 
         // split on 2+ consecutive spaces
         const cols = line.trim().split(/\s{2,}/);
-        if (cols.length < 5) continue;
+        if (cols.length < 9) continue;
 
         const legajo = parseInt(cols[0], 10);
         if (isNaN(legajo)) continue;
@@ -478,23 +707,48 @@
         const telefonoRaw    = cols[2].trim();
         const fotoRaw        = cols[3].trim();
         const gitHubRaw      = cols[4].trim();
+        const practicosRaw   = cols[5].trim();
+        const presenteRaw    = cols[7].trim();
+        const asistenciasRaw = cols[8].trim();
+        const notaRaw        = cols[9]?.trim() ?? '';
+        const codigoRaw      = cols[10]?.trim() ?? '';
 
-        const comma    = apellidoNombre.indexOf(',');
-        const apellido = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;
-        const nombre   = comma >= 0 ? apellidoNombre.slice(comma + 1).trim() : '';
+        const comma     = apellidoNombre.indexOf(',');
+        const apellido  = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;
+        const nombre    = comma >= 0 ? apellidoNombre.slice(comma + 1).trim() : '';
 
-        const telefono = (telefonoRaw === '—' || telefonoRaw === '-') ? '' : telefonoRaw;
-        const gitHub   = (gitHubRaw   === '—' || gitHubRaw   === '-') ? '' : gitHubRaw;
-        const tieneFoto = fotoRaw === 'Si';
+        const telefono  = (telefonoRaw === '—' || telefonoRaw === '-') ? '' : telefonoRaw;
+        const gitHub    = (gitHubRaw   === '—' || gitHubRaw   === '-') ? '' : gitHubRaw;
+        const codigo    = (codigoRaw   === '—' || codigoRaw   === '-') ? '' : codigoRaw;
+        const tieneFoto = /^(si|sí|true|yes)$/i.test(fotoRaw);
+        const presente  = /^(si|sí|true|yes)$/i.test(presenteRaw);
+        const asistencias = Number.parseInt(asistenciasRaw, 10);
 
         // CarpetaNombre exactly mirrors C# CarpetaNombre property
         const carpetaNombre = `${legajo} - ${apellido}, ${nombre}`;
-        const fotoPaths     = [
-          `../practicos/${carpetaNombre}/foto.png`,
-          `../practicos/${carpetaNombre}/foto.jpg`,
-        ];
-
-        alumnos.push({ legajo, apellido, nombre, apellidoNombre, telefono, gitHub, tieneFoto, comision, fotoPath: '', fotoPaths });
+        const fotoPaths     = tieneFoto ? fotoCandidates(carpetaNombre) : [];
+        const notaParts     = notaRaw
+        const codigoLegajo  = notaParts.length >= 1 ? Number.parseInt(notaParts[0], 10) : null;
+        const nota = parseInt(notaRaw);
+        alumnos.push({
+          legajo,
+          apellido,
+          nombre,
+          apellidoNombre,
+          telefono,
+          gitHub,
+          tieneFoto,
+          comision,
+          practicosRaw,
+          presente,
+          asistencias: Number.isNaN(asistencias) ? 0 : asistencias,
+          codigo,
+          codigoLegajo: Number.isNaN(codigoLegajo) ? null : codigoLegajo,
+          carpetaNombre,
+          fotoPath: '',
+          fotoPaths,
+          nota
+        });
       }
 
       return alumnos;
@@ -505,10 +759,150 @@
       return (apellido.charAt(0) + (nombre.charAt(0) || '')).toUpperCase();
     }
 
-    function renderCard(alumno, idx) {
+    function extraerEstados(texto) {
+      return (texto.match(/[🟢🟡🟠🔴⚪🟤]/gu) || []).map(emoji => emoji === '⚪' ? '⚪️' : emoji);
+    }
+
+    function contarEstados(texto) {
+      return extraerEstados(texto).length;
+    }
+
+    function calcularTotalPracticos(alumnos) {
+      const estadosPorAlumno = alumnos.map(alumno => extraerEstados(alumno.practicosRaw || ''));
+      const maxEstados = Math.max(...estadosPorAlumno.map(estados => estados.length), 0);
+
+      if (maxEstados === 0) {
+        return 0;
+      }
+
+      for (let indice = 0; indice < maxEstados; indice++) {
+        const columnaVacia = estadosPorAlumno.every(estados => (estados[indice] || '⚪️') === '⚪️');
+
+        if (columnaVacia) {
+          return indice;
+        }
+      }
+
+      return maxEstados;
+    }
+
+    function normalizarEstados(texto, total) {
+      const estados = extraerEstados(texto);
+
+      while (estados.length < total) {
+        estados.push('⚪️');
+      }
+
+      return estados.slice(0, total);
+    }
+
+    function nombreEstado(estado) {
+      switch (estado) {
+        case '🟢': return 'Aprobado';
+        case '🟡': return 'Pendiente';
+        case '🟠': return 'Revisión';
+        case '🔴': return 'Desaprobado';
+        case '⚫️': return 'Mal';
+        case '⚪️': return 'Sin estado';
+        default: return 'Sin estado';
+      }
+    }
+
+    function normalizeSearchToken(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+    }
+
+    function estadoDesdeBusqueda(value) {
+      switch (normalizeSearchToken(value)) {
+        case 'aprobado':
+        case 'aprobada':
+        case 'aprobados':
+        case 'aprobadas':
+          return '🟢';
+        case 'pendiente':
+        case 'pendientes':
+          return '🟡';
+        case 'revision':
+        case 'revisar':
+        case 'revisado':
+        case 'revisados':
+          return '🟠';
+        case 'desaprobado':
+        case 'desaprobada':
+        case 'desaprobados':
+        case 'desaprobadas':
+          return '🔴';
+        case 'mal':
+          return '⚫️';
+        case 'sin-estado':
+        case 'sinestado':
+        case 'sin_estado':
+        case 'vacio':
+        case 'vacia':
+          return '⚪️';
+        default:
+          return null;
+      }
+    }
+
+    function githubPracticoUrl(alumno, numeroPractico) {
+      const path = encodedRepoPath('practicos', alumno.carpetaNombre, `tp${numeroPractico}`);
+
+      return `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/tree/${GITHUB_BRANCH}/${path}`;
+    }
+
+    function renderPracticos(alumno, totalPracticos) {
+      if (totalPracticos <= 0) {
+        return '';
+      }
+
+      const estados = normalizarEstados(alumno.practicosRaw || '', totalPracticos);
+      const titulo = `Estado de ${totalPracticos} práctico${totalPracticos !== 1 ? 's' : ''}`;
+
+      return `
+        <div class="practicos-status" role="group" title="${escHtml(titulo)}" aria-label="${escHtml(titulo)}">
+          <div class="practicos-track">
+            ${estados.map((estado, indice) => {
+              const numeroPractico = indice + 1;
+              const href = githubPracticoUrl(alumno, numeroPractico);
+              const detalle = `Abrir TP${numeroPractico} en GitHub · ${nombreEstado(estado)}`;
+
+              return `<a class="practico-link" href="${escHtml(href)}" target="_blank" rel="noopener noreferrer" title="${escHtml(detalle)}" aria-label="${escHtml(detalle)}"><span class="practico-dot">${escHtml(estado)}</span></a>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
+    function renderAttendance(alumno) {
+      const presente      = alumno.presente ? 'Sí' : 'No';
+      const presenteClass = alumno.presente ? 'is-present' : 'is-absent';
+      const asistencias = Number.isFinite(alumno.asistencias) ? alumno.asistencias : 0;
+
+      return `
+        <div class="attendance-summary" aria-label="Presencia y asistencias">
+          <span class="attendance-pill" title="Cantidad de asistencias registradas">${escHtml(asistencias)}</span>
+          <span class="attendance-pill-x2 ${presenteClass}" title="Presente en clase">${alumno.presente ? '🔵' : '⚪'}</span>
+        </div>`;
+    }
+
+    function notaClass(nota) {
+      if (nota >= 8) return 'grade-green';
+      if (nota >= 4) return 'grade-yellow';
+      return 'grade-red';
+    }
+
+    function renderCard(alumno, idx, totalPracticos) {
       const accent  = accentFor(alumno.legajo);
       const inits   = initials(alumno.apellido, alumno.nombre);
       const comBadge = `badge-comision-${alumno.comision.toLowerCase()}`;
+      const codigoLegajoNoCoincide = alumno.codigoLegajo != null && alumno.codigoLegajo !== alumno.legajo;
+      const codigoBadge = `${alumno.codigo.length > 0 ? "🚨" : (alumno.nota >= 8 ? "🎖️" : "")}`;
+      const notaHtml = alumno.nota != null
+        ? `<span class="grade-badge ${notaClass(alumno.nota)}">${alumno.nota}${codigoBadge}</span>`
+        : '';
 
       const phoneHtml = alumno.telefono
         ? `<span class="detail-value">${escHtml(alumno.telefono)}</span>`
@@ -517,6 +911,10 @@
       const ghHtml = alumno.gitHub
         ? `<span class="detail-value"><a href="https://github.com/${escHtml(alumno.gitHub)}" target="_blank" rel="noopener noreferrer">${escHtml(alumno.gitHub)}</a></span>`
         : `<span class="detail-value detail-empty">sin GitHub</span>`;
+
+      const codigoHtml = alumno.codigo
+        ? `<div class="detail detail-code"><span class="detail-value">Código: ${escHtml(alumno.codigo)}</span></div>`
+        : '';
 
       const avatarHtml = alumno.tieneFoto && alumno.fotoPath
         ? `<img class="avatar-img"
@@ -529,12 +927,13 @@
 
       return `
         <article class="card" style="--accent:${accent};--i:${idx}" role="listitem">
+          ${notaHtml}
           <div class="card-top">
             <div class="avatar-wrap">
               ${avatarHtml}
             </div>
             <div class="identity">
-              <p class="card-eyebrow">Tarjeta personal</p>
+              <p class="card-eyebrow">Perfil del alumno</p>
               <h2 class="card-name">${escHtml(alumno.apellidoNombre)}</h2>
               <div class="badges">
                 <span class="badge">${alumno.legajo}</span>
@@ -544,19 +943,28 @@
           </div>
           <div class="card-body">
             <hr class="divider">
-            <div class="detail">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 6.5C13 11 8 14.5 8 14.5S3 11 3 6.5a5 5 0 0 1 10 0Z"/>
-                <circle cx="8" cy="6.5" r="1.8"/>
-              </svg>
-              ${phoneHtml}
+            <div class="card-meta">
+              <div class="detail-list">
+                <div class="detail">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 6.5C13 11 8 14.5 8 14.5S3 11 3 6.5a5 5 0 0 1 10 0Z"/>
+                    <circle cx="8" cy="6.5" r="1.8"/>
+                  </svg>
+                  ${phoneHtml}
+                </div>
+                <div class="detail">
+                  <svg viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+                  </svg>
+                  ${ghHtml}
+                </div>
+              </div>
+              <div class="status-rail">
+                ${renderPracticos(alumno, totalPracticos)}
+                ${renderAttendance(alumno)}
+              </div>
             </div>
-            <div class="detail">
-              <svg viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
-              </svg>
-              ${ghHtml}
-            </div>
+            ${codigoHtml}
           </div>
         </article>`;
     }
@@ -582,7 +990,7 @@
       for (const candidate of alumno.fotoPaths) {
         const found = await imageExists(candidate);
         if (found) {
-          alumno.fotoPath = found;
+          alumno.fotoPath  = found;
           alumno.tieneFoto = true;
           return alumno;
         }
@@ -595,76 +1003,208 @@
 
     // ── State ─────────────────────────────────────────────────────────────────
     let allAlumnos = [];
-    let activeFilter = 'todos';
+    const activeCommissionFilters = new Set(COMMISSION_FILTER_DEFINITIONS.map(filter => filter.value));
+    const activeAttendanceFilters = new Set(ATTENDANCE_FILTER_DEFINITIONS.map(filter => filter.value));
     let searchQuery  = '';
+    let totalPracticos = 0;
+
+    function restoreFiltersState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(FILTERS_STORAGE_KEY) || 'null');
+
+        if (saved && typeof saved === 'object') {
+          if (Array.isArray(saved.commissions)) {
+            activeCommissionFilters.clear();
+            saved.commissions
+              .filter(filter => VALID_COMMISSION_FILTERS.has(filter))
+              .forEach(filter => activeCommissionFilters.add(filter));
+          } else if (saved.scope === 'C7' || saved.scope === 'C9') {
+            activeCommissionFilters.clear();
+            activeCommissionFilters.add(saved.scope);
+          }
+
+          if (Array.isArray(saved.attendance)) {
+            activeAttendanceFilters.clear();
+            saved.attendance
+              .filter(filter => VALID_ATTENDANCE_FILTERS.has(filter))
+              .forEach(filter => activeAttendanceFilters.add(filter));
+          } else if (Array.isArray(saved.toggles)) {
+            activeAttendanceFilters.clear();
+
+            if (saved.toggles.includes('presentes')) {
+              activeAttendanceFilters.add('presentes');
+            } else {
+              ATTENDANCE_FILTER_DEFINITIONS.forEach(filter => activeAttendanceFilters.add(filter.value));
+            }
+          }
+
+          if (typeof saved.searchQuery === 'string') {
+            searchQuery = saved.searchQuery;
+          }
+
+          return;
+        }
+
+        if (localStorage.getItem(LEGACY_PRESENTES_FILTER_STORAGE_KEY) === '1') {
+          activeAttendanceFilters.clear();
+          activeAttendanceFilters.add('presentes');
+        }
+      } catch {
+        // Si localStorage no está disponible, seguimos con el estado en memoria.
+      }
+    }
+
+    function persistFiltersState() {
+      try {
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify({
+          commissions: [...activeCommissionFilters].filter(filter => VALID_COMMISSION_FILTERS.has(filter)),
+          attendance: [...activeAttendanceFilters].filter(filter => VALID_ATTENDANCE_FILTERS.has(filter)),
+          searchQuery,
+        }));
+        localStorage.removeItem(LEGACY_PRESENTES_FILTER_STORAGE_KEY);
+      } catch {
+        // Si localStorage no está disponible, seguimos con el estado en memoria.
+      }
+    }
 
     function parseSearchQuery(query) {
-      const normalized = query.toLowerCase();
+      const normalized = normalizeSearchToken(query);
       const terms = normalized.split(/[\s,]+/).filter(Boolean);
       const commissionTerms = ['c7', 'c9'].filter(term => terms.includes(term));
+      const practicoFilters = [];
+      const consumedIndexes = new Set();
+
+      for (let index = 0; index < terms.length; index++) {
+        const term = terms[index];
+        const tpMatch = term.match(/^tp(\d+)$/);
+        if (!tpMatch) continue;
+
+        const practico = Number.parseInt(tpMatch[1], 10);
+        let estado = null;
+
+        for (let cursor = index + 1; cursor < terms.length; cursor++) {
+          const candidate = terms[cursor];
+          if (candidate === 'para' || candidate === 'en') {
+            continue;
+          }
+
+          estado = estadoDesdeBusqueda(candidate);
+          if (estado) {
+            practicoFilters.push({ practico, estado });
+            consumedIndexes.add(index);
+            consumedIndexes.add(cursor);
+          }
+          break;
+        }
+      }
 
       return {
-        requireSinFoto: terms.includes('sin-foto'),
-        requireSinGithub: terms.includes('sin-github'),
         requireSinTelefono: terms.includes('sin-telefono'),
         commissions: commissionTerms,
+        practicos: practicoFilters,
         text: terms
-          .filter(term => term !== 'sin-foto' && term !== 'sin-github' && term !== 'sin-telefono' && term !== 'c7' && term !== 'c9')
+          .filter((term, index) => term !== 'sin-telefono' && term !== 'c7' && term !== 'c9' && term !== 'para' && term !== 'en' && !consumedIndexes.has(index))
           .join(' ')
           .trim(),
       };
     }
 
-    function matchesFilter(alumno, filter) {
-      switch (filter) {
-        case 'todos':
-          return true;
-        case 'sin-foto':
-          return !alumno.tieneFoto;
-        case 'sin-github':
-          return !alumno.gitHub;
-        default:
-          return alumno.comision === filter;
+    function matchesPracticoFilters(alumno, practicoFilters) {
+      if (!practicoFilters.length) {
+        return true;
       }
+
+      const total = Math.max(totalPracticos, ...practicoFilters.map(filter => filter.practico));
+      const estados = normalizarEstados(alumno.practicosRaw || '', total);
+
+      return practicoFilters.every(filter => estados[filter.practico - 1] === filter.estado);
     }
 
-    function getVisible() {
-      const parsed = parseSearchQuery(searchQuery);
+    function matchesSearch(alumno, parsed) {
+      if (parsed.commissions.length > 0 && !parsed.commissions.includes(alumno.comision.toLowerCase())) return false;
+      if (parsed.requireSinTelefono && !!alumno.telefono) return false;
+      if (!matchesPracticoFilters(alumno, parsed.practicos)) return false;
 
-      return allAlumnos.filter(a => {
-        if (!matchesFilter(a, activeFilter)) return false;
-        if (parsed.commissions.length > 0 && !parsed.commissions.includes(a.comision.toLowerCase())) return false;
-        if (parsed.requireSinFoto && a.tieneFoto) return false;
-        if (parsed.requireSinGithub && !!a.gitHub) return false;
-        if (parsed.requireSinTelefono && !!a.telefono) return false;
+      if (!parsed.text) return true;
 
-        if (!parsed.text) return true;
-        const q = parsed.text;
-        return (
-          a.apellido.toLowerCase().includes(q) ||
-          a.nombre.toLowerCase().includes(q) ||
-          a.apellidoNombre.toLowerCase().includes(q) ||
-          String(a.legajo).includes(q) ||
-          a.gitHub.toLowerCase().includes(q) ||
-          a.telefono.toLowerCase().includes(q)
-        );
+      const q = parsed.text;
+      return (
+        alumno.apellido.toLowerCase().includes(q) ||
+        alumno.nombre.toLowerCase().includes(q) ||
+        alumno.apellidoNombre.toLowerCase().includes(q) ||
+        String(alumno.legajo).includes(q) ||
+        alumno.codigo.toLowerCase().includes(q) ||
+        alumno.gitHub.toLowerCase().includes(q) ||
+        alumno.telefono.toLowerCase().includes(q)
+      );
+    }
+
+    function matchesCommissionFilters(alumno, selectedFilters = activeCommissionFilters) {
+      return selectedFilters.has(alumno.comision);
+    }
+
+    function matchesAttendanceFilters(alumno, selectedFilters = activeAttendanceFilters) {
+      return alumno.presente
+        ? selectedFilters.has('presentes')
+        : selectedFilters.has('ausentes');
+    }
+
+    function matchesFilters(alumno, parsed, commissionFilters = activeCommissionFilters, attendanceFilters = activeAttendanceFilters) {
+      return matchesCommissionFilters(alumno, commissionFilters)
+        && matchesAttendanceFilters(alumno, attendanceFilters)
+        && matchesSearch(alumno, parsed);
+    }
+
+    function countMatchingAlumnos(parsed, commissionFilters = activeCommissionFilters, attendanceFilters = activeAttendanceFilters) {
+      return allAlumnos.filter(alumno => matchesFilters(alumno, parsed, commissionFilters, attendanceFilters)).length;
+    }
+
+    function countBaseSelection() {
+      return allAlumnos.filter(alumno => (
+        matchesCommissionFilters(alumno)
+        && matchesAttendanceFilters(alumno)
+      )).length;
+    }
+
+    function updateTabStates(parsed) {
+      document.querySelectorAll('.tab').forEach(btn => {
+        const group = btn.dataset.filterGroup;
+        const filter = btn.dataset.filter;
+        const isActive = group === 'commission'
+          ? activeCommissionFilters.has(filter)
+          : activeAttendanceFilters.has(filter);
+        const label = btn.dataset.label || filter;
+        const count = group === 'commission'
+          ? countMatchingAlumnos(parsed, new Set([filter]), activeAttendanceFilters)
+          : countMatchingAlumnos(parsed, activeCommissionFilters, new Set([filter]));
+
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+        btn.textContent = `${label} (${count})`;
       });
     }
 
+    function getVisible(parsed) {
+      return allAlumnos.filter(alumno => matchesFilters(alumno, parsed));
+    }
+
     function render() {
-      const visible = getVisible();
+      const parsed = parseSearchQuery(searchQuery);
+      const visible = getVisible(parsed);
       const grid    = document.getElementById('grid');
       const counter = document.getElementById('counter');
 
+      updateTabStates(parsed);
+
       if (visible.length === 0) {
         grid.innerHTML = '<div class="state">Sin resultados para la búsqueda.</div>';
-        counter.textContent = '';
+        counter.textContent = '0 alumnos';
         return;
       }
 
-      grid.innerHTML = visible.map((a, i) => renderCard(a, i)).join('');
+      grid.innerHTML = visible.map((a, i) => renderCard(a, i, totalPracticos)).join('');
 
-      const total = allAlumnos.filter(a => matchesFilter(a, activeFilter)).length;
+      const total = countBaseSelection();
 
       counter.textContent = visible.length === total
         ? `${total} alumno${total !== 1 ? 's' : ''}`
@@ -672,16 +1212,32 @@
     }
 
     // ── Event listeners ───────────────────────────────────────────────────────
-    document.getElementById('search').addEventListener('input', e => {
+    const searchInput = document.getElementById('search');
+
+    restoreFiltersState();
+    searchInput.value = searchQuery;
+
+    searchInput.addEventListener('input', e => {
       searchQuery = e.target.value.trim();
+      persistFiltersState();
       render();
     });
 
     document.querySelectorAll('.tab').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeFilter = btn.dataset.filter;
+        const group = btn.dataset.filterGroup;
+        const filter = btn.dataset.filter;
+        const activeFilters = group === 'commission'
+          ? activeCommissionFilters
+          : activeAttendanceFilters;
+
+        if (activeFilters.has(filter)) {
+          activeFilters.delete(filter);
+        } else {
+          activeFilters.add(filter);
+        }
+
+        persistFiltersState();
         render();
       });
     });
@@ -694,6 +1250,7 @@
       })
       .then(async text => {
         allAlumnos = await Promise.all(parseAlumnos(text).map(resolveAlumnoPhoto));
+        totalPracticos = calcularTotalPracticos(allAlumnos);
         render();
       })
       .catch(() => {

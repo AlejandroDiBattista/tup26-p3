@@ -1,15 +1,12 @@
 import json
 from dataclasses import dataclass
 
-
 class ParserError(Exception):
     pass
-
 
 @dataclass
 class NumberNode:
     value: float
-
 
 @dataclass
 class BinaryOpNode:
@@ -17,12 +14,10 @@ class BinaryOpNode:
     left: object
     right: object
 
-
 @dataclass
 class UnaryOpNode:
     op: str
     operand: object
-
 
 class Lexer:
     def __init__(self, text: str):
@@ -142,7 +137,6 @@ class Parser:
 
         raise ParserError(f"Token inesperado: {token_type}")
 
-
 class Evaluator:
     def visit(self, node):
         if isinstance(node, NumberNode):
@@ -169,7 +163,6 @@ class Evaluator:
 
         raise ParserError("Nodo AST inválido")
 
-
 def node_to_dict(node):
     if isinstance(node, NumberNode):
         return {"type": "Number", "value": node.value}
@@ -191,10 +184,8 @@ def node_to_dict(node):
 
     raise ParserError("Nodo AST inválido")
 
-
 def ast_to_json(node):
     return json.dumps(node_to_dict(node), indent=2, ensure_ascii=False)
-
 
 def format_ast_tree(node, prefix="", is_last=True):
     connector = "└── " if is_last else "├── "
@@ -222,11 +213,9 @@ def format_ast_tree(node, prefix="", is_last=True):
 def build_ast(expression: str):
     return Parser(expression).parse()
 
-
 def evaluate(expression: str) -> float:
     ast = build_ast(expression)
     return Evaluator().visit(ast)
-
 
 def main():
     print("Analizador recursivo descendente con AST")

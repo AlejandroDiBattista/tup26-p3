@@ -1,0 +1,42 @@
+[
+  {
+    "Id": 2,
+    "Nombre": "Ana",
+    "Telefonos": "2222222",
+    "Email": "juan@gmail.com",
+    "Notas": "",
+    "Favorito": true
+  },
+  {
+    "Id": 3,
+    "Nombre": "Susana",
+    "Telefonos": "38152312425",
+    "Email": "susanitatieneunraton@gmail.com",
+    "Notas": "",
+    "Favorito": true
+  },
+  {
+    "Id": 4,
+    "Nombre": "Juan",
+    "Telefonos": "3815589063",
+    "Email": "juandecima@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  },
+  {
+    "Id": 5,
+    "Nombre": "Leandro Lopez",
+    "Telefonos": "33443433422",
+    "Email": "leanlop@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  },
+  {
+    "Id": 6,
+    "Nombre": "Facu Moran DJ",
+    "Telefonos": "8456735235",
+    "Email": "DJMORANELMEJOR@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  }
+]

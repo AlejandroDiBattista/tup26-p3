@@ -4,49 +4,45 @@ using System.Text;
 namespace VisiCalc;
 
 internal sealed class Spreadsheet {
-    private readonly Dictionary<CellAddress, string> _cells = [];
+    private readonly Dictionary<CellAddress, string> cells = [];
 
     public Spreadsheet(int rowCount = 20, int columnCount = 8) {
         RowCount = Math.Max(1, rowCount);
         ColumnCount = Math.Max(1, columnCount);
     }
 
-    public int RowCount {
-        get; private set;
-    }
+    public int RowCount { get; private set; }
 
-    public int ColumnCount {
-        get; private set;
-    }
+    public int ColumnCount { get; private set; }
 
-    public string GetRaw(CellAddress address) => _cells.TryGetValue(address, out string? raw) ? raw : string.Empty;
+    public string GetRaw(CellAddress address) => cells.TryGetValue(address, out string? raw) ? raw : string.Empty;
 
     public void SetRaw(CellAddress address, string? raw) {
         EnsureContains(address);
 
         raw = raw?.Trim() ?? string.Empty;
         if (raw.Length == 0) {
-            _cells.Remove(address);
+            cells.Remove(address);
             return;
         }
 
-        _cells[address] = raw;
+        cells[address] = raw;
     }
 
-    public void Clear(CellAddress address) => _cells.Remove(address);
+    public void Clear(CellAddress address) => cells.Remove(address);
 
-    public void ClearAll() => _cells.Clear();
+    public void ClearAll() => cells.Clear();
 
     public void Resize(int rows, int columns) {
         RowCount = Math.Max(1, rows);
         ColumnCount = Math.Max(1, columns);
 
-        List<CellAddress> outsideBounds = _cells.Keys
+        List<CellAddress> outsideBounds = cells.Keys
             .Where(address => address.Row >= RowCount || address.Column >= ColumnCount)
             .ToList();
 
         foreach (CellAddress address in outsideBounds) {
-            _cells.Remove(address);
+            cells.Remove(address);
         }
     }
 
@@ -63,10 +59,10 @@ internal sealed class Spreadsheet {
 
         CellValue value = Evaluate(address);
         return value.Kind switch {
-            CellValueKind.Empty  => new CellView(string.Empty, AlignRight: false, IsError: false),
+            CellValueKind.Empty => new CellView(string.Empty, AlignRight: false, IsError: false),
             CellValueKind.Number => new CellView(FormatNumber(value.Number), AlignRight: true, IsError: false),
-            CellValueKind.Text   => new CellView(value.Text, AlignRight: false, IsError: false),
-            CellValueKind.Error  => new CellView("#ERR", AlignRight: false, IsError: true),
+            CellValueKind.Text => new CellView(value.Text, AlignRight: false, IsError: false),
+            CellValueKind.Error => new CellView("#ERR", AlignRight: false, IsError: true),
             _ => new CellView("?", AlignRight: false, IsError: true)
         };
     }
@@ -75,10 +71,10 @@ internal sealed class Spreadsheet {
         string raw = GetRaw(address);
         CellValue value = Evaluate(address);
         string rendered = value.Kind switch {
-            CellValueKind.Empty  => "(vacia)",
+            CellValueKind.Empty => "(vacia)",
             CellValueKind.Number => FormatNumber(value.Number),
-            CellValueKind.Text   => value.Text,
-            CellValueKind.Error  => $"ERROR: {value.Text}",
+            CellValueKind.Text => value.Text,
+            CellValueKind.Error => $"ERROR: {value.Text}",
             _ => "?"
         };
 
@@ -86,48 +82,53 @@ internal sealed class Spreadsheet {
     }
 
     public (int Rows, int Columns) GetUsedSize() {
-        if (_cells.Count == 0) {
+        if (cells.Count == 0) {
             return (1, 1);
         }
 
-        int maxRow    = _cells.Keys.Max(address => address.Row) + 1;
-        int maxColumn = _cells.Keys.Max(address => address.Column) + 1;
+        int maxRow = cells.Keys.Max(address => address.Row) + 1;
+        int maxColumn = cells.Keys.Max(address => address.Column) + 1;
         return (Math.Max(1, maxRow), Math.Max(1, maxColumn));
     }
 
-    public string ToCsv(char delimiter) {
-        (int rows, int columns) = GetUsedSize();
-        List<IReadOnlyList<string>> output = [];
+    public string ToText() {
+        IEnumerable<string> lines = cells
+            .OrderBy(entry => entry.Key.Row)
+            .ThenBy(entry => entry.Key.Column)
+            .Select(entry => $"{entry.Key}: {entry.Value}");
 
-        for (int row = 0; row < rows; row++) {
-            List<string> fields = [];
-            for (int column = 0; column < columns; column++) {
-                fields.Add(GetRaw(new CellAddress(row, column)));
-            }
-
-            output.Add(fields);
-        }
-
-        return CsvFormat.Write(output, delimiter);
+        return string.Join(Environment.NewLine, lines);
     }
 
-    public void LoadCsv(string csvText, char delimiter) {
-        List<List<string>> rows = CsvFormat.Parse(csvText, delimiter);
+    public void LoadText(string text) {
         ClearAll();
+        Resize(1, 1);
 
-        int rowCount    = Math.Max(1, rows.Count);
-        int columnCount = Math.Max(1, rows.Count == 0 ? 0 : rows.Max(row => row.Count));
-        Resize(rowCount, columnCount);
+        if (string.IsNullOrWhiteSpace(text)) {
+            return;
+        }
 
-        for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++) {
-            for (int columnIndex = 0; columnIndex < rows[rowIndex].Count; columnIndex++) {
-                SetRaw(new CellAddress(rowIndex, columnIndex), rows[rowIndex][columnIndex]);
+        string[] separators = ["\r\n", "\n", "\r"];
+        string[] lines = text.Split(separators, StringSplitOptions.None);
+
+        foreach (string line in lines) {
+            if (string.IsNullOrWhiteSpace(line)) {
+                continue;
             }
+
+            int separatorIndex = line.IndexOf(':');
+            if (separatorIndex < 0) {
+                throw new FormatException($"Linea invalida: '{line}'.");
+            }
+
+            string addressText = line[..separatorIndex].Trim();
+            string rawText = line[(separatorIndex + 1)..].TrimStart();
+            SetRaw(CellAddress.Parse(addressText), rawText);
         }
     }
 
     public string RenderSnapshot(int maxRows = 10, int maxColumns = 8) {
-        int rows    = Math.Min(RowCount, maxRows);
+        int rows = Math.Min(RowCount, maxRows);
         int columns = Math.Min(ColumnCount, maxColumns);
         const int rowHeaderWidth = 5;
         const int cellWidth = 12;
@@ -154,7 +155,7 @@ internal sealed class Spreadsheet {
         return builder.ToString();
     }
 
-    private CellValue EvaluateInternal( CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private CellValue EvaluateInternal(CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         if (cache.TryGetValue(address, out CellValue cached)) {
             return cached;
         }
@@ -184,11 +185,11 @@ internal sealed class Spreadsheet {
         }
     }
 
-    private CellValue EvaluateFormula( string formula, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private CellValue EvaluateFormula(string formula, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         try {
             FormulaParser parser = new(
                 formula,
-                resolveCell:  address      => ResolveNumericCell(address, cache, stack),
+                resolveCell: address => ResolveNumericCell(address, cache, stack),
                 resolveRange: (start, end) => ResolveRange(start, end, cache, stack));
 
             double result = parser.Parse();
@@ -202,7 +203,7 @@ internal sealed class Spreadsheet {
         }
     }
 
-    private double ResolveNumericCell( CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private double ResolveNumericCell(CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         CellValue value = EvaluateInternal(address, cache, stack);
         if (value.TryGetNumber(out double number)) {
             return number;
@@ -214,7 +215,7 @@ internal sealed class Spreadsheet {
                 : $"La celda {address} no contiene un valor numerico.");
     }
 
-    private IEnumerable<double> ResolveRange( CellAddress start, CellAddress end, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private IEnumerable<double> ResolveRange(CellAddress start, CellAddress end, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         int minRow = Math.Min(start.Row, end.Row);
         int maxRow = Math.Max(start.Row, end.Row);
         int minColumn = Math.Min(start.Column, end.Column);

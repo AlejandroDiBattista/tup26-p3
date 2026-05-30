@@ -40,6 +40,9 @@ artifacts/
 *.user
 *.rsuser
 *.suo
+*.lscache
+*.userosscache
+*.sln.docstates
 
 # Logs and temporary files
 *.log
@@ -48,3 +51,8 @@ artifacts/
 .hintrc
 /material-docente
 /apuntes/presentacion/02.050-tipos-compuestos_files/libs
+/scripts
+/.obsidian
+/apuntes/resumir
+clases/node_modules/debug/LICENSE
+/clases/node_modules

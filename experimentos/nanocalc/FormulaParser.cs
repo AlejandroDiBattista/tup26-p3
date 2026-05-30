@@ -2,58 +2,47 @@ using System.Globalization;
 
 namespace NanoCalc;
 
-internal static class FormulaParser
-{
-    public static ExpressionNode ParseExpression(string text, CellAddress owner)
-    {
+internal static class FormulaParser {
+    public static ExpressionNode ParseExpression(string text, CellAddress owner) {
         var parser = new Parser(text, owner);
         return parser.Parse();
     }
 
-    public static bool IsIdentifier(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
+    public static bool IsIdentifier(string text) {
+        if (string.IsNullOrWhiteSpace(text)) {
             return false;
         }
 
-        if (!char.IsLetter(text[0]) && text[0] != '_')
-        {
+        if (!char.IsLetter(text[0]) && text[0] != '_') {
             return false;
         }
 
         return text.All(character => char.IsLetterOrDigit(character) || character == '_');
     }
 
-    private sealed class Parser
-    {
+    private sealed class Parser {
         private readonly Tokenizer _tokenizer;
         private readonly CellAddress _owner;
 
-        public Parser(string text, CellAddress owner)
-        {
+        public Parser(string text, CellAddress owner) {
             _tokenizer = new Tokenizer(text);
             _owner = owner;
         }
 
-        public ExpressionNode Parse()
-        {
+        public ExpressionNode Parse() {
             var expression = ParseComparison();
-            if (_tokenizer.Current.Kind != TokenKind.End)
-            {
+            if (_tokenizer.Current.Kind != TokenKind.End) {
                 throw new InvalidOperationException("Expresion invalida.");
             }
 
             return expression;
         }
 
-        private ExpressionNode ParseComparison()
-        {
+        private ExpressionNode ParseComparison() {
             var expression = ParseAdditive();
 
             while (_tokenizer.Current.Kind == TokenKind.Operator &&
-                   _tokenizer.Current.Text is "<" or "<=" or ">" or ">=" or "=" or "==" or "!=" or "<>")
-            {
+                   _tokenizer.Current.Text is "<" or "<=" or ">" or ">=" or "=" or "==" or "!=" or "<>") {
                 var op = _tokenizer.Current.Text;
                 _tokenizer.Advance();
                 expression = new BinaryNode(op, expression, ParseAdditive());
@@ -62,13 +51,11 @@ internal static class FormulaParser
             return expression;
         }
 
-        private ExpressionNode ParseAdditive()
-        {
+        private ExpressionNode ParseAdditive() {
             var expression = ParseMultiplicative();
 
             while (_tokenizer.Current.Kind == TokenKind.Operator &&
-                   _tokenizer.Current.Text is "+" or "-")
-            {
+                   _tokenizer.Current.Text is "+" or "-") {
                 var op = _tokenizer.Current.Text;
                 _tokenizer.Advance();
                 expression = new BinaryNode(op, expression, ParseMultiplicative());
@@ -77,13 +64,11 @@ internal static class FormulaParser
             return expression;
         }
 
-        private ExpressionNode ParseMultiplicative()
-        {
+        private ExpressionNode ParseMultiplicative() {
             var expression = ParsePower();
 
             while (_tokenizer.Current.Kind == TokenKind.Operator &&
-                   _tokenizer.Current.Text is "*" or "/")
-            {
+                   _tokenizer.Current.Text is "*" or "/") {
                 var op = _tokenizer.Current.Text;
                 _tokenizer.Advance();
                 expression = new BinaryNode(op, expression, ParsePower());
@@ -92,13 +77,11 @@ internal static class FormulaParser
             return expression;
         }
 
-        private ExpressionNode ParsePower()
-        {
+        private ExpressionNode ParsePower() {
             var expression = ParseUnary();
 
             while (_tokenizer.Current.Kind == TokenKind.Operator &&
-                   _tokenizer.Current.Text == "^")
-            {
+                   _tokenizer.Current.Text == "^") {
                 _tokenizer.Advance();
                 expression = new BinaryNode("^", expression, ParseUnary());
             }
@@ -106,10 +89,8 @@ internal static class FormulaParser
             return expression;
         }
 
-        private ExpressionNode ParseUnary()
-        {
-            if (_tokenizer.Current.Kind == TokenKind.Operator && _tokenizer.Current.Text is "+" or "-")
-            {
+        private ExpressionNode ParseUnary() {
+            if (_tokenizer.Current.Kind == TokenKind.Operator && _tokenizer.Current.Text is "+" or "-") {
                 var op = _tokenizer.Current.Text;
                 _tokenizer.Advance();
                 return new UnaryNode(op, ParseUnary());
@@ -118,12 +99,10 @@ internal static class FormulaParser
             return ParsePrimary();
         }
 
-        private ExpressionNode ParsePrimary()
-        {
+        private ExpressionNode ParsePrimary() {
             var token = _tokenizer.Current;
 
-            switch (token.Kind)
-            {
+            switch (token.Kind) {
                 case TokenKind.Number:
                     _tokenizer.Advance();
                     return new NumberLiteralNode(decimal.Parse(token.Text, CultureInfo.InvariantCulture));
@@ -147,28 +126,22 @@ internal static class FormulaParser
             }
         }
 
-        private ExpressionNode ParseIdentifierBased()
-        {
+        private ExpressionNode ParseIdentifierBased() {
             var identifier = _tokenizer.Current.Text;
             _tokenizer.Advance();
 
-            if (TryParseReference(identifier, out var address))
-            {
+            if (TryParseReference(identifier, out var address)) {
                 return new RelativeReferenceNode(address.Row - _owner.Row, address.Column - _owner.Column);
             }
 
-            if (_tokenizer.Current.Kind == TokenKind.LeftParen)
-            {
+            if (_tokenizer.Current.Kind == TokenKind.LeftParen) {
                 _tokenizer.Advance();
                 var arguments = new List<FunctionArgumentNode>();
 
-                if (_tokenizer.Current.Kind != TokenKind.RightParen)
-                {
-                    while (true)
-                    {
+                if (_tokenizer.Current.Kind != TokenKind.RightParen) {
+                    while (true) {
                         arguments.Add(ParseFunctionArgument());
-                        if (_tokenizer.Current.Kind != TokenKind.Comma)
-                        {
+                        if (_tokenizer.Current.Kind != TokenKind.Comma) {
                             break;
                         }
 
@@ -184,18 +157,15 @@ internal static class FormulaParser
             return new IdentifierNode(identifier);
         }
 
-        private FunctionArgumentNode ParseFunctionArgument()
-        {
+        private FunctionArgumentNode ParseFunctionArgument() {
             if (_tokenizer.Current.Kind == TokenKind.Identifier &&
                 _tokenizer.Peek.Kind == TokenKind.Colon &&
-                TryParseReference(_tokenizer.Current.Text, out var start))
-            {
+                TryParseReference(_tokenizer.Current.Text, out var start)) {
                 _tokenizer.Advance();
                 _tokenizer.Advance();
 
                 if (_tokenizer.Current.Kind != TokenKind.Identifier ||
-                    !TryParseReference(_tokenizer.Current.Text, out var end))
-                {
+                    !TryParseReference(_tokenizer.Current.Text, out var end)) {
                     throw new InvalidOperationException("Expresion invalida.");
                 }
 
@@ -206,13 +176,11 @@ internal static class FormulaParser
             return new ScalarArgumentNode(ParseComparison());
         }
 
-        private static bool TryParseReference(string tokenText, out CellAddress address)
-        {
+        private static bool TryParseReference(string tokenText, out CellAddress address) {
             return CellAddress.TryParse(tokenText, out address);
         }
 
-        private FunctionArgumentNode CreateRangeArgument(CellAddress start, CellAddress end)
-        {
+        private FunctionArgumentNode CreateRangeArgument(CellAddress start, CellAddress end) {
             var top = Math.Min(start.Row, end.Row);
             var bottom = Math.Max(start.Row, end.Row);
             var left = Math.Min(start.Column, end.Column);
@@ -223,22 +191,18 @@ internal static class FormulaParser
                 new RelativeReferenceNode(bottom - _owner.Row, right - _owner.Column));
         }
 
-        private void Expect(TokenKind expected)
-        {
-            if (_tokenizer.Current.Kind != expected)
-            {
+        private void Expect(TokenKind expected) {
+            if (_tokenizer.Current.Kind != expected) {
                 throw new InvalidOperationException("Expresion invalida.");
             }
         }
     }
 
-    private sealed class Tokenizer
-    {
+    private sealed class Tokenizer {
         private readonly string _text;
         private int _position;
 
-        public Tokenizer(string text)
-        {
+        public Tokenizer(string text) {
             _text = text;
             Current = ReadNext();
             Peek = ReadNext();
@@ -247,44 +211,36 @@ internal static class FormulaParser
         public Token Current { get; private set; }
         public Token Peek { get; private set; }
 
-        public void Advance()
-        {
+        public void Advance() {
             Current = Peek;
             Peek = ReadNext();
         }
 
-        private Token ReadNext()
-        {
-            while (_position < _text.Length && char.IsWhiteSpace(_text[_position]))
-            {
+        private Token ReadNext() {
+            while (_position < _text.Length && char.IsWhiteSpace(_text[_position])) {
                 _position++;
             }
 
-            if (_position >= _text.Length)
-            {
+            if (_position >= _text.Length) {
                 return new Token(TokenKind.End, string.Empty);
             }
 
             var current = _text[_position];
 
-            if (char.IsDigit(current) || (current == '.' && _position + 1 < _text.Length && char.IsDigit(_text[_position + 1])))
-            {
+            if (char.IsDigit(current) || (current == '.' && _position + 1 < _text.Length && char.IsDigit(_text[_position + 1]))) {
                 return ReadNumber();
             }
 
-            if (char.IsLetter(current) || current == '_')
-            {
+            if (char.IsLetter(current) || current == '_') {
                 return ReadIdentifier();
             }
 
-            if (current == '"')
-            {
+            if (current == '"') {
                 return ReadString();
             }
 
             _position++;
-            return current switch
-            {
+            return current switch {
                 '(' => new Token(TokenKind.LeftParen, "("),
                 ')' => new Token(TokenKind.RightParen, ")"),
                 ',' => new Token(TokenKind.Comma, ","),
@@ -299,10 +255,8 @@ internal static class FormulaParser
             };
         }
 
-        private bool Match(char expected)
-        {
-            if (_position < _text.Length && _text[_position] == expected)
-            {
+        private bool Match(char expected) {
+            if (_position < _text.Length && _text[_position] == expected) {
                 _position++;
                 return true;
             }
@@ -310,40 +264,33 @@ internal static class FormulaParser
             return false;
         }
 
-        private Token ReadNumber()
-        {
+        private Token ReadNumber() {
             var start = _position;
-            while (_position < _text.Length && (char.IsDigit(_text[_position]) || _text[_position] == '.'))
-            {
+            while (_position < _text.Length && (char.IsDigit(_text[_position]) || _text[_position] == '.')) {
                 _position++;
             }
 
             return new Token(TokenKind.Number, _text[start.._position]);
         }
 
-        private Token ReadIdentifier()
-        {
+        private Token ReadIdentifier() {
             var start = _position;
-            while (_position < _text.Length && (char.IsLetterOrDigit(_text[_position]) || _text[_position] == '_'))
-            {
+            while (_position < _text.Length && (char.IsLetterOrDigit(_text[_position]) || _text[_position] == '_')) {
                 _position++;
             }
 
             return new Token(TokenKind.Identifier, _text[start.._position]);
         }
 
-        private Token ReadString()
-        {
+        private Token ReadString() {
             _position++;
             var start = _position;
-            while (_position < _text.Length && _text[_position] != '"')
-            {
+            while (_position < _text.Length && _text[_position] != '"') {
                 _position++;
             }
 
             var value = _text[start..Math.Min(_position, _text.Length)];
-            if (_position < _text.Length && _text[_position] == '"')
-            {
+            if (_position < _text.Length && _text[_position] == '"') {
                 _position++;
             }
 
@@ -353,8 +300,7 @@ internal static class FormulaParser
 
     private readonly record struct Token(TokenKind Kind, string Text);
 
-    private enum TokenKind
-    {
+    private enum TokenKind {
         End,
         Number,
         String,

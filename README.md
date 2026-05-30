@@ -1,161 +1,120 @@
-# Resultados TP1: Sortx
+﻿# Programación 3
 
-### Resultados de la corrección del TP1.
+>[!IMPORTANT]
+> Está publicado el TP4: Catálogo REST.
+> Deben presentarlo hasta el martes 2 de junio.
 
-Los trabajos que tienen errores deben corregirse y reentregarse para ser aprobados.
-Los que no han sido presentados deben ser entregados sin errores para ser aprobados.
-
-> Plazo: *jueves 16 de abril de 2026 a las 22:00 hs*
-
-
-#### Para presentar el trabajo deben:
-1. Cambiar a la rama `main`, 
-2. Bajar (`pull`) el repositorio con los datos nuevos. 
-3. Luego deben crear una rama nueva y corregir el programa (con `commit` y `push` a su rama).
-4. Realizar un `pull request` para que se pueda revisar la corrección.
-5. Volver a la rama `main` y bajar (`pull`) el repositorio para tener los datos nuevos.
+(Ver enunciado completo: [enunciados/tp4/enunciado.md](enunciados/tp4/enunciado.md))
+(Ver instrucción de entrega: [como-entregar-practico.md](como-entregar-practico.md))
 
 
+# ¿Cómo aprobar la materia?
+
+Para aprobar la materia se debe asistir, presentar los prácticos y aprobar los parciales.
+Dependiendo del desempeño en cada uno de estos aspectos, el alumno podrá quedar libre, regular o promocionar la materia.
+
+## ¿Cómo regularizo la materia?
+- Debe tener al menos 15 asistencias a clase verificadas.
+- Debe aprobar al menos 3 trabajos prácticos.
+- Debe aprobar ambos parciales con 4 o más.
+
+## ¿Cómo promociono la materia?
+- Debe tener al menos 30 asistencias a clase verificadas.
+- Debe aprobar todos los trabajos prácticos.
+- Debe aprobar ambos parciales con 8 o más.
+- Los trabajos prácticos se contabilizarán como 2 asistencias a clase, a los fines de la promoción.
 
 
+## Sobre la asistencia a clase
+- La materia es presencial; la asistencia es obligatoria.
+- Los trabajos prácticos aprobados se pueden considerar como asistencia a clase a los fines de la promoción.
+- A la fecha, quedan 15 clases para finalizar el cursado.
 
-## C7
 
-### Funciona bien
+## Sobre la evaluación de los trabajos prácticos
+- Los trabajos prácticos serán aprobados o rechazados en función de que se ejecuten sin error. 
+- No se les dará una nota numérica.
+- El trabajo es *estrictamente individual* y debe ser realizado en persona por el alumno.
+- La práctica se realizará en la computadora del alumno.
+- El alumno tiene libertad para usar cualquier recurso de aprendizaje, pero *no podrá usar la IA para hacer* los trabajos prácticos.
 
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63402 | Condori, Nahuel Ariel | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63241 | Cortez, Josías | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63776 | Fuensalida, Ulises Nahuel | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63174 | Jerez, Luciano Germán | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63399 | Lazarte, Gonzalo Romeo | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|61581 | Paz, Naim Federico | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63647 | Paz, Valentina | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63354 | Perondi, Luciano | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63546 | Sosa Paz, Jeremías | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|61490 | Valdez Bustamante, Tomás | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63397 | Vercellone, Tomás | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63456 | Ávila Lahr, Joaquín | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-### Funciona pero tiene errores
+## ¿Cómo se evaluarán los parciales?
+- Los alumnos que tengan todos los prácticos aprobados y no alcancen la nota para la promoción podrán rendir un recuperatorio del primer parcial para mejorar su nota.
+- El último trabajo práctico actuará como examen final, que deberá defenderse en forma presencial ante el docente.
+- Si el sistema ejecuta sin error el trabajo práctico, la nota será un 5.
+- La defensa consistirá en la resolución de 5 consignas; cada una le dará un punto, por lo que podrá obtener hasta un 10.
+- La consigna consistirá en explicar el código y/o realizar cambios en él para resolver un problema o agregar una funcionalidad.
+- La defensa se realizará en la fecha acordada para cada grupo, en forma pública y presencial.
 
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63396 | Gil Garau, Atalía Trinidad | 🔵 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-|61577 | González, Lucas Alfredo | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63420 | Pereyra, Valentina Nazaret | 🔵 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-|63350 | Páez Carabajal, Santiago | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63393 | Ritorto, Lucca | 🔵 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-|63387 | Sosa Gonella, Luca | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63547 | Sosa Paz, José Lisandro | 🔵 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-### No compila
+## Recuperación Trabajos prácticos
 
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63268 | Condori, Karina Edith | 🟡 | - | - | - | - | - | - |
-|63208 | Rosconi, Ignacio Federico | 🟡 | - | - | - | - | - | - |
+Dada la enorme cantidad de irregularidades detectadas en el TP3, se procedió a analizar detalladamente los trabajos prácticos anteriores.
 
-### No presentó
+## Rehacer TP3 _(para Promocionar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP3: 
+> **sábado 29 de mayo**
 
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63415 | Chávez, Lucas Francisco | 🔴 | - | - | - | - | - | - |
-|63419 | Coronel, Tomás | 🔴 | - | - | - | - | - | - |
-|63330 | Cuevas, Joel Alejandro | 🔴 | - | - | - | - | - | - |
-|63457 | González Dupuy, Ignacio | 🔴 | - | - | - | - | - | - |
-|63700 | Jiménez, Nelson Maximiliano | 🔴 | - | - | - | - | - | - |
-|63211 | Montero, Luca | 🔴 | - | - | - | - | - | - |
-|63447 | Suárez, Sofía Celeste | 🔴 | - | - | - | - | - | - |
-|63696 | Yael, Ramón Ezequiel | 🔴 | - | - | - | - | - | - |
-
-## C9
-
-### Funciona bien
-
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63385 | Almaraz Sintora, Nahuel | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63150 | Carlino, Joaquín | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63341 | Carrer, Juan Cruz | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63461 | Cativa, Facundo Simón | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63137 | Díaz, José Simón | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63345 | García, Franco Tomás | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63182 | González Rojas, Emmanuel | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|62844 | Guzmán, Luciano Leonel | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|61489 | Gómez, Tomás | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63418 | Miranda, Gonzalo Emanuel | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63207 | Saravia, César Nahum | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63216 | Sánchez, Sofía Micaela | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|61026 | Thompson, María José | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-|63300 | Álvarez, Hernán Fabricio | 🟢 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-### Funciona pero tiene errores
-
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63218 | Cortés, Guillermo Augusto | 🔵 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-|63266 | Decima, Juan Cruz | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63737 | Galván, Rocío Julieta | 🔵 | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-|63717 | González, Octavio | 🔵 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-|63219 | Lazarte, Sergio Fabricio | 🔵 | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-|63297 | Lezana, Juan Ignacio | 🔵 | ✅ | ❌ | ❌ | ❌ | ❌ | ✅ |
-|63213 | Marina Noguera, Morena | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63494 | Medina, Lourdes Natalia | 🔵 | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-|63234 | Molina, Lázaro Exequiel | 🔵 | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
-|63412 | Morán, Facundo Martín | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63220 | Pérez del Rien, Valentina | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-|63313 | Ávila Puntano, Benjamín | 🔵 | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-
-### No compila
-
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63222 | Bajre Martínez, Julián | 🟡 | - | - | - | - | - | - |
-|63231 | Herrera, Rocío Tatiana | 🟡 | - | - | - | - | - | - |
-
-### No presentó
-
-| Legajo | Nombre | R | T1 | T2 | T3 | T4 | T5 | T6 |
-|---|---|---|---|---|---|---|---|---|
-|63217 | Altamiranda Borquez, Bian | 🔴 | - | - | - | - | - | - |
-|61801 | Benega, Maximiliano Abraham | 🔴 | - | - | - | - | - | - |
-|63493 | Busnelli, Bruno | 🔴 | - | - | - | - | - | - |
-|64016 | Cura, Rocío Aylen | 🔴 | - | - | - | - | - | - |
-|61641 | Figueroa, Nahuel Ramón | 🔴 | - | - | - | - | - | - |
-|61057 | Getar, Thomas | 🔴 | - | - | - | - | - | - |
-|61161 | González, Thomas Ezequiel | 🔴 | - | - | - | - | - | - |
-|63425 | Holmquist, Jeremy | 🔴 | - | - | - | - | - | - |
-|61907 | Kargachin, Guadalupe | 🔴 | - | - | - | - | - | - |
-|63388 | López, Leandro Joel | 🔴 | - | - | - | - | - | - |
-|63205 | Navarro Aragón, Facundo | 🔴 | - | - | - | - | - | - |
-|63232 | Roldan, Enzo Joaquín | 🔴 | - | - | - | - | - | - |
-
-### Comandos para las pruebas:
-
-1. Help
->   dotnet run sortx.cs -- --help
-
-2. Ordenar por apellido
->   dotnet run sortx.cs -- empleados.csv --by apellido
-
-3. Ordenar por salario descendente
->   dotnet run sortx.cs -- empleados.csv --by salario:num:desc
-
-4. Ordenar por departamento y salario descendente
->   dotnet run sortx.cs -- empleados.csv --by departamento --by salario:num:desc
-
-5. Salida a archivo
->   dotnet run sortx.cs -- empleados.csv --by apellido:alpha:asc --output salida.csv
-
-### Archivo de entrada (empleados.csv):
 ```text
-nombre,apellido,edad,salario,departamento
-Carlos,García,35,85000,Ingeniería
-Ana,Martínez,28,72000,Diseño
-Luis,Rodríguez,42,120000,Gerencia
-María,López,31,88000,Ingeniería
-Pedro,Sánchez,25,65000,Diseño
-Laura,González,38,95000,Gerencia
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------- -----  ---  --  ------
+61161   González, Thomas Ezequiel  🟢🟢🟠   10   5  - - C
+63207   Saravia, César Nahum       🟢🟢🟠    9  10  - - B
+63213   Marina Noguera, Morena     🟢🟢🟠   11   9  - - C
+63216   Sánchez, Sofía Micaela     🟢🟢🟠   11  10  - - B
+63300   Álvarez, Hernán Fabricio   🟢🟢🟠    9  10  - - B
+63354   Perondi, Luciano           🟢🟢🟠    8  10  - - A
+63456   Ávila Lahr, Joaquín        🟢🟢🟠   12  10  - - A
+```
+
+
+## Rehacer TP1 _(para Promocionar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP1: 
+> **sábado 29 de mayo**
+
+
+```text
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------- -----  ---  --  ------
+62844   Guzmán, Luciano Leonel     🟠🟢🟢   11  10  D - -
+63182   González Rojas, Emmanuel   🟠🟢🟢   13  10  D - -
+63397   Vercellone, Tomás          🟠🟢🔴   10   9  B - -
+63493   Busnelli, Bruno            🟠🟢🔴    6  10  E - -
+63647   Paz, Valentina             🟠🟢🟢    9  10  B - -
+```
+
+
+## Rehacer TP1 y TP2 _(para Promocionar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP1 y TP2:
+> **miércoles 2 de junio**
+
+
+```text
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------- -----  ---  --  ------
+61026   Thompson, María José       🟠🟠🟢   12   9  F C -
+61490   Valdez Bustamante, Tomás   🟠🟠🔴   13  13  A A -
+63150   Carlino, Joaquín           🟠🟠🔴   13  13  A A -
+```
+
+
+## Rehacer TP1, TP2 y TP3 _(para No Recursar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP1, TP2 y TP3: **sábado 5 de junio**
+
+```text
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------  -----  ---  --  ------
+61489   Gómez, Tomás               🟠🟠🟠   12   9  F C C
+61641   Figueroa, Nahuel Ramón     🟠🟠🟠   11   4  F C C
+61801   Benega, Maximiliano        🟠🟠🟠    7   6  F C C
+63218   Cortés, Guillermo Augusto  🟠🟠🟠   11  10  G B B
+63341   Carrer, Juan Cruz          🟠🟠🟠    8  10  G B B
+63345   García, Franco Tomás       🟠🟠🟠    6  10  E B B
+63494   Medina, Lourdes Natalia    🟠🟠🟠    9  10  C D B
+63737   Galván, Rocío Julieta      🟠🟠🟠   10  10  G D B
 ```

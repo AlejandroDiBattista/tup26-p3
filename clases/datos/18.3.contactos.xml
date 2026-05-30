@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfPersona xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Persona>
+    <Id>1</Id>
+    <Nombre>María</Nombre>
+    <Apellido>González</Apellido>
+    <Edad>26</Edad>
+  </Persona>
+  <Persona>
+    <Id>3</Id>
+    <Nombre>Juan</Nombre>
+    <Apellido>Pérez</Apellido>
+    <Edad>40</Edad>
+  </Persona>
+  <Persona>
+    <Id>4</Id>
+    <Nombre>María</Nombre>
+    <Apellido>González</Apellido>
+    <Edad>25</Edad>
+  </Persona>
+  <Persona>
+    <Id>5</Id>
+    <Nombre>Juan</Nombre>
+    <Apellido>Pérez</Apellido>
+    <Edad>40</Edad>
+  </Persona>
+</ArrayOfPersona>

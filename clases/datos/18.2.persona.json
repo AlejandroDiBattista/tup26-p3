@@ -1,0 +1,6 @@
+{
+    "nombre": "Alejandro",
+    "apellido": "Battista",
+    "edad": 30,
+    "hobbies": ["programar", "leer", "viajar"]
+}

@@ -1,0 +1,19 @@
+@baseUrl = http://localhost:5001
+
+### Estado inicial
+GET {{baseUrl}}/contador
+
+### Incrementar 1
+POST {{baseUrl}}/contador
+
+### Incrementar 2
+POST {{baseUrl}}/contador
+
+### Leer después de incrementar
+GET {{baseUrl}}/contador
+
+### Borrar contador
+DELETE {{baseUrl}}/contador
+
+### Leer valor final
+GET {{baseUrl}}/contador

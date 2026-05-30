@@ -1,4 +1,16 @@
+
 # Cómo entregar el trabajo práctico ?
+
+Resumen:
+
+- Clonar el repositorio del curso. (*github.com/alejandrodibattista/tup26-p3*)
+- Actualizar el repositorio local (ir a la rama `main` y hacer fetch).
+- Crear una rama nueva con el formato `tp-01/nombre-apellido`.
+- Modificar los archivos dentro de la carpeta del alumno (ejemplo: `practicos/63313 - Sanchez, Sofia/TP1/sortx.cs`).
+- Hacer commit de los cambios parciales, con al menos 5 commits y mensajes descriptivos.
+- Hacer push a la rama creada.
+- Abrir un Pull Request a la rama `main` con el formato `TP 01 - Legajo - Nombre Apellido`.
+- Regresar a la rama `main` y actualizar el repositorio local.
 
 ---
 1. **Se debe clonar el repositorio actual del curso.**

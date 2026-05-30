@@ -1,14 +1,7 @@
 namespace Tup26.AlumnosApp;
 
 class Alumnos : IEnumerable<Alumno> {
-
-    public Alumno? BuscarPorLegajo(int legajo) =>
-        Lista.FirstOrDefault(a => a.Legajo == legajo);
-        
-    public List<Alumno> Lista { get; set; } = new();
-
-    public Alumno this[int index] => Lista[index];
-    public int Count => Lista.Count;
+    List<Alumno> Lista { get; init; }
 
     public Alumnos(IEnumerable<Alumno> alumnos) =>
         Lista = alumnos?.ToList() ?? new();
@@ -16,11 +9,17 @@ class Alumnos : IEnumerable<Alumno> {
     public void Agregar(Alumno alumno) =>
         Lista.Add(alumno);
 
+    public Alumno? BuscarPorLegajo(int legajo) =>
+        Lista.FirstOrDefault(a => a.Legajo == legajo);
+
+    public Alumno? BuscarPorTelefono(string telefono) =>
+        Lista.FirstOrDefault(a => a.TelefonoId == telefono);
+
     public Alumnos ConGithub(bool tiene = true) =>
         new(Lista.Where(a => tiene == a.ConGithub));
 
     public Alumnos ConPractico(int numero, Estado estado) =>
-        new(Lista.Where(a =>  (a.practicos[numero - 1] & estado) != 0));
+        new(Lista.Where(a => (a.EstadoPractico(numero) & estado) != 0));
 
     public Alumnos ConTelefono(bool tiene = true) =>
         new(Lista.Where(a => tiene == a.ConTelefono));
@@ -34,6 +33,6 @@ class Alumnos : IEnumerable<Alumno> {
     public Alumnos ParaAgregar() =>
         new(Lista.Where(a => a.GitHub == "(agregar)"));
 
-    public IEnumerator<Alumno> GetEnumerator() => Lista.GetEnumerator(); 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator(); 
+    public IEnumerator<Alumno> GetEnumerator() => Lista.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

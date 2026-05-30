@@ -2,8 +2,7 @@ using EditCsv;
 
 var options = CommandLineOptions.Parse(args);
 
-if (options.ShowHelp || string.IsNullOrWhiteSpace(options.FilePath))
-{
+if (options.ShowHelp || string.IsNullOrWhiteSpace(options.FilePath)) {
     CommandLineOptions.PrintHelp();
     return;
 }
