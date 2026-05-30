@@ -73,7 +73,7 @@ public sealed class AgendaWindow : Window{
         )
     );
 }
-    private void AbrirDialogo() {
+private void AbrirDialogo() {
         var dialog = new ContactoDialog();
 
         Application.Run(dialog);
@@ -86,22 +86,67 @@ public sealed class AgendaWindow : Window{
         }
     }
     private void EliminarContacto() {
-        if (contacts.Count == 0)
-            return;
+    if (contacts.Count == 0)
+        return;
 
-        if (listView.SelectedItem is not int index)
-            return;
+    if (listView.SelectedItem is not int index)
+        return;
 
-        if (index < 0 || index >= contacts.Count)
-            return;
+    var contacto = contacts[index];
 
-        var contacto = contacts[index];
+    var confirmDialog = new Dialog()
+    {
+        Title = "Confirmar",
+        Width = 40,
+        Height = 7
+    };
 
-        store.Delete(contacto);
-        contacts.RemoveAt(index);
+    var label = new Label()
+    {
+        Text = "¿Eliminar contacto?",
+        X = 1,
+        Y = 1
+    };
 
-        RefreshList();;
-    }
+    bool aceptar = false;
+
+    var btnSi = new Button()
+    {
+        Text = "Sí",
+        X = 10,
+        Y = 3
+    };
+
+    var btnNo = new Button()
+    {
+        Text = "No",
+        X = 20,
+        Y = 3
+    };
+
+    btnSi.Accepting += (_, e) => {
+        aceptar = true;
+        Application.RequestStop();
+    };
+
+    btnNo.Accepting += (_, e) => {
+        Application.RequestStop();
+    };
+
+    confirmDialog.Add(label);
+    confirmDialog.AddButton(btnSi);
+    confirmDialog.AddButton(btnNo);
+
+    Application.Run(confirmDialog);
+
+    if (!aceptar)
+        return;
+
+    store.Delete(contacto);
+    contacts.RemoveAt(index);
+
+    RefreshList();
+}
     private void EditarContacto() {
         if (contacts.Count == 0)
             return;
@@ -148,7 +193,7 @@ public sealed class ContactoDialog : Dialog {
     private Contacto? contactoOriginal;
 
     public ContactoDialog(Contacto? contacto = null) {
-        Title  = "Nuevo Contacto";
+        Title = contacto == null ? "Nuevo Contacto" : "Editar Contacto";
         Width  = 50;
         Height = 18;
 
@@ -186,7 +231,6 @@ public sealed class ContactoDialog : Dialog {
             Application.RequestStop();
             e.Handled = true;
         };
-
         cancelar.Accepting += (_, e) => {
             Resultado = null;
             Application.RequestStop();
