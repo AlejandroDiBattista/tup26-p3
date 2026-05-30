@@ -76,19 +76,65 @@ private Label statusLabel = null!;
                     ])
                 ]
         };
-
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        Add(menu);
+        Label searchLabel = new() {
+            Text = "Buscar:",
+            X = 1,
+            Y = 1
         };
-
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        searchField = new TextField() {
+            X = 10,
+            Y = 1,
+            Width = 40,
+            Text = ""
         };
+        searchField.TextChanged += (_, _) => ApplyFilters();
+        contactsList = new ListView() {
+            X = 1,
+            Y = 3,
+            Width = 30,
+            Height = Dim.Fill()
+        };
+        FrameView contactosFrame = new() {
+            Title = "Contactos",
+            X = 1,
+            Y = 3,
+            Width = 30,
+            Height = Dim.Fill(1)
+        };
+        contactsList = new ListView() {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+        contactsList.RowRender += (_, _) => UpdateDetail();
+        contactosFrame.Add(contactsList);
 
-        Add(menu, openButton);
+        FrameView detalleFrame = new() {
+            Title = "Detalle",
+            X = 32,
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(2)
+        };
+        detailView = new TextView() {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ReadOnly = true
+        };
+        detalleFrame.Add(detailView);
+
+        Add(menu, searchLabel, searchField, contactosFrame, detalleFrame);
+         statusLabel = new Label() {
+            Text = "F2 Nuevo | F3 Editar | Del Eliminar | F4 Buscar | Ctrl+I Importar | Ctrl+E Exportar | Ctrl+Q Salir",
+            X = 0,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+         };
+        Add(statusLabel);
     }
 
     private void LoadContacts() {
@@ -106,7 +152,7 @@ private Label statusLabel = null!;
             return matchesSearch && matchesFavorite;
         })
         .ToList();
-        observableCollection<string> items = new(filteredContacts.Select(c => c.Favorito ? $"★ {c.Nombre}" : c.Nombre));
+        ObservableCollection<string> items = new(filteredContacts.Select(c => c.Favorito ? $"★ {c.Nombre}" : c.Nombre));
         contactsList.SetSource<string>(items);
         UpdateDetail();
     }
@@ -116,7 +162,7 @@ private Label statusLabel = null!;
             detailView.Text = "No hay contactos para mostrar.";
             return;
         }
-        int index = contactsList.SelectedItem ? contactsList.SelectedItem.Value0 : 0;
+        int index = contactsList.SelectedItem.HasValue ? contactsList.SelectedItem.Value : 0;
         if (index < 0 || index >= filteredContacts.Count) {
             return;
             Contacto c = filteredContacts[index];
@@ -466,7 +512,7 @@ public class SqliteAgendaStore {
         Initialize();
     }
 
-    private DbConecction GetConnection() {
+    private DbConnection GetConnection() {
         return new SqliteConnection($"Data Source={dbPath}");
     }
     private void Initialize() {
@@ -507,7 +553,29 @@ public class SqliteAgendaStore {
         connection.Delete(contacto);
     }
 }
-public class JsonAgendaIO {}
+public class JsonAgendaIO {
+    
+    public static void Export (
+        string path, List<Contacto> contactos
+    ) {
+        JsonSerializerOptions options = new() {
+            WriteIndented = true
+        };
+        string json = JsonSerializer.Serialize(contactos, options);
+        File.WriteAllText(path, json);
+    }
+    public static List<Contacto> Import(
+        string path) 
+    {
+        if (!File.Exists (path))
+        throw new Exception("El archivo JSON no existe");
+        string json = File.ReadAllText(path);
+        List<Contacto>? contactos = JsonSerializer.Deserialize<List<Contacto>>(json);
+        if (contactos == null)
+        throw new Exception(" JSON inválido");
+        return contactos;
+    }
+}
 
 [Table("Contactos")]
 public class Contacto {
@@ -517,4 +585,15 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+          public Contacto Clone() {
+              return new Contacto {
+                  Id = Id,
+                  Nombre = Nombre,
+                  Telefonos = Telefonos,
+                  Email = Email,
+                  Notas = Notas,
+                  Favorito = Favorito
+              };
+          }
 }
