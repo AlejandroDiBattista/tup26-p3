@@ -2,7 +2,9 @@
 #:package Microsoft.EntityFrameworkCore.Sqlite@*
 #:property PublishAot=false
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using SQLitePCL;
 
 // ── Configuración ──────────────────────────────────────────────────────────
 
@@ -22,20 +24,44 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
+    return Results.Ok(repositorio.TraerProductos());
+});
+app.MapPost("/productos",(CatalogoRepositorio repositorio,Producto producto) => {
+    repositorio.AgregarProducto(producto);
+    return Results.Created($"/productos/{producto.Id}",producto);
+    });
 
-    return Results.Ok(producto);
+app.MapDelete("/productos/{id}",(CatalogoRepositorio repositorio,int id)=>{
+    var eliminado = repositorio.EliminarProducto(id);
+    if (!eliminado)
+    return Results.NotFound();
+
+    return Results.NoContent();    
+});
+app.MapPut("/productos/{id}",(CatalogoRepositorio repositorio,int id ,Producto productoActualizado)=> {
+    var actualizado = repositorio.ActualizarProducto(id,productoActualizado);
+    if (!actualizado)
+    return Results.NotFound();
+
+    return Results.Ok(productoActualizado);
 });
 
 app.Run("http://localhost:5050");
 
 
 
+
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+class Producto
+ {
+    public int Id  {get ; set;}
+    public string Codigo {get ; set ;} = "";
+     public string Nombre {get ; set ; } = "";
+     public decimal Precio {get; set;}
+     public int Stock {get; set;}
+}
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
@@ -55,11 +81,49 @@ class CatalogoRepositorio {
         db.Database.EnsureCreated();
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-            db.SaveChanges();
+           db.Productos.Add(new Producto {
+              Id = 1,
+              Codigo = "P001", 
+              Nombre = "Yerba Mate 500g",
+              Precio = 1500m,
+              Stock = 100 , 
+          
+           });
+           db.SaveChanges();
         }
     }
 
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+    public List<Producto> TraerProductos ()=>
+    db.Productos.OrderBy(p => p.Id).ToList();
+
+    public void AgregarProducto (Producto producto) {
+        db.Productos.Add(producto);
+        db.SaveChanges();
+    }
+
+    public bool EliminarProducto(int id) {
+        var producto = db.Productos.Find(id);
+
+        if (producto is null) {
+            return false;
+        }
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
+    }
+    public bool ActualizarProducto (int id , Producto productoActualizado) {
+        var producto = db.Productos.Find(id);
+        if (producto is null)
+        return false ;
+
+        producto.Codigo =   productoActualizado.Codigo;
+        producto.Nombre =   productoActualizado.Nombre;
+        producto.Precio =   productoActualizado.Precio;
+        producto.Stock  =   productoActualizado.Stock;
+
+        db.SaveChanges();
+        return true;
+
+    }
 }
+
