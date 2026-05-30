@@ -341,28 +341,59 @@ public sealed class EjemploDialog : Dialog {
     private CheckBox favoritoCheck;
     public ContactDialog(Contacto contacto) {
         Contacto = contacto;
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+        Title  = "Contacto";
+        Width  = 60;
+        Height = 32;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
+        Add (new Label() {
+            Text = "Nombre",
+            X = 1,
+            Y = 1
+        });
+
+        nombreField = new TextField() {
+            X = 15,
+            Y = 1,
+            Width = 40,
+            Text = contacto.Nombre
         };
-
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
+        Add(nombreField);
+        string[] telefonosGuardados = contacto.Telefonos.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        for(int i = 0; i < 5; i++) {
+            Add(new Label() {
+                Text = $"Teléfono {i+1}:",
+                X = 1,
+                Y = 3 + i*2
+            });
+            telefonosFields[i] = new TextField() {
+                X = 15,
+                Y = 3 + i*2,
+                Width = 40,
+                Text = i < telefonosGuardados.Length ? telefonosGuardados[i].Trim() : ""
+            };
+            Add(telefonosFields[i]);
+        }
+        Add(new Label() {
+            Text = "Email:",
+            X = 1,
+            Y = 13
+        });
+        emailField = new TextField() {
+            X = 15,
+            Y = 13,
+            Width = 40,
+            Text = contacto.Email
         };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
+        Add(emailField);
+        
+        string textoInicial = contacto.Favorito? "Favorito (si)" : "Favorito (No)";
+        favoritoCheck = new CheckBox() {
+            Text = "Favorito",
+            X = 15,
+            Y = 15,
         };
-
-        Add(message);
-        AddButton(closeButton);
+        favoritoCheck.Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked;
+        Add(favoritoCheck);
     }
 }
 
