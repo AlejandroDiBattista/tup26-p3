@@ -169,7 +169,7 @@ private Label statusLabel = null!;
             detailView.Text = $"Nombre: {c.Nombre}\n" +
                               $"Teléfonos: {c.Telefonos}\n" +
                               $"Email: {c.Email}\n" +
-                              $"Favorito: {(c.Favorito ? "Sí" : "No")}"+
+                              $"Favorito: {(c.Favorito ? "Sí" : "No")}\n"+
                               $"Notas: {c.Notas}\n";                   
     }
 
