@@ -42,6 +42,34 @@ public sealed class CatalogoWindow : Runnable {
         Title = "Catalogo REST - ESC para salir";
         Width = Dim.Fill();
         Height = Dim.Fill();
+        Menu.DefaultBorderStyle = LineStyle.Single;
+        CrearInterfaz();
+    }
+
+    private void CrearInterfaz() {
+        MenuBar menu = new() {
+            Menus = [
+                new MenuBarItem("_Productos", [
+                    new MenuItem("_Agregar", "F2", AgregarProducto),
+                    new MenuItem("_Modificar", "F3", ModificarProducto),
+                    new MenuItem("_Eliminar", "F4", EliminarProducto),
+                    null!,
+                    new MenuItem("_Recargar", "F5", RecargarProductos)
+                ]),
+                new MenuBarItem("_Movimientos", [
+                    new MenuItem("_Compra", "Ctrl+C", () => RegistrarMovimiento("Compra")),
+                    new MenuItem("_Venta", "Ctrl+V", () => RegistrarMovimiento("Venta")),
+                    new MenuItem("_Ajuste", "Ctrl+A", () => RegistrarMovimiento("Ajuste"))
+                ]),
+                new MenuBarItem("_Archivo", [
+                    new MenuItem("_Salir", "Ctrl+Q", Salir)
+                ])
+            ]
+        };
+
+        estado = new Label { Text = "Cargando interfaz...", X = 1, Y = 27, Width = 120 };
+
+        Add(menu, estado);
     }
 }
 
