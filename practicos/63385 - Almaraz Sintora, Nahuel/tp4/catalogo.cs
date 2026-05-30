@@ -138,13 +138,55 @@ public sealed class CatalogoWindow : Runnable {
 
         Add(menu, buscarLabel, buscarTexto, buscarBoton, productosTitulo, listaProductos, movimientosTitulo, listaMovimientos, agregar, modificar, eliminar, compra, venta, ajuste, estado);
     }
+
+    private void CargarMovimientosDelSeleccionado() {
+        lineasMovimientos.Clear();
+
+        var producto = ProductoSeleccionado();
+        if (producto is null) return;
+
+        try {
+            var movimientos = http.GetFromJsonAsync<List<MovimientoDto>>($"productos/{producto.Id}/movimientos")
+                .GetAwaiter()
+                .GetResult() ?? [];
+
+            if (movimientos.Count == 0) {
+                lineasMovimientos.Add("Sin movimientos.");
+                return;
+            }
+
+            foreach (var movimiento in movimientos) {
+                lineasMovimientos.Add(FormatearMovimiento(movimiento));
+            }
+        } catch (Exception ex) {
+            lineasMovimientos.Add($"Error: {ex.Message}");
+        }
+    }
+
+    private ProductoDto? ProductoSeleccionado() {
+        int? indice = listaProductos.SelectedItem;
+        if (indice is null || indice < 0 || indice >= productosFiltrados.Count) return null;
+
+        return productosFiltrados[indice.Value];
+    }
+
+    private static string FormatearProducto(ProductoDto p) {
+        string nombre = Cortar(p.Nombre, 24);
+        return $"{p.Codigo,-8} {nombre,-24} ${p.Precio,9:N2} Stock:{p.Stock,4}";
+    }
+
+    private static string FormatearMovimiento(MovimientoDto m) =>
+        $"{m.Fecha:dd/MM/yyyy HH:mm}  {m.Tipo,-7}  Cantidad: {m.Cantidad}";
+
+    private static string Cortar(string texto, int largo) =>
+        texto.Length <= largo ? texto : texto[..(largo - 3)] + "...";
+
+    private void MostrarMensaje(string titulo, string mensaje) {
+        MensajeDialog dialogo = new(titulo, mensaje);
+        App!.Run(dialogo);
+    }
+
+    private void Salir() {
+        App!.RequestStop();
+    }
 }
-
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
-}
-
-// ── DTO ───────────────────────────────────────────────────────────────────
-
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
