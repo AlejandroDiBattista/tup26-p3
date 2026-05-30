@@ -85,7 +85,25 @@ public sealed class CatalogoWindow : Runnable {
 
         estado = new Label { Text = "", X = 1, Y = 27, Width = 120 };
 
-        Add(menu, buscarLabel, buscarTexto, buscarBoton, productosTitulo, listaProductos, movimientosTitulo, listaMovimientos, estado);
+        Button agregar = new() { Text = "_Agregar", X = 1, Y = 24 };
+        agregar.Accepting += (_, e) => { AgregarProducto(); e.Handled = true; };
+
+        Button modificar = new() { Text = "_Modificar", X = 13, Y = 24 };
+        modificar.Accepting += (_, e) => { ModificarProducto(); e.Handled = true; };
+
+        Button eliminar = new() { Text = "_Eliminar", X = 28, Y = 24 };
+        eliminar.Accepting += (_, e) => { EliminarProducto(); e.Handled = true; };
+
+        Button compra = new() { Text = "_Compra", X = 44, Y = 24 };
+        compra.Accepting += (_, e) => { RegistrarMovimiento("Compra"); e.Handled = true; };
+
+        Button venta = new() { Text = "_Venta", X = 56, Y = 24 };
+        venta.Accepting += (_, e) => { RegistrarMovimiento("Venta"); e.Handled = true; };
+
+        Button ajuste = new() { Text = "_Ajuste", X = 67, Y = 24 };
+        ajuste.Accepting += (_, e) => { RegistrarMovimiento("Ajuste"); e.Handled = true; };
+
+        Add(menu, buscarLabel, buscarTexto, buscarBoton, productosTitulo, listaProductos, movimientosTitulo, listaMovimientos, agregar, modificar, eliminar, compra, venta, ajuste, estado);
     }
 }
 
