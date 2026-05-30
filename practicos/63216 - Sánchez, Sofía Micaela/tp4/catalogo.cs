@@ -42,6 +42,9 @@ MenuBar menu = new(new MenuBarItem[]
 {
     new("Producto", new MenuItem[]
     {
+        new("_Agregar",  "Ctrl+A Agregar",   () => AgregarProducto(),  Key.A.WithCtrl),
+        new("_Editar",   "Ctrl+E Editar",    () => EditarProducto(),   Key.E.WithCtrl),
+        new("_Eliminar", "Ctrl+D Eliminar",  () => EliminarProducto(), Key.D.WithCtrl),
         null!,
         new("_Salir", "Ctrl+Q Salir", () => app.RequestStop(), Key.Q.WithCtrl),
     }),
@@ -173,11 +176,198 @@ async Task RecargarYActualizar(int? idSeleccionado = null)
 
     await MostrarDetalle();
 }
+void AgregarProducto()
+{
+    using DialogoProducto dialogo = new("Agregar producto", null);
+    app.Run(dialogo);
+
+    if (dialogo.Result is null) return;
+
+    ProductoDatos datos = dialogo.Result;
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            HttpResponseMessage resp = await http.PostAsJsonAsync("/productos", datos);
+            if (resp.IsSuccessStatusCode)
+            {
+                ProductoDto? nuevo = await resp.Content.ReadFromJsonAsync<ProductoDto>();
+                await RecargarYActualizar(nuevo?.Id);
+            }
+            else
+            {
+                string error = await resp.Content.ReadAsStringAsync();
+                MessageBox.ErrorQuery(app, "Error", error, "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(app, "Error", ex.Message, "OK");
+        }
+    });
+}
+
+void EditarProducto()
+{
+    int indice = listaProductos.SelectedItem ?? -1;
+    if (indice < 0 || indice >= filtrados.Count)
+    {
+        MessageBox.Query(app, "Editar", "Seleccione un producto primero.", "OK");
+        return;
+    }
+
+    ProductoDto actual = filtrados[indice];
+    using DialogoProducto dialogo = new("Editar producto", actual);
+    app.Run(dialogo);
+
+    if (dialogo.Result is null) return;
+
+    ProductoDatos datos = dialogo.Result;
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            HttpResponseMessage resp = await http.PutAsJsonAsync($"/productos/{actual.Id}", datos);
+            if (resp.IsSuccessStatusCode)
+            {
+                await RecargarYActualizar(actual.Id);
+            }
+            else
+            {
+                string error = await resp.Content.ReadAsStringAsync();
+                MessageBox.ErrorQuery(app, "Error", error, "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(app, "Error", ex.Message, "OK");
+        }
+    });
+}
 
 // ── DTO ───────────────────────────────────────────────────────────────────
+void EliminarProducto()
+{
+    int indice = listaProductos.SelectedItem ?? -1;
+    if (indice < 0 || indice >= filtrados.Count)
+    {
+        MessageBox.Query(app, "Eliminar", "Seleccione un producto primero.", "OK");
+        return;
+    }
+
+    ProductoDto actual = filtrados[indice];
+    int respuesta = MessageBox.Query(app, "Eliminar",
+        $"¿Eliminar '{actual.Nombre}'?", "No", "Sí") ?? 0;
+
+    if (respuesta != 1) return;
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            HttpResponseMessage resp = await http.DeleteAsync($"/productos/{actual.Id}");
+            if (resp.IsSuccessStatusCode)
+            {
+                await RecargarYActualizar();
+            }
+            else
+            {
+                MessageBox.ErrorQuery(app, "Error", "No se pudo eliminar.", "OK");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(app, "Error", ex.Message, "OK");
+        }
+    });
+}
 
 static async Task<List<ProductoDto>> CargarProductos(HttpClient http)
     => await http.GetFromJsonAsync<List<ProductoDto>>("/productos") ?? [];
 static string FormatearProducto(ProductoDto p)
     => $"{p.Codigo,-6} {p.Nombre,-25} ${p.Precio,8:N2} Stock: {p.Stock,4}";
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record ProductoDatos(string Codigo, string Nombre, decimal Precio, int Stock);
+class DialogoProducto : Dialog<ProductoDatos?>
+{
+    public DialogoProducto(string titulo, ProductoDto? existente)
+    {
+        Title = titulo;
+        Width = 60;
+        Height = 14;
+
+        Label lCodigo = new() { Text = "Codigo :", X = 1, Y = 1 };
+        TextField tCodigo = new()
+        {
+            Text = existente?.Codigo ?? "",
+            X = 11, Y = 1, Width = 30
+        };
+
+        Label lNombre = new() { Text = "Nombre :", X = 1, Y = 3 };
+        TextField tNombre = new()
+        {
+            Text = existente?.Nombre ?? "",
+            X = 11, Y = 3, Width = 30
+        };
+
+        Label lPrecio = new() { Text = "Precio :", X = 1, Y = 5 };
+        TextField tPrecio = new()
+        {
+            Text = existente?.Precio.ToString() ?? "0",
+            X = 11, Y = 5, Width = 15
+        };
+
+        Label lStock = new() { Text = "Stock  :", X = 1, Y = 7 };
+        TextField tStock = new()
+        {
+            Text = existente?.Stock.ToString() ?? "0",
+            X = 11, Y = 7, Width = 10
+        };
+
+        Label lError = new() { Text = "", X = 1, Y = 9, Width = Dim.Fill(2) };
+
+        Add(lCodigo, tCodigo, lNombre, tNombre, lPrecio, tPrecio, lStock, tStock, lError);
+
+        Button btnCancelar = new() { Title = "Cancelar" };
+        btnCancelar.Accepting += (_, _) => Result = null;
+        AddButton(btnCancelar);
+
+        Button btnGuardar = new() { Title = "Guardar" };
+        btnGuardar.Accepting += (_, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(tCodigo.Text))
+            {
+                lError.Text = "El codigo es obligatorio.";
+                e.Handled = true;
+                tCodigo.SetFocus();
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(tNombre.Text))
+            {
+                lError.Text = "El nombre es obligatorio.";
+                e.Handled = true;
+                tNombre.SetFocus();
+                return;
+            }
+            if (!decimal.TryParse(tPrecio.Text, out decimal precio) || precio < 0)
+            {
+                lError.Text = "Precio invalido.";
+                e.Handled = true;
+                tPrecio.SetFocus();
+                return;
+            }
+            if (!int.TryParse(tStock.Text, out int stock) || stock < 0)
+            {
+                lError.Text = "Stock invalido.";
+                e.Handled = true;
+                tStock.SetFocus();
+                return;
+            }
+
+            Result = new ProductoDatos(tCodigo.Text.Trim(), tNombre.Text.Trim(), precio, stock);
+        };
+        AddButton(btnGuardar);
+    }
+}
