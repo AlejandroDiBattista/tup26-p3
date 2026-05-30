@@ -128,6 +128,141 @@ private Label statusLabel = null!;
         }
     }
 
+    private Contacto? GetSelected() {
+        
+        if (filteredContacts.Count ==0)
+        return null;
+        int index = contactsList.SelectedItem.HasValue? contactsList.SelectedItem.Value : 0;
+        if (index < 0 || index >= filteredContacts.Count)
+            return null;
+        return filteredContacts[index];
+    }
+
+    private void NuevoContacto() {
+        ContactDialog dialog = new(new Contacto());
+        App!.Run(dialog);
+        if (!dialog.Accepted)
+            return;
+            store.Insert(dialog.Contacto);
+            LoadContacts();
+            SetStatus("Contacto agregado");
+    }
+
+    private void EditarContacto() {
+        Contacto? selected = GetSelected();
+        if (selected == null)
+            return;
+        ContactDialog dialog = new(selected.Clone());
+        App!.Run(dialog);
+        if (dialog.Accepted)
+            return;
+            store.Update(dialog.Contacto);
+            LoadContacts();
+            SetStatus("Contacto actualizado");
+    }
+
+    private void EliminarContacto() {
+        Contacto? selected = GetSelected();
+        if (selected == null)
+            return;
+        int result = MessageBox.Query(App!, "Confirmar",
+            $"¿Eliminar contacto '{selected.Nombre}'?", 
+            "Sí", 
+            "No"
+            ) ?? 0;
+            if (result !=0)
+            return;
+            store.Delete(selected);
+            LoadContacts();
+            SetStatus("Contacto eliminado");
+    }
+
+    private void ToggleFavorites() {
+        onlyFavorites = !onlyFavorites;
+        ApplyFilters();
+    }
+
+    private string? PedirNombreArchivo(string titulo, string valorDefault) {
+        string? result = null;
+        Dialog dialog = new() {
+            Title = titulo,
+            Width = 50,
+            Height = 8
+        };
+        Label label = new() {Text = "Archivo:", X = 1, Y = 1};
+        TextField textField = new() {
+            X= 11,
+            Y= 1,
+            Width = 30,
+            Text = valorDefault
+        };
+        Button okButton = new() {Text = "_OK", X = 11, Y = 3};
+        okButton.Accepting +=(_, e) => {
+            resultado = field.Text.ToString()?.Trim();
+            dialog.App!.RequestStop();
+            e.Handled = true;
+        };
+        Button cancelButton = new() {Text = "_Cancelar"};
+        cancelButton.Accepting += (_, e) => {
+            dialog.App!.RequestStop();
+            e.Handled = true;
+        };
+        dialog.Add(label, field);
+        dialog.AddButton(okButton);
+        dialog.AddButton(cancelButton);
+        App!.Run(dialog);
+        return resultado;
+    }
+
+    private void ImportJson() {
+        string? archivo = PedirNombreArchivo("Importar desde JSON", "contactos.json");
+        if(string.IsNullOrWhiteSpace(archivo))
+            return;
+        try {
+            List<Contacto> imported = JsonAgendaIO.Import(archivo);
+            int result = MessageBox.Query(
+                App!,
+                "Importar",
+                $"Agregar {imported.Count} contactos?",
+                "Sí",
+                "No"
+            )?? 0;
+            if (result != 0)
+                return;
+            foreach (Contacto c in imported) {
+                c.Id = 0;
+                store.Insert(c);
+            }
+            LoadContacts();
+            SetStatus($"{imported.Count} contactos importados");
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, 
+            "Error", 
+            ex.Message,
+            "OK");
+        }
+    }
+
+    private void ExportJson() {
+        string? archivo = PedirNombreArchivo("Exportar a JSON", "contactos.json");
+        if(string.IsNullOrWhiteSpace(archivo))
+            return;
+        try {
+            JsonAgendaIO.Export(archivo, contacts);
+            MessageBox.Query(
+                App!,
+                "Exportar",
+                "Archivo exportado",
+                "OK"
+            );
+        } catch (Exception ex) {
+            MessageBox.ErrorQuery(
+            App!, 
+            "Error", 
+            ex.Message,
+            "OK");
+        }
+    }
 
 
     private void AbrirDialogo() {
