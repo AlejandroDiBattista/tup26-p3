@@ -61,15 +61,18 @@ public sealed class AgendaWindow : Window{
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
-        listView.SetSource(
-            new ObservableCollection<string>(
-                contacts.Select(c => c.Nombre)
-            )
-        );
+        RefreshList();;
         Add(menu, listView);
     }
     private List<Contacto> contacts = [];
     private ListView listView = null!;
+    private void RefreshList() {
+    listView.SetSource(
+        new ObservableCollection<string>(
+            contacts.Select(c => c.Nombre)
+        )
+    );
+}
     private void AbrirDialogo() {
         var dialog = new ContactoDialog();
 
@@ -79,11 +82,7 @@ public sealed class AgendaWindow : Window{
             store.Insert(dialog.Resultado);
             contacts.Add(dialog.Resultado);
 
-            listView.SetSource(
-                new ObservableCollection<string>(
-                    contacts.Select(c => c.Nombre)
-                )
-            );
+            RefreshList();;
         }
     }
     private void EliminarContacto() {
@@ -101,11 +100,7 @@ public sealed class AgendaWindow : Window{
         store.Delete(contacto);
         contacts.RemoveAt(index);
 
-        listView.SetSource(
-            new ObservableCollection<string>(
-                contacts.Select(c => c.Nombre)
-            )
-        );
+        RefreshList();;
     }
     private void EditarContacto() {
         if (contacts.Count == 0)
@@ -124,11 +119,7 @@ public sealed class AgendaWindow : Window{
 
             contacts[index] = dialog.Resultado;
 
-            listView.SetSource(
-                new ObservableCollection<string>(
-                    contacts.Select(c => c.Nombre)
-                )
-            );
+            RefreshList();;
         }
     }
     private void SolicitarSalir() {
