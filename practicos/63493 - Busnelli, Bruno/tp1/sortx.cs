@@ -95,7 +95,15 @@ AppConfig ParseArgs(string[] args)
 
 string ReadInput(AppConfig config)
 {
-    throw new NotImplementedException();
+    if (!string.IsNullOrWhiteSpace(config.InputFile))
+    {
+        if (!File.Exists(config.InputFile))
+            throw new FileNotFoundException($"No existe el archivo de entrada: {config.InputFile}");
+
+        return File.ReadAllText(config.InputFile);
+    }
+
+    return Console.In.ReadToEnd();
 }
 
 ParsedTable ParseDelimited(string text, AppConfig config)
