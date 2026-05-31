@@ -74,7 +74,7 @@ app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepos
     return Results.Ok(repositorio.TraerMovimientos(productoId));
 });
 
-app.MapPost("/productos/{productoId}/movimientos",
+app.MapPost("/products/{productId}/movements",
     (int productoId, MovimientoDeProducto movimiento, CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto(productoId);
     if (producto is null) return Results.NotFound();
@@ -88,8 +88,11 @@ app.MapPost("/productos/{productoId}/movimientos",
     return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
 });
 
-
-
+//Apagar el servidor cuando la tui lo llame
+app.MapDelete("/shutdown", (IHostApplicationLifetime lifetime) => {
+    lifetime.StopApplication();
+    return Results.Ok("Servidor detenido.");
+});
 
 //-------------------------------------------------------------
 
