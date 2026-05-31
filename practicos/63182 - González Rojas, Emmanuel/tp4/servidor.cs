@@ -89,5 +89,15 @@ class CatalogoDb : DbContext {
             db.Productos.Add(producto);
             db.SaveChanges();
         }
+
+        public void ModificarProducto(int id, Producto input) {
+        var producto = db.Productos.First(p => p.Id == id);
+        producto.Codigo = input.Codigo;
+        producto.Nombre = input.Nombre;
+        producto.Precio = input.Precio;
+        producto.Stock  = input.Stock;
+        db.SaveChanges();
+    }
+    
             
     }
