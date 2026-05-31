@@ -222,5 +222,31 @@ private readonly CatalogoApi api;
     }
 
     
+    private void MostrarAyuda() {
+        var dlg = new Dialog { Title = " Ayuda - Atajos de Sistema ", Width = 65, Height = 15 };
+        
+        var lblInfo = new Label {
+            Text = "GENERAL:\n" +
+                   "  [F9]  Abrir el menú superior (pestañas)\n" +
+                   "  [TAB] Cambiar de panel (Filtro -> Productos -> Movimientos)\n" +
+                   "  [ESC] Salir de la aplicación\n\n" +
+                   "PRODUCTOS:\n" +
+                   "  [A] Agregar   [B] Modificar   [E] Eliminar   [F5] Recargar\n\n" +
+                   "MOVIMIENTOS:\n" +
+                   "  [C] Compra    [V] Venta       [J] Ajuste",
+            X = 2, Y = 1
+        };
+
+        var btn = new Button { Text = "_Aceptar", IsDefault = true };
+        btn.Accepting += (_, _) => Application.RequestStop(dlg);
+        
+        dlg.Add(lblInfo);
+        dlg.AddButton(btn);
+        
+        Application.Run(dlg);
+    }
+
+
+
     
 }
