@@ -190,6 +190,20 @@ private readonly CatalogoApi api;
             ]
         };
 
+        Add(panelMaestro, panelDetalle, lblStatus);
+
+        txtBuscar.TextChanged += (_, _) => AplicarFiltro();
+
+        listaProductos.SelectedItemChanged += (_, e) => {
+            if (e.Item >= 0 && e.Item < productosFiltrados.Count)
+                _ = CargarMovimientosAsync(productosFiltrados[e.Item]);
+        };
+
+        KeyDown += (_, e) => ProcesarAtajo(e);
+
+        RenderizarProductos();
+
+
       }
     
 }
