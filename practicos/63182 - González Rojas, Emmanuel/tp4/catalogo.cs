@@ -190,7 +190,7 @@ private readonly CatalogoApi api;
             ]
         };
 
-        Add(panelMaestro, panelDetalle, lblStatus);
+        Add(MasterPanel, DetailPanel, lblStatus);
 
         txtBuscar.TextChanged += (_, _) => AplicarFiltro();
 
@@ -205,5 +205,22 @@ private readonly CatalogoApi api;
 
 
       }
+
+          public MenuBar ObtenerMenu() => menu;
+    private void EjecutarMenu(Action accion) {
+        _ = Task.Run(async () => {
+            await Task.Delay(150);
+            Application.Invoke(accion);
+        });
+    }
+
+    private void AccionMenu(Action accion) {
+        _ = Task.Run(async () => {
+            await Task.Delay(100);
+            Application.Invoke(accion);
+        });
+    }
+
+    
     
 }
