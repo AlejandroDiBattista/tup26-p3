@@ -7,6 +7,9 @@ using System.Text.Json.Serialization;
 // ── Configuración ──────────────────────────────────────────────────────────
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.ConfigureHttpJsonOptions(options => {
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
@@ -39,10 +42,13 @@ app.MapPost("/productos",(Producto producto, CatalogoRepositorio repositorio) =>
     return Results.BadRequest("El precio no puede ser negativo.");
     if (producto.Stock < 0)    return Results.BadRequest("El stock no puede ser negativo.");
     if (repositorio.ExisteCodigo(producto.Codigo))
-    return Results.BadRequest("Code already exists.");
+    return Results.Conflict($"Ya existe otro producto con código '{producto.Codigo}'.");
+    
     repositorio.AgregarProducto(producto);
     return Results.Created($"/productos/{producto.Id}", producto);
 });
+
+
 app.MapPut("/productos/{id}", (int id, Producto input, CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto(id);
     if (producto is null) return Results.NotFound();
@@ -69,12 +75,11 @@ app.MapDelete("/productos/{id}",(int id, CatalogoRepositorio repositorio) => {
 });
 //-------------------------------------------------------------
 app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto(productoId);
-    if (producto is null) return Results.NotFound();
+    if (repositorio.TraerProducto(productoId) is null) return Results.NotFound();
     return Results.Ok(repositorio.TraerMovimientos(productoId));
 });
 
-app.MapPost("/products/{productId}/movements",
+app.MapPost("/productos/{productoId}/movimientos",
     (int productoId, MovimientoDeProducto movimiento, CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto(productoId);
     if (producto is null) return Results.NotFound();
@@ -118,7 +123,7 @@ class MovimientoDeProducto {
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
-    public DbSet<Producto>             Productos   => Set<Producto>();
+    public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
@@ -138,8 +143,10 @@ class CatalogoDb : DbContext {
             db.Database.EnsureCreated();
             if (!db.Productos.Any()) {
                     db.Productos.Add(new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 });
-                    db.Productos.Add(new Producto { Codigo = "P002", Nombre = "Mate Cocido x20", Precio = 1400m,  Stock = 50  });
+                    db.Productos.Add(new Producto { Codigo = "P002", Nombre = "Mate Cocido x20", Precio = 1100m,  Stock = 50  });
                     db.Productos.Add(new Producto { Codigo = "P003", Nombre = "Azucar x 1kg",   Precio = 900m, Stock = 30  });
+                    db.Productos.Add(new Producto { Codigo = "P004", Nombre = "Edulcorante",    Precio = 3200m, Stock = 20  });
+                    db.Productos.Add(new Producto { Codigo = "P005", Nombre = "Te x 20",     Precio = 1200m, Stock = 80  });
                     db.SaveChanges();
             }
         }
