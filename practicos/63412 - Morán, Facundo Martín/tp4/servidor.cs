@@ -3,11 +3,18 @@
 #:property PublishAot=false
 
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 // ── Configuración ──────────────────────────────────────────────────────────
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter());
+});
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
 
@@ -144,8 +151,10 @@ class Producto
 {
     public int Id { get; set; }
 
+    [MaxLength(40)]
     public string Codigo { get; set; } = "";
-
+    
+    [MaxLength(120)]
     public string Nombre { get; set; } = "";
 
     public decimal Precio { get; set; }
@@ -164,6 +173,8 @@ record class MovimientoDto(
     record class MovimientoRequest(
     TipoMovimiento Tipo,
     int Cantidad);
+    
+    [JsonConverter(typeof(JsonStringEnumConverter))]
 enum TipoMovimiento
 {
     Compra,
@@ -194,10 +205,15 @@ class CatalogoDb : DbContext {
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+     modelBuilder.Entity<Producto>()
+        .HasIndex(p => p.Codigo)
+        .IsUnique();
+
     modelBuilder.Entity<MovimientoDeProducto>()
         .HasOne(m => m.Producto)
         .WithMany(p => p.Movimientos)
-        .HasForeignKey(m => m.ProductoId);
+        .HasForeignKey(m => m.ProductoId)
+        .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
