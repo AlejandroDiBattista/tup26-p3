@@ -35,3 +35,64 @@ builder.Services.AddDbContext<CatalogoContext>(options =>
         "POST /productos/{productoId}/movimientos"
     }
 }));
+
+app.MapGet("/productos", async (CatalogoContext db) => 
+await db.Productos
+.AsNoTracking()
+        .OrderBy(p => p.Codigo)
+        .ToListAsync());
+
+app.MapGet("/productos/{id:int}", async (int id, CatalogoDbContext db) => {
+    Producto? producto = await db.Productos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
+});
+
+app.MapPost("/productos", async (ProductoRequest request, CatalogoDbContext db) => {
+    string? error = await ValidateProduct(request, db);
+    if (error is not null) {
+        return Results.BadRequest(new { Error = error });
+    }
+
+    Producto producto = new() {
+        Codigo = request.Codigo.Trim(),
+        Nombre = request.Nombre.Trim(),
+        Precio = request.Precio,
+        Stock = request.Stock
+    };
+
+    db.Productos.Add(producto);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/productos/{producto.Id}", producto);
+});
+
+app.MapPut("/productos/{id:int}", async (int id, ProductoRequest request, CatalogoDbContext db) => {
+    Producto? producto = await db.Productos.FindAsync(id);
+    if (producto is null) {
+        return Results.NotFound();
+    }
+
+    string? error = await ValidateProduct(request, db, id);
+    if (error is not null) {
+        return Results.BadRequest(new { Error = error });
+    }
+
+    producto.Codigo = request.Codigo.Trim();
+    producto.Nombre = request.Nombre.Trim();
+    producto.Precio = request.Precio;
+    producto.Stock = request.Stock;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(producto);
+});
+
+app.MapDelete("/productos/{id:int}", async (int id, CatalogoDbContext db) => {
+    Producto? producto = await db.Productos.FindAsync(id);
+    if (producto is null) {
+        return Results.NotFound();
+    }
+
+    db.Productos.Remove(producto);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
