@@ -1,9 +1,9 @@
 #:sdk Microsoft.NET.Sdk.Web
-#:package Microsoft.EntityFrameworkCore.Sqlite@*
+#:package Microsoft.EntityFrameworkCore.Sqlite@9.*
 #:property PublishAot=false
 
 using Microsoft.EntityFrameworkCore;
-
+using System.Text.Json.Serialization;
 // ── Configuración ──────────────────────────────────────────────────────────
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,11 +21,12 @@ using (var scope = app.Services.CreateScope()) {
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
-
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
-
+app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
+    repositorio.TraerProductos());
+    
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(id);
+    if (producto is null) return Results.NotFound();
     return Results.Ok(producto);
 });
 
@@ -62,3 +63,23 @@ class CatalogoDb : DbContext {
     }
 }
 
+//Repositorio
+class CatalogoRepositorio {
+    private readonly CatalogoDb db;
+    public CatalogoRepositorio(CatalogoDb db) => this.db = db;
+
+   public void Iniciar() {
+        db.Database.EnsureCreated();
+        if (!db.Productos.Any()) {
+                db.Productos.Add(new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 });
+                db.Productos.Add(new Producto { Codigo = "P002", Nombre = "Mate Cocido x20", Precio = 1400m,  Stock = 50  });
+                db.Productos.Add(new Producto { Codigo = "P003", Nombre = "Azucar x 1kg",   Precio = 900m, Stock = 30  });
+                db.SaveChanges();
+        }
+    }
+
+
+    public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
+    public Producto? TraerProducto(int id) =>db.Productos.FirstOrDefault(p => p.Id == id);
+        
+}
