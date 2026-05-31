@@ -26,8 +26,6 @@ using (var scope = app.Services.CreateScope()) {
 
 app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
     var productos = repositorio.TraerProductos();
-    if(productos is null) return Results.NotFound();
-
     return Results.Ok(productos);
 });
 
@@ -46,9 +44,9 @@ app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repositor
 });
 app.MapPost("/productos/", (ProductoCrearDto dto, CatalogoRepositorio repositorio) => {
     if (dto is null) return Results.BadRequest();
-    if (string.IsNullOrWhiteSpace(dto.Codigo, dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
+    if (string.IsNullOrWhiteSpace(dto.Codigo) || string.IsNullOrWhiteSpace(dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
     if (dto.Precio <= 0 || dto.Stock < 0) return Results.BadRequest("El precio y el Stock deben ser mayores a 0.");
-    if (repositorio.CodigoExistente(dto.Codigo)) return Results.Conflict("Y existe un producto con ese código.");
+    if (repositorio.CodigoExiste(dto.Codigo)) return Results.Conflict("Y existe un producto con ese código.");
 
     var nuevoProducto = repositorio.CrearProducto(dto.Codigo, dto.Nombre, dto.Precio, dto.Stock);
     return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
@@ -58,16 +56,16 @@ app.MapPost("/productos/{id}/movimientos", (int id, MovimientoCrearDto dto, Cata
     if (string.IsNullOrWhiteSpace(dto.Accion)) return Results.BadRequest("La acción es obligatoria.");
     if (dto.Cantidad <= 0) return Results.BadRequest("La cantidad debe ser mayor a 0.");
 
-    var movimiento = repositorio.registrarMovimiento(id, dto.Accion, dto.Cantidad);
+    var movimiento = repositorio.RegistrarMovimiento(id, dto.Accion, dto.Cantidad);
     if (movimiento is null) return Results.BadRequest("No se pudo registrar el movimiento. Verifique el producto y la acción.");
 
     return Results.Created($"/productos/{id}/movimientos/{movimiento.Id}", movimiento);
 });
 
 app.MapPut("/productos/{id}", (int id, ProductoActualizarDto dto, CatalogoRepositorio repositorio) => {
-    if (string.IsNullOrWhiteSpace(dto.Codigo, dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
+    if (string.IsNullOrWhiteSpace(dto.Codigo) || string.IsNullOrWhiteSpace(dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
     if (dto.Precio <= 0 || dto.Stock < 0) return Results.BadRequest("El precio y el Stock deben ser mayores a 0.");
-    if (repositorio.CodigoExistente(dto.Codigo, id)) return Results.Conflict("Y existe un producto con ese código.");
+    if (repositorio.CodigoExisteenOtro(dto.Codigo, id)) return Results.Conflict("Y existe un producto con ese código.");
 
     var productoActualizado = repositorio.ActualizarProducto(id, dto.Codigo, dto.Nombre, dto.Precio, dto.Stock);
     if (productoActualizado is null) return Results.NotFound();
@@ -91,7 +89,7 @@ app.Run("http://localhost:5050");
 
 record class ProductoCrearDto(string Codigo, string Nombre, decimal Precio, int Stock);
 record class ProductoActualizarDto(string Codigo, string Nombre, decimal Precio, int Stock);
-record class MovimientoCrearDto(string Tipo, int Cantidad);
+record class MovimientoCrearDto(string Accion, int Cantidad);
 
 
 
@@ -136,4 +134,63 @@ class CatalogoRepositorio {
         .OrderByDescending(m => m.Fecha)
         .ToList(); 
 
-}
+    public MovimientoDeProducto? RegistrarMovimiento(int productoId, string accion, int cantidad) {
+    var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);
+    if (producto is null) return null;
+  
+    int nuevoStock;
+
+    if (accion == "Compra") {
+        nuevoStock = producto.Stock + cantidad;
+    }
+    else if (accion == "Venta") {
+        if (producto.Stock < cantidad) return null;
+        nuevoStock = producto.Stock - cantidad;
+    }
+    else if (accion == "Ajuste") {
+        nuevoStock = cantidad;
+    }
+    else {
+        throw new ArgumentException("Acción no válida. Debe ser 'Compra', 'Venta' o 'Ajuste'.");
+    }
+
+    var productoActualizado = producto with { Stock = nuevoStock };
+    db.Productos.Update(productoActualizado);
+
+    var movimiento = new MovimientoDeProducto(0, productoId, accion, cantidad, DateTime.Now);
+    db.MovimientosDeProductos.Add(movimiento);
+
+
+    db.SaveChanges();
+
+    return movimiento;
+    }
+
+    public Producto? ActualizarProducto(int id, string codigo, string nombre, decimal precio, int stock) {
+        var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+        if (producto is null) return null;
+
+        var productoActualizado = producto with { Codigo = codigo, Nombre = nombre, Precio = precio, Stock = stock };
+        db.Productos.Update(productoActualizado);
+        db.SaveChanges();
+        return productoActualizado;
+    }
+
+    public bool CodigoExiste(string codigo) =>  db.Productos.Any(p => p.Codigo == codigo); 
+    public bool CodigoExisteenOtro(string codigo, int id) =>  db.Productos.Any(p => p.Codigo == codigo && p.Id != id);
+    public Producto CrearProducto(string codigo, string nombre, decimal precio, int stock) {
+        var nuevoProducto = new Producto(0, codigo, nombre, precio, stock);
+        db.Productos.Add(nuevoProducto);
+        db.SaveChanges();
+        return nuevoProducto;
+    }
+
+    public bool EliminarProducto(int id) {
+        var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+        if (producto is null) return false;
+
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
+    }
+}    
