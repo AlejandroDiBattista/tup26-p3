@@ -132,7 +132,7 @@ private readonly CatalogoApi api;
         Width  = Dim.Fill();
         Height = Dim.Fill();
         
-         var lblBuscar = new Label { Text = "Buscar:", X = 1, Y = 0 };
+         var lblBuscar = new Label { Text = "Search:", X = 1, Y = 0 };
         txtBuscar = new TextField { X = Pos.Right(lblBuscar) + 1, Y = 0, Width = Dim.Fill(1) };
 
         listaProductos = new ListaAtajos {
@@ -142,6 +142,21 @@ private readonly CatalogoApi api;
         };
         
         
+        var panelMaestro = new FrameView {
+            Title  = " Productos  [A]Agregar [B]Modificar [E]Eliminar [F5]Recargar ",
+            X = 0, Y = 0, Width = Dim.Percent(54), Height = Dim.Fill(1)
+        };
+        panelMaestro.Add(lblBuscar, txtBuscar, listaProductos);
+
+        lblMovimientos = new Label { Text = " Seleccioná un producto", X = 1, Y = 0 };
+        
+        listaMovimientos = new ListaAtajos {
+            X = 0, Y = 2, Width = Dim.Fill(), Height = Dim.Fill(),
+            AllowsMarking = false,
+            Interceptor = ProcesarAtajo 
+        };
+
+
         
         }
     
