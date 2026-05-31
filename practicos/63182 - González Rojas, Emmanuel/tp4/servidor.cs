@@ -64,22 +64,30 @@ class CatalogoDb : DbContext {
 }
 
 //Repositorio
-class CatalogoRepositorio {
-    private readonly CatalogoDb db;
-    public CatalogoRepositorio(CatalogoDb db) => this.db = db;
+    class CatalogoRepositorio {
+        private readonly CatalogoDb db;
+        public CatalogoRepositorio(CatalogoDb db) => this.db = db;
 
-   public void Iniciar() {
-        db.Database.EnsureCreated();
-        if (!db.Productos.Any()) {
-                db.Productos.Add(new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 });
-                db.Productos.Add(new Producto { Codigo = "P002", Nombre = "Mate Cocido x20", Precio = 1400m,  Stock = 50  });
-                db.Productos.Add(new Producto { Codigo = "P003", Nombre = "Azucar x 1kg",   Precio = 900m, Stock = 30  });
-                db.SaveChanges();
+    public void Iniciar() {
+            db.Database.EnsureCreated();
+            if (!db.Productos.Any()) {
+                    db.Productos.Add(new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 });
+                    db.Productos.Add(new Producto { Codigo = "P002", Nombre = "Mate Cocido x20", Precio = 1400m,  Stock = 50  });
+                    db.Productos.Add(new Producto { Codigo = "P003", Nombre = "Azucar x 1kg",   Precio = 900m, Stock = 30  });
+                    db.SaveChanges();
+            }
         }
-    }
 
 
-    public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
-    public Producto? TraerProducto(int id) =>db.Productos.FirstOrDefault(p => p.Id == id);
+        public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
+        public Producto? TraerProducto(int id) =>db.Productos.FirstOrDefault(p => p.Id == id);
+
+        public bool ExisteCodigo(string codigo, int excluirId = 0) => db.Productos.Any(p => p.Codigo == codigo && p.Id != excluirId);
         
-}
+        public void AgregarProducto(Producto producto) {
+            if (ExisteCodigo(producto.Codigo)) throw new Exception("El código ya existe.");
+            db.Productos.Add(producto);
+            db.SaveChanges();
+        }
+            
+    }
