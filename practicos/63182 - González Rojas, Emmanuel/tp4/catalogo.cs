@@ -462,6 +462,59 @@ private void AgregarProducto() {
 
         Application.Run(dlg);
     }
+private void EliminarProducto() {
+        var producto = GetSeleccionado();
+        if (producto is null) {
+            var dlgError = new Dialog { Title = " Atención ", Width = 50, Height = 6 };
+            dlgError.Add(new Label { Text = "Seleccioná un producto primero.", X = 1, Y = 1 });
+            var btnOk = new Button { Text = "_Aceptar", IsDefault = true };
+            btnOk.Accepting += (_, _) => Application.RequestStop(dlgError);
+            dlgError.AddButton(btnOk);
+            Application.Run(dlgError);
+            return;
+        }
+
+        var dlg = new Dialog { Title = " Confirmar eliminación ", Width = 55, Height = 8 };
+        var lblInfo = new Label {
+            Text = $"¿Eliminar '{producto.Nombre}'?\nSe borrarán también sus movimientos.",
+            X = 1, Y = 1
+        };
+        
+        var btnCancelar = new Button { Text = "_Cancelar", IsDefault = true };
+        var btnEliminar = new Button { Text = "_Eliminar",};
+
+        dlg.Add(lblInfo);
+        dlg.AddButton(btnCancelar);
+        dlg.AddButton(btnEliminar); 
+
+        
+        btnEliminar.Accepting += (_, _) => {
+            _ = Task.Run(async () => {
+                try {
+                    var (ok, msg) = await api.EliminarProductoAsync(producto.Id);
+                    Application.Invoke(() => {
+                        Application.RequestStop(dlg);
+                        SetStatus(ok ? "✓ Producto eliminado." : $"✗ {msg}");
+                        if (ok) {
+                            movimientosActuales.Clear();
+                            lblMovimientos.Text = " Seleccioná un producto";
+                            RenderizarMovimientos();
+                            _ = RecargarAsync();
+                        }
+                    });
+                } catch (Exception ex) {
+                    Application.Invoke(() => {
+                        Application.RequestStop(dlg);
+                        SetStatus($"✗ {ex.Message}");
+                    });
+                }
+            });
+        };
+        
+        btnCancelar.Accepting += (_, _) => Application.RequestStop(dlg);
+
+        Application.Run(dlg);
+    }
 
     
 }
