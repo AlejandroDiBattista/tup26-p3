@@ -129,6 +129,64 @@ class Compilador {
         "Token inesperado"
     );
 }
+
+private char CaracterActual() {
+
+    return posicionActual
+        < codigoFuente.Length
+        ? codigoFuente[posicionActual]
+        : '\0';
+}
+
+private bool Coincide(char simbolo) {
+
+    if (
+        CaracterActual()
+        == simbolo
+    ) {
+
+        posicionActual++;
+
+        return true;
+    }
+
+    return false;
+}
+
+private void OmitirEspacios() {
+
+    while (
+        char.IsWhiteSpace(
+            CaracterActual()
+        )
+    ) {
+
+        posicionActual++;
+    }
+}
+
+private Nodo LeerNumero() {
+
+    int inicio = posicionActual;
+
+    while (
+        char.IsDigit(
+            CaracterActual()
+        )
+    ) {
+
+        posicionActual++;
+    }
+
+    var textoNumero =
+        codigoFuente[
+            inicio..posicionActual
+        ];
+
+    return new ValorNumero(
+        int.Parse(textoNumero)
+    );
+}
 }
 
 
