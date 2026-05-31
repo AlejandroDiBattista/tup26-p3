@@ -156,7 +156,16 @@ private readonly CatalogoApi api;
             Interceptor = ProcesarAtajo 
         };
 
+        var panelDetalle = new FrameView {
+            Title  = " Movimientos  [C]Compra [V]Venta [J]Ajuste ",
+            X = Pos.Right(panelMaestro), Y = 0, Width = Dim.Fill(), Height = Dim.Fill(1)
+        };
+        panelDetalle.Add(lblMovimientos, listaMovimientos);
 
+        lblStatus = new Label {
+            Text = " Listo  |  [TAB] Cambiar panel  |  [F9] Abrir menú  |  [ESC] Salir",
+            X = 0, Y = Pos.AnchorEnd(1)
+        };
         
         }
     
