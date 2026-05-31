@@ -132,7 +132,14 @@ private readonly CatalogoApi api;
         Width  = Dim.Fill();
         Height = Dim.Fill();
         
-        
+         var lblBuscar = new Label { Text = "Buscar:", X = 1, Y = 0 };
+        txtBuscar = new TextField { X = Pos.Right(lblBuscar) + 1, Y = 0, Width = Dim.Fill(1) };
+
+        listaProductos = new ListaAtajos {
+            X = 0, Y = 2, Width = Dim.Fill(), Height = Dim.Fill(1),
+            AllowsMarking = false,
+            Interceptor = ProcesarAtajo 
+        };
         
         
         
