@@ -74,4 +74,61 @@ class Compilador {
 
         return nodoActual;
     }
+
+    private Nodo LeerFactor() {
+
+    OmitirEspacios();
+
+    if (Coincide('+')) {
+        return LeerFactor();
+    }
+
+    if (Coincide('-')) {
+
+        return new CambioSigno(
+            LeerFactor()
+        );
+    }
+
+    if (Coincide('(')) {
+
+        var nodoInterno =
+            LeerExpresion();
+
+        if (!Coincide(')')) {
+
+            throw new FormatException(
+                "Se esperaba ')'"
+            );
+        }
+
+        return nodoInterno;
+    }
+
+    if (
+        char.IsDigit(
+            CaracterActual()
+        )
+    ) {
+
+        return LeerNumero();
+    }
+
+    if (
+        char.ToLower(
+            CaracterActual()
+        ) == 'x'
+    ) {
+
+        posicionActual++;
+
+        return new VariableX();
+    }
+
+    throw new FormatException(
+        "Token inesperado"
+    );
 }
+}
+
+
