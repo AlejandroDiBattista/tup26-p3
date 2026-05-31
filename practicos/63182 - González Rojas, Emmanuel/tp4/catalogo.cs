@@ -40,7 +40,24 @@ try {
     api.ApagarServidorAsync().Wait(500); 
 } catch { }
 
+// DTOS 
+enum TipoMovimiento { Compra, Venta, Ajuste }
 
+class ProductoDto {
+    public int     Id     { get; set; }
+    public string  Codigo { get; set; } = "";
+    public string  Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int     Stock  { get; set; }
+}
+
+class MovimientoDto {
+    public int            Id         { get; set; }
+    public int            ProductoId { get; set; }
+    public TipoMovimiento Tipo       { get; set; }
+    public int            Cantidad   { get; set; }
+    public DateTime       Fecha      { get; set; }
+}
 // // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 // using IApplication app = Application.Create().Init();
