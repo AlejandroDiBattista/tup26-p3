@@ -74,6 +74,19 @@ app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepos
     return Results.Ok(repositorio.TraerMovimientos(productoId));
 });
 
+app.MapPost("/productos/{productoId}/movimientos",
+    (int productoId, MovimientoDeProducto movimiento, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(productoId);
+    if (producto is null) return Results.NotFound();
+
+    if (movimiento.Cantidad <= 0)
+        return Results.BadRequest("La cantidad debe ser un valor positivo.");
+    if (movimiento.Tipo == TipoMovimiento.Venta && producto.Stock < movimiento.Cantidad)
+        return Results.BadRequest($"Stock insuficiente. Stock actual: {producto.Stock}, solicitado: {movimiento.Cantidad}.");
+
+    repositorio.RegistrarMovimientos(productoId, movimiento);
+    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+});
 
 
 
