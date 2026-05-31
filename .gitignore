@@ -43,6 +43,9 @@ artifacts/
 *.lscache
 *.userosscache
 *.sln.docstates
+*.db
+*.db-shm
+*.db-wal
 
 # Logs and temporary files
 *.log
