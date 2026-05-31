@@ -61,6 +61,14 @@ app.MapPut("/productos/{id}", (int id, Producto input, CatalogoRepositorio repos
     repositorio.ModificarProducto(id, input);
     return Results.Ok(repositorio.TraerProducto(id));
 });
+app.MapDelete("/productos/{id}",(int id, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(id);
+    if (producto is null) return Results.NotFound();
+    repositorio.EliminarProducto(id);
+    return Results.NoContent();
+});
+
+
 
 app.Run("http://localhost:5050");
 
