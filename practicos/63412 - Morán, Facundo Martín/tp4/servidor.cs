@@ -78,6 +78,17 @@ app.MapDelete("/productos/{id:int}",
 
     return Results.NoContent();
 });
+app.MapGet("/productos/{productoId:int}/movimientos",
+(int productoId, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.TraerProducto(productoId);
+
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(
+        repositorio.TraerMovimientos(productoId));
+});
 
 static string? ValidarProducto(ProductoRequest request)
 {
@@ -117,6 +128,12 @@ class Producto
     public List<MovimientoDeProducto> Movimientos { get; set; } = [];
 }
 record class ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
+record class MovimientoDto(
+    int Id,
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha);
 enum TipoMovimiento
 {
     Compra,
@@ -236,6 +253,19 @@ public bool EliminarProducto(int id)
 public bool ExisteCodigo(string codigo)
 {
     return db.Productos.Any(p => p.Codigo == codigo);
+}
+public List<MovimientoDto> TraerMovimientos(int productoId)
+{
+    return db.Movimientos
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .Select(m => new MovimientoDto(
+            m.Id,
+            m.ProductoId,
+            m.Tipo,
+            m.Cantidad,
+            m.Fecha))
+        .ToList();
 }
         
 }
