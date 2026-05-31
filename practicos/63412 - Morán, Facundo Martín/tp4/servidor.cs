@@ -48,6 +48,16 @@ app.MapPost("/productos", (ProductoRequest request, CatalogoRepositorio reposito
 
     return Results.Created($"/productos/{producto.Id}", producto);
 });
+app.MapPut("/productos/{id:int}",
+(int id, ProductoRequest request, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.ModificarProducto(id, request);
+
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(producto);
+});
 
 app.Run("http://localhost:5050");
 
@@ -107,6 +117,26 @@ class CatalogoRepositorio {
     );
 
     db.Productos.Add(producto);
+    db.SaveChanges();
+
+    return producto;
+}
+public Producto? ModificarProducto(int id, ProductoRequest request)
+{
+    var producto = db.Productos.Find(id);
+
+    if (producto is null)
+        return null;
+
+    producto = producto with
+    {
+        Codigo = request.Codigo,
+        Nombre = request.Nombre,
+        Precio = request.Precio,
+        Stock = request.Stock
+    };
+
+    db.Productos.Update(producto);
     db.SaveChanges();
 
     return producto;
