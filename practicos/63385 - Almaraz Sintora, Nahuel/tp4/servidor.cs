@@ -32,6 +32,15 @@ app.MapGet("/productos/{id:int}", async (int id, CatalogoRepositorio repo) => {
 
 app.Run("http://localhost:5050");
 
+static string? ValidarProducto(ProductoDatos datos) {
+    if (string.IsNullOrWhiteSpace(datos.Codigo)) return "El codigo es obligatorio.";
+    if (string.IsNullOrWhiteSpace(datos.Nombre)) return "El nombre es obligatorio.";
+    if (datos.Precio < 0) return "El precio no puede ser negativo.";
+    if (datos.Stock < 0) return "El stock no puede ser negativo.";
+
+    return null;
+}
+
 // ── Modelo ────────────────────────────────────────────────────────────────
 public class Producto {
     public int Id { get; set; }
