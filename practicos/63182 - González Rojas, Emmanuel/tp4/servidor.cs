@@ -20,7 +20,7 @@ using (var scope = app.Services.CreateScope()) {
     repositorio.Iniciar();
 }
 
-// ── Endpoints ─────────────────────────────────────────────────────────────
+//Endpoints
 app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
     repositorio.TraerProductos());
     
@@ -30,7 +30,6 @@ app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
     return Results.Ok(producto);
 });
 
-// Todo el código y comentarios de este archivo deben estar en español.
 app.MapPost("/productos",(Producto producto, CatalogoRepositorio repositorio) => {
     if (string.IsNullOrWhiteSpace(producto.Codigo))
     return Results.BadRequest("El código no puede estar vacío.");
@@ -44,7 +43,24 @@ app.MapPost("/productos",(Producto producto, CatalogoRepositorio repositorio) =>
     repositorio.AgregarProducto(producto);
     return Results.Created($"/productos/{producto.Id}", producto);
 });
+app.MapPut("/productos/{id}", (int id, Producto input, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(id);
+    if (producto is null) return Results.NotFound();
 
+    if (string.IsNullOrWhiteSpace(input.Codigo))
+        return Results.BadRequest("El código no puede estar vacío.");
+    if (string.IsNullOrWhiteSpace(input.Nombre))
+        return Results.BadRequest("El nombre no puede estar vacío.");
+    if (input.Precio < 0)
+        return Results.BadRequest("El precio no puede ser negativo.");
+    if (input.Stock < 0)
+        return Results.BadRequest("El stock no puede ser negativo.");
+    if (repositorio.ExisteCodigo(input.Codigo, id))
+        return Results.Conflict($"Ya existe otro producto con código '{input.Codigo}'.");
+
+    repositorio.ModificarProducto(id, input);
+    return Results.Ok(repositorio.TraerProducto(id));
+});
 
 app.Run("http://localhost:5050");
 
