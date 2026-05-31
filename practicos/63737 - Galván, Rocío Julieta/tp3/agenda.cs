@@ -55,23 +55,24 @@ public class AgendaWindow : Window {
     private StatusBar _statusBar = null!;
     private MenuItem _toggleFavoritosItem = null!;
 
-    public AgendaWindow(SqliteAgendaStore store) {
-        _store = store;
-        _contacts = store.GetAll();
-        _filteredContacts = new List<Contacto>(_contacts);
+public AgendaWindow(SqliteAgendaStore store) {
+    _store = store;
+    _contacts = store.GetAll();
+    _filteredContacts = new List<Contacto>(_contacts);
 
-        Title = "AGENDA DE CONTACTO";
-        X = 0;
-        Y = 0;
-        Width = Dim.Fill();
-        Height = Dim.Fill();
+    Title = "AGENDA DE CONTACTO";
+    X = 0;
+    Y = 0;
+    Width = Dim.Fill();
+    Height = Dim.Fill();
 
+    BuildMenu();
+    BuildLayout();
+    BuildStatusBar();
+    RefreshList();
 
-        BuildMenu();
-        BuildLayout();
-        BuildStatusBar();
-        RefreshList();
-    }
+   
+}
 
     private void BuildMenu() {
         _toggleFavoritosItem = new MenuItem("_Solo favoritos", null!, () => ToggleFavoritos());
@@ -84,19 +85,22 @@ public class AgendaWindow : Window {
                 new MenuItem("_Importar JSON", "Ctrl+I",  () => ImportJson()),
                 new MenuItem("_Exportar JSON", "Ctrl+E",  () => ExportJson()),
                 null!,
-                new MenuItem("_Salir",         "Ctrl+Q",  () => App!.RequestStop()),
+                new MenuItem("_Salir",   "Ctrl+Q",  () => App!.RequestStop()),
             ]),
+
             new MenuBarItem("_Contactos",
             [
-                new MenuItem("_Nuevo",    "F2 / Ctrl+N",  () => NuevoContacto()),
-                new MenuItem("_Editar",   "F3 / Enter",   () => EditarContacto()),
-                new MenuItem("_Eliminar", "Del / Ctrl+D", () => EliminarContacto())
+                new MenuItem("_Nuevo",    "F2 / Ctrl+N",  NuevoContacto),
+                new MenuItem("_Editar",   "F3 / Enter", EditarContacto),
+                new MenuItem("_Eliminar", "Del / Ctrl+D",  EliminarContacto)
             ]),
-  new MenuBarItem("_Ver",
-[
-    _toggleFavoritosItem,
-    new MenuItem("_Todos los contactos", null!, () => MostrarTodos())
-]),
+
+             new MenuBarItem("_Ver",
+           [
+             _toggleFavoritosItem,
+            new MenuItem("_Todos los contactos", null!, () => MostrarTodos())
+           ]),
+
             new MenuBarItem("_Ayuda",
             [
                 new MenuItem("_Acerca de", null!, () => MostrarAcercaDe())
@@ -139,18 +143,20 @@ public class AgendaWindow : Window {
     }
 
 
+ private void BuildStatusBar() {
+     _statusBar = new StatusBar([
+    new Shortcut(Key.F2, "Nuevo", NuevoContacto),
+    new Shortcut(Key.F3, "Editar", EditarContacto),
+    new Shortcut(Key.Delete, "Eliminar", EliminarContacto),
+    new Shortcut(Key.F4, "Buscar", () => _searchField.SetFocus()),
+    new Shortcut(Key.I.WithCtrl, "Importar", ImportJson),  
+    new Shortcut(Key.E.WithCtrl, "Exportar", ExportJson),  
+    new Shortcut(Key.Q.WithCtrl, "Salir", () => App!.RequestStop())
+     ]);
+     Add(_statusBar); 
+}
 
-    private void BuildStatusBar() {
-        _statusBar = new StatusBar(
-        [
-            new Shortcut(Key.F2,         "Nuevo",    () => NuevoContacto()),
-        new Shortcut(Key.F3,         "Editar",   () => EditarContacto()),
-        new Shortcut(Key.Delete,     "Eliminar", () => EliminarContacto()),
-        new Shortcut(Key.F4,         "Buscar",   () => _searchField.SetFocus()),
-        new Shortcut(Key.Q.WithCtrl, "Salir",    () => App!.RequestStop()),
-        ]);
-        Add(_statusBar);
-    }
+
 
     private void RefreshList() {
         _listView.SetSource(new ObservableCollection<string>(
@@ -196,30 +202,31 @@ public class AgendaWindow : Window {
 
     }
 
-    private void EditarContacto() {
-        int selectedIndex = SelectedIndex();
-        if (selectedIndex < 0 || selectedIndex >= _filteredContacts.Count) {
-            return;
-        }
-
-        var original = _filteredContacts[selectedIndex];
-        var dialog = new ContactDialog(original.Clone());
-       App!.Run(dialog);
-
-        if (dialog.Result is null) {
-            return;
-        }
-
-        dialog.Result.Id = original.Id;
-        _store.Update(dialog.Result);
-
-        int index = _contacts.FindIndex(c => c.Id == original.Id);
-        if (index >= 0) {
-            _contacts[index] = dialog.Result;
-        }
-        ApplyFilter();
-        SetStatus("Se actualizó el contacto correctamente");
+private void EditarContacto() {
+    int selectedIndex = SelectedIndex();
+    if (selectedIndex < 0 || selectedIndex >= _filteredContacts.Count) {
+        return;
     }
+
+    var original = _filteredContacts[selectedIndex];
+
+    var dialog = new ContactDialog(original.Clone());
+    App!.Run(dialog);
+
+    if (dialog.Result is null) {
+        return;
+    }
+
+    dialog.Result.Id = original.Id;
+    _store.Update(dialog.Result);
+
+    int index = _contacts.FindIndex(c => c.Id == original.Id);
+    if (index >= 0) {
+        _contacts[index] = dialog.Result;
+    }
+    ApplyFilter();
+    SetStatus("Se actualizó el contacto correctamente");
+}
 
     private void EliminarContacto() {
     int selectedIndex = SelectedIndex();
@@ -356,8 +363,8 @@ var label = new Label {
     try {
         var io = new JsonAgendaIO();
         io.Export(_contacts, input.Text);
- MessageBox.Query(App!, "Exportar", $"Contactos exportados correctamente a:\n{input.Text}", "Ok");
-SetStatus($"Exportados {_contacts.Count} contacto(s) a {input.Text}");
+        MessageBox.Query(App!, "Exportar", $"Contactos exportados correctamente a:\n{input.Text}", "Ok");
+        SetStatus($"Exportados {_contacts.Count} contacto(s) a {input.Text}");
     }
     catch (Exception ex) {
         MessageBox.ErrorQuery(App!, "Error", ex.Message, "Ok");
@@ -380,6 +387,52 @@ SetStatus($"Exportados {_contacts.Count} contacto(s) a {input.Text}");
     private int SelectedIndex() {
         return _listView.SelectedItem ?? -1;
     }
+
+
+protected override bool OnKeyDown(Key key) {
+    string teclaStr = key.ToString();
+
+    if (teclaStr == "F2" || key.IsCtrl && teclaStr == "N") {
+        NuevoContacto(); 
+        return true;
+    }
+
+    if (teclaStr == "F3" || teclaStr == "Enter") {
+        EditarContacto();
+        return true;
+    }
+
+    if (teclaStr == "Delete" || key.IsCtrl && teclaStr == "D") {
+        EliminarContacto(); 
+        return true;
+    }
+
+    if (key.IsCtrl && teclaStr == "I") {
+        ImportJson();
+        return true;
+    }
+
+    if (key.IsCtrl && teclaStr == "E") {
+        ExportJson();
+        return true;
+    }
+
+    if (teclaStr == "F4") {
+        _searchField.SetFocus(); 
+        return true;
+    }
+
+    if (key.IsCtrl && teclaStr == "Q") {
+        App!.RequestStop();
+        return true;
+    }
+
+    bool handled = base.OnKeyDown(key);
+    
+
+    return handled;
+}
+
 }
 
 
@@ -414,7 +467,7 @@ public class ContactDialog : Dialog
         Y = 3
     };
 
-       string[] tels = contacto.Telefonos.Split(',');
+        string[] tels = contacto.Telefonos.Split(',');
       for (int i = 0; i < 5; i++)
     {
     _phoneFields[i] = new TextField {
