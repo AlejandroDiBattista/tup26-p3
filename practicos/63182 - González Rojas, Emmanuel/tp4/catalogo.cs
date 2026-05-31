@@ -374,5 +374,45 @@ private readonly CatalogoApi api;
         Application.Run(dlg);
     }
 
+private void AgregarProducto() {
+        var dlg = new Dialog { Title = " Agregar Producto ", Width = 58, Height = 14 };
+
+        var lblCodigo = new Label     { Text = "Código :", X = 1, Y = 1 };
+        var txtCodigo = new TextField { Text = "", X = 12, Y = 1, Width = Dim.Fill(2) };
+        var lblNombre = new Label     { Text = "Nombre :", X = 1, Y = 3 };
+        var txtNombre = new TextField { Text = "", X = 12, Y = 3, Width = Dim.Fill(2) };
+        var lblPrecio = new Label     { Text = "Precio :", X = 1, Y = 5 };
+        var txtPrecio = new TextField { Text = "0", X = 12, Y = 5, Width = 20 };
+        var lblStock  = new Label     { Text = "Stock  :", X = 1, Y = 7 };
+        var txtStock  = new TextField { Text = "0", X = 12, Y = 7, Width = 12 };
+
+        var btnGuardar  = new Button { Text = "_Guardar",  IsDefault = true };
+        var btnCancelar = new Button { Text = "_Cancelar" };
+
+        dlg.Add(lblCodigo, txtCodigo, lblNombre, txtNombre,
+                lblPrecio, txtPrecio, lblStock,  txtStock);
+        dlg.AddButton(btnGuardar);
+        dlg.AddButton(btnCancelar);
+
+        btnGuardar.Accepting += (_, _) => {
+            var datos = ValidarYLeer(txtCodigo, txtNombre, txtPrecio, txtStock);
+            if (datos is null) return;
+            _ = Task.Run(async () => {
+                try {
+                    var (ok, msg) = await api.AgregarProductoAsync(datos);
+                    Application.Invoke(() => {
+                        Application.RequestStop(dlg);
+                        SetStatus(ok ? "✓ Producto agregado." : $"✗ {msg}");
+                        if (ok) _ = RecargarAsync();
+                    });
+                } catch (Exception ex) { SetStatus($"✗ {ex.Message}"); }
+            });
+        };
+        btnCancelar.Accepting += (_, _) => Application.RequestStop(dlg);
+
+        Application.Run(dlg);
+    }
+
+
     
 }
