@@ -31,35 +31,34 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
 
 app.Run("http://localhost:5050");
 
+//Modelo de datos
+enum TipoMovimiento { Compra, Venta, Ajuste }
+class Producto {
+    public int     Id     { get; set; }
+    public string  Codigo { get; set; } = "";
+    public string  Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int     Stock  { get; set; }
+}
 
-
-// ── Modelo ────────────────────────────────────────────────────────────────
-
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
-
-// ── DbContext ─────────────────────────────────────────────────────────────
+class MovimientoDeProducto {
+    public int            Id         { get; set; }
+    public int            ProductoId { get; set; }
+    public TipoMovimiento Tipo       { get; set; }
+    public int            Cantidad   { get; set; }
+    public DateTime       Fecha      { get; set; }
+}
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
-    public DbSet<Producto> Productos => Set<Producto>();
-}
+    public DbSet<Producto>             Productos   => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 
-// ── Repositorio ───────────────────────────────────────────────────────────
-
-class CatalogoRepositorio {
-    private readonly CatalogoDb db;
-
-    public CatalogoRepositorio(CatalogoDb db) => this.db = db;
-
-    public void Iniciar() {
-        db.Database.EnsureCreated();
-
-        if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-            db.SaveChanges();
-        }
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>()
+            .HasIndex(p => p.Codigo).IsUnique();
+        modelBuilder.Entity<MovimientoDeProducto>()
+            .Property(m => m.Tipo).HasConversion<string>();
     }
-
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }
+
