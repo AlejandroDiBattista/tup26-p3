@@ -29,20 +29,22 @@ app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
     return Results.Ok(productos);
 });
 
-app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+app.MapGet("/productos/{id : int}", (int id, CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto(id);
-    if(producto is null) return Results.NotFound();
+    if(producto is null) return Results.NotFound("Producto no encontrado/no existe.");
 
     return Results.Ok(producto);
 });
 
-app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repositorio) => {
-    var movimientos = repositorio.TraerMovimientosDeProducto(id);
-    if(movimientos is null) return Results.NotFound();
+app.MapGet("/productos/{id : int}/movimientos", (int id, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(id);
+    if (producto is null) return Results.NotFound("Producto no encontrado/no existe.");
 
+    var movimientos = repositorio.TraerMovimientosDeProducto(id);
     return Results.Ok(movimientos);
 });
-app.MapPost("/productos/", (ProductoCrearDto dto, CatalogoRepositorio repositorio) => {
+
+app.MapPost("/productos", (ProductoCrearDto dto, CatalogoRepositorio repositorio) => {
     if (dto is null) return Results.BadRequest();
     if (string.IsNullOrWhiteSpace(dto.Codigo) || string.IsNullOrWhiteSpace(dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
     if (dto.Precio <= 0 || dto.Stock < 0) return Results.BadRequest("El precio y el Stock deben ser mayores a 0.");
@@ -52,7 +54,7 @@ app.MapPost("/productos/", (ProductoCrearDto dto, CatalogoRepositorio repositori
     return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
 });
 
-app.MapPost("/productos/{id}/movimientos", (int id, MovimientoCrearDto dto, CatalogoRepositorio repositorio) => {
+app.MapPost("/productos/{id : int}/movimientos", (int id, MovimientoCrearDto dto, CatalogoRepositorio repositorio) => {
     if (string.IsNullOrWhiteSpace(dto.Accion)) return Results.BadRequest("La acción es obligatoria.");
     if (dto.Cantidad <= 0) return Results.BadRequest("La cantidad debe ser mayor a 0.");
 
@@ -62,7 +64,7 @@ app.MapPost("/productos/{id}/movimientos", (int id, MovimientoCrearDto dto, Cata
     return Results.Created($"/productos/{id}/movimientos/{movimiento.Id}", movimiento);
 });
 
-app.MapPut("/productos/{id}", (int id, ProductoActualizarDto dto, CatalogoRepositorio repositorio) => {
+app.MapPut("/productos/{id : int}", (int id, ProductoActualizarDto dto, CatalogoRepositorio repositorio) => {
     if (string.IsNullOrWhiteSpace(dto.Codigo) || string.IsNullOrWhiteSpace(dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
     if (dto.Precio <= 0 || dto.Stock < 0) return Results.BadRequest("El precio y el Stock deben ser mayores a 0.");
     if (repositorio.CodigoExisteenOtro(dto.Codigo, id)) return Results.Conflict("Y existe un producto con ese código.");
@@ -73,9 +75,9 @@ app.MapPut("/productos/{id}", (int id, ProductoActualizarDto dto, CatalogoReposi
     return Results.Ok(productoActualizado);
 });
 
-app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+app.MapDelete("/productos/{id : int}", (int id, CatalogoRepositorio repositorio) => {
     var eliminado = repositorio.EliminarProducto(id);
-    if (!eliminado) return Results.NotFound();
+    if (!eliminado) return Results.NotFound("Producto no encontrado/no existe.");
 
     return Results.NoContent();
 });
@@ -135,7 +137,7 @@ class CatalogoRepositorio {
         .ToList(); 
 
     public MovimientoDeProducto? RegistrarMovimiento(int productoId, string accion, int cantidad) {
-    var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);
+    var producto = db.Productos.AsNoTracking().FirstOrDefault(p => p.Id == productoId);
     if (producto is null) return null;
   
     int nuevoStock;
@@ -151,7 +153,7 @@ class CatalogoRepositorio {
         nuevoStock = cantidad;
     }
     else {
-        throw new ArgumentException("Acción no válida. Debe ser 'Compra', 'Venta' o 'Ajuste'.");
+        return null;
     }
 
     var productoActualizado = producto with { Stock = nuevoStock };
@@ -167,7 +169,7 @@ class CatalogoRepositorio {
     }
 
     public Producto? ActualizarProducto(int id, string codigo, string nombre, decimal precio, int stock) {
-        var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+        var producto = db.Productos.AsNoTracking().FirstOrDefault(p => p.Id == id);
         if (producto is null) return null;
 
         var productoActualizado = producto with { Codigo = codigo, Nombre = nombre, Precio = precio, Stock = stock };
