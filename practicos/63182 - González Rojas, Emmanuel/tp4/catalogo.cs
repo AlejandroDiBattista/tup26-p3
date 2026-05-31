@@ -267,6 +267,41 @@ private readonly CatalogoApi api;
     }
 
 
+    private void RenderizarProductos() {
+        var items = productosFiltrados
+            .Select(p => $" {p.Codigo,-10} {p.Nombre,-22} ${p.Precio,9:N2}  Stk:{p.Stock,5}")
+            .ToList();
+        listaProductos.SetSource(new ObservableCollection<string>(items));
+
+        if (productosFiltrados.Count == 0) {
+            movimientosActuales.Clear();
+            lblMovimientos.Text = " Sin resultados.";
+            RenderizarMovimientos();
+        } else {
+            listaProductos.SelectedItem = 0;
+            _ = CargarMovimientosAsync(productosFiltrados[0]);
+        }
+    }
+
+    private void RenderizarMovimientos() {
+        if (movimientosActuales.Count == 0) {
+            listaMovimientos.SetSource(
+                new ObservableCollection<string> { " (sin movimientos)" });
+            return;
+        }
+        var items = movimientosActuales.Select(m => {
+            var signo = m.Tipo switch {
+                TipoMovimiento.Compra => "+",
+                TipoMovimiento.Venta  => "-",
+                _                     => "="
+            };
+            return $" {m.Tipo,-8}  {signo}{m.Cantidad,5}   {m.Fecha:dd/MM/yy HH:mm}";
+        }).ToList();
+        listaMovimientos.SetSource(new ObservableCollection<string>(items));
+    }
+
+
+    
 
 
     
