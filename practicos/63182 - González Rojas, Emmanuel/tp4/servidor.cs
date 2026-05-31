@@ -98,6 +98,11 @@ class CatalogoDb : DbContext {
         producto.Stock  = input.Stock;
         db.SaveChanges();
     }
-    
+        public void EliminarProducto(int id) {
+            var movimientos = db.Movimientos.Where(m => m.ProductoId == id).ToList();
+            db.Movimientos.RemoveRange(movimientos);
+            db.Productos.Remove(db.Productos.First(p => p.Id == id));
+            db.SaveChanges();
+        }
             
     }
