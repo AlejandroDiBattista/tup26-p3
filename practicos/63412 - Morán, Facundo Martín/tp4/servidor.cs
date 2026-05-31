@@ -47,6 +47,9 @@ app.MapPost("/productos", (ProductoRequest request, CatalogoRepositorio reposito
         var error = ValidarProducto(request);
         if (error is not null)
             return Results.BadRequest(error);
+            if (!repositorio.ExisteCodigo(request.Codigo))
+        return Results.BadRequest("El código ya existe.");
+    
     var producto = repositorio.CrearProducto(request);
 
     return Results.Created($"/productos/{producto.Id}", producto);
@@ -57,7 +60,7 @@ app.MapPut("/productos/{id:int}",
     var error = ValidarProducto(request);
     if (error is not null)
         return Results.BadRequest(error);
-        
+
     var producto = repositorio.ModificarProducto(id, request);
 
     if (producto is null)
@@ -186,6 +189,10 @@ public bool EliminarProducto(int id)
     db.SaveChanges();
 
     return true;
+}
+public bool ExisteCodigo(string codigo)
+{
+    return db.Productos.Any(p => p.Codigo == codigo);
 }
         
 }
