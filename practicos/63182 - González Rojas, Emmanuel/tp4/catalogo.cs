@@ -104,33 +104,38 @@ class CatalogoApi {
         try { await http.DeleteAsync($"{Base}/shutdown"); } catch { }
     }
 }
-// // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
-// using IApplication app = Application.Create().Init();
-// using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-// var detalleProducto = new Label {
-//     Text = $"""
-//             # PRODUCTO 
+//CatalogoWindow
+class CatalogoWindow : Window {
+    
+private readonly CatalogoApi api;
+    private List<ProductoDto> productos = [];
+    private List<ProductoDto> productosFiltrados = [];
+    private List<MovimientoDto>  movimientosActuales = [];
 
-//             - Id     : {producto.Id}
-//             - Código : {producto.Codigo}
-//             - Nombre : {producto.Nombre}
-//             - Precio : ${producto.Precio,10:N2}
-//             - Stock  :  {producto.Stock,10}
-//             """,
-//     X = 4, Y = 2,
-// };
+    private readonly MenuBar     menu;
+    private readonly TextField   txtBuscar;
+    private readonly ListaAtajos listaProductos;
+    private readonly Label       lblMovimientos;
+    private readonly ListaAtajos listaMovimientos;
+    private readonly Label       lblStatus;
 
-// ventana.Add(detalleProducto);
+     public CatalogoWindow(CatalogoApi api, List<ProductoDto> productosIniciales) {
+        this.api = api;
+        this.productos = productosIniciales;
+        productosFiltrados = [.. productos];
 
-// app.Run(ventana);
-
-// static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-//     const string url = "http://localhost:5050/producto";
-//     return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
-// }
-
-// // ── DTO ───────────────────────────────────────────────────────────────────
-
-// record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+        Title = "Catálogo REST";
+        X = 0;
+        Y = 1;
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+        
+        
+        
+        
+        
+        }
+    
+}
