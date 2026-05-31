@@ -365,5 +365,14 @@ private readonly CatalogoApi api;
     }
 
 
+ private static void MostrarError(string mensaje) {
+        var dlg = new Dialog { Title = " Atención ", Width = 50, Height = 6 };
+        dlg.Add(new Label { Text = mensaje, X = 1, Y = 1 });
+        var btn = new Button { Text = "_Aceptar", IsDefault = true };
+        btn.Accepting += (_, _) => Application.RequestStop(dlg);
+        dlg.AddButton(btn);
+        Application.Run(dlg);
+    }
+
     
 }
