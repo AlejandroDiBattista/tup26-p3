@@ -79,3 +79,10 @@ class CatalogoRepositorio {
     public async Task<bool> ExisteProductoAsync(int id) =>
         await db.Productos.AnyAsync(p => p.Id == id);
 }
+
+public class ProductoDatos {
+    public string Codigo { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+}
