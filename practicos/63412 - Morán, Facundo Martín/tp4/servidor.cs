@@ -102,14 +102,56 @@ app.Run("http://localhost:5050");
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+class Producto 
+{
+    public int Id { get; set; }
+
+    public string Codigo { get; set; } = "";
+
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+
+    public List<MovimientoDeProducto> Movimientos { get; set; } = [];
+}
 record class ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
+enum TipoMovimiento
+{
+    Compra,
+    Venta,
+    Ajuste
+}
+class MovimientoDeProducto
+{
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public Producto Producto { get; set; } = null!;
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+}
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+    modelBuilder.Entity<MovimientoDeProducto>()
+        .HasOne(m => m.Producto)
+        .WithMany(p => p.Movimientos)
+        .HasForeignKey(m => m.ProductoId);
+    }
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -123,7 +165,13 @@ class CatalogoRepositorio {
         db.Database.EnsureCreated();
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.Add(new Producto {
+                Id = 1,
+                Codigo = "P001",
+                Nombre = "Yerba Mate 500g",
+                Precio = 1500m,
+                Stock = 100
+            });
             db.SaveChanges();
         }
     }
@@ -145,14 +193,12 @@ class CatalogoRepositorio {
         ? db.Productos.Max(p => p.Id) + 1
         : 1;
 
-    var producto = new Producto(
-        nuevoId,
-        request.Codigo,
-        request.Nombre,
-        request.Precio,
-        request.Stock
-    );
-
+    var producto = new Producto {
+        Codigo = request.Codigo,
+        Nombre = request.Nombre,
+        Precio = request.Precio,
+        Stock = request.Stock
+    };
     db.Productos.Add(producto);
     db.SaveChanges();
 
@@ -165,13 +211,10 @@ public Producto? ModificarProducto(int id, ProductoRequest request)
     if (producto is null)
         return null;
 
-    producto = producto with
-    {
-        Codigo = request.Codigo,
-        Nombre = request.Nombre,
-        Precio = request.Precio,
-        Stock = request.Stock
-    };
+producto.Codigo = request.Codigo;
+producto.Nombre = request.Nombre;
+producto.Precio = request.Precio;
+producto.Stock = request.Stock;
 
     db.Productos.Update(producto);
     db.SaveChanges();
