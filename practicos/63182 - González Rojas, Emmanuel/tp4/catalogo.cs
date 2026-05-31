@@ -40,7 +40,7 @@ try {
     api.ApagarServidorAsync().Wait(500); 
 } catch { }
 
-// DTOS 
+// DTOs
 enum TipoMovimiento { Compra, Venta, Ajuste }
 
 class ProductoDto {
@@ -57,6 +57,52 @@ class MovimientoDto {
     public TipoMovimiento Tipo       { get; set; }
     public int            Cantidad   { get; set; }
     public DateTime       Fecha      { get; set; }
+}
+
+class CatalogoApi {
+    private readonly HttpClient            http;
+    private readonly JsonSerializerOptions opts;
+    private const    string                Base = "http://localhost:5050";
+
+    public CatalogoApi(HttpClient http) {
+        this.http = http;
+        opts = new JsonSerializerOptions {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
+    }
+
+    public async Task<List<ProductoDto>> ObtenerProductosAsync() =>
+        await http.GetFromJsonAsync<List<ProductoDto>>($"{Base}/productos", opts)
+        ?? throw new HttpRequestException("El servidor devolvió una respuesta vacía.");
+
+    public async Task<(bool ok, string msg)> AgregarProductoAsync(ProductoDto p) {
+        var resp = await http.PostAsJsonAsync($"{Base}/productos", p, opts);
+        return (resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+    }
+
+    public async Task<(bool ok, string msg)> ModificarProductoAsync(ProductoDto p) {
+        var resp = await http.PutAsJsonAsync($"{Base}/productos/{p.Id}", p, opts);
+        return (resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+    }
+
+    public async Task<(bool ok, string msg)> EliminarProductoAsync(int id) {
+        var resp = await http.DeleteAsync($"{Base}/productos/{id}");
+        return (resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+    }
+
+    public async Task<List<MovimientoDto>> ObtenerMovimientosAsync(int productoId) =>
+        await http.GetFromJsonAsync<List<MovimientoDto>>(
+            $"{Base}/productos/{productoId}/movimientos", opts) ?? [];
+
+    public async Task<(bool ok, string msg)> RegistrarMovimientoAsync(int productoId, MovimientoDto m) {
+        var resp = await http.PostAsJsonAsync($"{Base}/productos/{productoId}/movimientos", m, opts);
+        return (resp.IsSuccessStatusCode, await resp.Content.ReadAsStringAsync());
+    }
+
+    public async Task ApagarServidorAsync() {
+        try { await http.DeleteAsync($"{Base}/shutdown"); } catch { }
+    }
 }
 // // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
