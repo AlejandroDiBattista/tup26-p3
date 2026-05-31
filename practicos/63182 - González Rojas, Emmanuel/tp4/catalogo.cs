@@ -414,5 +414,54 @@ private void AgregarProducto() {
     }
 
 
+    private void ModificarProducto() {
+        var producto = GetSeleccionado();
+        if (producto is null) {
+            MostrarError("Seleccioná un producto primero.");
+            return;
+        }
+
+        var dlg = new Dialog { Title = $" Modificar: {producto.Nombre} ", Width = 58, Height = 14 };
+
+        var lblCodigo = new Label     { Text = "Código :", X = 1, Y = 1 };
+        var txtCodigo = new TextField { Text = producto.Codigo, X = 12, Y = 1, Width = Dim.Fill(2) };
+        var lblNombre = new Label     { Text = "Nombre :", X = 1, Y = 3 };
+        var txtNombre = new TextField { Text = producto.Nombre, X = 12, Y = 3, Width = Dim.Fill(2) };
+        var lblPrecio = new Label     { Text = "Precio :", X = 1, Y = 5 };
+        var txtPrecio = new TextField {
+            Text = producto.Precio.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            X = 12, Y = 5, Width = 20
+        };
+        var lblStock  = new Label     { Text = "Stock  :", X = 1, Y = 7 };
+        var txtStock  = new TextField { Text = producto.Stock.ToString(), X = 12, Y = 7, Width = 12 };
+
+        var btnGuardar  = new Button { Text = "_Guardar",  IsDefault = true };
+        var btnCancelar = new Button { Text = "_Cancelar" };
+
+        dlg.Add(lblCodigo, txtCodigo, lblNombre, txtNombre,
+                lblPrecio, txtPrecio, lblStock,  txtStock);
+        dlg.AddButton(btnGuardar);
+        dlg.AddButton(btnCancelar);
+
+        btnGuardar.Accepting += (_, _) => {
+            var datos = ValidarYLeer(txtCodigo, txtNombre, txtPrecio, txtStock);
+            if (datos is null) return;
+            datos.Id = producto.Id;
+            _ = Task.Run(async () => {
+                try {
+                    var (ok, msg) = await api.ModificarProductoAsync(datos);
+                    Application.Invoke(() => {
+                        Application.RequestStop(dlg);
+                        SetStatus(ok ? "✓ Producto modificado." : $"✗ {msg}");
+                        if (ok) _ = RecargarAsync();
+                    });
+                } catch (Exception ex) { SetStatus($"✗ {ex.Message}"); }
+            });
+        };
+        btnCancelar.Accepting += (_, _) => Application.RequestStop(dlg);
+
+        Application.Run(dlg);
+    }
+
     
 }
