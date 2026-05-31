@@ -22,20 +22,24 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+app.MapGet("/productos", async (CatalogoRepositorio repo) =>
+    Results.Ok(await repo.ListarProductosAsync()));
 
-    return Results.Ok(producto);
+app.MapGet("/productos/{id:int}", async (int id, CatalogoRepositorio repo) => {
+    var producto = await repo.BuscarProductoAsync(id);
+    return producto is null ? Results.NotFound("Producto no encontrado.") : Results.Ok(producto);
 });
 
 app.Run("http://localhost:5050");
 
-
-
 // ── Modelo ────────────────────────────────────────────────────────────────
-
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+public class Producto {
+    public int Id { get; set; }
+    public string Codigo { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+}
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
@@ -55,11 +59,23 @@ class CatalogoRepositorio {
         db.Database.EnsureCreated();
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.AddRange(
+            new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 },
+            new Producto { Codigo = "P002", Nombre = "Azucar 1kg", Precio = 900m, Stock = 60 },
+            new Producto { Codigo = "P003", Nombre = "Cafe 250g", Precio = 3200m, Stock = 30 }
+        );
             db.SaveChanges();
         }
     }
 
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+    public async Task<List<Producto>> ListarProductosAsync() =>
+        await db.Productos
+            .OrderBy(p => p.Codigo)
+            .ToListAsync();
+
+    public async Task<Producto?> BuscarProductoAsync(int id) =>
+        await db.Productos.FindAsync(id);
+
+    public async Task<bool> ExisteProductoAsync(int id) =>
+        await db.Productos.AnyAsync(p => p.Id == id);
 }
