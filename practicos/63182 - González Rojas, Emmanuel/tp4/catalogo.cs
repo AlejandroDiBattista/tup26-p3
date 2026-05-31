@@ -267,7 +267,7 @@ private readonly CatalogoApi api;
     }
 
 
-    private void RenderizarProductos() {
+    private void RenderProducts() {
         var items = productosFiltrados
             .Select(p => $" {p.Codigo,-10} {p.Nombre,-22} ${p.Precio,9:N2}  Stk:{p.Stock,5}")
             .ToList();
@@ -301,7 +301,44 @@ private readonly CatalogoApi api;
     }
 
 
-    
+    private void ProcesarAtajo(Key e) {
+        if (e.Handled) return;
+
+        if (e.KeyCode == KeyCode.Esc) {
+            Application.RequestStop();
+            e.Handled = true;
+            return;
+        }
+        if (e.KeyCode == KeyCode.F5) {
+            _ = RecargarAsync();
+            e.Handled = true;
+            return;
+        }
+
+        if (txtBuscar.HasFocus) return;
+
+        var codigo = e.KeyCode & ~KeyCode.ShiftMask;
+
+        switch (codigo) {
+            case KeyCode.F1: MostrarAyuda();
+                            e.Handled = true;break;
+            case KeyCode.A: case (KeyCode)'a': 
+                AgregarProducto(); e.Handled = true; break;
+            case KeyCode.B: case (KeyCode)'b': 
+                ModificarProducto(); e.Handled = true; break;
+            case KeyCode.E: case (KeyCode)'e': 
+                EliminarProducto(); e.Handled = true; break;
+            case KeyCode.C: case (KeyCode)'c': 
+                RegistrarMovimiento(TipoMovimiento.Compra); e.Handled = true; break;
+            case KeyCode.V: case (KeyCode)'v': 
+                RegistrarMovimiento(TipoMovimiento.Venta); e.Handled = true; break;
+            case KeyCode.J: case (KeyCode)'j': 
+                RegistrarMovimiento(TipoMovimiento.Ajuste); e.Handled = true; break;
+            case KeyCode.M: case (KeyCode)'m': 
+                menu.SetFocus(); e.Handled = true; break;
+        }
+    }
+
 
 
     
