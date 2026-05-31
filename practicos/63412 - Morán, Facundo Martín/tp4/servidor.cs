@@ -44,6 +44,9 @@ app.MapGet("/productos/{id:int}",
 });
 app.MapPost("/productos", (ProductoRequest request, CatalogoRepositorio repositorio) =>
 {
+        var error = ValidarProducto(request);
+        if (error is not null)
+            return Results.BadRequest(error);
     var producto = repositorio.CrearProducto(request);
 
     return Results.Created($"/productos/{producto.Id}", producto);
@@ -51,6 +54,10 @@ app.MapPost("/productos", (ProductoRequest request, CatalogoRepositorio reposito
 app.MapPut("/productos/{id:int}",
 (int id, ProductoRequest request, CatalogoRepositorio repositorio) =>
 {
+    var error = ValidarProducto(request);
+    if (error is not null)
+        return Results.BadRequest(error);
+        
     var producto = repositorio.ModificarProducto(id, request);
 
     if (producto is null)
@@ -68,6 +75,23 @@ app.MapDelete("/productos/{id:int}",
 
     return Results.NoContent();
 });
+
+static string? ValidarProducto(ProductoRequest request)
+{
+    if (string.IsNullOrWhiteSpace(request.Codigo))
+        return "El código es obligatorio.";
+
+    if (string.IsNullOrWhiteSpace(request.Nombre))
+        return "El nombre es obligatorio.";
+
+    if (request.Precio <= 0)
+        return "El precio debe ser mayor a cero.";
+
+    if (request.Stock < 0)
+        return "El stock no puede ser negativo.";
+
+    return null;
+}
 
 app.Run("http://localhost:5050");
 
