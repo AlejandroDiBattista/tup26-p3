@@ -30,6 +30,22 @@ app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
     return Results.Ok(producto);
 });
 
+// Todo el código y comentarios de este archivo deben estar en español.
+app.MapPost("/productos",(Producto producto, CatalogoRepositorio repositorio) => {
+    if (string.IsNullOrWhiteSpace(producto.Codigo))
+    return Results.BadRequest("El código no puede estar vacío.");
+    if (string.IsNullOrWhiteSpace(producto.Nombre))
+    return Results.BadRequest("El nombre no puede estar vacío.");
+    if (producto.Precio < 0)
+    return Results.BadRequest("El precio no puede ser negativo.");
+    if (producto.Stock < 0)    return Results.BadRequest("El stock no puede ser negativo.");
+    if (repositorio.ExisteCodigo(producto.Codigo))
+    return Results.BadRequest("Code already exists.");
+    repositorio.AgregarProducto(producto);
+    return Results.Created($"/productos/{producto.Id}", producto);
+});
+
+
 app.Run("http://localhost:5050");
 
 //Modelo de datos
