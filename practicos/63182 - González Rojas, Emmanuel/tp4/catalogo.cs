@@ -206,7 +206,7 @@ private readonly CatalogoApi api;
 
       }
 
-          public MenuBar ObtenerMenu() => menu;
+    public MenuBar ObtenerMenu() => menu;
     private void EjecutarMenu(Action accion) {
         _ = Task.Run(async () => {
             await Task.Delay(150);
@@ -245,6 +245,27 @@ private readonly CatalogoApi api;
         
         Application.Run(dlg);
     }
+
+
+    private void SetStatus(string msg) =>
+        Application.Invoke(() => lblStatus.Text = $" {msg}");
+
+    private ProductoDto? GetSeleccionado() {
+        int idx = listaProductos.SelectedItem;
+        return (idx >= 0 && idx < productosFiltrados.Count)
+            ? productosFiltrados[idx] : null;
+    }
+
+    private void AplicarFiltro() {
+        var q = txtBuscar.Text?.Trim() ?? "";
+        productosFiltrados = string.IsNullOrEmpty(q)
+            ? [.. productos]
+            : [.. productos.Where(p =>
+                p.Codigo.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                p.Nombre.Contains(q, StringComparison.OrdinalIgnoreCase))];
+        RenderizarProductos();
+    }
+
 
 
 
