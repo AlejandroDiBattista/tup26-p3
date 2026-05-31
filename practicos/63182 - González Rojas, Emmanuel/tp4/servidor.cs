@@ -105,4 +105,27 @@ class CatalogoDb : DbContext {
             db.SaveChanges();
         }
             
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId) => db.Movimientos.Where(m => m.ProductoId == productoId)
+    .OrderByDescending(m => m.Fecha)
+    .ToList();
+    
+    public void RegistrarMovimientos(int productiId, MovimientoDeProducto movimiento) {
+        var producto = db.Productos.First(p => p.Id == productiId);
+        
+        switch (movimiento.Tipo) {
+            case TipoMovimiento.Compra:producto.Stock += movimiento.Cantidad;
+                break;
+            case TipoMovimiento.Venta:
+                if (producto.Stock < movimiento.Cantidad) throw new Exception("Stock insuficiente."); producto.Stock -= movimiento.Cantidad;
+                break;
+            case TipoMovimiento.Ajuste: producto.Stock = movimiento.Cantidad;
+                break;
+        }
+
+        movimiento.ProductoId = productiId;
+        movimiento.Fecha = DateTime.Now;
+        db.Movimientos.Add(movimiento);
+        db.SaveChanges();
+    }
+    
     }
