@@ -339,6 +339,30 @@ private readonly CatalogoApi api;
         }
     }
 
+  private async Task RecargarAsync() {
+        SetStatus("Recargando...");
+        try {
+            productos = await api.ObtenerProductosAsync();
+            Application.Invoke(() => {
+                AplicarFiltro();
+                SetStatus($"✓ {productos.Count} producto(s) cargado(s).");
+            });
+        } catch (Exception ex) {
+            SetStatus($"✗ Error: {ex.Message}");
+        }
+    }
+
+  private async Task CargarMovimientosAsync(ProductoDto producto) {
+        Application.Invoke(() =>
+            lblMovimientos.Text = $" {producto.Nombre}  (stock: {producto.Stock})");
+        try {
+            var lista = await api.ObtenerMovimientosAsync(producto.Id);
+            movimientosActuales = lista;
+            Application.Invoke(RenderizarMovimientos);
+        } catch (Exception ex) {
+            SetStatus($"✗ Error movimientos: {ex.Message}");
+        }
+    }
 
 
     
