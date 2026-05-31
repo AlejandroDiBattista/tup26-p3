@@ -106,7 +106,7 @@ class CatalogoApi {
 }
 
 
-//CatalogoWindow
+//CATALOGOWINDOW
 class CatalogoWindow : Window {
     
 private readonly CatalogoApi api;
@@ -167,6 +167,29 @@ private readonly CatalogoApi api;
             X = 0, Y = Pos.AnchorEnd(1)
         };
         
-        }
+    //MENU
+         menu = new MenuBar {
+            Menus = [
+                new MenuBarItem("_Productos", [
+                    new MenuItem("_Agregar",       "", () => EjecutarMenu(AgregarProducto)),
+                    new MenuItem("Modificar (_B)", "", () => EjecutarMenu(ModificarProducto)),
+                    new MenuItem("_Eliminar",      "", () => EjecutarMenu(EliminarProducto)),
+                    new MenuItem("Recargar (_F5)", "", () => EjecutarMenu(() => _ = RecargarAsync())),
+                ]),
+                new MenuBarItem("_Movimientos", [
+                    new MenuItem("_Compra",  "", () => EjecutarMenu(() => RegistrarMovimiento(TipoMovimiento.Compra))),
+                    new MenuItem("_Venta",   "", () => EjecutarMenu(() => RegistrarMovimiento(TipoMovimiento.Venta))),
+                    new MenuItem("A_juste",  "", () => EjecutarMenu(() => RegistrarMovimiento(TipoMovimiento.Ajuste))),
+                ]),
+                new MenuBarItem("A_yuda", [
+                    new MenuItem("Ver Atajos (_F1)", "", () => EjecutarMenu(MostrarAyuda))
+                ]),
+                new MenuBarItem("_Salir", [
+                    new MenuItem("Salir (_ESC)", "", () => Application.RequestStop()),
+                ]),
+            ]
+        };
+
+      }
     
 }
