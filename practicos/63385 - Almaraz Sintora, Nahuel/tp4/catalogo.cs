@@ -3,6 +3,9 @@
 
 using System.Net.Http.Json;
 using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
@@ -44,7 +47,8 @@ public sealed class CatalogoWindow : Runnable {
         Height = Dim.Fill();
         Menu.DefaultBorderStyle = LineStyle.Single;
         CrearInterfaz();
-        private void RecargarProductos() {
+    }
+    private void RecargarProductos() {
         try {
             productos = http.GetFromJsonAsync<List<ProductoDto>>("productos")
                 .GetAwaiter()
@@ -75,8 +79,6 @@ public sealed class CatalogoWindow : Runnable {
 
         listaProductos.SelectedItem = lineasProductos.Count > 0 ? 0 : null;
         CargarMovimientosDelSeleccionado();
-    }
-        RecargarProductos();
     }
 
     private void CrearInterfaz() {
@@ -251,3 +253,88 @@ public sealed class CatalogoWindow : Runnable {
         return false;
     }
 }
+
+public sealed class ProductoDialog : Dialog {
+    public ProductoDatos? Resultado { get; private set; }
+    private readonly TextField codigo = new(), nombre = new(), precio = new(), stock = new();
+
+    public ProductoDialog(string titulo, ProductoDto? producto) {
+        Title = titulo; Width = 60; Height = 13;
+        codigo.Text = producto?.Codigo ?? ""; nombre.Text = producto?.Nombre ?? "";
+        precio.Text = producto?.Precio.ToString(CultureInfo.CurrentCulture) ?? "0";
+        stock.Text = producto?.Stock.ToString() ?? "0";
+        codigo.X = 12; codigo.Y = 1; codigo.Width = 35; nombre.X = 12; nombre.Y = 3; nombre.Width = 35;
+        precio.X = 12; precio.Y = 5; precio.Width = 35; stock.X = 12; stock.Y = 7; stock.Width = 35;
+
+        Add(new Label { Text = "Codigo:", X = 2, Y = 1 }, codigo, new Label { Text = "Nombre:", X = 2, Y = 3 }, nombre, new Label { Text = "Precio:", X = 2, Y = 5 }, precio, new Label { Text = "Stock:", X = 2, Y = 7 }, stock);
+
+        Button guardar = new() { Text = "_Guardar", IsDefault = true };
+        guardar.Accepting += (_, e) => { if (Guardar()) App!.RequestStop(); e.Handled = true; };
+        Button cancelar = new() { Text = "_Cancelar" };
+        cancelar.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        AddButton(guardar); AddButton(cancelar);
+    }
+
+    private bool Guardar() {
+        string codigoValor = codigo.Text.ToString().Trim(); string nombreValor = nombre.Text.ToString().Trim();
+        if (codigoValor == "" || nombreValor == "") { MostrarError("Codigo y nombre son obligatorios."); return false; }
+        if (!LeerDecimal(precio.Text.ToString(), out decimal precioValor) || precioValor < 0) { MostrarError("El precio debe ser un numero mayor o igual a cero."); return false; }
+        if (!int.TryParse(stock.Text.ToString(), out int stockValor) || stockValor < 0) { MostrarError("El stock debe ser un numero entero mayor o igual a cero."); return false; }
+        Resultado = new ProductoDatos(codigoValor, nombreValor, precioValor, stockValor); return true;
+    }
+
+    private static bool LeerDecimal(string texto, out decimal valor) => decimal.TryParse(texto, NumberStyles.Number, CultureInfo.CurrentCulture, out valor) || decimal.TryParse(texto, NumberStyles.Number, CultureInfo.InvariantCulture, out valor);
+    private void MostrarError(string mensaje) => App!.Run(new MensajeDialog("Dato invalido", mensaje));
+}
+
+public sealed class MovimientoDialog : Dialog {
+    public MovimientoDatos? Resultado { get; private set; }
+    private readonly string tipo; private readonly TextField cantidad = new();
+
+    public MovimientoDialog(string tipo, ProductoDto producto) {
+        this.tipo = tipo; Title = $"Registrar {tipo.ToLowerInvariant()}"; Width = 62; Height = 10;
+        string textoCantidad = tipo == "Ajuste" ? "Nuevo stock:" : "Cantidad:";
+        string ayuda = tipo == "Compra" ? "La compra aumenta el stock." : tipo == "Venta" ? "La venta disminuye el stock." : "El ajuste deja el stock en el valor indicado.";
+        cantidad.Text = "1"; cantidad.X = 16; cantidad.Y = 4; cantidad.Width = 20;
+
+        Add(new Label { Text = $"{producto.Codigo} - {producto.Nombre}", X = 2, Y = 1 }, new Label { Text = $"Stock actual: {producto.Stock}", X = 2, Y = 2 }, new Label { Text = ayuda, X = 2, Y = 3 }, new Label { Text = textoCantidad, X = 2, Y = 4 }, cantidad);
+
+        Button guardar = new() { Text = "_Guardar", IsDefault = true };
+        guardar.Accepting += (_, e) => { if (Guardar()) App!.RequestStop(); e.Handled = true; };
+        Button cancelar = new() { Text = "_Cancelar" };
+        cancelar.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        AddButton(guardar); AddButton(cancelar);
+    }
+
+    private bool Guardar() {
+        if (!int.TryParse(cantidad.Text.ToString(), out int cantidadValor)) { MostrarError("La cantidad debe ser un numero entero."); return false; }
+        if (cantidadValor < 0 || (tipo != "Ajuste" && cantidadValor == 0)) { MostrarError("La cantidad debe ser positiva."); return false; }
+        Resultado = new MovimientoDatos(tipo, cantidadValor); return true;
+    }
+    private void MostrarError(string mensaje) => App!.Run(new MensajeDialog("Dato invalido", mensaje));
+}
+
+public sealed class ConfirmDialog : Dialog {
+    public bool Confirmado { get; private set; }
+    public ConfirmDialog(string titulo, string mensaje) {
+        Title = titulo; Width = 62; Height = 8; Add(new Label { Text = mensaje, X = 2, Y = 2 });
+        Button si = new() { Text = "_Si", IsDefault = true };
+        si.Accepting += (_, e) => { Confirmado = true; App!.RequestStop(); e.Handled = true; };
+        Button no = new() { Text = "_No" };
+        no.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        AddButton(si); AddButton(no);
+    }
+}
+
+public sealed class MensajeDialog : Dialog {
+    public MensajeDialog(string titulo, string mensaje) {
+        Title = titulo; Width = 70; Height = 8; Add(new Label { Text = mensaje, X = 2, Y = 2 });
+        Button cerrar = new() { Text = "_Cerrar", IsDefault = true };
+        cerrar.Accepting += (_, e) => { App!.RequestStop(); e.Handled = true; };
+        AddButton(cerrar);
+    }
+}
+public record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+public record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
+public record ProductoDatos(string Codigo, string Nombre, decimal Precio, int Stock);
+public record MovimientoDatos(string Tipo, int Cantidad);
