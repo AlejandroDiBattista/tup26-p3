@@ -67,8 +67,18 @@ app.MapDelete("/productos/{id}",(int id, CatalogoRepositorio repositorio) => {
     repositorio.EliminarProducto(id);
     return Results.NoContent();
 });
+//-------------------------------------------------------------
+app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(productoId);
+    if (producto is null) return Results.NotFound();
+    return Results.Ok(repositorio.TraerMovimientos(productoId));
+});
 
 
+
+
+
+//-------------------------------------------------------------
 
 app.Run("http://localhost:5050");
 
