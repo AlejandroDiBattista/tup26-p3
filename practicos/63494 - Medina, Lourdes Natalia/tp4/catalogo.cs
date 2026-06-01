@@ -14,17 +14,17 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
-string serverUrl = args.Length > 0 ? args[0] : "http://localhost:5000";    
+string serverUrl = args.Length > 0 ? args[0] : "http://localhost:5000";
 
-try{
+try {
     using CatalogoApiClient api = new(serverUrl);
     using IApplication app = Application.Create().Init();
     app.Run(new CatalogoWindow(api));
 }
 catch (Exception ex) {
-    Console.WriteLine($"No se pudo iniciar el catalogo: {ex.Message} ");
+    Console.Error.WriteLine($"No se pudo iniciar el catalogo: {ex.Message}");
     Environment.ExitCode = 1;
-}  
+}
 
 public sealed class CatalogoWindow : Window {
     private readonly CatalogoApiClient api;
@@ -39,7 +39,7 @@ public sealed class CatalogoWindow : Window {
     private StatusBar statusBar = null!;
     private int selectedIndex;
 
-     public CatalogoWindow(CatalogoApiClient api) {
+    public CatalogoWindow(CatalogoApiClient api) {
         this.api = api;
 
         Title = $"Catalogo de productos - {api.BaseUrl}";
@@ -51,7 +51,7 @@ public sealed class CatalogoWindow : Window {
         ReloadProducts("Catalogo cargado.");
     }
 
- private void BuildLayout() {
+    private void BuildLayout() {
         MenuBar menu = new() {
             Menus = [
                 new MenuBarItem("_Archivo", [
@@ -75,7 +75,7 @@ public sealed class CatalogoWindow : Window {
             ]
         };
 
-        Label searchLabel = new(){
+        Label searchLabel = new() {
             Text = "Buscar:",
             X = 1,
             Y = 1,
@@ -85,7 +85,7 @@ public sealed class CatalogoWindow : Window {
         searchField = new TextField {
             X = Pos.Right(searchLabel) + 1,
             Y = 1,
-            Width = Dim.Fill(1)   
+            Width = Dim.Fill(1)
         };
         searchField.TextChanged += (_, _) => RefreshFilteredProducts();
 
@@ -97,7 +97,7 @@ public sealed class CatalogoWindow : Window {
             Height = Dim.Fill(1)
         };
 
-        productList = new ListView{
+        productList = new ListView {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
@@ -124,11 +124,11 @@ public sealed class CatalogoWindow : Window {
             X = 0,
             Y = Pos.Bottom(productDetail) + 1,
             Width = Dim.Fill(),
-            Height = Dim.Fill(1)
+            Height = Dim.Fill()
         };
         detailFrame.Add(productDetail, movementList);
 
-         statusBar = new StatusBar([
+        statusBar = new StatusBar([
             new Shortcut(Key.F2, "Agregar", AddProduct),
             new Shortcut(Key.F3, "Editar", EditProduct),
             new Shortcut(Key.Delete, "Eliminar", DeleteProduct),
