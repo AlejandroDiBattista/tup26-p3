@@ -1,30 +1,27 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
 
+
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
-
+using Terminal.Gui.ViewBase;
 using Terminal.Gui.Drawing;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-using var http = new HttpClient(BaseAddress: new Uri("http://localhost:5050/"));
 List<ProductoDto> productos;
-// ProductoDto producto;
+using var http = new HttpClient { BaseAddress = new Uri("http://localhost:5050") };
+
 try {
-    using var http = new HttpClient();
-    productos = CargarProductosAsync(http);
+   productos = CargarProductos(http);
 } catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
     Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
     return;
 }
-
-List<ProductoDto> filtrados = productos.ToList();
-bool actualizarLista = false;
-
 
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
@@ -95,13 +92,21 @@ ventana.Add(Buscar, search, panelizquierdo, panelDerecho);
 
 
 
+List<ProductoDto> filtrados = productos.ToList();
+
+listaProductos.SetSource(new ObservableCollection<string>(
+    filtrados.Select(p => $"{p.Codigo} - {p.Nombre}  $ {p.Precio:N2}  Stock: {p.Stock}")
+));
+
+if (filtrados.Count > 0)
+{
+    listaProductos.SelectedItem = 0;
+}
 
 
 
-
-
-listaPoductos.ValueChanged += (_,_) => {
-    var producto = Obtenerproductos(listaProductos, producto);
+listaProductos.ValueChanged += (_,_) => {
+    var producto = ObtenerSeleccionado(listaProductos, filtrados);
 
     if (producto is null) {
         detalleProducto.Text = "No hay productos disponibles/seleccionados.";
@@ -118,39 +123,32 @@ listaPoductos.ValueChanged += (_,_) => {
             - Precio : ${producto.Precio,10:N2}
             - Stock  :  {producto.Stock,10}
             """;
-}        
+        
 
-using var http = new HttpClient(BaseAddress: new Uri("http://localhost:5050/"));
-var movimientos = cargarMovimientos(http, producto.Id);
+    var movimientos = CargarMovimientos(http, producto.Id);
 
-detalleMovimientos.Text = movimientos.count == 0 ? "No hay movimientos registrados para este producto." 
-: $"""
-        # MOVIMIENTOS
+    movimientosProducto.Text = movimientos.Count == 0 ? "No hay movimientos registrados para este producto." 
+    : $"""
+            # MOVIMIENTOS
 
-        {string.Join("\n", movimientos.Select(m => $"- {m.Accion} {m.Cantidad} unidades el {m.Fecha:dd/MM/yyyy HH:mm:ss}"))}
-        """;
+            {string.Join("\n", movimientos.Select(m => $"- {m.Accion} {m.Cantidad} unidades el {m.Fecha:dd/MM/yyyy HH:mm:ss}"))}
+            """;
 
-
+};
 app.Run(ventana);
-
-
-
-
-
-
-
-
 
 
 // funciones auxiliares
 
-static List<ProductoDto> CargarProductosAsync(HttpClient http) {
+static List<ProductoDto> CargarProductos(HttpClient http) {
     return http.GetFromJsonAsync<List<ProductoDto>>("/productos").Result ?? new List<ProductoDto>();
 }
-static ProductoDto CargarProducto(HttpClient http, int id)
+static ProductoDto? ObtenerSeleccionado(ListView lista, List<ProductoDto> productosFiltrados)
 {
-    return http.GetFromJsonAsync<ProductoDto>($"/productos/{id}").Result
-        ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+    if (lista.SelectedItem is not int i) return null;
+    if (i < 0 || i >= productosFiltrados.Count) return null;
+
+    return productosFiltrados[i];
 }
 static List<MovimientosDto> CargarMovimientos(HttpClient http, int id)
 {
@@ -160,3 +158,4 @@ static List<MovimientosDto> CargarMovimientos(HttpClient http, int id)
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientosDto(int Id, int ProductoId, string Accion, int Cantidad, DateTime Fecha);

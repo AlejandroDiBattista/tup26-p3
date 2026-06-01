@@ -29,14 +29,14 @@ app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
     return Results.Ok(productos);
 });
 
-app.MapGet("/productos/{id : int}", (int id, CatalogoRepositorio repositorio) => {
+app.MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto(id);
     if(producto is null) return Results.NotFound("Producto no encontrado/no existe.");
 
     return Results.Ok(producto);
 });
 
-app.MapGet("/productos/{id : int}/movimientos", (int id, CatalogoRepositorio repositorio) => {
+app.MapGet("/productos/{id:int}/movimientos", (int id, CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto(id);
     if (producto is null) return Results.NotFound("Producto no encontrado/no existe.");
 
@@ -54,7 +54,7 @@ app.MapPost("/productos", (ProductoCrearDto dto, CatalogoRepositorio repositorio
     return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
 });
 
-app.MapPost("/productos/{id : int}/movimientos", (int id, MovimientoCrearDto dto, CatalogoRepositorio repositorio) => {
+app.MapPost("/productos/{id:int}/movimientos", (int id, MovimientoCrearDto dto, CatalogoRepositorio repositorio) => {
     if (string.IsNullOrWhiteSpace(dto.Accion)) return Results.BadRequest("La acción es obligatoria.");
     if (dto.Cantidad <= 0) return Results.BadRequest("La cantidad debe ser mayor a 0.");
 
@@ -64,7 +64,7 @@ app.MapPost("/productos/{id : int}/movimientos", (int id, MovimientoCrearDto dto
     return Results.Created($"/productos/{id}/movimientos/{movimiento.Id}", movimiento);
 });
 
-app.MapPut("/productos/{id : int}", (int id, ProductoActualizarDto dto, CatalogoRepositorio repositorio) => {
+app.MapPut("/productos/{id:int}", (int id, ProductoActualizarDto dto, CatalogoRepositorio repositorio) => {
     if (string.IsNullOrWhiteSpace(dto.Codigo) || string.IsNullOrWhiteSpace(dto.Nombre)) return Results.BadRequest("El codigo y el nombre es obligatorio.");
     if (dto.Precio <= 0 || dto.Stock < 0) return Results.BadRequest("El precio y el Stock deben ser mayores a 0.");
     if (repositorio.CodigoExisteenOtro(dto.Codigo, id)) return Results.Conflict("Y existe un producto con ese código.");
@@ -75,7 +75,7 @@ app.MapPut("/productos/{id : int}", (int id, ProductoActualizarDto dto, Catalogo
     return Results.Ok(productoActualizado);
 });
 
-app.MapDelete("/productos/{id : int}", (int id, CatalogoRepositorio repositorio) => {
+app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => {
     var eliminado = repositorio.EliminarProducto(id);
     if (!eliminado) return Results.NotFound("Producto no encontrado/no existe.");
 
