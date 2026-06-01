@@ -190,7 +190,7 @@ private readonly CatalogoApi api;
             ]
         };
 
-        Add(MasterPanel, DetailPanel, lblStatus);
+        Add(panelMaestro, panelDetalle, lblStatus);
 
         txtBuscar.TextChanged += (_, _) => AplicarFiltro();
 
@@ -267,7 +267,7 @@ private readonly CatalogoApi api;
     }
 
 
-    private void RenderProducts() {
+    private void RenderizarProductos() {
         var items = productosFiltrados
             .Select(p => $" {p.Codigo,-10} {p.Nombre,-22} ${p.Precio,9:N2}  Stk:{p.Stock,5}")
             .ToList();
@@ -576,6 +576,34 @@ private void RegistrarMovimiento(TipoMovimiento tipo) {
         Application.Run(dlg);
     }
 
+private static ProductoDto? ValidarYLeer(
+        TextField txtCodigo, TextField txtNombre,
+        TextField txtPrecio, TextField txtStock) {
 
+        var codigo = txtCodigo.Text?.Trim() ?? "";
+        var nombre = txtNombre.Text?.Trim() ?? "";
+
+        if (string.IsNullOrEmpty(codigo)) {
+            MostrarError("El código no puede estar vacío.");
+            return null;
+        }
+        if (string.IsNullOrEmpty(nombre)) {
+            MostrarError("El nombre no puede estar vacío.");
+            return null;
+        }
+        if (!decimal.TryParse(
+                txtPrecio.Text?.Trim().Replace(",", "."),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal precio) || precio < 0) {
+            MostrarError("El precio debe ser un decimal no negativo.");
+            return null;
+        }
+        if (!int.TryParse(txtStock.Text?.Trim(), out int stock) || stock < 0) {
+            MostrarError("El stock debe ser un entero no negativo.");
+            return null;
+        }
+        return new ProductoDto { Codigo = codigo, Nombre = nombre, Precio = precio, Stock = stock };
+    }
     
 }
