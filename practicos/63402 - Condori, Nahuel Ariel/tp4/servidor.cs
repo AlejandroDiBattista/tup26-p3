@@ -133,6 +133,17 @@ class CatalogoRepositorio {
     public void Iniciar() {
         db.Database.EnsureCreated();
 
+        db.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS Movimientos (
+            Id INTEGER NOT NULL CONSTRAINT PK_Movimientos PRIMARY KEY AUTOINCREMENT,
+            ProductoId INTEGER NOT NULL,
+            Fecha TEXT NOT NULL,
+            Cantidad INTEGER NOT NULL,
+            Tipo INTEGER NOT NULL,
+            FOREIGN KEY (ProductoId) REFERENCES Productos (Id)
+        );
+        """);
+
         if (!db.Productos.Any()) {
             db.Productos.AddRange(
                 new Producto {
