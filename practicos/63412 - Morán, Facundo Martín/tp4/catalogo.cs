@@ -76,7 +76,22 @@ var eliminar = new Button
             Text = $"Productos encontrados: {productos.Count}"
         };
 
+        var historial = new ListView
+{
+    X = 50,
+    Y = 1
+};
+
+historial.SetSource(
+    new ObservableCollection<string>(
+        new List<string>
+        {
+            "Historial pendiente"
+        }));
+
+
         Add(listaProductos);
+        Add(historial);
         Add(informacion);
         Add(agregar);
         Add(modificar);
@@ -94,6 +109,7 @@ static class ProductoDialog
             1000,
             10);
     }
+
 }
 sealed class CatalogoApi
 {
@@ -121,6 +137,12 @@ public async Task EliminarProductoAsync(int id)
 {
     await http.DeleteAsync($"/productos/{id}");
 }
+public async Task<List<MovimientoDto>> ListarMovimientosAsync(int productoId)
+{
+    return await http.GetFromJsonAsync<List<MovimientoDto>>(
+        $"/productos/{productoId}/movimientos")
+        ?? [];
+}
 }
 // ── DTO ───────────────────────────────────────────────────────────────────
 
@@ -130,3 +152,16 @@ sealed record ProductoRequest(
     string Nombre,
     decimal Precio,
     int Stock);
+
+        enum TipoMovimiento
+{
+    Compra,
+    Venta,
+    Ajuste
+}
+
+record MovimientoDto(
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha);
