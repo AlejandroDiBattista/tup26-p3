@@ -95,3 +95,9 @@ public class ProductoDatos {
     public decimal Precio { get; set; }
     public int Stock { get; set; }
 }
+
+record ResultadoProducto(Producto? Producto, string? Error, bool NoEncontrado) {
+    public static ResultadoProducto Ok(Producto producto) => new(producto, null, false);
+    public static ResultadoProducto Fallo(string error) => new(null, error, false);
+    public static ResultadoProducto NoEncontradoResult() => new(null, null, true);
+}
