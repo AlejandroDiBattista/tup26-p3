@@ -28,10 +28,19 @@ sealed class CatalogoWindow : Window
     {
         Title = $" Catalogo REST — {productos.Count} productos cargados ";
 
+        var menu = new Label
+{
+    X = 1,
+    Y = 0,
+    Text = "[A]gregar  [M]odificar  [E]liminar"
+};
+
+Add(menu);
+
         var listaProductos = new ListView
         {
             X = 1,
-            Y = 1,
+            Y = 2,
         };
         var agregar = new Button    
 {
@@ -79,7 +88,7 @@ var eliminar = new Button
         var historial = new ListView
 {
     X = 50,
-    Y = 1
+    Y = 2
 };
 
 historial.SetSource(
