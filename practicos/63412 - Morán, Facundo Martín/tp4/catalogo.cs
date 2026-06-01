@@ -20,7 +20,7 @@ try {
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Productos (ESC para salir) " };
+using Window ventana = new () { Title = " Catalogo REST — {productos.Count} productos guardados " };
 
 var listaProductos = new ListView
 {
@@ -33,8 +33,15 @@ listaProductos.SetSource(
         productos.Select(p =>
             $"{p.Codigo,-10} {p.Nombre,-25} ${p.Precio,10:N2} Stock:{p.Stock}")
         .ToList()));
-
+var informacion = new Label
+{
+    X = 1,
+    Y = productos.Count + 3,
+    Text = $"Productos encontrados: {productos.Count}"
+};
 ventana.Add(listaProductos);
+ventana.Add(informacion);
+
 
 app.Run(ventana);
 
