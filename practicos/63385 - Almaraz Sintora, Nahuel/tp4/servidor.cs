@@ -67,6 +67,15 @@ app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, Cat
     return Results.Ok(await repo.ListarMovimientosAsync(productoId));
 });
 
+app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, MovimientoDatos datos, CatalogoRepositorio repo) => {
+    var resultado = await repo.RegistrarMovimientoAsync(productoId, datos);
+    if (resultado.NoEncontrado) return Results.NotFound("Producto no encontrado.");
+
+    return resultado.Error is not null
+        ? Results.BadRequest(resultado.Error)
+        : Results.Created($"/productos/{productoId}/movimientos/{resultado.Movimiento!.Id}", resultado.Movimiento);
+});
+
 app.Run("http://localhost:5050");
 
 static string? ValidarProducto(ProductoDatos datos) {
@@ -193,6 +202,42 @@ class CatalogoRepositorio {
             .Where(m => m.ProductoId == productoId)
             .OrderByDescending(m => m.Fecha)
             .ToListAsync();
+    
+    public async Task<ResultadoMovimiento> RegistrarMovimientoAsync(int productoId, MovimientoDatos datos) {
+        var producto = await db.Productos.FindAsync(productoId);
+        if (producto is null) return ResultadoMovimiento.NoEncontradoResult();
+
+        if (!Enum.TryParse<TipoMovimiento>(datos.Tipo, true, out var tipo)) {
+            return ResultadoMovimiento.Fallo("El tipo debe ser Compra, Venta o Ajuste.");
+        }
+
+        if (datos.Cantidad < 0 || (tipo != TipoMovimiento.Ajuste && datos.Cantidad == 0)) {
+            return ResultadoMovimiento.Fallo("La cantidad debe ser positiva.");
+        }
+
+        if (tipo == TipoMovimiento.Compra) {
+            producto.Stock += datos.Cantidad;
+        } else if (tipo == TipoMovimiento.Venta) {
+            if (producto.Stock < datos.Cantidad) {
+                return ResultadoMovimiento.Fallo("No hay stock suficiente para la venta.");
+            }
+
+            producto.Stock -= datos.Cantidad;
+        } else {
+            producto.Stock = datos.Cantidad;
+        }
+
+        var movimiento = new MovimientoDeProducto {
+            ProductoId = productoId,
+            Tipo = tipo,
+            Cantidad = datos.Cantidad,
+            Fecha = DateTime.Now
+        };
+
+        db.Movimientos.Add(movimiento);
+        await db.SaveChangesAsync();
+        return ResultadoMovimiento.Ok(movimiento);
+    }
 
     private async Task<bool> CodigoRepetidoAsync(string codigo, int idActual) =>
         await db.Productos.AnyAsync(p => p.Codigo == codigo.Trim() && p.Id != idActual);
@@ -218,4 +263,15 @@ record ResultadoProducto(Producto? Producto, string? Error, bool NoEncontrado) {
     public static ResultadoProducto Ok(Producto producto) => new(producto, null, false);
     public static ResultadoProducto Fallo(string error) => new(null, error, false);
     public static ResultadoProducto NoEncontradoResult() => new(null, null, true);
+}
+
+public class MovimientoDatos {
+    public string Tipo { get; set; } = "";
+    public int Cantidad { get; set; }
+}
+
+record ResultadoMovimiento(MovimientoDeProducto? Movimiento, string? Error, bool NoEncontrado) {
+    public static ResultadoMovimiento Ok(MovimientoDeProducto movimiento) => new(movimiento, null, false);
+    public static ResultadoMovimiento Fallo(string error) => new(null, error, false);
+    public static ResultadoMovimiento NoEncontradoResult() => new(null, null, true);
 }
