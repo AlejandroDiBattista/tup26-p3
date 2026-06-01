@@ -33,11 +33,20 @@ sealed class CatalogoWindow : Window
             X = 1,
             Y = 1,
         };
-        var agregar = new Button
+        var agregar = new Button    
 {
     X = 1,
     Y = productos.Count + 5,
     Text = "Agregar"
+};
+agregar.Accepting += (_, _) =>
+{
+    var producto = ProductoDialog.Mostrar();
+
+    if (producto is not null)
+    {
+        Console.WriteLine($"Producto: {producto.Nombre}");
+    }
 };
 
 var modificar = new Button
@@ -73,6 +82,18 @@ var eliminar = new Button
         Add(modificar);
         Add(eliminar);
     }
+    
+}
+static class ProductoDialog
+{
+    public static ProductoRequest? Mostrar()
+    {
+        return new ProductoRequest(
+            "P000",
+            "Nuevo Producto",
+            1000,
+            10);
+    }
 }
 sealed class CatalogoApi
 {
@@ -104,3 +125,8 @@ public async Task EliminarProductoAsync(int id)
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+sealed record ProductoRequest(
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock);
