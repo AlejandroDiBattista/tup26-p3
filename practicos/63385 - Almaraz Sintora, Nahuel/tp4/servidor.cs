@@ -3,6 +3,7 @@
 #:property PublishAot=false
 
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 // ── Configuración ──────────────────────────────────────────────────────────
 
@@ -75,6 +76,23 @@ public class Producto {
     public string Nombre { get; set; } = "";
     public decimal Precio { get; set; }
     public int Stock { get; set; }
+    [JsonIgnore]
+    public List<MovimientoDeProducto> Movimientos { get; set; } = [];
+}
+public enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
+
+public class MovimientoDeProducto {
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    [JsonIgnore]
+    public Producto? Producto { get; set; }
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
 }
 
 // ── DbContext ─────────────────────────────────────────────────────────────
@@ -82,10 +100,17 @@ public class Producto {
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<Producto>()
             .HasIndex(p => p.Codigo)
             .IsUnique();
+
+        modelBuilder.Entity<Producto>()
+            .HasMany(p => p.Movimientos)
+            .WithOne(m => m.Producto)
+            .HasForeignKey(m => m.ProductoId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
@@ -140,7 +165,7 @@ class CatalogoRepositorio {
     public async Task<ResultadoProducto> ModificarProductoAsync(int id, ProductoDatos datos) {
         var producto = await db.Productos.FindAsync(id);
         if (producto is null) return ResultadoProducto.NoEncontradoResult();
-        
+
         if (await CodigoRepetidoAsync(datos.Codigo, id)) {
             return ResultadoProducto.Fallo("Ya existe otro producto con ese codigo.");
         }
