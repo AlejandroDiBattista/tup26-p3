@@ -197,3 +197,123 @@ public sealed class CatalogoWindow : Window {
     private static string FormatProductListItem(Producto product) {
         return $"{product.Codigo,-12} {TrimTo(product.Nombre, 28),-28} {product.Precio,10:C2}  Stock: {product.Stock,5}";
     }
+
+     private Producto? SelectedProduct() {
+        if (filteredProducts.Count == 0) {
+            return null;
+        }
+
+        int index = productList is null ? selectedIndex : productList.SelectedItem ?? selectedIndex;
+        if (index < 0 || index >= filteredProducts.Count) {
+            index = 0;
+        }
+
+        return filteredProducts[index];
+    }
+
+    private void LoadSelectedMovements() {
+        Producto? selected = SelectedProduct();
+        movements.Clear();
+
+        if (selected is null) {
+            productDetail.Text = "No hay productos para mostrar.";
+            movementList.SetSource(new ObservableCollection<string>(["Sin movimientos."]));
+            return;
+        }
+
+        productDetail.Text =
+            $"Id: {selected.Id}\n" +
+            $"Codigo: {selected.Codigo}\n" +
+            $"Nombre: {selected.Nombre}\n" +
+            $"Precio: {selected.Precio:C2}    Stock actual: {selected.Stock}";
+
+        try {
+            movements.AddRange(api.GetMovementsAsync(selected.Id).GetAwaiter().GetResult());
+            movementList.SetSource(new ObservableCollection<string>(
+                movements.Count == 0
+                    ? ["Sin movimientos registrados."]
+                    : movements.Select(FormatMovementListItem).ToList()));
+        }
+        catch (Exception ex) {
+            movementList.SetSource(new ObservableCollection<string>([$"Error: {ex.Message}"]));
+        }
+
+        productDetail.SetNeedsDraw();
+        movementList.SetNeedsDraw();
+    }
+
+    private static string FormatMovementListItem(MovimientoDeProducto movement) {
+        return $"{movement.Fecha:yyyy-MM-dd HH:mm}  {movement.Tipo,-7}  {movement.Cantidad,6}";
+    }
+
+ private void AddProduct() {
+        ProductDialog dialog = new();
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Product is null) {
+            SetStatus("Alta cancelada.");
+            return;
+        }
+
+        try {
+            Producto saved = api.CreateProductAsync(dialog.Product).GetAwaiter().GetResult();
+            ReloadProducts($"Producto agregado: {saved.Codigo}.");
+            SelectProduct(saved.Id);
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al guardar", ex.Message, "Aceptar");
+        }
+    }
+
+     private void EditProduct() {
+        Producto? selected = SelectedProduct();
+        if (selected is null) {
+            SetStatus("No hay producto seleccionado para modificar.");
+            return;
+        }
+
+        ProductDialog dialog = new(selected);
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Product is null) {
+            SetStatus("Edicion cancelada.");
+            return;
+        }
+
+        try {
+            Producto updated = api.UpdateProductAsync(selected.Id, dialog.Product).GetAwaiter().GetResult();
+            ReloadProducts($"Producto modificado: {updated.Codigo}.");
+            SelectProduct(updated.Id);
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al modificar", ex.Message, "Aceptar");
+        }
+    }
+
+       private void DeleteProduct() {
+        Producto? selected = SelectedProduct();
+        if (selected is null) {
+            SetStatus("No hay producto seleccionado para eliminar.");
+            return;
+        }
+
+        int answer = MessageBox.Query(
+            App!,
+            "Confirmar eliminacion",
+            $"Eliminar el producto \"{selected.Codigo} - {selected.Nombre}\"?",
+            "Eliminar",
+            "Cancelar") ?? 1;
+
+        if (answer != 0) {
+            SetStatus("Eliminacion cancelada.");
+            return;
+        }
+
+        try {
+            api.DeleteProductAsync(selected.Id).GetAwaiter().GetResult();
+            ReloadProducts($"Producto eliminado: {selected.Codigo}.");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
+        }
+    }
