@@ -42,6 +42,12 @@ Add(menu);
             X = 1,
             Y = 2,
         };
+        var detalle = new Label
+{
+    X = 50,
+    Y = 15,
+    Text = "Seleccione un producto"
+};
         var agregar = new Button    
 {
     X = 1,
@@ -97,6 +103,24 @@ historial.SetSource(
         {
             "Historial pendiente"
         }));
+        listaProductos.Accepting += (_, _) =>
+{
+    if (listaProductos.SelectedItem is not int indice)
+        return;
+
+    if (indice < 0 || indice >= productos.Count)
+        return;
+
+    var p = productos[indice];
+
+    detalle.Text =
+        $"Código: {p.Codigo}\n" +
+        $"Nombre: {p.Nombre}\n" +
+        $"Precio: ${p.Precio:N2}\n" +
+        $"Stock: {p.Stock}";
+};
+
+        
 
 
         Add(listaProductos);
