@@ -59,6 +59,14 @@ app.MapDelete("/productos/{id:int}", async (int id, CatalogoRepositorio repo) =>
     return eliminado ? Results.NoContent() : Results.NotFound("Producto no encontrado.");
 });
 
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoRepositorio repo) => {
+    if (!await repo.ExisteProductoAsync(productoId)) {
+        return Results.NotFound("Producto no encontrado.");
+    }
+
+    return Results.Ok(await repo.ListarMovimientosAsync(productoId));
+});
+
 app.Run("http://localhost:5050");
 
 static string? ValidarProducto(ProductoDatos datos) {
@@ -179,6 +187,12 @@ class CatalogoRepositorio {
         await db.SaveChangesAsync();
         return ResultadoProducto.Ok(producto);
     }
+
+    public async Task<List<MovimientoDeProducto>> ListarMovimientosAsync(int productoId) =>
+        await db.Movimientos
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .ToListAsync();
 
     private async Task<bool> CodigoRepetidoAsync(string codigo, int idActual) =>
         await db.Productos.AnyAsync(p => p.Codigo == codigo.Trim() && p.Id != idActual);
