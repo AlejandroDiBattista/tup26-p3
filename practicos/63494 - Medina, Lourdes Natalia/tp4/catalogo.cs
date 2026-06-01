@@ -317,3 +317,73 @@ public sealed class CatalogoWindow : Window {
             MessageBox.ErrorQuery(App!, "Error al eliminar", ex.Message, "Aceptar");
         }
     }
+
+private void RegisterPurchase() {
+        RegisterMovement(TipoMovimiento.Compra);
+    }
+
+private void RegisterSale() {
+        RegisterMovement(TipoMovimiento.Venta); 
+    }
+
+private void RegisterAdjustment() {
+        RegisterMovement(TipoMovimiento.Ajuste);
+    }
+
+private void RegisterMovement(TipoMovimiento type) {
+        Producto? selected = SelectedProduct();
+        if (selected is null) {
+            SetStatus($"No hay producto seleccionado para registrar movimientos.");
+            return;
+        }
+
+        MovementDialog dialog = new(type, selected);
+        App!.Run(dialog);
+
+        if (!dialog.Accepted || dialog.Request is null) {
+            SetStatus($"{tipo} cancelado.");
+            return;
+        }
+
+        try {
+            MovimientoResponse response = api.CreateMovementAsync(selected.Id, dialog.Request).GetAwaiter().GetResult();
+            ReloadProducts($"Movimiento registrado. Stock actual: {response.StockActual}.");
+           
+           SelectProduct(selected.Id);
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, $"Error al registrar", ex.Message, "Aceptar");
+        }
+    }
+
+    private void RefreshAll() {
+        ReloadProducts("Catalogo actualizado.");
+    }
+
+    private void SelectProduct(int id) {
+        int index = filteredProducts.FindIndex(p => p.Id == id);
+        if (index >= 0) {
+                productList.SelectedItem = selectedIndex;
+                selectedIndex = index;
+                LoadSelectedMovements();   
+        }
+    }
+
+    private void ShowAbout() {
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "Catalogo de productos\nTerminal.Gui v2 + ASP.NET Core Minimal API + EF Core SQLite", 
+            "Aceptar");
+    }
+
+    private void RequestExit() {
+        App!.RequestStop();
+    }
+
+    private void SetStatus(string message) {
+       if (statusBar is not null) {
+            statusBar.Text = message;
+        }
+ }   
+
+ 
