@@ -59,6 +59,16 @@ class MovimientoDto {
     public DateTime       Fecha      { get; set; }
 }
 
+class ListaAtajos : ListView {
+    public Action<Key>? Interceptor { get; set; }
+
+    protected override bool OnKeyDown(Key keyEvent) {
+        Interceptor?.Invoke(keyEvent);
+        if (keyEvent.Handled) return true;
+        return base.OnKeyDown(keyEvent);
+    }
+}
+
 class CatalogoApi {
     private readonly HttpClient            http;
     private readonly JsonSerializerOptions opts;
@@ -132,7 +142,7 @@ private readonly CatalogoApi api;
         Width  = Dim.Fill();
         Height = Dim.Fill();
         
-         var lblBuscar = new Label { Text = "Search:", X = 1, Y = 0 };
+         var lblBuscar = new Label { Text = "Buscar:", X = 1, Y = 0 };
         txtBuscar = new TextField { X = Pos.Right(lblBuscar) + 1, Y = 0, Width = Dim.Fill(1) };
 
         listaProductos = new ListaAtajos {
