@@ -56,9 +56,8 @@ class CatalogoDb : DbContext {
     public DbSet<Producto> Productos => Set<Producto>(); // DbSet para la tabla de productos
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>(); // Db
 
-
-// metodo para construir la bd
-protected override void OnModelCreating(ModelBuilder modelBuilder) {
+    // metodo para construir la bd
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<Producto>() 
         .HasIndex(p => p.Codigo) // creamos un indice para el codigo del producto, para mejorar la busqueda por codigo
         .IsUnique(); // indice unico para el codigo del producto
@@ -73,8 +72,67 @@ protected override void OnModelCreating(ModelBuilder modelBuilder) {
             .HasForeignKey(m => m.ProductoId) // FK ProductoId
             .OnDelete(DeleteBehavior.Cascade);/// si se borra un prod, se borra el historial
     }
-
-
 }
 
+// clase intermediaria para la app y bd
+class CatalogoRepositorio {
+    private readonly CatalogoDb db; //guarda contexto para usarlo dps
+    public CatalogoRepositorio(CatalogoDb db) {
+        this.db = db;
+    }
 
+    public void Iniciar() {
+        db.Database.EnsureCreated(); //verifica que exista la bd, si no la crea.
+        if (!db.Productos.Any()) {
+            db.Productos.AddRange();
+            db.SaveChanges();
+        //este if lo usamos pa verificar que la tabla este vacia
+        }
+    }
+
+    //lista los productos ordenados por codigo, y trae un producto por id, devuelve null si no lo encuentra
+    public List<Producto> ListarProductos() =>
+        db.Productos.OrderBy(p => p.Codigo).ToList();
+    //trae prod si no devuelve null
+    public Producto? TraerProducto(int id) =>
+        db.Productos.FirstOrDefault(p => p.Id == id);
+
+    public OperacionProducto CrearProducto(ProductoEntrada entrada) {
+        var codigo = entrada.Codigo.Trim();
+        if (db.Productos.Any(p => p.Codigo == codigo)) {
+            return new OperacionProducto(Error: "Ya   hay un producto con el codigo ");
+        }
+        var producto = new Producto();
+        db.Productos.Add(producto);
+        db.SaveChanges();
+        return new OperacionProducto(producto);
+        // se crea la entidad, se agrega al contexto y devuelve con el id
+    }
+
+    public OperacionProducto ModificarProducto(int id, ProductoEntrada entrada) {
+        var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+        if (producto == null) {
+            return new OperacionProducto(NoEncontrado: true);
+        }
+        var codigo = entrada.Codigo.Trim();
+        if (db.Productos.Any(p => p.Id != id && p.Codigo == codigo)) {
+            return new OperacionProducto(Error: "Ya hay un producto con el codigo ");
+        }
+        db.SaveChanges();        
+    producto.Codigo = codigo; 
+    producto.Nombre = entrada.Nombre.Trim();
+    producto.Stock = entrada.Stock;
+    producto.Precio = entrada.Precio;
+    db.SaveChanges();
+    return new OperacionProducto(producto);
+    }
+
+    public bool EliminarProducto(int id) {
+        var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+        if (producto is null) 
+        return false;
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
+    }
+}
