@@ -54,7 +54,7 @@ app.MapPost("/productos", (ProductoRequest request, CatalogoRepositorio reposito
         var error = ValidarProducto(request);
         if (error is not null)
             return Results.BadRequest(error);
-            if (!repositorio.ExisteCodigo(request.Codigo))
+            if (repositorio.ExisteCodigo(request.Codigo))
         return Results.BadRequest("El código ya existe.");
     
     var producto = repositorio.CrearProducto(request);

@@ -32,7 +32,7 @@
     {
         X = 1,
         Y = 0,
-        Text = "[A]gregar  [M]odificar  [E]liminar"
+        Text = "[A]gregar  [M]odificar  [E]liminar [C]ompra  [V]enta  [J]Ajuste"
     };
 
     Add(menu);
@@ -40,7 +40,7 @@
             var listaProductos = new ListView
             {
                 X = 1,
-                Y = 2,
+                Y = 3,
             };
             var detalle = new Label
     {
@@ -164,14 +164,14 @@
             var historial = new ListView
     {
         X = 50,
-        Y = 2
+        Y = 3
     };
 
     historial.SetSource(
         new ObservableCollection<string>(
             new List<string>
             {
-                "Historial pendiente"
+                "Sin movimientos cargados"
             }));
             listaProductos.Accepting += (_, _) =>
     {
