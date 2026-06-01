@@ -8,13 +8,13 @@ using Terminal.Gui.Views;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
+var api = new CatalogoApi();
+
 List<ProductoDto> productos;
 try {
-    using var http = new HttpClient();
-    productos = await CargarProductosAsync(http);
+    productos = await api.ListarProductosAsync();
 } catch (HttpRequestException ex) {
-    Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
+    Console.WriteLine($"Error al conectar con el servidor: {ex.Message}");
     return;
 }
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
@@ -45,12 +45,19 @@ ventana.Add(informacion);
 
 app.Run(ventana);
 
-static async Task<List<ProductoDto>> CargarProductosAsync (HttpClient http) {
-    const string url = "http://localhost:5050/productos";
-      return await http.GetFromJsonAsync<List<ProductoDto>>(url)
-        ?? [];
-}
+sealed class CatalogoApi
+{
+    private readonly HttpClient http = new()
+    {
+        BaseAddress = new Uri("http://localhost:5050")
+    };
 
+    public async Task<List<ProductoDto>> ListarProductosAsync()
+    {
+        return await http.GetFromJsonAsync<List<ProductoDto>>("/productos")
+            ?? [];
+    }
+}
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
