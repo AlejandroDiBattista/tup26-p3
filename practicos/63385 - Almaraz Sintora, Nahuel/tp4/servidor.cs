@@ -82,6 +82,11 @@ public class Producto {
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>()
+            .HasIndex(p => p.Codigo)
+            .IsUnique();
+    }
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -116,6 +121,10 @@ class CatalogoRepositorio {
         await db.Productos.AnyAsync(p => p.Id == id);
 
     public async Task<ResultadoProducto> CrearProductoAsync(ProductoDatos datos) {
+        if (await CodigoRepetidoAsync(datos.Codigo, 0)) {
+            return ResultadoProducto.Fallo("Ya existe un producto con ese codigo.");
+        }
+
         var producto = new Producto {
             Codigo = datos.Codigo.Trim(),
             Nombre = datos.Nombre.Trim(),
@@ -131,6 +140,10 @@ class CatalogoRepositorio {
     public async Task<ResultadoProducto> ModificarProductoAsync(int id, ProductoDatos datos) {
         var producto = await db.Productos.FindAsync(id);
         if (producto is null) return ResultadoProducto.NoEncontradoResult();
+        
+        if (await CodigoRepetidoAsync(datos.Codigo, id)) {
+            return ResultadoProducto.Fallo("Ya existe otro producto con ese codigo.");
+        }
 
         producto.Codigo = datos.Codigo.Trim();
         producto.Nombre = datos.Nombre.Trim();
@@ -140,6 +153,9 @@ class CatalogoRepositorio {
         await db.SaveChangesAsync();
         return ResultadoProducto.Ok(producto);
     }
+
+    private async Task<bool> CodigoRepetidoAsync(string codigo, int idActual) =>
+        await db.Productos.AnyAsync(p => p.Codigo == codigo.Trim() && p.Id != idActual);
 
     public async Task<bool> EliminarProductoAsync(int id) {
         var producto = await db.Productos.FindAsync(id);
