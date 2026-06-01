@@ -135,4 +135,41 @@ class CatalogoRepositorio {
         db.SaveChanges();
         return true;
     }
-}
+
+ public List<MovimientoDeProducto> ListarMovimientos(int productoId) => db.Movimientos
+    .Where(m => m.ProductoId == productoId)
+    .OrderByDescending(m => m.Fecha)
+    .ToList();
+    //lista recorrible para filtrar movimientos x productos y ordenarlos por fecha desc
+
+public OperacionMovimiento RegistrarMovimiento(int productoId, MovimientoEntrada entrada) {
+    using var transaccion = db.Database.BeginTransaction();
+
+    var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);
+    if (producto == null) return new OperacionMovimiento(NoEncontrado: true);
+
+    if (entrada.Tipo == TipoMovimiento.Compra) {
+        producto.Stock += entrada.Cantidad;
+    }
+    else if (entrada.Tipo == TipoMovimiento.Venta) {
+        if (producto.Stock < entrada.Cantidad)
+            return new OperacionMovimiento(Error: "No hay suficiente stock para realizar la venta");
+        producto.Stock -= entrada.Cantidad;
+    }
+    else if (entrada.Tipo == TipoMovimiento.Ajuste) {
+        producto.Stock = entrada.Cantidad;
+    }
+
+    var movimiento = new MovimientoDeProducto {
+        ProductoId = productoId,
+        Tipo = entrada.Tipo,
+        Cantidad = entrada.Cantidad,
+        Fecha = DateTime.Now,
+    };
+    db.Movimientos.Add(movimiento);
+    db.SaveChanges();
+    transaccion.Commit();
+    return new OperacionMovimiento(movimiento);
+}}
+
+
