@@ -384,6 +384,58 @@ private void RegisterMovement(TipoMovimiento type) {
        if (statusBar is not null) {
             statusBar.Text = message;
         }
- }   
+ }
 
- 
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.N.WithCtrl || key == Key.F2) {
+            AddProduct ();
+            return true;
+        }
+        
+        if (key == Key.F3 || key == Key.Enter) {
+            EditProduct();
+            return true;
+        }
+       
+       if (key == Key.D.WithCtrl || key == Key.Delete) {
+            DeleteProduct();
+            return true;
+        }
+
+        if (key == Key.F5) {
+            RefreshAll();
+            return true;
+        }
+
+        if (key == Key.F6) {
+            RegisterPurchase();
+            return true;
+        }
+
+        if (key == Key.F7) {
+            RegisterSale();
+            return true;
+        }
+
+        if (key == Key.F8) {
+            RegisterAdjustment();
+            return true;
+        }
+
+        if (key == Key.Q.WithCtrl) {
+            RequestExit();
+            return true;
+        }
+
+        bool handled = base.OnKeyDown(key);
+        selectedIndex = productList?.SelectedItem ?? selectedIndex;
+        LoadSelectedMovements();
+        return handled;
+    }
+
+    private static string TrimTo(string value, int maxLength) {
+        return value.Length <= maxLength ? value : value[..Math.Max(0, maxLength - 1)] + ".";
+    }
+}
+
+
