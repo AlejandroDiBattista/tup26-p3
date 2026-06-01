@@ -517,4 +517,65 @@ private void EliminarProducto() {
     }
 
     
+private void RegistrarMovimiento(TipoMovimiento tipo) {
+        var producto = GetSeleccionado();
+        if (producto is null) {
+            MostrarError("Seleccioná un producto primero.");
+            return;
+        }
+
+        string titulo = tipo switch {
+            TipoMovimiento.Compra => "Registrar Compra (+stock)",
+            TipoMovimiento.Venta  => "Registrar Venta  (-stock)",
+            _                     => "Ajuste de Stock  (=stock)"
+        };
+        string etiqueta = tipo switch {
+            TipoMovimiento.Compra => "Cantidad a sumar  :",
+            TipoMovimiento.Venta  => "Cantidad a restar :",
+            _                     => "Nuevo valor stock :"
+        };
+
+        var dlg     = new Dialog { Title = $" {titulo} ", Width = 58, Height = 10 };
+        var lblInfo = new Label  {
+            Text = $" {producto.Codigo} — {producto.Nombre}  (stock: {producto.Stock})",
+            X = 1, Y = 1
+        };
+        var lblCant = new Label   { Text = etiqueta, X = 1, Y = 3 };
+        var txtCant = new TextField { Text = "", X = Pos.Right(lblCant) + 1, Y = 3, Width = 10 };
+
+        var btnOk    = new Button { Text = "_Aceptar",  IsDefault = true };
+        var btnCance = new Button { Text = "_Cancelar" };
+
+        dlg.Add(lblInfo, lblCant, txtCant);
+        dlg.AddButton(btnOk);
+        dlg.AddButton(btnCance);
+
+        btnOk.Accepting += (_, _) => {
+            if (!int.TryParse(txtCant.Text?.Trim(), out int cantidad) || cantidad <= 0) {
+                MostrarError("Ingresá un número entero positivo.");
+                return;
+            }
+            var mov = new MovimientoDto { ProductoId = producto.Id, Tipo = tipo, Cantidad = cantidad };
+            _ = Task.Run(async () => {
+                try {
+                    var (ok, msg) = await api.RegistrarMovimientoAsync(producto.Id, mov);
+                    Application.Invoke(() => {
+                        Application.RequestStop(dlg);
+                        SetStatus(ok ? "✓ Movimiento registrado." : $"✗ {msg}");
+                        if (ok) _ = Task.Run(async () => {
+                            await RecargarAsync();
+                            var act = productos.FirstOrDefault(p => p.Id == producto.Id);
+                            if (act is not null) await CargarMovimientosAsync(act);
+                        });
+                    });
+                } catch (Exception ex) { SetStatus($"✗ {ex.Message}"); }
+            });
+        };
+        btnCance.Accepting += (_, _) => Application.RequestStop(dlg);
+
+        Application.Run(dlg);
+    }
+
+
+    
 }
