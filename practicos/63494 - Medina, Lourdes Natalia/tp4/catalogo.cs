@@ -142,3 +142,58 @@ public sealed class CatalogoWindow : Window {
         Add(menu, searchLabel, searchField, productFrame, detailFrame, statusBar);
         searchField.SetFocus();
     }
+
+     private void ReloadProducts(string status) {
+        try {
+            int selectedId = SelectedProduct()?.Id ?? 0;
+            products.Clear();
+            products.AddRange(api.GetProductsAsync().GetAwaiter().GetResult());
+            RefreshFilteredProducts();
+
+            if (selectedId != 0) {
+                SelectProduct(selectedId);
+            }
+
+            LoadSelectedMovements();
+            SetStatus($"{status} {products.Count} producto(s).");
+        }
+        catch (Exception ex) {
+            MessageBox.ErrorQuery(App!, "Error de conexion", ex.Message, "Aceptar");
+            SetStatus("No se pudo cargar el catalogo.");
+        }
+    }
+
+  private void RefreshFilteredProducts() {
+        string query = (searchField?.Text?.ToString() ?? "").Trim();
+        int currentId = SelectedProduct()?.Id ?? 0;
+
+        filteredProducts.Clear();
+        filteredProducts.AddRange(products
+            .Where(p => MatchesSearch(p, query))
+            .OrderBy(p => p.Codigo, StringComparer.CurrentCultureIgnoreCase));
+
+        productList?.SetSource(new ObservableCollection<string>(filteredProducts.Select(FormatProductListItem).ToList()));
+
+        selectedIndex = 0;
+        if (currentId != 0) {
+            int found = filteredProducts.FindIndex(p => p.Id == currentId);
+            selectedIndex = found >= 0 ? found : 0;
+        }
+
+        if (productList is not null && filteredProducts.Count > 0) {
+            productList.SelectedItem = Math.Min(selectedIndex, filteredProducts.Count - 1);
+        }
+
+        LoadSelectedMovements();
+        productList?.SetNeedsDraw();
+    }
+
+      private static bool MatchesSearch(Producto product, string query) {
+        return string.IsNullOrWhiteSpace(query)
+            || product.Codigo.Contains(query, StringComparison.CurrentCultureIgnoreCase)
+            || product.Nombre.Contains(query, StringComparison.CurrentCultureIgnoreCase);
+    }
+
+    private static string FormatProductListItem(Producto product) {
+        return $"{product.Codigo,-12} {TrimTo(product.Nombre, 28),-28} {product.Precio,10:C2}  Stock: {product.Stock,5}";
+    }
