@@ -1,18 +1,44 @@
 class Compilador {
 
-    private string codigoFuente = "";
-    private int posicionActual = 0;
+        private string codigoFuente = "";
+        private int posicionActual = 0;
 
-    public static Nodo Parse(
+        public static Nodo Parse(
         string expresion
-    ) {
+        ) {
+
+        if (
+            string.IsNullOrWhiteSpace(
+                expresion
+            )
+        ) {
+
+            throw new FormatException(
+                "Token inesperado"
+            );
+        }
 
         var parser = new Compilador();
 
         parser.codigoFuente = expresion;
         parser.posicionActual = 0;
 
-        return parser.LeerExpresion();
+        var resultadoFinal =
+            parser.LeerExpresion();
+
+        parser.OmitirEspacios();
+
+        if (
+            parser.posicionActual
+            < parser.codigoFuente.Length
+        ) {
+
+            throw new FormatException(
+                "Token inesperado"
+            );
+        }
+
+        return resultadoFinal;
     }
 
     private Nodo LeerExpresion() {
@@ -20,6 +46,8 @@ class Compilador {
         var nodoActual = LeerTermino();
 
         while (true) {
+
+            OmitirEspacios();
 
             if (Coincide('+')) {
 
@@ -50,6 +78,8 @@ class Compilador {
         var nodoActual = LeerFactor();
 
         while (true) {
+
+            OmitirEspacios();
 
             if (Coincide('*')) {
 
