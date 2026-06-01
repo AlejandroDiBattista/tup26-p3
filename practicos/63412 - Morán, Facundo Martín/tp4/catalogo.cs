@@ -33,6 +33,26 @@ sealed class CatalogoWindow : Window
             X = 1,
             Y = 1,
         };
+        var agregar = new Button
+{
+    X = 1,
+    Y = productos.Count + 5,
+    Text = "Agregar"
+};
+
+var modificar = new Button
+{
+    X = 15,
+    Y = productos.Count + 5,
+    Text = "Modificar"
+};
+
+var eliminar = new Button
+{
+    X = 30,
+    Y = productos.Count + 5,
+    Text = "Eliminar"
+};
 
         listaProductos.SetSource(
             new ObservableCollection<string>(
@@ -49,6 +69,9 @@ sealed class CatalogoWindow : Window
 
         Add(listaProductos);
         Add(informacion);
+        Add(agregar);
+        Add(modificar);
+        Add(eliminar);
     }
 }
 sealed class CatalogoApi
@@ -63,6 +86,20 @@ sealed class CatalogoApi
         return await http.GetFromJsonAsync<List<ProductoDto>>("/productos")
             ?? [];
     }
+    public async Task CrearProductoAsync(ProductoDto producto)
+{
+    await http.PostAsJsonAsync("/productos", producto);
+}
+
+public async Task ModificarProductoAsync(int id, ProductoDto producto)
+{
+    await http.PutAsJsonAsync($"/productos/{id}", producto);
+}
+
+public async Task EliminarProductoAsync(int id)
+{
+    await http.DeleteAsync($"/productos/{id}");
+}
 }
 // ── DTO ───────────────────────────────────────────────────────────────────
 
