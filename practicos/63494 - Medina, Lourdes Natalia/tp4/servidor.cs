@@ -96,3 +96,110 @@ app.MapDelete("/productos/{id:int}", async (int id, CatalogoDbContext db) => {
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
+
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoDbContext db) => {
+    bool exists = await db.Productos.AnyAsync(p => p.Id == productoId);
+    if (!exists) {
+        return Results.NotFound();
+    }
+
+    List<MovimientoDeProducto> movimientos = await db.Movimientos
+        .AsNoTracking()
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .ToListAsync();
+
+    return Results.Ok(movimientos);
+});
+
+app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, MovimientoRequest request, CatalogoDbContext db) => {
+    Producto? producto = await db.Productos.FindAsync(productoId);
+    if (producto is null) {
+        return Results.NotFound();
+    }
+
+    if (request.Cantidad < 0) {
+        return Results.BadRequest(new { Error = "La cantidad no puede ser negativa." });
+    }
+
+    int cantidadRegistrada;
+    int stockAnterior = producto.Stock;
+
+    switch (request.Tipo) {
+        case TipoMovimiento.Compra:
+            if (request.Cantidad == 0) {
+                return Results.BadRequest(new { Error = "La compra debe indicar una cantidad mayor que cero." });
+            }
+
+            producto.Stock += request.Cantidad;
+            cantidadRegistrada = request.Cantidad;
+            break;
+
+        case TipoMovimiento.Venta:
+            if (request.Cantidad == 0) {
+                return Results.BadRequest(new { Error = "La venta debe indicar una cantidad mayor que cero." });
+            }
+
+            if (producto.Stock < request.Cantidad) {
+                return Results.BadRequest(new { Error = "No hay stock suficiente para registrar la venta." });
+            }
+
+            producto.Stock -= request.Cantidad;
+            cantidadRegistrada = -request.Cantidad;
+            break;
+
+        case TipoMovimiento.Ajuste:
+            producto.Stock = request.Cantidad;
+            cantidadRegistrada = producto.Stock - stockAnterior;
+            break;
+
+        default:
+            return Results.BadRequest(new { Error = "Tipo de movimiento invalido." });
+    }
+
+    MovimientoDeProducto movimiento = new() {
+        ProductoId = producto.Id,
+        Tipo = request.Tipo,
+        Cantidad = cantidadRegistrada,
+        Fecha = DateTime.Now
+    };
+
+    db.Movimientos.Add(movimiento);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/productos/{producto.Id}/movimientos/{movimiento.Id}", new MovimientoResponse(
+        movimiento.Id,
+        movimiento.ProductoId,
+        movimiento.Tipo,
+        movimiento.Cantidad,
+        movimiento.Fecha,
+        producto.Stock));
+});
+
+app.Run("http://localhost:5000");
+
+static async Task<string?> ValidateProduct(ProductoRequest request, CatalogoDbContext db, int? currentId = null) {
+    string codigo = request.Codigo.Trim();
+    string nombre = request.Nombre.Trim();
+
+    if (string.IsNullOrWhiteSpace(codigo)) {
+        return "El codigo no puede estar vacio.";
+    }
+
+    if (string.IsNullOrWhiteSpace(nombre)) {
+        return "El nombre no puede estar vacio.";
+    }
+
+    if (request.Precio < 0) {
+        return "El precio no puede ser negativo.";
+    }
+
+    if (request.Stock < 0) {
+        return "El stock no puede ser negativo.";
+    }
+
+    bool duplicated = await db.Productos.AnyAsync(p =>
+        p.Codigo == codigo && (!currentId.HasValue || p.Id != currentId.Value));
+
+    return duplicated ? "Ya existe un producto con ese codigo." : null;
+}
