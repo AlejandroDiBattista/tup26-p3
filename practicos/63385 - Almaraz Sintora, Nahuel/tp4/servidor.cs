@@ -30,6 +30,33 @@ app.MapGet("/productos/{id:int}", async (int id, CatalogoRepositorio repo) => {
     return producto is null ? Results.NotFound("Producto no encontrado.") : Results.Ok(producto);
 });
 
+app.MapPost("/productos", async (ProductoDatos datos, CatalogoRepositorio repo) => {
+    var error = ValidarProducto(datos);
+    if (error is not null) return Results.BadRequest(error);
+
+    var resultado = await repo.CrearProductoAsync(datos);
+    return resultado.Error is not null
+        ? Results.BadRequest(resultado.Error)
+        : Results.Created($"/productos/{resultado.Producto!.Id}", resultado.Producto);
+});
+
+app.MapPut("/productos/{id:int}", async (int id, ProductoDatos datos, CatalogoRepositorio repo) => {
+    var error = ValidarProducto(datos);
+    if (error is not null) return Results.BadRequest(error);
+
+    var resultado = await repo.ModificarProductoAsync(id, datos);
+    if (resultado.NoEncontrado) return Results.NotFound("Producto no encontrado.");
+
+    return resultado.Error is not null
+        ? Results.BadRequest(resultado.Error)
+        : Results.Ok(resultado.Producto);
+});
+
+app.MapDelete("/productos/{id:int}", async (int id, CatalogoRepositorio repo) => {
+    var eliminado = await repo.EliminarProductoAsync(id);
+    return eliminado ? Results.NoContent() : Results.NotFound("Producto no encontrado.");
+});
+
 app.Run("http://localhost:5050");
 
 static string? ValidarProducto(ProductoDatos datos) {
@@ -87,6 +114,41 @@ class CatalogoRepositorio {
 
     public async Task<bool> ExisteProductoAsync(int id) =>
         await db.Productos.AnyAsync(p => p.Id == id);
+
+    public async Task<ResultadoProducto> CrearProductoAsync(ProductoDatos datos) {
+        var producto = new Producto {
+            Codigo = datos.Codigo.Trim(),
+            Nombre = datos.Nombre.Trim(),
+            Precio = datos.Precio,
+            Stock = datos.Stock
+        };
+
+        db.Productos.Add(producto);
+        await db.SaveChangesAsync();
+        return ResultadoProducto.Ok(producto);
+    }
+
+    public async Task<ResultadoProducto> ModificarProductoAsync(int id, ProductoDatos datos) {
+        var producto = await db.Productos.FindAsync(id);
+        if (producto is null) return ResultadoProducto.NoEncontradoResult();
+
+        producto.Codigo = datos.Codigo.Trim();
+        producto.Nombre = datos.Nombre.Trim();
+        producto.Precio = datos.Precio;
+        producto.Stock = datos.Stock;
+
+        await db.SaveChangesAsync();
+        return ResultadoProducto.Ok(producto);
+    }
+
+    public async Task<bool> EliminarProductoAsync(int id) {
+        var producto = await db.Productos.FindAsync(id);
+        if (producto is null) return false;
+
+        db.Productos.Remove(producto);
+        await db.SaveChangesAsync();
+        return true;
+    }   
 }
 
 public class ProductoDatos {
