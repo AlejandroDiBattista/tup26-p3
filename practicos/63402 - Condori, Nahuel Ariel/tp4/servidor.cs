@@ -63,3 +63,37 @@ class CatalogoRepositorio {
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }
+
+class Producto {
+    public int Id { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+}
+
+class catalogoDb : DbContext {
+    public CatalogoDb(DbContextOptions<catalogoDb> options) : base(options) { }
+    public DbSet<producto> Productos => Set<producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+}
+
+app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
+    var productos = repositorio.TraerProductos();
+    return Results.Ok(productos);
+});
+
+app.MapPost("/productos", (CatalogoRepositorio repositorio, producto nuevoProducto) => {
+    repositorio.AgregarProducto(nuevoProducto);
+    return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
+});
+
+app.MapPut("/productos/{id:int}", (CatalogoRepositorio repositorio, int id, producto productoActualizado) => {
+    repositorio.ActualizarProducto(id, productoActualizado);
+    return Results.Ok(productoActualizado);
+});
+
+app.MapDelete("/productos/{id:int}", (CatalogoRepositorio repositorio, int id) => {
+    repositorio.EliminarProducto(id);
+    return Results.NoContent();
+});
