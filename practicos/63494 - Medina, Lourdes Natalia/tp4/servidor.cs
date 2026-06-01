@@ -203,3 +203,77 @@ static async Task<string?> ValidateProduct(ProductoRequest request, CatalogoDbCo
 
     return duplicated ? "Ya existe un producto con ese codigo." : null;
 }
+
+public sealed class CatalogoDbContext(DbContextOptions<CatalogoDbContext> options) : DbContext(options) {
+    public DbSet<Producto> Productos => Set<Producto>();
+
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>(entity => {
+            entity.HasKey(p => p.Id);
+            entity.HasIndex(p => p.Codigo).IsUnique();
+            entity.Property(p => p.Codigo).IsRequired();
+            entity.Property(p => p.Nombre).IsRequired();
+            entity.Property(p => p.Precio).HasColumnType("decimal(18,2)");
+            entity.HasMany(p => p.Movimientos)
+                .WithOne(m => m.Producto)
+                .HasForeignKey(m => m.ProductoId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MovimientoDeProducto>(entity => {
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Tipo).HasConversion<string>();
+            entity.Property(m => m.Fecha).IsRequired();
+        });
+    }
+}
+
+public sealed class Producto {
+    public int Id { get; set; }
+
+    public string Codigo { get; set; } = "";
+
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+
+    [JsonIgnore]
+    public List<MovimientoDeProducto> Movimientos { get; set; } = [];
+}
+
+public sealed class MovimientoDeProducto {
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+
+    [JsonIgnore]
+    public Producto? Producto { get; set; }
+}
+
+public enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
+
+public sealed record ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
+
+public sealed record MovimientoRequest(TipoMovimiento Tipo, int Cantidad);
+
+public sealed record MovimientoResponse(
+    int Id,
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha,
+    int StockActual);
