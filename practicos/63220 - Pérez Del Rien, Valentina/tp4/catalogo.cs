@@ -226,9 +226,97 @@ class CatalogoWindow : Window
         }
     }
 
-    private async Task MostrarDialogoAgregar() { await Task.CompletedTask; }
-    private async Task MostrarDialogoEditar() { await Task.CompletedTask; }
-    private async Task RegistrarMovimiento(string tipo) { await Task.CompletedTask; }
+    private async Task MostrarDialogoAgregar()
+    {
+        using DialogProducto dialog = new("Agregar producto", null);
+        App!.Run(dialog);
+
+        if (!dialog.Guardado || dialog.Resultado == null) return;
+
+        await CargarProductos();
+
+        bool codigoExiste = productos.Any(p => p.Codigo.Trim().Equals(dialog.Resultado.Codigo.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (codigoExiste)
+        {
+            App!.Invoke(() => {
+                MessageBox.Query(App!, "Código Duplicado", $"PROHIBIDO: Ya existe un producto con el código '{dialog.Resultado.Codigo.Trim()}'.", "OK");
+            });
+            return;
+        }
+
+        try
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(dialog.Resultado, jsonOpts), Encoding.UTF8, "application/json");
+            var response = await http.PostAsync("/productos", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarProductos();
+            }
+            else
+            {
+                App!.Invoke(() => {
+                    MessageBox.Query(App!, "Error", $"El servidor rechazó el producto (Código: {response.StatusCode})", "OK");
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            App!.Invoke(() => {
+                MessageBox.Query(App!, "Error de Red", $"No se pudo enviar el producto:\n{ex.Message}", "OK");
+            });
+        }
+    }
+
+    private async Task MostrarDialogoEditar()
+    {
+        if (productoSeleccionado == null)
+        {
+            MessageBox.Query(App!, "Editar", "Seleccioná un producto primero.", "OK");
+            return;
+        }
+
+        using DialogProducto dialog = new("Editar producto", productoSeleccionado);
+        App!.Run(dialog);
+
+        if (!dialog.Guardado || dialog.Resultado == null) return;
+
+        await CargarProductos();
+
+        bool codigoExisteEnOtro = productos.Any(p => p.Id != productoSeleccionado.Id && p.Codigo.Trim().Equals(dialog.Resultado.Codigo.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (codigoExisteEnOtro)
+        {
+            App!.Invoke(() => {
+                MessageBox.Query(App!, "Código Duplicado", $"PROHIBIDO: No podés usar el código '{dialog.Resultado.Codigo.Trim()}' because pertenece a otro artículo.", "OK");
+            });
+            return;
+        }
+
+        try
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(dialog.Resultado, jsonOpts), Encoding.UTF8, "application/json");
+            var response = await http.PutAsync($"/productos/{productoSeleccionado.Id}", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarProductos();
+            }
+            else
+            {
+                App!.Invoke(() => {
+                    MessageBox.Query(App!, "Error", $"El servidor rechazó la edición (Código: {response.StatusCode})", "OK");
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            App!.Invoke(() => {
+                MessageBox.Query(App!, "Error de Red", $"No se pudieron guardar los cambios:\n{ex.Message}", "OK");
+            });
+        }
+    }
 
     private async Task EliminarProducto()
     {
@@ -268,8 +356,153 @@ class CatalogoWindow : Window
             }
         }
     }
+
+    private async Task RegistrarMovimiento(string tipo)
+    {
+        if (productoSeleccionado == null)
+        {
+            MessageBox.Query(App!, "Movimiento", "Seleccioná un producto primero.", "OK");
+            return;
+        }
+
+        using DialogMovimiento dialog = new(tipo, productoSeleccionado.Nombre);
+        App!.Run(dialog);
+
+        if (!dialog.Registrado) return;
+
+        try
+        {
+            var mov = new { tipo = tipo, cantidad = dialog.Cantidad };
+            var content = new StringContent(
+                JsonSerializer.Serialize(mov, jsonOpts), Encoding.UTF8, "application/json");
+            var response = await http.PostAsync($"/productos/{productoSeleccionado.Id}/movimientos", content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarProductos();
+                await CargarMovimientos();
+            }
+            else
+            {
+                App!.Invoke(() => {
+                    MessageBox.Query(App!, "Error", $"El servidor rechazó el movimiento (Código: {response.StatusCode})", "OK");
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            App!.Invoke(() => {
+                MessageBox.Query(App!, "Error de Red", $"No se pudo registrar el movimiento:\n{ex.Message}", "OK");
+            });
+        }
+    }
 }
 
+class DialogProducto : Dialog
+{
+    private readonly TextField txtCodigo;
+    private readonly TextField txtNombre;
+    private readonly TextField txtPrecio;
+    private readonly TextField txtStock;
+
+    public bool      Guardado   { get; private set; }
+    public Producto? Resultado  { get; private set; }
+
+    public DialogProducto(string titulo, Producto? producto)
+    {
+        Title  = titulo;
+        Width  = 52;
+        Height = 16;
+
+        Label lblCodigo = new() { Text = "Código:",  X = 1, Y = 1 };
+        txtCodigo = new() { X = 12, Y = 1, Width = 30, Text = producto?.Codigo ?? "" };
+
+        Label lblNombre = new() { Text = "Nombre:",  X = 1, Y = 3 };
+        txtNombre = new() { X = 12, Y = 3, Width = 30, Text = producto?.Nombre ?? "" };
+
+        Label lblPrecio = new() { Text = "Precio:",  X = 1, Y = 5 };
+        txtPrecio = new() { X = 12, Y = 5, Width = 15, Text = producto?.Precio.ToString() ?? "0" };
+
+        Label lblStock  = new() { Text = "Stock:",   X = 1, Y = 7 };
+        txtStock  = new() { X = 12, Y = 7, Width = 10, Text = producto?.Stock.ToString()  ?? "0" };
+
+        Button btnCancelar = new() { Title = "Cancelar" };
+        btnCancelar.Accepting += (_, e) =>
+        {
+            Guardado = false;
+            RequestStop(); 
+        };
+
+        Button btnGuardar = new() { Title = "Guardar", IsDefault = true };
+        btnGuardar.Accepting += (_, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(txtCodigo.Text?.ToString()))
+            {
+                txtCodigo.SetFocus();
+                e.Handled = true;
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtNombre.Text?.ToString()))
+            {
+                txtNombre.SetFocus();
+                e.Handled = true;
+                return;
+            }
+
+            Resultado = new Producto
+            {
+                Id     = producto?.Id ?? 0,
+                Codigo = txtCodigo.Text?.ToString() ?? "",
+                Nombre = txtNombre.Text?.ToString() ?? "",
+                Precio = decimal.TryParse(txtPrecio.Text?.ToString(), out var p) ? p : 0,
+                Stock  = int.TryParse(txtStock.Text?.ToString(),  out var s) ? s : 0,
+            };
+            Guardado = true;
+            RequestStop(); 
+        };
+
+        Add(lblCodigo, txtCodigo, lblNombre, txtNombre, lblPrecio, txtPrecio, lblStock, txtStock);
+        AddButton(btnCancelar);
+        AddButton(btnGuardar);
+    }
+}
+
+class DialogMovimiento : Dialog
+{
+    private readonly TextField txtCantidad;
+
+    public bool Registrado { get; private set; }
+    public int  Cantidad   { get; private set; }
+
+    public DialogMovimiento(string tipo, string nombreProducto)
+    {
+        Title  = $"{tipo} — {nombreProducto}";
+        Width  = 46;
+        Height = 10;
+
+        Label lblCantidad = new() { Text = "Cantidad:", X = 1, Y = 1 };
+        txtCantidad = new() { Text = "0", X = 12, Y = 1, Width = 15 };
+
+        Button btnCancelar = new() { Title = "Cancelar" };
+        btnCancelar.Accepting += (_, e) =>
+        {
+            Registrado = false;
+            RequestStop(); 
+        };
+
+        Button btnRegistrar = new() { Title = "Registrar", IsDefault = true };
+        btnRegistrar.Accepting += (_, e) =>
+        {
+            Cantidad   = int.TryParse(txtCantidad.Text?.ToString(), out var c) ? c : 0;
+            Registrado = true;
+            RequestStop(); 
+        };
+
+        Add(lblCantidad, txtCantidad);
+        AddButton(btnCancelar);
+        AddButton(btnRegistrar);
+    }
+}
 
 class Producto
 {
