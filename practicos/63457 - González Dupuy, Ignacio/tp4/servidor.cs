@@ -22,14 +22,10 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
-
-    return Results.Ok(producto);
-});
-
-app.Run("http://localhost:5050");
+app.MapGet("/productos", (CatalogoRepositorio catalogo) =>
+{
+    return catalogo.ObtenerTodos();
+});app.Run("http://localhost:5050");
 
 
 
@@ -54,12 +50,20 @@ class CatalogoRepositorio {
     public void Iniciar() {
         db.Database.EnsureCreated();
 
-        if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-            db.SaveChanges();
+         if (!db.Productos.Any()) {
+            db.Productos.AddRange(
+                new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100),
+                new Producto(2, "P002", "Azúcar 1kg", 900m, 50),
+                new Producto(3, "P003", "Arroz 500g", 1200m, 80)
+            );
+                        db.SaveChanges();
         }
     }
 
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+        public List<Producto> ObtenerTodos() =>
+        db.Productos
+          .OrderBy(p => p.Id)
+          .ToList();
 }
