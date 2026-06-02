@@ -22,11 +22,9 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
-
-    return Results.Ok(producto);
+app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
+    var productos = repositorio.TraerProductos();
+    return Results.Ok(productos);
 });
 
 app.Run("http://localhost:5050");
@@ -62,7 +60,8 @@ class CatalogoRepositorio {
     private readonly CatalogoDb db;
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
-
+    
+    public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
     public void Iniciar() {
         db.Database.EnsureCreated();
 
