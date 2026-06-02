@@ -75,15 +75,24 @@
         Y = 3,
         Text = "Agregar"
     };
-    agregar.Accepting += async (_, _) =>
+    agregar.Accepted += async (_, _) =>
     {
         var producto = ProductoDialog.Mostrar(App!, null);
 
         if (producto is not null)
         {
-            await api.CrearProductoAsync(producto);
-            productos = await api.ListarProductosAsync();
-            RefrescarLista();
+            try
+            {
+                await api.CrearProductoAsync(producto);
+                productos = await api.ListarProductosAsync();
+                buscar.Text = "";
+                estado.Text = "Producto agregado.";
+                RefrescarLista();
+            }
+            catch (Exception ex)
+            {
+                estado.Text = $"Error: {ex.Message}";
+            }
         }
     };
 
@@ -100,7 +109,7 @@
         Y = 3,
         Text = "Eliminar"
     };
-    modificar.Accepting += async (_, _) =>
+    modificar.Accepted += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice || indice < 0 || indice >= filtrados.Count)
         {
@@ -113,13 +122,20 @@
         if (request is null)
             return;
 
-        await api.ModificarProductoAsync(producto.Id, request);
-        productos = await api.ListarProductosAsync();
-        estado.Text = "Producto modificado.";
-        RefrescarLista();
+        try
+        {
+            await api.ModificarProductoAsync(producto.Id, request);
+            productos = await api.ListarProductosAsync();
+            estado.Text = "Producto modificado.";
+            RefrescarLista();
+        }
+        catch (Exception ex)
+        {
+            estado.Text = $"Error: {ex.Message}";
+        }
     };
 
-    eliminar.Accepting += async (_, _) =>
+    eliminar.Accepted += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice || indice < 0 || indice >= filtrados.Count)
         {
@@ -131,10 +147,17 @@
         if ((MessageBox.Query(App!, "Eliminar", $"Eliminar {producto.Nombre}?", "No", "Si") ?? 0) != 1)
             return;
 
-        await api.EliminarProductoAsync(producto.Id);
-        productos = await api.ListarProductosAsync();
-        estado.Text = "Producto eliminado.";
-        RefrescarLista();
+        try
+        {
+            await api.EliminarProductoAsync(producto.Id);
+            productos = await api.ListarProductosAsync();
+            estado.Text = "Producto eliminado.";
+            RefrescarLista();
+        }
+        catch (Exception ex)
+        {
+            estado.Text = $"Error: {ex.Message}";
+        }
     };
 
     var compra = new Button
@@ -157,7 +180,7 @@
         Y = 4,
         Text = "Ajuste"
     };
-    compra.Accepting += async (_, _) =>
+    compra.Accepted += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
         {
@@ -176,21 +199,25 @@
         if (cantidad is null)
             return;
 
-        await api
-            .RegistrarMovimientoAsync(
-                producto.Id,
-                TipoMovimiento.Compra,
-                cantidad.Value);
+        try
+        {
+            await api
+                .RegistrarMovimientoAsync(
+                    producto.Id,
+                    TipoMovimiento.Compra,
+                    cantidad.Value);
 
-        productos = await api.ListarProductosAsync();
-        estado.Text = $"Compra registrada para {producto.Nombre}.";
-        RefrescarLista();
-
-        Console.WriteLine(
-            $"Compra registrada para {producto.Nombre}");
+            productos = await api.ListarProductosAsync();
+            estado.Text = $"Compra registrada para {producto.Nombre}.";
+            RefrescarLista();
+        }
+        catch (Exception ex)
+        {
+            estado.Text = $"Error: {ex.Message}";
+        }
     };
 
-    venta.Accepting += async (_, _) =>
+    venta.Accepted += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
         {
@@ -209,21 +236,25 @@
         if (cantidad is null)
             return;
 
-        await api
-            .RegistrarMovimientoAsync(
-                producto.Id,
-                TipoMovimiento.Venta,
-                cantidad.Value);
+        try
+        {
+            await api
+                .RegistrarMovimientoAsync(
+                    producto.Id,
+                    TipoMovimiento.Venta,
+                    cantidad.Value);
 
-        productos = await api.ListarProductosAsync();
-        estado.Text = $"Venta registrada para {producto.Nombre}.";
-        RefrescarLista();
-
-        Console.WriteLine(
-            $"Venta registrada para {producto.Nombre}");
+            productos = await api.ListarProductosAsync();
+            estado.Text = $"Venta registrada para {producto.Nombre}.";
+            RefrescarLista();
+        }
+        catch (Exception ex)
+        {
+            estado.Text = $"Error: {ex.Message}";
+        }
     };
 
-    ajuste.Accepting += async (_, _) =>
+    ajuste.Accepted += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
         {
@@ -242,18 +273,22 @@
         if (cantidad is null)
             return;
 
-        await api
-            .RegistrarMovimientoAsync(
-                producto.Id,
-                TipoMovimiento.Ajuste,
-                cantidad.Value);
+        try
+        {
+            await api
+                .RegistrarMovimientoAsync(
+                    producto.Id,
+                    TipoMovimiento.Ajuste,
+                    cantidad.Value);
 
-        productos = await api.ListarProductosAsync();
-        estado.Text = $"Ajuste registrado para {producto.Nombre}.";
-        RefrescarLista();
-
-        Console.WriteLine(
-            $"Ajuste registrado para {producto.Nombre}");
+            productos = await api.ListarProductosAsync();
+            estado.Text = $"Ajuste registrado para {producto.Nombre}.";
+            RefrescarLista();
+        }
+        catch (Exception ex)
+        {
+            estado.Text = $"Error: {ex.Message}";
+        }
     };
 
             void RefrescarLista()
@@ -290,7 +325,7 @@
             {
                 "Sin movimientos cargados"
             }));
-            listaProductos.Accepting += async (_, _) =>
+            listaProductos.Accepted += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
             return;
@@ -337,38 +372,61 @@
         public static ProductoRequest? Mostrar(IApplication app, ProductoDto? producto)
         {
             ProductoRequest? resultado = null;
-            var d = new Dialog { Title = producto is null ? "Agregar producto" : "Modificar producto", Width = 55, Height = 13 };
+            var d = new Window { Title = producto is null ? "Agregar producto" : "Modificar producto", Width = 55, Height = 14 };
             var codigo = Campo(d, "Codigo:", producto?.Codigo ?? "", 1);
             var nombre = Campo(d, "Nombre:", producto?.Nombre ?? "", 3);
             var precio = Campo(d, "Precio:", producto?.Precio.ToString() ?? "", 5);
             var stock = Campo(d, "Stock:", producto?.Stock.ToString() ?? "", 7);
+            var error = new Label { X = 2, Y = 8, Width = 48, Text = "" };
+            d.Add(error);
 
-            var aceptar = new Button { Text = "Aceptar" };
-            aceptar.Accepting += (_, _) =>
+            var aceptar = new Button { X = 12, Y = 10, Text = "Aceptar" };
+            aceptar.Accepted += (_, _) =>
             {
-                if (!decimal.TryParse(precio.Text.ToString(), out var precioValor))
+                var codigoValor = codigo.Text.ToString()?.Trim() ?? "";
+                var nombreValor = nombre.Text.ToString()?.Trim() ?? "";
+
+                if (string.IsNullOrWhiteSpace(codigoValor))
+                {
+                    error.Text = "El codigo es obligatorio.";
                     return;
-                if (!int.TryParse(stock.Text.ToString(), out var stockValor))
+                }
+
+                if (string.IsNullOrWhiteSpace(nombreValor))
+                {
+                    error.Text = "El nombre es obligatorio.";
                     return;
+                }
+
+                if (!decimal.TryParse(precio.Text.ToString(), out var precioValor) || precioValor <= 0)
+                {
+                    error.Text = "El precio debe ser mayor a cero.";
+                    return;
+                }
+
+                if (!int.TryParse(stock.Text.ToString(), out var stockValor) || stockValor < 0)
+                {
+                    error.Text = "El stock debe ser cero o mayor.";
+                    return;
+                }
 
                 resultado = new ProductoRequest(
-                    codigo.Text.ToString() ?? "",
-                    nombre.Text.ToString() ?? "",
+                    codigoValor,
+                    nombreValor,
                     precioValor,
                     stockValor);
                 d.App!.RequestStop();
             };
 
-            var cancelar = new Button { Text = "Cancelar" };
-            cancelar.Accepting += (_, _) => d.App!.RequestStop();
+            var cancelar = new Button { X = 26, Y = 10, Text = "Cancelar" };
+            cancelar.Accepted += (_, _) => d.App!.RequestStop();
 
-            d.AddButton(aceptar);
-            d.AddButton(cancelar);
+            d.Add(aceptar, cancelar);
             app.Run(d);
             return resultado;
         }
 
-        static TextField Campo(Dialog d, string etiqueta, string valor, int y)
+        static TextField Campo(Window d, string etiqueta, string valor, int y)
         {
             var campo = new TextField { X = 12, Y = y, Width = 35, Text = valor };
             d.Add(new Label { X = 2, Y = y, Text = etiqueta }, campo);
@@ -381,12 +439,12 @@
         public static int? Mostrar(IApplication app, TipoMovimiento tipo)
         {
             int? resultado = null;
-            var d = new Dialog { Title = $"Movimiento: {tipo}", Width = 45, Height = 8 };
+            var d = new Window { Title = $"Movimiento: {tipo}", Width = 45, Height = 8 };
             var cantidad = new TextField { X = 12, Y = 1, Width = 20 };
             d.Add(new Label { X = 2, Y = 1, Text = "Cantidad:" }, cantidad);
 
-            var aceptar = new Button { Text = "Aceptar" };
-            aceptar.Accepting += (_, _) =>
+            var aceptar = new Button { X = 10, Y = 4, Text = "Aceptar" };
+            aceptar.Accepted += (_, _) =>
             {
                 if (!int.TryParse(cantidad.Text.ToString(), out var valor) || valor <= 0)
                     return;
@@ -395,11 +453,10 @@
                 d.App!.RequestStop();
             };
 
-            var cancelar = new Button { Text = "Cancelar" };
-            cancelar.Accepting += (_, _) => d.App!.RequestStop();
+            var cancelar = new Button { X = 24, Y = 4, Text = "Cancelar" };
+            cancelar.Accepted += (_, _) => d.App!.RequestStop();
 
-            d.AddButton(aceptar);
-            d.AddButton(cancelar);
+            d.Add(aceptar, cancelar);
             app.Run(d);
             return resultado;
         }
@@ -418,17 +475,17 @@
         }
         public async Task CrearProductoAsync(ProductoRequest producto)
     {
-        await http.PostAsJsonAsync("/productos", producto);
+        await EnviarAsync(() => http.PostAsJsonAsync("/productos", producto));
     }
 
     public async Task ModificarProductoAsync(int id, ProductoRequest producto)
     {
-        await http.PutAsJsonAsync($"/productos/{id}", producto);
+        await EnviarAsync(() => http.PutAsJsonAsync($"/productos/{id}", producto));
     }
 
     public async Task EliminarProductoAsync(int id)
     {
-        await http.DeleteAsync($"/productos/{id}");
+        await EnviarAsync(() => http.DeleteAsync($"/productos/{id}"));
     }
     public async Task<List<MovimientoDto>> ListarMovimientosAsync(int productoId)
     {
@@ -448,9 +505,24 @@
             Cantidad = cantidad
         };
 
-        await http.PostAsJsonAsync(
+        await EnviarAsync(() => http.PostAsJsonAsync(
             $"/productos/{productoId}/movimientos",
-            movimiento);
+            movimiento));
+    }
+
+    private static async Task EnviarAsync(Func<Task<HttpResponseMessage>> accion)
+    {
+        using var respuesta = await accion();
+
+        if (respuesta.IsSuccessStatusCode)
+            return;
+
+        var mensaje = await respuesta.Content.ReadAsStringAsync();
+
+        throw new InvalidOperationException(
+            string.IsNullOrWhiteSpace(mensaje)
+                ? $"HTTP {(int)respuesta.StatusCode}"
+                : mensaje.Trim('"'));
     }
     }
     // ── DTO ───────────────────────────────────────────────────────────────────
