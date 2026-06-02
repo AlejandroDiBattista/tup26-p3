@@ -218,8 +218,8 @@ public bool RegistrarMovimiento(
     TipoMovimiento tipoMovimiento,
     int cantidadMovimiento)
 {
-    if (cantidadMovimiento <= 0)
-    return false;
+     if (cantidadMovimiento <= 0)
+        return false;
     var productoEncontrado = db.Productos.Find(productoId);
 
     if (productoEncontrado is null)

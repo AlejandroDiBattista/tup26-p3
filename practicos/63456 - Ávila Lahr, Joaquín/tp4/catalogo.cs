@@ -7,13 +7,14 @@ using Terminal.Gui.Views;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-ProductoDto producto;
+List<ProductoDto> productos;
+
 try {
     using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
-} catch (HttpRequestException ex) {
+    productos = await CargarProductosAsync(http);
+}
+catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
     return;
 }
 
@@ -22,26 +23,23 @@ try {
 using IApplication app = Application.Create().Init();
 using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
-
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+var lista = new Label {
+    Text = string.Join("\n", productos.Select(p =>
+        $"{p.Id} - {p.Codigo} - {p.Nombre} - ${p.Precio} - Stock: {p.Stock}"
+    )),
+    X = 2,
+    Y = 1,
 };
 
-ventana.Add(detalleProducto);
+ventana.Add(lista);
 
 app.Run(ventana);
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
+{
+    const string url = "http://localhost:5050/productos";
+    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
+           ?? new List<ProductoDto>();
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
