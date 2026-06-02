@@ -60,6 +60,12 @@ if (productos.Count > 0)
 ventana.Add(lista);
 ventana.Add(detalle);
 
+lista.Acepting += (s,e) =>
+{
+    datalle.Text = "Se presionó Enter";
+
+};
+
 Console.WriteLine($"Productos cargados: {productos.Count}");
 
 app.Run(ventana);
@@ -75,3 +81,5 @@ static async Task<List<ProductoDto>> CargarProductoAsync(HttpClient http)
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+
+
