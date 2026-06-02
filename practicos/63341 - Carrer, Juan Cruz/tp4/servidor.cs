@@ -4,8 +4,6 @@
 
 using Microsoft.EntityFrameworkCore;
 
-// ── Configuración ──────────────────────────────────────────────────────────
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
@@ -13,14 +11,10 @@ builder.Services.AddScoped<CatalogoRepositorio>();
 
 var app = builder.Build();
 
-// ── Inicialización de la base de datos ────────────────────────────────────
-
 using (var scope = app.Services.CreateScope()) {
     var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
     repositorio.Iniciar();
 }
-
-// ── Endpoints ─────────────────────────────────────────────────────────────
 
 app.MapGet("/productos", (CatalogoRepositorio repo) => {
     return Results.Ok(repo.TraerProductos());
@@ -76,9 +70,6 @@ app.MapPost("/productos/{id}/movimientos",
 
 app.Run("http://localhost:5050");
 
-
-// ── Modelo ────────────────────────────────────────────────────────────────
-
 enum TipoMovimiento
 {
     Compra,
@@ -116,8 +107,6 @@ class MovimientoProducto
     public Producto? Producto { get; set; }
 }
 
-// ── DbContext ─────────────────────────────────────────────────────────────
-
 class CatalogoDb : DbContext
 {
     public CatalogoDb(DbContextOptions<CatalogoDb> options)
@@ -136,8 +125,6 @@ class CatalogoDb : DbContext
             .IsUnique();
     }
 }
-
-// ── Repositorio ───────────────────────────────────────────────────────────
 
 class CatalogoRepositorio
 {
