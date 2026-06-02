@@ -228,3 +228,48 @@ public class Program
             }
         }
     }
+    static void DialogoRegistrarMovimiento() 
+    {
+        if (productoSeleccionado == null) {
+            MessageBox.ErrorQuery("Aviso", "Primero seleccioná un producto de la lista", "OK");
+            return;
+        }
+
+        var dialog = new Dialog { Title = "Registrar Movimiento", Width = 40, Height = 12 };
+
+        var radioTipo = new RadioGroup { RadioLabels = new string[] { "Compra (Sumar)", "Venta (Restar)", "Ajuste (Fijar)" }, X = 10, Y = 1 };
+        var txtCantidad = new TextField { Text = "", X = 10, Y = 5, Width = 20 };
+
+        dialog.Add(new Label { Text = "Tipo:", X = 1, Y = 1 }, radioTipo);
+        dialog.Add(new Label { Text = "Cantidad:", X = 1, Y = 5 }, txtCantidad);
+
+        var btnGuardar = new Button { Text = "Registrar", IsDefault = true };
+        btnGuardar.Accepting += (s, e) => {
+            if (int.TryParse(txtCantidad.Text.ToString(), out int cant)) {
+                var tipoSeleccionado = (TipoMovimiento)radioTipo.SelectedItem;
+                
+                var mov = new MovimientoDeProducto {
+                    Tipo = tipoSeleccionado,
+                    Cantidad = cant
+                };
+
+                var res = http.PostAsJsonAsync($"/productos/{productoSeleccionado.Id}/movimientos", mov).Result;
+                if (res.IsSuccessStatusCode) {
+                    Application.RequestStop();
+                    CargarProductos(); 
+                    CargarMovimientos();
+                }
+            } else {
+                MessageBox.ErrorQuery("Error", "La cantidad debe ser un número entero", "OK");
+            }
+        };
+
+        var btnCancelar = new Button { Text = "Cancelar" };
+        btnCancelar.Accepting += (s, e) => Application.RequestStop();
+
+        dialog.AddButton(btnGuardar);
+        dialog.AddButton(btnCancelar);
+
+        Application.Run(dialog);
+    }
+}
