@@ -116,3 +116,54 @@ async Task RefrescarProductosAsync() {
         VaciarFormulario();
     }
 }
+
+void AplicarFiltro() {
+    var filtro = textoBuscar.Text?.ToString()?.Trim() ?? "";
+
+    productosMostrados = productos
+        .Where(p => filtro.Length == 0
+            || p.Codigo.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+            || p.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Codigo)
+        .ToList();
+
+    filasProductos.Clear();
+    foreach (var p in productosMostrados) {
+        filasProductos.Add($"{p.Codigo,-8} {Cortar(p.Nombre, 26),-26} ${p.Precio,8:N2}  St:{p.Stock,4}");
+    }
+
+    if (productosMostrados.Count == 0) {
+        elegido = null;
+        filasMovimientos.Clear();
+        mensaje.Text = "No hay productos para mostrar.";
+    } else if (listado.SelectedItem is null || listado.SelectedItem >= productosMostrados.Count) {
+        listado.SelectedItem = 0;
+    }
+
+    pantalla.SetNeedsDraw();
+}
+
+async Task TomarSeleccionAsync() {
+    var indice = listado.SelectedItem;
+    if (indice is null || indice < 0 || indice >= productosMostrados.Count) return;
+
+    elegido = productosMostrados[indice.Value];
+    txtCodigo.Text = elegido.Codigo;
+    txtNombre.Text = elegido.Nombre;
+    txtPrecio.Text = elegido.Precio.ToString(CultureInfo.InvariantCulture);
+    txtStock.Text = elegido.Stock.ToString(CultureInfo.InvariantCulture);
+
+    await RefrescarMovimientosAsync(elegido.Id);
+}
+
+async Task RefrescarMovimientosAsync(int productoId) {
+    filasMovimientos.Clear();
+    var movimientos = await cliente.GetFromJsonAsync<List<MovimientoDto>>($"/productos/{productoId}/movimientos", opcionesJson) ?? [];
+
+    foreach (var mov in movimientos) {
+        filasMovimientos.Add($"{mov.Tipo,-7}  {mov.Cantidad,5} u.  {mov.Fecha:dd/MM HH:mm}");
+    }
+
+    if (movimientos.Count == 0) filasMovimientos.Add("Sin movimientos.");
+    pantalla.SetNeedsDraw();
+}
