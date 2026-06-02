@@ -70,3 +70,16 @@ class ServicioCatalogo {
     private readonly TiendaDb db;
 
     public ServicioCatalogo(TiendaDb db) => this.db = db;
+    public void PrepararBase() {
+        db.Database.EnsureCreated();
+
+        if (db.Productos.Any()) return;
+
+        db.Productos.AddRange(
+            new Producto { Codigo = "A100", Nombre = "Yerba Cachamate 500g", Precio = 1450m, Stock = 80 },
+            new Producto { Codigo = "B220", Nombre = "Azucar  1kg", Precio = 890m, Stock = 45 },
+            new Producto { Codigo = "C315", Nombre = "Cafe instantaneo 250g", Precio = 2600m, Stock = 30 }
+        );
+
+        db.SaveChanges();
+    }
