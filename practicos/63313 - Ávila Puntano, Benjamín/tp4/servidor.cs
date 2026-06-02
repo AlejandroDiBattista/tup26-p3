@@ -15,6 +15,27 @@ using (var scope = app.Services.CreateScope())
     var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
     repositorio.Iniciar();
 }
+app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
+    Results.Ok(repositorio.ListarProductos()));
+app.MapPost("/productos", (ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
+    var error = ValidarProducto(entrada);
+    if (error is not null) return Results.BadRequest(error);
+    var resultado = repositorio.CrearProducto(entrada);
+    return Results.Created($"/productos/{resultado.Producto!.Id}", resultado.Producto);
+});
+app.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
+    var error = ValidarProducto(entrada);
+    if (error is not null) return Results.BadRequest(error);
+    var resultado = repositorio.ModificarProducto(id, entrada);
+    if (resultado.NoEncontrado) return Results.NotFound();
+    if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
+    return Results.Ok(resultado.Producto);
+});
+app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
+static string? ValidarProducto(ProductoEntrada entrada) {
+    if (string.IsNullOrWhiteSpace(entrada.Codigo)) return "El codigo es obligatorio.";
+    return null;
+}
 
 app.Run("http://localhost:5000"); // iniciamos el servidor en el puerto 5000
 
@@ -118,13 +139,12 @@ class CatalogoRepositorio {
         if (db.Productos.Any(p => p.Id != id && p.Codigo == codigo)) {
             return new OperacionProducto(Error: "Ya hay un producto con el codigo ");
         }
-        db.SaveChanges();        
-    producto.Codigo = codigo; 
-    producto.Nombre = entrada.Nombre.Trim();
-    producto.Stock = entrada.Stock;
-    producto.Precio = entrada.Precio;
-    db.SaveChanges();
-    return new OperacionProducto(producto);
+        producto.Codigo = codigo; 
+        producto.Nombre = entrada.Nombre.Trim();
+        producto.Stock = entrada.Stock;
+        producto.Precio = entrada.Precio;
+        db.SaveChanges();
+        return new OperacionProducto(producto);
     }
 
     public bool EliminarProducto(int id) {
@@ -136,40 +156,39 @@ class CatalogoRepositorio {
         return true;
     }
 
- public List<MovimientoDeProducto> ListarMovimientos(int productoId) => db.Movimientos
-    .Where(m => m.ProductoId == productoId)
-    .OrderByDescending(m => m.Fecha)
-    .ToList();
-    //lista recorrible para filtrar movimientos x productos y ordenarlos por fecha desc
+    public List<MovimientoDeProducto> ListarMovimientos(int productoId) => db.Movimientos
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .ToList();
+        //lista recorrible para filtrar movimientos x productos y ordenarlos por fecha desc
 
-public OperacionMovimiento RegistrarMovimiento(int productoId, MovimientoEntrada entrada) {
-    using var transaccion = db.Database.BeginTransaction();
+    public OperacionMovimiento RegistrarMovimiento(int productoId, MovimientoEntrada entrada) {
+        using var transaccion = db.Database.BeginTransaction();
 
-    var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);
-    if (producto == null) return new OperacionMovimiento(NoEncontrado: true);
+        var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);
+        if (producto == null) return new OperacionMovimiento(NoEncontrado: true);
 
-    if (entrada.Tipo == TipoMovimiento.Compra) {
-        producto.Stock += entrada.Cantidad;
-    }
-    else if (entrada.Tipo == TipoMovimiento.Venta) {
-        if (producto.Stock < entrada.Cantidad)
-            return new OperacionMovimiento(Error: "No hay suficiente stock para realizar la venta");
-        producto.Stock -= entrada.Cantidad;
-    }
-    else if (entrada.Tipo == TipoMovimiento.Ajuste) {
-        producto.Stock = entrada.Cantidad;
-    }
+        if (entrada.Tipo == TipoMovimiento.Compra) {
+            producto.Stock += entrada.Cantidad;
+        }
+        else if (entrada.Tipo == TipoMovimiento.Venta) {
+            if (producto.Stock < entrada.Cantidad)
+                return new OperacionMovimiento(Error: "No hay suficiente stock para realizar la venta");
+            producto.Stock -= entrada.Cantidad;
+        }
+        else if (entrada.Tipo == TipoMovimiento.Ajuste) {
+            producto.Stock = entrada.Cantidad;
+        }
 
-    var movimiento = new MovimientoDeProducto {
-        ProductoId = productoId,
-        Tipo = entrada.Tipo,
-        Cantidad = entrada.Cantidad,
-        Fecha = DateTime.Now,
-    };
-    db.Movimientos.Add(movimiento);
-    db.SaveChanges();
-    transaccion.Commit();
-    return new OperacionMovimiento(movimiento);
-}}
-
-
+        var movimiento = new MovimientoDeProducto {
+            ProductoId = productoId,
+            Tipo = entrada.Tipo,
+            Cantidad = entrada.Cantidad,
+            Fecha = DateTime.Now,
+        };
+        db.Movimientos.Add(movimiento);
+        db.SaveChanges();
+        transaccion.Commit();
+        return new OperacionMovimiento(movimiento);
+    }    
+}
