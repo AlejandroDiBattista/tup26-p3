@@ -1,7 +1,6 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
-#:package Microsoft.EntityFrameworkCore@10.*
-#:package Microsoft.EntityFrameworkCore.Sqlite@10.*
+
 
 using System.Net.Http.Json;
 using Terminal.Gui.App;
@@ -43,10 +42,14 @@ ventana.Add(detalleProducto);
 app.Run(ventana);
 
 static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
+    const string url = "http://localhost:5050/productos";
     return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
 
+enum TipoMovimiento{Compra,Venta,Ajuste} //enum de los movimientos que se podran hacer
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record ProductoEntrada(string Codigo, string Nombre, decimal Precio, int Stock); // no agregamos un id xq el servidor lo asigna solo
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+record MovimientoEntrada(TipoMovimiento Tipo, int Cantidad);
