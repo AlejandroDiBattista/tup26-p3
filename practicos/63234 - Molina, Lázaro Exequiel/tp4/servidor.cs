@@ -116,3 +116,24 @@ class ServicioCatalogo {
 
         return new(ProductoDto.Desde(producto), null);
     }
+
+    public async Task<ResultadoProducto> ActualizarProductoAsync(int id, ProductoEntrada entrada) {
+        var producto = await db.Productos.FindAsync(id);
+        if (producto is null) return new(null, $"No se encontro el producto con id {id}.");
+
+        var error = ValidarProducto(entrada);
+        if (error is not null) return new(null, error);
+
+        var codigo = entrada.Codigo.Trim().ToUpperInvariant();
+        if (await db.Productos.AnyAsync(p => p.Id != id && p.Codigo == codigo)) {
+            return new(null, $"Otro producto ya usa el codigo {codigo}.");
+        }
+
+        producto.Codigo = codigo;
+        producto.Nombre = entrada.Nombre.Trim();
+        producto.Precio = entrada.Precio;
+        producto.Stock = entrada.Stock;
+
+        await db.SaveChangesAsync();
+        return new(ProductoDto.Desde(producto), null);
+    }
