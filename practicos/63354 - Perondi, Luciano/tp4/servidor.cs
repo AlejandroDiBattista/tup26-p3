@@ -11,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
 
+builder.Services.ConfigureHttpJsonOptions(opt =>
+opt.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
 var app = builder.Build();
 
 // ── Inicialización de la base de datos ────────────────────────────────────
@@ -46,11 +49,19 @@ app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
     return Results.NoContent();
 });
 
+app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio repo) =>
+    Results.Ok(repo.TraerMovimientos(productoId)));
+
+app.MapPost("/productos/{productoId}/movimientos", (int productoId, MovimientoDto dto, CatalogoRepositorio repo) => {
+    var movimiento = repo.RegistrarMovimiento(productoId, dto.Tipo, dto.Cantidad);
+    if (movimiento is null) return Results.NotFound();
+    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+});
+
 app.Run("http://localhost:5050");
 
 
 // ── Modelo ────────────────────────────────────────────────────────────────
-
 
 class Producto {
     public int Id { get; set; }
@@ -71,6 +82,8 @@ class MovimientoDeProducto {
     public DateTime Fecha { get; set; }
     public Producto Producto { get; set; } = null!;
 }
+
+record MovimientoDto(TipoMovimiento Tipo, int Cantidad); //dto
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
@@ -102,30 +115,56 @@ class CatalogoRepositorio {
     db.Productos.Find(id);
 
     public Producto Crear(Producto producto) {
-    db.Productos.Add(producto);
-    db.SaveChanges();
-    return producto;
+        db.Productos.Add(producto);
+        db.SaveChanges();
+        return producto;
     }
 
     public bool Modificar(int id, Producto datos) {
-    var producto = db.Productos.Find(id);
-    if (producto is null) return false;
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
 
-    producto.Codigo = datos.Codigo;
-    producto.Nombre = datos.Nombre;
-    producto.Precio = datos.Precio;
-    producto.Stock = datos.Stock;
+        producto.Codigo = datos.Codigo;
+        producto.Nombre = datos.Nombre;
+        producto.Precio = datos.Precio;
+        producto.Stock = datos.Stock;
 
-    db.SaveChanges();
-    return true;
+        db.SaveChanges();
+        return true;
     }
 
     public bool Eliminar(int id) {
-    var producto = db.Productos.Find(id);
-    if (producto is null) return false;
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
 
-    db.Productos.Remove(producto);
-    db.SaveChanges();
-    return true;
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
     }
+
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId) =>
+    db.Movimientos
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .ToList();
+
+    public MovimientoDeProducto? RegistrarMovimiento(int productoId, TipoMovimiento tipo, int cantidad) {
+        var producto = db.Productos.Find(productoId);
+        if (producto is null) return null;
+
+        if (tipo == TipoMovimiento.Compra) producto.Stock += cantidad;
+        else if (tipo == TipoMovimiento.Venta) producto.Stock -= cantidad;
+        else producto.Stock = cantidad;
+
+        var movimiento = new MovimientoDeProducto {
+        ProductoId = productoId,
+        Tipo = tipo,
+        Cantidad = cantidad,
+        Fecha = DateTime.Now,
+    };
+    db.Movimientos.Add(movimiento);
+
+    db.SaveChanges();
+    return movimiento;
+}
 }
