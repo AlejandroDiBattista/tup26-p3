@@ -49,3 +49,17 @@ app.MapDelete("/productos/{id:int}", async (int id, ServicioCatalogo servicio) =
     await servicio.BorrarProductoAsync(id)
         ? Results.NoContent()
         : Results.NotFound($"No se encontro el producto con id {id}."));
+
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, ServicioCatalogo servicio) => {
+    var movimientos = await servicio.ListarMovimientosAsync(productoId);
+    return movimientos is null
+        ? Results.NotFound($"No se encontro el producto con id {productoId}.")
+        : Results.Ok(movimientos);
+});
+
+app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, MovimientoEntrada entrada, ServicioCatalogo servicio) => {
+    var resultado = await servicio.RegistrarMovimientoAsync(productoId, entrada);
+    return resultado.Error is not null
+        ? Results.BadRequest(resultado.Error)
+        : Results.Created($"/productos/{productoId}/movimientos/{resultado.Movimiento!.Id}", resultado);
+});
