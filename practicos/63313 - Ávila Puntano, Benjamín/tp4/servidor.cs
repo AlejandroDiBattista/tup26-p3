@@ -15,9 +15,22 @@ using (var scope = app.Services.CreateScope())
     var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
     repositorio.Iniciar();
 }
-app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
+
+ var norep = app.MapGroup("/productos"); // grupo de endpoints para productos
+
+
+norep.MapGet("/productos", (CatalogoRepositorio repositorio) =>
     Results.Ok(repositorio.ListarProductos()));
-app.MapPost("/productos", (ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
+    norep .MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.TraerProducto(id);
+
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(producto);
+});
+norep.MapPost("/productos", (ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
 
@@ -25,7 +38,7 @@ app.MapPost("/productos", (ProductoEntrada entrada, CatalogoRepositorio reposito
     if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
     return Results.Created($"/productos/{resultado.Producto!.Id}", resultado.Producto);
 });
-app.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
+norep.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
     var resultado = repositorio.ModificarProducto(id, entrada);
@@ -33,7 +46,7 @@ app.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepo
     if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
     return Results.Ok(resultado.Producto);
 });
-app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
+norep.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
 static string? ValidarProducto(ProductoEntrada entrada) {
     if (string.IsNullOrWhiteSpace(entrada.Codigo))
      return "El codigo es obligatorio.";
@@ -46,15 +59,7 @@ static string? ValidarProducto(ProductoEntrada entrada) {
 
     return null;
 }
-app.MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =>
-{
-    var producto = repositorio.TraerProducto(id);
 
-    if (producto is null)
-        return Results.NotFound();
-
-    return Results.Ok(producto);
-});
 app.Run("http://localhost:5050"); // iniciamos el servidor en el puerto 5050
 
 enum TipoMovimiento{Compra,Venta,Ajuste} //Tipo de movimientos que se podran realizar
