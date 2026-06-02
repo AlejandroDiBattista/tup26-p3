@@ -178,7 +178,7 @@ public sealed class AgendaWindow : Runnable {
                             """;
     }
     private void AbrirDialogo() {
-        EjemploDialog dialog = new();
+        ContactDialog dialog = new();
         App!.Run(dialog);
     }
 
@@ -197,30 +197,156 @@ public sealed class AgendaWindow : Runnable {
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
-        Width  = 50;
-        Height = 8;
+public sealed class ContactDialog : Dialog {
+    private readonly TextField txtNombre;
+    private readonly TextField txtEmail;
+    private readonly CheckBox chkFavorito;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
+    private readonly List<TextField> telefonos = new();
+
+    public Contacto Contacto { get; private set; } = new();
+    public bool Guardado { get; private set; }
+
+    public ContactDialog() {
+
+    Title = "Nuevo contacto";
+    Width = 70;
+    Height = 18;
+
+    Add(new Label()
+    {
+        X = 1,
+        Y = 1,
+        Text = "Nombre:"
+    });
+
+    txtNombre = new TextField()
+    {
+        X = 15,
+        Y = 1,
+        Width = 40
+    };
+
+    Add(txtNombre);
+
+    Add(new Label()
+    {
+        X = 1,
+        Y = 3,
+        Text = "Email:"
+    });
+
+    txtEmail = new TextField()
+    {
+        X = 15,
+        Y = 3,
+        Width = 40
+    };
+
+    Add(txtEmail);
+
+    for (int i = 0; i < 5; i++)
+    {
+        Add(new Label()
+        {
+            X = 1,
+            Y = 5 + i,
+            Text = $"Teléfono {i + 1}:"
+        });
+
+        TextField txtTelefono = new()
+        {
+            X = 15,
+            Y = 5 + i,
+            Width = 25
         };
 
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
+        telefonos.Add(txtTelefono);
 
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
-            e.Handled = true;
-        };
+        Add(txtTelefono);
+    }
 
-        Add(message);
-        AddButton(closeButton);
+    chkFavorito = new CheckBox()
+    {
+        X = 15,
+        Y = 11,
+        Text = "Favorito"
+    };
+
+    Add(chkFavorito);
+
+    Button btnGuardar = new()
+    {
+        Text = "_Guardar"
+    };
+
+    btnGuardar.Accepting += GuardarContacto;
+
+    Button btnCancelar = new()
+    {
+        Text = "_Cancelar"
+    };
+
+    btnCancelar.Accepting += (_, e) =>
+    {
+        App!.RequestStop();
+        e.Handled = true;
+    };
+
+    AddButton(btnGuardar);
+    AddButton(btnCancelar);
+    }
+    private void GuardarContacto(object? sender, CommandEventArgs e)
+    {
+    string nombre = txtNombre.Text?.ToString()?.Trim() ?? "";
+
+    if (string.IsNullOrWhiteSpace(nombre))
+    {
+        MessageBox.ErrorQuery(
+            App!,
+            "Error",
+            "El nombre es obligatorio",
+            "OK"
+        );
+
+        e.Handled = true;
+        return;
+    }
+
+    string email = txtEmail.Text?.ToString()?.Trim() ?? "";
+
+    if (!string.IsNullOrEmpty(email) && !email.Contains("@"))
+    {
+        MessageBox.ErrorQuery(
+            App!,
+            "Error",
+            "El email debe contener @",
+            "OK"
+        );
+
+        e.Handled = true;
+        return;
+    }
+
+    List<string> numeros = telefonos
+        .Select(t => t.Text?.ToString()?.Trim())
+        .Where(t => !string.IsNullOrWhiteSpace(t))
+        .Cast<string>()
+        .ToList();
+
+    Contacto = new Contacto
+    {
+        Nombre = nombre,
+        Email = email,
+        Telefonos = string.Join(",", numeros),
+        Favorito = chkFavorito.Value == CheckState.Checked
+    };
+    
+    Guardado = true;
+
+    App!.RequestStop();
+
+    e.Handled = true;
     }
 }
 
