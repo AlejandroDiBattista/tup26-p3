@@ -70,7 +70,13 @@ class CatalogoRepositorio {
     private readonly CatalogoDb db;
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
-
+    public IEnumerable<Producto> ListarProductos() => db.Productos.ToList();
+    public Producto? ObtenerPorId(int id) => db.Productos.Find(id);
+    public void AgregarProducto(Producto p) { db.Productos.Add(p); db.SaveChanges(); }
+    public void EliminarProducto(int id) { 
+    var p = db.Productos.Find(id); 
+    if(p != null) { db.Productos.Remove(p); db.SaveChanges(); } 
+    }
     public void Iniciar() {
         db.Database.EnsureCreated();
 
@@ -79,7 +85,48 @@ class CatalogoRepositorio {
             db.SaveChanges();
         }
     }
+    public void Registrarmovimiento(MovimientoDto movimiento) {
+        var producto = db.Productos.Find(movimiento.ProductoId);
+        if (producto is null) throw new Exception("Producto no encontrado");
+
+        if (movimiento.Tipo == TipoMovimiento.Compra) {
+            producto = producto with { Stock = producto.Stock + movimiento.Cantidad };
+        } else if (movimiento.Tipo == TipoMovimiento.Venta) {
+            if (producto.Stock < movimiento.Cantidad) throw new Exception("Stock insuficiente");
+            producto = producto with { Stock = producto.Stock - movimiento.Cantidad };
+        }
+
+        db.Productos.Update(producto);
+        db.SaveChanges();
+    }
+
+    public List<Producto> ListarTodosLosProductos() => 
+    db.Productos.OrderBy(p => p.Id).ToList();
+    public void ActualizarProducto(Producto productoDto) {
+        var producto = db.Productos.Find(productoDto.Id);
+        if (producto is null) throw new Exception("Producto no encontrado");
+
+        producto = producto with {
+            Codigo = productoDto.Codigo,
+            Nombre = productoDto.Nombre,
+            Precio = productoDto.Precio,
+            Stock = productoDto.Stock
+        };
+
+        db.Productos.Update(producto);
+        db.SaveChanges();
+    }
+
+    public IEnumerable<MovimientoDto> ObtenerMovimientos(int productoId) {
+    return db.Movimientos
+             .Where(m => m.ProductoId == productoId)
+             .OrderByDescending(m => m.Fecha)
+             .ToList();
+    }
 
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }
+
+
+    
