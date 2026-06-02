@@ -3,6 +3,7 @@
 #:property PublishAot=false
 
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 // ── Configuración ──────────────────────────────────────────────────────────
 
@@ -10,6 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
+
+/* serializa el enum TipoMovimiento como texto */
+builder.Services.ConfigureHttpJsonOptions(opciones => {
+    opciones.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 var app = builder.Build();
 
@@ -28,6 +34,39 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
 
     return Results.Ok(producto);
 });
+
+app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) => {
+    var nuevo = repositorio.CrearProducto(producto);
+    return Results.Created($"/productos/{nuevo.Id} ", nuevo);
+});
+
+app.MapPut("/productos/{id}", (int id,Producto producto, CatalogoRepositorio repositorio) => {
+    var actualizado = repositorio.ActualizarProducto(id, producto);
+    return actualizado ? Results.NoContent() : Results.NotFound();
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+    var eliminado = repositorio.EliminarProducto(id);
+    return eliminado ? Results.NoContent() : Results.NotFound();
+
+});
+
+/* EndPoints para Movimientos */
+
+app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio repositorio) => {
+    return Results.Ok(repositorio.ListarMovimientos(productoId));
+
+});
+
+app.MapPost("productos/{productoId}/movimientos", (int productoId, MovimientoDeProducto movimiento, CatalogoRepositorio repositorio) => {
+      try {
+        var nuevoMovimiento = repositorio.RegistrarMovimiento(productoId, movimiento);
+        return Results.Created($"/productos/{productoId}/movimientos/{nuevoMovimiento.Id}", nuevoMovimiento);
+
+    }  catch (Exception ex) {
+        return Results.BadRequest(ex.Message);
+    }
+}  );
 
 app.Run("http://localhost:5050");
 
