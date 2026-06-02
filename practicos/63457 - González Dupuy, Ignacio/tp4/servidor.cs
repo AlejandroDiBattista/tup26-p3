@@ -22,10 +22,18 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/productos", (CatalogoRepositorio catalogo) =>
+app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
 {
-    return catalogo.ObtenerTodos();
-});app.Run("http://localhost:5050");
+    return repositorio.ObtenerTodos();
+});
+
+app.MapGet("/productos/{id}/movimientos",
+(int id, CatalogoRepositorio repositorio) =>
+{
+    return repositorio.ObtenerMovimientos(id);
+});
+
+app.Run("http://localhost:5050");
 
 
 
@@ -33,11 +41,28 @@ app.MapGet("/productos", (CatalogoRepositorio catalogo) =>
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 
+enum TipoMovimiento
+{
+    Ingreso,
+    Egreso,
+    Ajuste
+}
+
+record class MovimientoDeProducto(
+    int Id,
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha
+);
+
+
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -60,10 +85,17 @@ class CatalogoRepositorio {
         }
     }
 
-    public Producto? TraerProducto() =>
+ public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
-        public List<Producto> ObtenerTodos() =>
-        db.Productos
-          .OrderBy(p => p.Id)
-          .ToList();
+
+    public List<Producto> ObtenerTodos() =>
+        db.Productos.OrderBy(p => p.Id).ToList();
+
+    public List<MovimientoDeProducto> ObtenerMovimientos(int productoId)
+    {
+        return db.Movimientos
+                 .Where(m => m.ProductoId == productoId)
+                 .OrderByDescending(m => m.Fecha)
+                 .ToList();
+    }
 }
