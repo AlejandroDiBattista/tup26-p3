@@ -160,11 +160,115 @@ class CatalogoWindow : Window {
             ? _filteredProductos[idx]
             : null;
     }
+private async void NuevoProducto() {
+    var dialog = new ProductoDialog();
+    App!.Run(dialog);
 
-    private void NuevoProducto() { }
-    private void EditarProducto() { }
-    private void EliminarProducto() { }
-    private void RegistrarMovimiento() { }
+    if (dialog.Result is null) return;
+
+    try {
+        var response = await _http.PostAsJsonAsync("/productos", dialog.Result);
+        if (!response.IsSuccessStatusCode) {
+            SetStatus("Error al crear el producto");
+            return;
+        }
+        await CargarProductosAsync();
+        SetStatus($"Producto '{dialog.Result.Nombre}' creado correctamente");
+    }
+    catch (Exception ex) {
+        SetStatus($"Error: {ex.Message}");
+    }
+}
+
+private async void EditarProducto() {
+    var producto = SelectedProducto();
+    if (producto is null) {
+        MessageBox.Query(App!, "Editar", "Seleccioná un producto", "Ok");
+        return;
+    }
+
+    var dialog = new ProductoDialog(producto);
+    App!.Run(dialog);
+
+    if (dialog.Result is null) return;
+
+    try {
+        var response = await _http.PutAsJsonAsync($"/productos/{producto.Id}", dialog.Result);
+        if (!response.IsSuccessStatusCode) {
+            SetStatus("Error al actualizar el producto");
+            return;
+        }
+        await CargarProductosAsync();
+        SetStatus($"Producto '{dialog.Result.Nombre}' actualizado correctamente");
+    }
+    catch (Exception ex) {
+        SetStatus($"Error: {ex.Message}");
+    }
+
+
+}
+
+private async void EliminarProducto() {
+    var producto = SelectedProducto();
+    if (producto is null) {
+        MessageBox.Query(App!, "Eliminar", "Seleccioná un producto", "Ok");
+        return;
+    }
+
+ int? confirm = MessageBox.Query(
+    App!,
+    "Eliminar",
+    $"¿Eliminar '{producto.Nombre}'?",
+    "Sí", "No");
+
+if (confirm != 0) return;
+
+
+    try {
+        var response = await _http.DeleteAsync($"/productos/{producto.Id}");
+        if (!response.IsSuccessStatusCode) {
+            SetStatus("Error al eliminar el producto");
+            return;
+        }
+        await CargarProductosAsync();
+        SetStatus($"Producto '{producto.Nombre}' eliminado correctamente");
+    }
+    catch (Exception ex) {
+        SetStatus($"Error: {ex.Message}");
+    }
+}
+
+private async void RegistrarMovimiento() {
+    var producto = SelectedProducto();
+    if (producto is null) {
+        MessageBox.Query(App!, "Movimiento", "Seleccioná un producto", "Ok");
+        return;
+    }
+     var dialog = new MovimientoDialog(producto!);
+    App!.Run(dialog);
+
+    if (dialog.Result is null) return;
+
+    try {
+        var response = await _http.PostAsJsonAsync(
+            $"/productos/{producto.Id}/movimientos",
+            dialog.Result);
+
+        if (!response.IsSuccessStatusCode) {
+            SetStatus("Error al registrar el movimiento");
+            return;
+        }
+
+        await CargarProductosAsync();
+        await CargarMovimientosAsync();
+        SetStatus($"Movimiento registrado correctamente");
+    }
+    catch (Exception ex) {
+        SetStatus($"Error: {ex.Message}");
+    }
+}
+
+
 
     protected override bool OnKeyDown(Key key) {
         switch (key) {
@@ -271,6 +375,7 @@ class ProductoDialog : Dialog {
             _codigoField, _nombreField, _precioField, _stockField,
             btnGuardar, btnCancelar);
     }
+}
 
 class MovimientoDialog : Dialog {
     private readonly CheckBox  _chkCompra;
@@ -354,9 +459,6 @@ class MovimientoDialog : Dialog {
     }
 }
 
-
-
-}
 
 
 // ── dtos ────//
