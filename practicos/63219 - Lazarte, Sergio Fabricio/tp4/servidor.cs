@@ -19,7 +19,32 @@ using (var scope = app.Services.CreateScope()) {
     repositorio.Iniciar();
 }
 
+app.MapGet("/productos", (CatalogoRepositorio repo) =>
+    Results.Ok(repo.ListarProductos()));
+
+app.MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repo) => {
+    var p = repo.ObtenerProducto(id);
+    return p is null ? Results.NotFound() : Results.Ok(p);
+});
+
+app.MapPost("/productos", (ProductoDto dto, CatalogoRepositorio repo) => {
+    var p = repo.CrearProducto(dto);
+    return Results.Created($"/productos/{p.Id}", p);
+});
+
+app.MapPut("/productos/{id:int}", (int id, ProductoDto dto, CatalogoRepositorio repo) => {
+    var p = repo.ModificarProducto(id, dto);
+    return p is null ? Results.NotFound() : Results.Ok(p);
+});
+
+app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repo) => {
+    var ok = repo.EliminarProducto(id);
+    return ok ? Results.NoContent() : Results.NotFound();
+});
+
 app.Run("http://localhost:5050");
+
+record ProductoDto(string Codigo, string Nombre, decimal Precio, int Stock);
 
 enum TipoMovimiento { Compra, Venta, Ajuste }
 
@@ -60,5 +85,38 @@ class CatalogoRepositorio {
             );
             db.SaveChanges();
         }
+    }
+
+    public List<Producto> ListarProductos() =>
+        db.Productos.OrderBy(p => p.Id).ToList();
+
+    public Producto? ObtenerProducto(int id) =>
+        db.Productos.Find(id);
+
+    public Producto CrearProducto(ProductoDto dto) {
+        var p = new Producto {
+            Codigo = dto.Codigo, Nombre = dto.Nombre,
+            Precio = dto.Precio, Stock  = dto.Stock
+        };
+        db.Productos.Add(p);
+        db.SaveChanges();
+        return p;
+    }
+
+    public Producto? ModificarProducto(int id, ProductoDto dto) {
+        var p = db.Productos.Find(id);
+        if (p is null) return null;
+        p.Codigo = dto.Codigo; p.Nombre = dto.Nombre;
+        p.Precio = dto.Precio; p.Stock  = dto.Stock;
+        db.SaveChanges();
+        return p;
+    }
+
+    public bool EliminarProducto(int id) {
+        var p = db.Productos.Find(id);
+        if (p is null) return false;
+        db.Productos.Remove(p);
+        db.SaveChanges();
+        return true;
     }
 }
