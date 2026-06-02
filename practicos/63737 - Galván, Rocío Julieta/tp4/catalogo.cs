@@ -343,11 +343,10 @@ class ProductoDialog : Dialog {
                 e.Handled = true;
                 return;
             }
-            if (!decimal.TryParse(_precioField.Text, out decimal precio) || precio <= 0) {
-                MessageBox.ErrorQuery(App!, "Error", "El precio debe ser un número mayor que cero", "Ok");
-                _precioField.SetFocus();
-                e.Handled = true;
-                return;
+            if (!decimal.TryParse(_precioField.Text, 
+             System.Globalization.NumberStyles.Any,
+             System.Globalization.CultureInfo.InvariantCulture,
+             out decimal precio) || precio <= 0) {
             }
             if (!int.TryParse(_stockField.Text, out int stock) || stock < 0) {
                 MessageBox.ErrorQuery(App!, "Error", "El stock debe ser un número positivo", "Ok");
