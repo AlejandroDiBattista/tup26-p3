@@ -131,3 +131,12 @@ app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, Mo
         new MovimientoRegistradoDto(ProductoDto.DesdeModelo(producto), MovimientoDto.DesdeModelo(movimiento))
     );
 });
+app.Run("http://localhost:5050");
+
+static string? ValidarProducto(string codigo, string nombre, decimal precio, int stock) {
+    if (string.IsNullOrWhiteSpace(codigo)) return "El codigo es obligatorio.";
+    if (string.IsNullOrWhiteSpace(nombre)) return "El nombre es obligatorio.";
+    if (precio < 0) return "El precio no puede ser negativo.";
+    if (stock < 0) return "El stock no puede ser negativo.";
+    return null;
+}
