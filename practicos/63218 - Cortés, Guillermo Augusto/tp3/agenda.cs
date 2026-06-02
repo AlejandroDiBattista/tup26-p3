@@ -69,7 +69,8 @@ public sealed class AgendaWindow : Runnable {
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ]),
                 new MenuBarItem("_Contacto", [
-                    new MenuItem("_Nuevo", "Ctrl+N", NuevoContacto)
+                    new MenuItem("_Nuevo", "Ctrl+N", NuevoContacto),
+                    new MenuItem("_Editar", "Ctrl+E", EditarContacto)
                 ])
             ]
         };
@@ -193,6 +194,33 @@ public sealed class AgendaWindow : Runnable {
         statusBar.Text = $"Contacto {dialog.Contacto.Nombre}agregado correctamente";
     }
 
+    private void EditarContacto()
+    {
+        if (filteredContacts.Count == 0)
+            return;
+
+        int idx = contactsList.SelectedItem ?? 0;
+
+        if (idx < 0 || idx >= filteredContacts.Count)
+            return;
+
+        Contacto original = filteredContacts[idx];
+        ContactDialog dialog = new(original.Clone());
+
+        App!.Run(dialog);
+
+        if (!dialog.Guardado)
+        return;
+
+        store.Update(dialog.Contacto);
+
+        contacts = store.ObtenerContactos();
+
+        ApplyFilters();
+
+        statusBar.Text = $"Contacto '{dialog.Contacto.Nombre}' actualizado";
+    }
+
     private void SolicitarSalir() {
         App!.RequestStop();
     }
@@ -205,6 +233,11 @@ public sealed class AgendaWindow : Runnable {
 
         if (key == Key.N.WithCtrl) {
             NuevoContacto();
+            return true;
+        }
+
+        if (key == Key.E.WithCtrl) {
+            EditarContacto();
             return true;
         }
 
@@ -224,7 +257,7 @@ public sealed class ContactDialog : Dialog {
     public Contacto Contacto { get; private set; } = new();
     public bool Guardado { get; private set; }
 
-    public ContactDialog() {
+    public ContactDialog(Contacto? contacto = null) {
 
     Title = "Nuevo contacto";
     Width = 70;
@@ -327,6 +360,18 @@ public sealed class ContactDialog : Dialog {
         e.Handled = true;
     };
 
+    if (contacto != null){
+        Contacto = contacto.Clone();
+        txtNombre.Text = contacto.Nombre;
+        txtEmail.Text = contacto.Email;
+        chkFavorito.Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked;
+
+        string[] numeros = contacto.Telefonos.Split(',');
+        for (int i = 0; i < numeros.Length && i < telefonos.Count; i++) telefonos[i].Text = numeros[i];
+
+        txtNotas.Text = contacto.Notas;
+    }
+
     AddButton(btnGuardar);
     AddButton(btnCancelar);
     }
@@ -370,6 +415,7 @@ public sealed class ContactDialog : Dialog {
 
     Contacto = new Contacto
     {
+        Id = Contacto.Id,
         Nombre = nombre,
         Email = email,
         Telefonos = string.Join(",", numeros),
