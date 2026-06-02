@@ -223,7 +223,25 @@ public sealed class CatalogoWindow : Runnable
             }
         });
     }
-    private void RegistrarMovimiento(){ }
+    private void RegistrarMovimiento()
+    {
+        var sel = ProductoSeleccionado();
+        if (sel is null) { MostrarInfo("Aviso", "Seleccioná un producto."); return; }
+        var dlg = new MovimientoDialog(App!, sel.Nombre);
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+        Task.Run(async () => {
+            try {
+                var r = await _http.PostAsJsonAsync($"/productos/{sel.Id}/movimientos",
+                    new { Tipo = dlg.Tipo.ToString(), dlg.Cantidad });
+                r.EnsureSuccessStatusCode();
+                await RecargarProductos();
+                App!.Invoke(() => MostrarInfo("Listo", "Movimiento registrado."));
+            } catch (Exception ex) {
+                App!.Invoke(() => MostrarError("Error", ex.Message));
+            }
+        });
+    }
 
     private void MostrarInfo(string titulo, string msg)
         => MessageBox.Query(App!, titulo, msg, "OK");
@@ -307,6 +325,66 @@ public sealed class ProductoDialog : Dialog
         }
 
         Resultado   = new ProductoDto(_orig.Id, codigo, nombre, precio, stock);
+        WasAccepted = true;
+        App!.RequestStop();
+    }
+
+    private void Cancelar() { WasAccepted = false; App!.RequestStop(); }
+}
+
+public sealed class MovimientoDialog : Dialog
+{
+    public bool           WasAccepted { get; private set; }
+    public TipoMovimiento Tipo        { get; private set; } = TipoMovimiento.Compra;
+    public int            Cantidad    { get; private set; }
+
+    private readonly IApplication _app;
+    private ListView  _rdTipo  = null!;
+    private TextField _txtCant = null!;
+
+    public MovimientoDialog(IApplication app, string nombreProducto)
+    {
+        _app   = app;
+        Title  = $"Movimiento — {nombreProducto}";
+        Width  = 52;
+        Height = 13;
+        BuildLayout();
+    }
+
+    private void BuildLayout()
+    {
+        Add(new Label { Text = "Tipo:", X = 1, Y = 1 });
+        _rdTipo = new ListView { X = 10, Y = 1, Width = 22, Height = 3 };
+        _rdTipo.SetSource<string>(new ObservableCollection<string>(
+            ["Compra  (+stock)", "Venta   (-stock)", "Ajuste  (=stock)"]
+        ));
+        _rdTipo.SelectedItem = 0;
+        Add(_rdTipo);
+
+        Add(new Label { Text = "Cantidad:", X = 1, Y = 6 });
+        _txtCant = new TextField { Text = "1", X = 12, Y = 6, Width = 12 };
+        Add(_txtCant);
+
+        var btnOk  = new Button { Text = "_Aceptar",  IsDefault = true };
+        var btnCan = new Button { Text = "_Cancelar" };
+        btnOk.Accepting  += (_, e) => { Guardar();  e.Handled = true; };
+        btnCan.Accepting += (_, e) => { Cancelar(); e.Handled = true; };
+        AddButton(btnOk);
+        AddButton(btnCan);
+    }
+
+    private void Guardar()
+    {
+        if (!int.TryParse(_txtCant.Text.Trim(), out int cant) || cant <= 0) {
+            MessageBox.ErrorQuery(_app, "Validación", "La cantidad debe ser un entero positivo.", "OK");
+            return;
+        }
+        Tipo = _rdTipo.SelectedItem.GetValueOrDefault(0) switch {
+            1 => TipoMovimiento.Venta,
+            2 => TipoMovimiento.Ajuste,
+            _ => TipoMovimiento.Compra,
+        };
+        Cantidad    = cant;
         WasAccepted = true;
         App!.RequestStop();
     }
