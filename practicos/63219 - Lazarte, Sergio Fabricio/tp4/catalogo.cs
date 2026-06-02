@@ -184,8 +184,45 @@ public sealed class CatalogoWindow : Runnable
             }
         });
     }
-    private void EditarProducto()     { }
-    private void EliminarProducto()   { }
+    private void EditarProducto()
+    {
+        var sel = ProductoSeleccionado();
+        if (sel is null) { MostrarInfo("Aviso", "Seleccioná un producto."); return; }
+        var dlg = new ProductoDialog(App!, "Editar Producto", sel);
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+        var d = dlg.Resultado!;
+        Task.Run(async () => {
+            try {
+                var r = await _http.PutAsJsonAsync($"/productos/{sel.Id}",
+                    new { d.Codigo, d.Nombre, d.Precio, d.Stock });
+                r.EnsureSuccessStatusCode();
+                await RecargarProductos();
+                App!.Invoke(() => MostrarInfo("Listo", "Producto modificado."));
+            } catch (Exception ex) {
+                App!.Invoke(() => MostrarError("Error", ex.Message));
+            }
+        });
+    }
+
+    private void EliminarProducto()
+    {
+        var sel = ProductoSeleccionado();
+        if (sel is null) { MostrarInfo("Aviso", "Seleccioná un producto."); return; }
+        int r = (int)(MessageBox.Query(App!, "Confirmar",
+            $"¿Eliminar '{sel.Nombre}'?", "Sí", "No") ?? 1);
+        if (r != 0) return;
+        Task.Run(async () => {
+            try {
+                var resp = await _http.DeleteAsync($"/productos/{sel.Id}");
+                resp.EnsureSuccessStatusCode();
+                await RecargarProductos();
+                App!.Invoke(() => MostrarInfo("Listo", "Producto eliminado."));
+            } catch (Exception ex) {
+                App!.Invoke(() => MostrarError("Error", ex.Message));
+            }
+        });
+    }
     private void RegistrarMovimiento(){ }
 
     private void MostrarInfo(string titulo, string msg)
