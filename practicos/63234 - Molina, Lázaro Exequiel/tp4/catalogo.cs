@@ -167,3 +167,108 @@ async Task RefrescarMovimientosAsync(int productoId) {
     if (movimientos.Count == 0) filasMovimientos.Add("Sin movimientos.");
     pantalla.SetNeedsDraw();
 }
+
+async Task GuardarAsync() {
+    if (!decimal.TryParse(txtPrecio.Text?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var precio)) {
+        mensaje.Text = "Precio invalido. Usa punto si necesitas decimales.";
+        return;
+    }
+
+    if (!int.TryParse(txtStock.Text?.ToString(), out var stock)) {
+        mensaje.Text = "Stock invalido. Debe ser un numero entero.";
+        return;
+    }
+
+    var entrada = new ProductoEntrada(
+        txtCodigo.Text?.ToString() ?? "",
+        txtNombre.Text?.ToString() ?? "",
+        precio,
+        stock
+    );
+
+    HttpResponseMessage respuesta = elegido is null
+        ? await cliente.PostAsJsonAsync("/productos", entrada, opcionesJson)
+        : await cliente.PutAsJsonAsync($"/productos/{elegido.Id}", entrada, opcionesJson);
+
+    if (!respuesta.IsSuccessStatusCode) {
+        mensaje.Text = await LeerMensajeAsync(respuesta);
+        return;
+    }
+
+    mensaje.Text = elegido is null ? "Producto agregado." : "Producto actualizado.";
+    await RefrescarProductosAsync();
+}
+
+async Task BorrarAsync() {
+    if (elegido is null) {
+        mensaje.Text = "Primero selecciona un producto.";
+        return;
+    }
+
+    var respuesta = await cliente.DeleteAsync($"/productos/{elegido.Id}");
+    if (!respuesta.IsSuccessStatusCode) {
+        mensaje.Text = await LeerMensajeAsync(respuesta);
+        return;
+    }
+
+    mensaje.Text = "Producto eliminado.";
+    await RefrescarProductosAsync();
+}
+
+async Task AgregarMovimientoAsync(TipoMovimiento tipo) {
+    if (elegido is null) {
+        mensaje.Text = "Selecciona un producto para cargar movimientos.";
+        return;
+    }
+
+    if (!int.TryParse(txtCantidad.Text?.ToString(), out var cantidad) || cantidad <= 0) {
+        mensaje.Text = "La cantidad debe ser mayor que cero.";
+        return;
+    }
+
+    var entrada = new MovimientoEntrada(tipo, cantidad);
+    var respuesta = await cliente.PostAsJsonAsync($"/productos/{elegido.Id}/movimientos", entrada, opcionesJson);
+
+    if (!respuesta.IsSuccessStatusCode) {
+        mensaje.Text = await LeerMensajeAsync(respuesta);
+        return;
+    }
+
+    mensaje.Text = $"Movimiento registrado: {tipo}.";
+    await RefrescarProductosAsync();
+}
+
+void VaciarFormulario() {
+    elegido = null;
+    txtCodigo.Text = "";
+    txtNombre.Text = "";
+    txtPrecio.Text = "0";
+    txtStock.Text = "0";
+    txtCantidad.Text = "1";
+    filasMovimientos.Clear();
+    mensaje.Text = "Listo para cargar un producto nuevo.";
+    pantalla.SetNeedsDraw();
+}
+
+static string Cortar(string texto, int largo) {
+    if (texto.Length <= largo) return texto;
+    return texto[..Math.Max(0, largo - 3)] + "...";
+}
+
+static async Task<string> LeerMensajeAsync(HttpResponseMessage respuesta) {
+    var contenido = await respuesta.Content.ReadAsStringAsync();
+    return string.IsNullOrWhiteSpace(contenido)
+        ? $"Error HTTP {(int)respuesta.StatusCode}."
+        : contenido.Trim('"');
+}
+
+record ProductoEntrada(string Codigo, string Nombre, decimal Precio, int Stock);
+record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoEntrada(TipoMovimiento Tipo, int Cantidad);
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
