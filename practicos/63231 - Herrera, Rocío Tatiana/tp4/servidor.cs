@@ -77,3 +77,11 @@ app.MapPut("/productos/{id:int}", async (int id, ProductoCrearDto dto, CatalogoD
     await db.SaveChangesAsync();
     return Results.Ok(ProductoDto.DesdeModelo(producto));
 });
+app.MapDelete("/productos/{id:int}", async (int id, CatalogoDb db) => {
+    var producto = await db.Productos.FindAsync(id);
+    if (producto is null) return Results.NotFound($"No existe un producto con id {id}.");
+
+    db.Productos.Remove(producto);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
