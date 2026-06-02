@@ -90,18 +90,28 @@ public sealed class CatalogoWindow : Runnable {
 
     }
 
+    private async Task CargarProductos() {
+        try {
+            var lista = await http.GetFromJsonAsync<List<ProductoDto>>("/productos");
+            productos = lista ?? [];
+            AplicarFiltro();
+        } catch {
+            SetStatus("Error no se pudo conectar con el servidor");
+        }
+    }
+
     private void AplicarFiltro() {
         string search = searchField?.Text.ToString()?.ToLower() ?? "";
         filtrados = productos.Where(p=> p.Codigo.ToLower().Contains(search) || p.Nombre.ToLower().Contains(search)).ToList();
         var items = new ObservableCollection<string>(filtrados.Select(p=> $"{p.Codigo, -10} - {p.Nombre, -20} ${p.Precio,8:N2}  [{p.Stock}]"));
-        ListaProductos.SetSource<string>(items);
+        listaProductos.SetSource<string>(items);
         CargarMovimientosDelSeleccionado();
     }
 
     private void CargarMovimientosDelSeleccionado() {
         var p = GetSelected();
         if (p is null) {
-            ListaMovimientos.SetSource<string>(new ObservableCollection<string>());
+            listaMovimientos.SetSource<string>(new ObservableCollection<string>());
             return;
         }
         Task.Run(async ()=> {
@@ -118,4 +128,107 @@ public sealed class CatalogoWindow : Runnable {
             catch{}
         });
     }
+    private ProductoDto? GetSelected() {
+        if (filtrados.Count == 0) return null;
+        int index = listaProductos.SelectedItem.HasValue ? listaProductos.SelectedItem.Value : 0;
+        if (index < 0 || index >= filtrados.Count) return null;
+        return filtrados[index];
+    }
+
+    private void NuevoProducto() {
+        var dialog = new ProductoDialog(new ProductoDto());
+        App!.Run(dialog);
+        if(!dialog.Accepted) return;
+        Task.Run(async ()=> {
+            try {
+                var resp = await http.PostAsJsonAsync("/productos", dialog.Producto);
+                if (resp.IsSuccessStatusCode) {
+                    await CargarProductos();
+                    SetStatus("Producto agregado");
+                } else {
+                    var msg = await resp.Content.ReadAsStringAsync();
+                    SetStatus("Error al agregar, ya existe un producto con ese código");
+                }
+            } catch {
+                SetStatus("Error al conectar con el servidor");
+            }
+        });
+    }
+
+    private void EditarProducto() {
+        var selected = GetSelected();
+        if (selected is null) return;
+        var dialog = new ProductoDialog(selected.Clone());
+        App!.Run(dialog);
+        if(!dialog.Accepted) return;
+        Task.Run(async () => {
+            try {
+                var resp = await http.PutAsJsonAsync($"/productos/{selected.Id}", dialog.Producto);
+                if (resp.IsSuccessStatusCode) {
+                    await CargarProductos();
+                    SetStatus("Producto actualizado");
+                } else {
+                    SetStatus("Error al actualizar, ya existe otro producto con ese código");
+                }
+            } catch {
+                SetStatus("Error al conectar con el servidor");
+            }
+        });
+    }
+
+    private void EliminarProducto() {
+        var selected = GetSelected();
+        if (selected is null) return;
+        int result = MessageBox.Query(App!,"Confirmar", $"¿Confirma que desea eliminar el producto '{selected.Nombre}'?", "Sí", "No") ?? 0;
+        if (result != 0) return;
+        Task.Run(async () => {
+            try {
+                var resp = await http.DeleteAsync($"/productos/{selected.Id}");
+                if (resp.IsSuccessStatusCode) {
+                    await CargarProductos();
+                    SetStatus("Producto eliminado");
+                } else {
+                    SetStatus("Error al eliminar el producto");
+                }
+            } catch {
+                SetStatus("Error al conectar con el servidor");
+            }
+        });
+    }
+
+    private void RegistrarMovimiento() {
+        var selected = GetSelected();
+        if (selected is null) {
+            MessageBox.ErrorQuery(App!, "Error", "No hay ningún producto seleccionado", "OK");
+            return;
+        }
+        var dialog = new MovimientoDialog(selected.Nombre);
+        App!.Run(dialog);
+        if (!dialog.Accepted) return;
+        Task.Run(async () => {
+            try {
+                var resp = await http.PostAsJsonAsync( $"/productos/{selected.Id}/movimientos", dialog.Movimiento);
+                if (resp.IsSuccessStatusCode) {
+                    int productoId = selected.Id;
+                    await CargarProductos();
+                    int indice = filtrados.FindIndex(p => p.Id == productoId);
+                    if (indice >= 0)
+                    listaProductos.SelectedItem = indice;
+                    CargarMovimientosDelSeleccionado();
+                    SetStatus("Movimiento registrado");
+                } else {
+                    var msg = await resp.Content.ReadAsStringAsync();
+                    SetStatus($"Error al registrar movimiento: {msg}");
+                }
+            } catch {
+                SetStatus("Error al conectar con el servidor");
+            }
+        });
+    }
+    private void SetStatus(string mensaje) {
+        statusLabel.Text = $"{mensaje}  | F2 Nuevo | F3 Editar | Del Eliminar | F5 Movimiento | Ctrl+Q Salir";
+    }
+
+    
+
 }
