@@ -1,11 +1,8 @@
 using System;
 
-static class Program
-{
-    static void Main(string[] args)
-    {
-        if (Comandos.Procesar(args))
-        {
+static class Program {
+    static void Main(string[] args) {
+        if (Comandos.Procesar(args)) {
             return;
         }
 
@@ -14,36 +11,29 @@ static class Program
 
         var expresion = Console.ReadLine() ?? "";
 
-        if (string.IsNullOrWhiteSpace(expresion))
-        {
+        if (string.IsNullOrWhiteSpace(expresion)) {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
 
         var funcion = Compilador.Parse(expresion);
 
-        while (true)
-        {
+        while (true) {
             Console.Write("x = ");
             var xTexto = Console.ReadLine() ?? "";
 
-            if (string.IsNullOrWhiteSpace(xTexto) || xTexto.ToLower() == "fin")
-            {
+            if (string.IsNullOrWhiteSpace(xTexto) || xTexto.ToLower() == "fin") {
                 break;
             }
 
-            if (!int.TryParse(xTexto, out int x))
-            {
+            if (!int.TryParse(xTexto, out int x)) {
                 Console.WriteLine("Valor de x inválido.");
                 continue;
             }
 
-            try
-            {
+            try {
                 Console.WriteLine(funcion.Evaluar(x));
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine(ex.Message);
             }
         }

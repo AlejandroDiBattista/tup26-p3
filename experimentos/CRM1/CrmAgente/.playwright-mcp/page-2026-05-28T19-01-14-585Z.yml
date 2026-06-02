@@ -1,0 +1,46 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - text: CRM.
+      - generic [ref=e5]: UTN Tucuman
+    - navigation [ref=e6]:
+      - link "Contactos" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "Pipeline" [ref=e8] [cursor=pointer]:
+        - /url: /pipeline
+      - link "Agente IA" [ref=e9] [cursor=pointer]:
+        - /url: /agente
+  - main [ref=e10]:
+    - generic [ref=e28]:
+      - heading "Contactos" [level=1] [ref=e29]
+      - paragraph [ref=e30]: "El centro del CRM: la gente y las empresas con las que trabajamos."
+    - generic [ref=e31]:
+      - textbox "Buscar por nombre o empresa..." [ref=e32]
+      - button "Cancelar" [active] [ref=e45] [cursor=pointer]
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49]: Nombre
+          - textbox [ref=e50]
+        - generic [ref=e51]:
+          - generic [ref=e52]: Empresa
+          - textbox [ref=e53]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]: Email
+          - textbox [ref=e57]
+        - generic [ref=e58]:
+          - generic [ref=e59]: Telefono
+          - textbox [ref=e60]
+      - button "Guardar contacto" [ref=e61] [cursor=pointer]
+    - generic [ref=e34]:
+      - generic [ref=e35] [cursor=pointer]:
+        - generic [ref=e36]:
+          - generic [ref=e37]: Juan Perez
+          - generic [ref=e38]: Perez Construcciones
+        - generic [ref=e39]: jperez@construcciones.com · 381-555-1234
+      - generic [ref=e40] [cursor=pointer]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: Maria Gomez
+          - generic [ref=e43]: Aceros del Norte
+        - generic [ref=e44]: mgomez@aceros.com · 381-555-9876

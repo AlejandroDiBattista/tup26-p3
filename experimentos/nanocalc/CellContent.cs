@@ -146,11 +146,9 @@ internal static class CellContentParser {
         if (isPercentage) {
             number /= 100m;
             displayFormat = CellDisplayFormat.NumberPercentage;
-        }
-        else if (isCurrency) {
+        } else if (isCurrency) {
             displayFormat = CellDisplayFormat.NumberCurrency;
-        }
-        else {
+        } else {
             displayFormat = CellDisplayFormat.NumberNormal;
         }
 

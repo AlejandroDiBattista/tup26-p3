@@ -1,0 +1,62 @@
+@using AgendaRazorHtmx
+@model Contact
+
+@{
+    Contact contact = Model;
+}
+
+<div class="detail-view">
+    <div class="detail-header">
+        <div>
+            <h2>@contact.Nombre @contact.Apellido</h2>
+            <p class="muted">@contact.Telefono</p>
+        </div>
+    </div>
+
+    <dl class="detail-grid">
+        <div>
+            <dt>Nombre</dt>
+            <dd>@contact.Nombre</dd>
+        </div>
+
+        <div>
+            <dt>Apellido</dt>
+            <dd>@contact.Apellido</dd>
+        </div>
+
+        <div>
+            <dt>Teléfono</dt>
+            <dd>@(string.IsNullOrWhiteSpace(contact.Telefono) ? "Sin teléfono" : contact.Telefono)</dd>
+        </div>
+
+        <div>
+            <dt>Email</dt>
+            <dd>@(string.IsNullOrWhiteSpace(contact.Email) ? "Sin email" : contact.Email)</dd>
+        </div>
+
+        <div class="detail-notes">
+            <dt>Notas</dt>
+            <dd>@(string.IsNullOrWhiteSpace(contact.Notas) ? "Sin notas" : contact.Notas)</dd>
+        </div>
+    </dl>
+
+    <form class="actions" hx-target="#detail" hx-swap="innerHTML">
+        @Html.AntiForgeryToken()
+
+        <button
+            type="button"
+            class="primary"
+            hx-get="/?handler=Edit&id=@contact.Id">
+            Editar
+        </button>
+
+        <button
+            type="button"
+            class="danger"
+            hx-post="/?handler=Delete&id=@contact.Id"
+            hx-include="closest form"
+            hx-confirm="¿Eliminar este contacto?">
+            Eliminar
+        </button>
+    </form>
+</div>

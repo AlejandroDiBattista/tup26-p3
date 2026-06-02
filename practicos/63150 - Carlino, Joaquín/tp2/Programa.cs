@@ -1,99 +1,61 @@
-namespace calculadora;
+using System;
 
-// ─── Punto de entrada ─────────────────────────────────────────────────────────
-
-class Programa
+namespace CalculadoraAST
 {
-    static void Main(string[] args)
+    static class Program 
     {
-        try
+        static void Main(string[] args) 
         {
-            var comando = Comandos.Parsear(args);
-            var compilador = new Compilador();
-
-            switch (comando.Modo)
+            if (Comandos.Procesar(args)) 
             {
-                // ── Ayuda ──────────────────────────────────────────────────────────────
-                case ModoEjecucion.Ayuda:
-                    Comandos.MostrarAyuda();
-                    Environment.Exit(0);
-                    break;
+                return;
+            }
 
-                // ── Pruebas ────────────────────────────────────────────────────────────
-                case ModoEjecucion.Pruebas:
-                    Pruebas.Ejecutar();
-                    break;
+            Console.WriteLine("\n Evaluación de expresiones matemáticas \n");
+            Console.Write("Ingrese una expresión matemática con la variable 'x': \n> ");
 
-                // ── Modo directo ───────────────────────────────────────────────────────
-                case ModoEjecucion.Directo:
+            var expresion = Console.ReadLine() ?? "";
+            if (string.IsNullOrWhiteSpace(expresion)) 
+            {
+                Console.WriteLine("Error: Entrada vacía. Terminando programa.");
+                return;
+            }
+
+            try
+            {
+                var funcion = Compilador.Parse(expresion);
+
+                while (true) 
                 {
-                    Nodo ast = compilador.Compilar(comando.Expresion!);
-                    int resultado = ast.Evaluar(comando.Valor!.Value);
-                    Console.WriteLine(resultado);
-                    break;
-                }
+                    Console.Write("x = ");
+                    var entradaX = Console.ReadLine() ?? "";
 
-                // ── Modo interactivo ───────────────────────────────────────────────────
-                case ModoEjecucion.Interactivo:
-                {
-                    // 1. Pedir y compilar la expresión una sola vez
-                    Console.Write("Expresión: ");
-                    string? linea = Console.ReadLine();
-
-                    if (string.IsNullOrWhiteSpace(linea))
+                    if (string.IsNullOrWhiteSpace(entradaX) || entradaX.Trim().ToLower() == "fin") 
                     {
-                        Console.Error.WriteLine("Error: la expresión está vacía.");
-                        Environment.Exit(1);
+                        break;
                     }
 
-                    Nodo ast = compilador.Compilar(linea);
-                    Console.WriteLine($"Expresión compilada: {ast}");
-                    Console.WriteLine("Ingrese valores para x (o 'fin' / vacío para terminar):");
-
-                    // 2. Evaluar repetidamente
-                    while (true)
+                    if (int.TryParse(entradaX, out int x))
                     {
-                        Console.Write("x = ");
-                        string? entrada = Console.ReadLine();
-
-                        if (string.IsNullOrWhiteSpace(entrada) ||
-                            entrada.Trim().Equals("fin", StringComparison.OrdinalIgnoreCase))
-                            break;
-
-                        if (!int.TryParse(entrada.Trim(), out int valorX))
-                        {
-                            Console.Error.WriteLine($"Error: '{entrada}' no es un entero válido.");
-                            continue;
-                        }
-
                         try
                         {
-                            Console.WriteLine(ast.Evaluar(valorX));
+                            Console.WriteLine($"Resultado: {funcion.Evaluar(x)}");
                         }
-                        catch (DivisionPorCeroException ex)
+                        catch (DivideByZeroException ex)
                         {
-                            Console.Error.WriteLine(ex.Message);
+                            Console.WriteLine(ex.Message);
                         }
                     }
-
-                    break;
+                    else
+                    {
+                        Console.WriteLine("Error: Valor de x inválido. Ingrese un número entero");
+                    }
                 }
             }
-        }
-        catch (ErrorDeParsing ex)
-        {
-            Console.Error.WriteLine(ex.Message);
-            Environment.Exit(1);
-        }
-        catch (DivisionPorCeroException ex)
-        {
-            Console.Error.WriteLine(ex.Message);
-            Environment.Exit(1);
-        }
-        catch (ArgumentException ex)
-        {
-            Console.Error.WriteLine(ex.Message);
-            Environment.Exit(1);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

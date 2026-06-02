@@ -27,12 +27,12 @@ public class Compilador {
 
     private Nodo Parsear() {
         SaltarEspacios();
-        if (CaracterActual == '\0') 
+        if (CaracterActual == '\0')
             throw new FormatException("Token inesperado: entrada vacía");
 
         var ast = ParsearExpresion();
         SaltarEspacios();
-        
+
         if (CaracterActual != '\0')
             throw new FormatException($"Token inesperado: '{CaracterActual}'");
 
@@ -90,7 +90,7 @@ public class Compilador {
             var nodo = ParsearExpresion();
             SaltarEspacios();
             if (CaracterActual != ')') throw new FormatException("Se esperaba ')'");
-            Avanzar(); 
+            Avanzar();
             return nodo;
         }
         if (CaracterActual == 'x' || CaracterActual == 'X') {

@@ -1,51 +1,41 @@
-abstract class Nodo
-{
+abstract class Nodo {
     public abstract int Evaluar(int x = 0);
 }
 
-class Numero : Nodo
-{
+class Numero : Nodo {
     public int Valor;
 
-    public Numero(int valor)
-    {
+    public Numero(int valor) {
         Valor = valor;
     }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         return Valor;
     }
 }
 
-class Variable : Nodo
-{
-    public override int Evaluar(int x = 0)
-    {
+class Variable : Nodo {
+    public override int Evaluar(int x = 0) {
         return x;
     }
 }
 
-class Binaria : Nodo
-{
+class Binaria : Nodo {
     public Nodo Izq;
     public Nodo Der;
     public char Op;
 
-    public Binaria(Nodo izq, char op, Nodo der)
-    {
+    public Binaria(Nodo izq, char op, Nodo der) {
         Izq = izq;
         Op = op;
         Der = der;
     }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         int a = Izq.Evaluar(x);
         int b = Der.Evaluar(x);
 
-        switch (Op)
-        {
+        switch (Op) {
             case '+': return a + b;
             case '-': return a - b;
             case '*': return a * b;
@@ -55,19 +45,16 @@ class Binaria : Nodo
     }
 }
 
-class Unaria : Nodo
-{
+class Unaria : Nodo {
     public char Op;
     public Nodo Expr;
 
-    public Unaria(char op, Nodo expr)
-    {
+    public Unaria(char op, Nodo expr) {
         Op = op;
         Expr = expr;
     }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         int val = Expr.Evaluar(x);
         return Op == '-' ? -val : val;
     }

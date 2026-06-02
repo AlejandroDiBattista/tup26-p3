@@ -1,0 +1,103 @@
+@base = http://localhost:5263
+
+### Acceso sin token: debe devolver 401
+GET {{base}}/tickets
+
+### Login con usuario sembrado
+# @name login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "clara@cliente.com",
+  "password": "clave5678"
+}
+
+### Token obtenido del login
+@token = {{login.response.body.$.token}}
+
+### Listar tickets
+GET {{base}}/tickets
+Authorization: Bearer {{token}}
+
+### Listar tickets en proceso
+GET {{base}}/tickets/estado/EnProceso
+Authorization: Bearer {{token}}
+
+### Ver ticket 2 con acciones sembradas
+GET {{base}}/tickets/2
+Authorization: Bearer {{token}}
+
+### Crear un ticket nuevo
+# @name crearTicket
+POST {{base}}/tickets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "titulo": "Prueba desde REST Client",
+  "descripcion": "Ticket creado desde prueba.http",
+  "responsableId": 1
+}
+
+### Id del ticket recien creado
+@ticketId = {{crearTicket.response.body.$.id}}
+
+### Registrar una accion pasada
+# @name accionPasada
+POST {{base}}/tickets/{{ticketId}}/acciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "descripcion": "Accion pasada de prueba",
+  "fecha": "2026-05-30T10:00:00"
+}
+
+### Registrar una accion futura
+# @name accionFutura
+POST {{base}}/tickets/{{ticketId}}/acciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "descripcion": "Accion futura de prueba",
+  "fecha": "2026-12-31T15:00:00"
+}
+
+### Id de la accion futura
+@accionFuturaId = {{accionFutura.response.body.$.id}}
+
+### Cambiar estado a EnProceso
+PUT {{base}}/tickets/{{ticketId}}/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "EnProceso"
+}
+
+### Marcar la accion futura como realizada
+PUT {{base}}/tickets/{{ticketId}}/acciones/{{accionFuturaId}}/realizada
+Authorization: Bearer {{token}}
+
+### Reasignar responsable del ticket creado
+PUT {{base}}/tickets/{{ticketId}}/responsable
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "responsableId": 2
+}
+
+### Ver el ticket creado actualizado
+GET {{base}}/tickets/{{ticketId}}
+Authorization: Bearer {{token}}
+
+### Logout
+POST {{base}}/auth/logout
+Authorization: Bearer {{token}}
+
+### Reintentar con el mismo token: debe devolver 401
+GET {{base}}/tickets
+Authorization: Bearer {{token}}

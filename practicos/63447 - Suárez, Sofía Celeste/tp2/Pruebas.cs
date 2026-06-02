@@ -1,4 +1,5 @@
 namespace CalculadoraArimetica;
+
 class Pruebas {
     public static void Ejecutar() {
         Console.WriteLine("Ejecutando pruebas automáticas...");

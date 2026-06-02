@@ -1,25 +1,21 @@
 
-class Compilador
-{
+class Compilador {
     private string texto;
     private int posicion;
 
-    private Compilador(string texto) 
-    {
+    private Compilador(string texto) {
         this.texto = texto;
         this.posicion = 0;
     }
 
-    public static Nodo Parse(string expresion)
-{
-    var compilador = new Compilador(expresion);
-    return compilador.ParsearExpresion();
-}
+    public static Nodo Parse(string expresion) {
+        var compilador = new Compilador(expresion);
+        return compilador.ParsearExpresion();
+    }
 
-    private char Actual()
-    {
+    private char Actual() {
         if (posicion >= texto.Length)// Si hemos llegado al final del texto, devolvemos un carácter nulo
-            return '\0'; 
+            return '\0';
 
         return texto[posicion];
     }
@@ -33,8 +29,7 @@ class Compilador
     {
         int inicio = posicion;
 
-        while (char.IsDigit(Actual()))
-        {
+        while (char.IsDigit(Actual())) {
             Avanzar();// Avanza mientras el carácter actual sea un dígito
         }
 
@@ -47,109 +42,89 @@ class Compilador
 
         return new NumeroNodo(valor);
     }
-    
-    private Nodo ParsearFactor()
-{
-    // Ignorar espacios
-    while (char.IsWhiteSpace(Actual()))
-        Avanzar();
 
-    char actual = Actual();
+    private Nodo ParsearFactor() {
+        // Ignorar espacios
+        while (char.IsWhiteSpace(Actual()))
+            Avanzar();
 
-    // 🔹 Número
-    if (char.IsDigit(actual))
-    {
-        return ParsearNumero();
+        char actual = Actual();
+
+        // 🔹 Número
+        if (char.IsDigit(actual)) {
+            return ParsearNumero();
+        }
+
+        // 🔹 Variable x
+        if (actual == 'x' || actual == 'X') {
+            Avanzar();
+            return new VariableNodo();
+        }
+
+        // 🔹 Unario +
+        if (actual == '+') {
+            Avanzar();
+            return ParsearFactor();
+        }
+
+        // 🔹 Unario -
+        if (actual == '-') {
+            Avanzar();
+            return new NegativoNodo(ParsearFactor());
+        }
+
+        // 🔹 Paréntesis
+        if (actual == '(') {
+            Avanzar(); // consumir '('
+            var nodo = ParsearExpresion();
+
+            if (Actual() != ')')
+                throw new FormatException("Se esperaba ')'");
+
+            Avanzar(); // consumir ')'
+            return nodo;
+        }
+
+        throw new FormatException("Token inesperado");
     }
+    private Nodo ParsearTermino() {
+        var nodo = ParsearFactor();
 
-    // 🔹 Variable x
-    if (actual == 'x' || actual == 'X')
-    {
-        Avanzar();
-        return new VariableNodo();
-    }
+        while (true) {
+            while (char.IsWhiteSpace(Actual()))
+                Avanzar();
 
-    // 🔹 Unario +
-    if (actual == '+')
-    {
-        Avanzar();
-        return ParsearFactor();
-    }
+            if (Actual() == '*') {
+                Avanzar();
+                nodo = new MultiplicacionNodo(nodo, ParsearFactor());
+            } else if (Actual() == '/') {
+                Avanzar();
+                nodo = new DivisionNodo(nodo, ParsearFactor());
+            } else {
+                break;
+            }
+        }
 
-    // 🔹 Unario -
-    if (actual == '-')
-    {
-        Avanzar();
-        return new NegativoNodo(ParsearFactor());
-    }
-
-    // 🔹 Paréntesis
-    if (actual == '(')
-    {
-        Avanzar(); // consumir '('
-        var nodo = ParsearExpresion();
-
-        if (Actual() != ')')
-            throw new FormatException("Se esperaba ')'");
-            
-        Avanzar(); // consumir ')'
         return nodo;
     }
+    private Nodo ParsearExpresion() {
+        var nodo = ParsearTermino();
 
-    throw new FormatException("Token inesperado");
-}
-private Nodo ParsearTermino()
-{
-    var nodo = ParsearFactor();
+        while (true) {
+            while (char.IsWhiteSpace(Actual()))
+                Avanzar();
 
-    while (true)
-    {
-        while (char.IsWhiteSpace(Actual()))
-            Avanzar();
+            if (Actual() == '+') {
+                Avanzar();
+                nodo = new SumaNodo(nodo, ParsearTermino());
+            } else if (Actual() == '-') {
+                Avanzar();
+                nodo = new RestaNodo(nodo, ParsearTermino());
+            } else {
+                break;
+            }
+        }
 
-        if (Actual() == '*')
-        {
-            Avanzar();
-            nodo = new MultiplicacionNodo(nodo, ParsearFactor());
-        }
-        else if (Actual() == '/')
-        {
-            Avanzar();
-            nodo = new DivisionNodo(nodo, ParsearFactor());
-        }
-        else
-        {
-            break;
-        }
+        return nodo;
     }
-
-    return nodo;
-}
-private Nodo ParsearExpresion()
-{
-    var nodo = ParsearTermino();
-
-    while (true)
-    {
-        while (char.IsWhiteSpace(Actual()))
-            Avanzar();
-
-        if (Actual() == '+')
-        {
-            Avanzar();
-            nodo = new SumaNodo(nodo, ParsearTermino());
-        }
-        else if (Actual() == '-')
-        {
-            Avanzar();
-            nodo = new RestaNodo(nodo, ParsearTermino());
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    return nodo;
-}
 }

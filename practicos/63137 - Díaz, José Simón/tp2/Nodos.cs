@@ -20,7 +20,7 @@ class PositivoNodo(Nodo operando) : Nodo {
 
 abstract class NodoBinario(Nodo izquierdo, Nodo derecho) : Nodo {
     protected Nodo Izquierdo { get; } = izquierdo;
-    protected Nodo Derecho   { get; } = derecho;
+    protected Nodo Derecho { get; } = derecho;
 }
 
 class SumaNodo(Nodo izquierdo, Nodo derecho) : NodoBinario(izquierdo, derecho) {

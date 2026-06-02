@@ -1,18 +1,15 @@
 using System;
 
-class Compilador
-{
+class Compilador {
     private string texto;
     private int pos;
 
-    private Compilador(string texto)
-    {
+    private Compilador(string texto) {
         this.texto = texto;
         this.pos = 0;
     }
 
-    public static Nodo Compilar(string texto)
-    {
+    public static Nodo Compilar(string texto) {
         var compilador = new Compilador(texto);
 
         compilador.SaltarEspacios();
@@ -27,47 +24,36 @@ class Compilador
         return nodo;
     }
 
-    private char Actual
-    {
-        get
-        {
+    private char Actual {
+        get {
             if (pos < texto.Length)
                 return texto[pos];
             return '\0';
         }
     }
 
-    private void Avanzar()
-    {
+    private void Avanzar() {
         pos++;
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (char.IsWhiteSpace(Actual))
             Avanzar();
     }
 
-    private Nodo Expresion()
-    {
+    private Nodo Expresion() {
         Nodo nodo = Termino();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
 
-            if (Actual == '+')
-            {
+            if (Actual == '+') {
                 Avanzar();
                 nodo = new SumaNodo(nodo, Termino());
-            }
-            else if (Actual == '-')
-            {
+            } else if (Actual == '-') {
                 Avanzar();
                 nodo = new RestaNodo(nodo, Termino());
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
@@ -75,26 +61,19 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Termino()
-    {
+    private Nodo Termino() {
         Nodo nodo = Factor();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
 
-            if (Actual == '*')
-            {
+            if (Actual == '*') {
                 Avanzar();
                 nodo = new MultiplicacionNodo(nodo, Factor());
-            }
-            else if (Actual == '/')
-            {
+            } else if (Actual == '/') {
                 Avanzar();
                 nodo = new DivisionNodo(nodo, Factor());
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
@@ -102,23 +81,19 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Factor()
-    {
+    private Nodo Factor() {
         SaltarEspacios();
 
-        if (Actual == '+')
-        {
+        if (Actual == '+') {
             Avanzar();
             return Factor();
         }
 
-        if (Actual == '-')
-        {
+        if (Actual == '-') {
             Avanzar();
             return new NegativoNodo(Factor());
         }
-        if (Actual == '(')
-        {
+        if (Actual == '(') {
             Avanzar();
             Nodo nodo = Expresion();
 
@@ -131,13 +106,11 @@ class Compilador
             return nodo;
         }
 
-        if (char.IsDigit(Actual))
-        {
+        if (char.IsDigit(Actual)) {
             return Numero();
         }
 
-        if (Actual == 'x' || Actual == 'X')
-        {
+        if (Actual == 'x' || Actual == 'X') {
             Avanzar();
             return new VariableNodo();
         }
@@ -145,8 +118,7 @@ class Compilador
         throw new Exception($"Token inesperado en posición {pos}");
     }
 
-    private Nodo Numero()
-    {
+    private Nodo Numero() {
         int inicio = pos;
 
         while (char.IsDigit(Actual))

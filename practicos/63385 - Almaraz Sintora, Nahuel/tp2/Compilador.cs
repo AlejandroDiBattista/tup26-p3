@@ -39,7 +39,7 @@ class Compilador {
 
         return izquierda;
     }
-     private Nodo ParseTermino() {
+    private Nodo ParseTermino() {
         var izquierda = ParseFactor();
 
         while (true) {
@@ -59,7 +59,7 @@ class Compilador {
 
         return izquierda;
     }
-     private Nodo ParseFactor() {
+    private Nodo ParseFactor() {
         SaltarEspacios();
 
         if (_pos >= _expresion.Length) {
@@ -79,7 +79,7 @@ class Compilador {
         }
 
         if (c == '(') {
-            _pos++; 
+            _pos++;
             var nodo = ParseExpresion();
             SaltarEspacios();
 
@@ -87,7 +87,7 @@ class Compilador {
                 throw new FormatException("Se esperaba ')'");
             }
 
-            _pos++; 
+            _pos++;
             return nodo;
         }
 

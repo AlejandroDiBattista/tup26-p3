@@ -11,40 +11,39 @@ class Compilador {
     private List<Token> _tokens = new();
     private int _posicion;
     private sealed class TokenCursor {
-    private readonly Token _token;
+        private readonly Token _token;
 
-    public TokenCursor(Token token) => _token = token;
-    public static implicit operator string(TokenCursor token) => token.ToString();
-    public static bool operator ==(TokenCursor token, char c) => token.ToString() == c.ToString();
-    public static bool operator !=(TokenCursor token, char c) => !(token == c); 
-    public override string ToString() {
-        return _token.Tipo switch {
-            TipoToken.Numero => _token.Valor,
-            TipoToken.Variable => _token.Valor,
-            TipoToken.Suma => "+",
-            TipoToken.Resta => "-",
-            TipoToken.Multiplicacion => "*",
-            TipoToken.Division => "/",
-            TipoToken.ParentesisAbierto => "(",
-            TipoToken.ParentesisCerrado => ")",
-            TipoToken.Final => "",
-            _ => _token.Valor
-        };
+        public TokenCursor(Token token) => _token = token;
+        public static implicit operator string(TokenCursor token) => token.ToString();
+        public static bool operator ==(TokenCursor token, char c) => token.ToString() == c.ToString();
+        public static bool operator !=(TokenCursor token, char c) => !(token == c);
+        public override string ToString() {
+            return _token.Tipo switch {
+                TipoToken.Numero => _token.Valor,
+                TipoToken.Variable => _token.Valor,
+                TipoToken.Suma => "+",
+                TipoToken.Resta => "-",
+                TipoToken.Multiplicacion => "*",
+                TipoToken.Division => "/",
+                TipoToken.ParentesisAbierto => "(",
+                TipoToken.ParentesisCerrado => ")",
+                TipoToken.Final => "",
+                _ => _token.Valor
+            };
+        }
+        public override bool Equals(object? obj) {
+            return obj is TokenCursor other && ToString() == other.ToString();
+        }
+        public override int GetHashCode() {
+            return ToString().GetHashCode();
+        }
     }
-    public override bool Equals(object? obj) {
-        return obj is TokenCursor other && ToString() == other.ToString();
-    }
-    public override int GetHashCode() {
-        return ToString().GetHashCode();
-    }
-}
-private TokenCursor token => new(_tokens[_posicion]);
-private bool EsNumero(string texto) => int.TryParse(texto, out _);
+    private TokenCursor token => new(_tokens[_posicion]);
+    private bool EsNumero(string texto) => int.TryParse(texto, out _);
     private Token Actual => _tokens[_posicion];
     private Token Consumir => _tokens[_posicion++];
     private void AvanzarToken() => _posicion++;
-    private bool Coincide(TipoToken tipo)
-    {
+    private bool Coincide(TipoToken tipo) {
         if (Actual.Tipo != tipo) {
             return false;
         }
@@ -70,10 +69,10 @@ private bool EsNumero(string texto) => int.TryParse(texto, out _);
         while (posicion < expresion.Length) {
             char c = expresion[posicion];
             if (char.IsWhiteSpace(c)) {
-             continuar();
+                continuar();
                 continue;
             }
-           if (char.IsDigit(c)) {
+            if (char.IsDigit(c)) {
                 string numero = "";
                 while (posicion < expresion.Length && char.IsDigit(expresion[posicion])) {
                     numero += continuar();
@@ -119,9 +118,9 @@ private bool EsNumero(string texto) => int.TryParse(texto, out _);
             string operador = token;
             AvanzarToken();
             var terminoDerecho = ParseFactor();
-            nodo = new NodoOperacion( operador, nodo, terminoDerecho);
+            nodo = new NodoOperacion(operador, nodo, terminoDerecho);
         }
-        return nodo;    
+        return nodo;
     }
     Nodo ParseExpresion() {
         var nodo = ParseTermino();
@@ -129,11 +128,11 @@ private bool EsNumero(string texto) => int.TryParse(texto, out _);
             string operador = token;
             AvanzarToken();
             var terminoDerecho = ParseTermino();
-            nodo = new NodoOperacion( nodo, operador, terminoDerecho);
+            nodo = new NodoOperacion(nodo, operador, terminoDerecho);
         }
-        return nodo;    
+        return nodo;
     }
-    Nodo ParseFactor(){
+    Nodo ParseFactor() {
 
         if (token == '+') {
             AvanzarToken();
@@ -149,7 +148,7 @@ private bool EsNumero(string texto) => int.TryParse(texto, out _);
             if (token == ')') {
                 AvanzarToken();
                 return nodo;
-            } else 
+            } else
                 throw new FormatException("Se esperaba ')'");
         }
         if (EsNumero(token)) {

@@ -1,4 +1,5 @@
 namespace CalculadoraArimetica;
+
 public class Compilador {
     private string _texto;
     private int _posicion;
@@ -16,7 +17,7 @@ public class Compilador {
     }
 
     private Compilador(string texto) {
-        _texto = texto.Replace(" ", ""); 
+        _texto = texto.Replace(" ", "");
         _posicion = 0;
     }
 
@@ -25,13 +26,12 @@ public class Compilador {
 
         while (Actual == '+' || Actual == '-') {
             char op = Actual;
-            _posicion++; 
+            _posicion++;
             Nodo der = ParseTermino();
-            
+
             if (op == '+') {
                 izq = new SumaNodo(izq, der);
-            } 
-            else {
+            } else {
                 izq = new RestaNodo(izq, der);
             }
         }
@@ -43,13 +43,12 @@ public class Compilador {
 
         while (Actual == '*' || Actual == '/') {
             char op = Actual;
-            _posicion++; 
+            _posicion++;
             Nodo der = ParseFactor();
 
             if (op == '*') {
                 izq = new MultiplicacionNodo(izq, der);
-            } 
-            else {
+            } else {
                 izq = new DivisionNodo(izq, der);
             }
         }
@@ -57,22 +56,22 @@ public class Compilador {
     }
 
     private Nodo ParseFactor() {
-        if (Actual == '+') { 
-            _posicion++; return ParseFactor(); 
+        if (Actual == '+') {
+            _posicion++; return ParseFactor();
         }
-        if (Actual == '-') { 
-            _posicion++; return new NegativoNodo(ParseFactor()); 
+        if (Actual == '-') {
+            _posicion++; return new NegativoNodo(ParseFactor());
         }
 
         if (Actual == '(') {
-            _posicion++; 
+            _posicion++;
             Nodo nodo = ParseExpresion();
-         
+
             if (Actual != ')') {
                 throw new FormatException("Se esperaba ')'");
             }
 
-            _posicion++; 
+            _posicion++;
             return nodo;
         }
 

@@ -49,7 +49,7 @@ class Compilador {
                 '/' => new Token(TipoToken.Division),
                 '(' => new Token(TipoToken.ParentesisAbierto),
                 ')' => new Token(TipoToken.ParentesisCerrado),
-                _   => throw new FormatException($"Token inesperado: '{caracter}'")
+                _ => throw new FormatException($"Token inesperado: '{caracter}'")
             };
 
             tokens.Add(tokenOperador);

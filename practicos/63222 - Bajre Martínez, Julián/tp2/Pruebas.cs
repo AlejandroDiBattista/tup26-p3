@@ -2,16 +2,13 @@ using System;
 using System.Collections.Generic;
 namespace TP2.Calculadora;
 
-class Pruebas
-{
-    public static void Ejecutar()
-    {
+class Pruebas {
+    public static void Ejecutar() {
         Console.WriteLine("Ejecutando pruebas automáticas...\n");
 
         var numero = 1;
 
-        Probar(ref numero, "Casos mínimos de evaluación del enunciado", () =>
-        {
+        Probar(ref numero, "Casos mínimos de evaluación del enunciado", () => {
             AfirmarEvaluacion("1 + 2 * 3", 0, 7);
             AfirmarEvaluacion("1 + 2 * x", 10, 21);
             AfirmarEvaluacion("(x - 1) * (x - 8 / 4) + 3", 10, 75);
@@ -19,39 +16,34 @@ class Pruebas
             AfirmarEvaluacion("10 / 2", 0, 5);
         });
 
-        Probar(ref numero, "Variables, mayúsculas y operadores unarios", () =>
-        {
+        Probar(ref numero, "Variables, mayúsculas y operadores unarios", () => {
             AfirmarEvaluacion("1 + 2 * x", 5, 11);
             AfirmarEvaluacion("(x - 1) * (x - 8 / 4) + 3", 5, 15);
             AfirmarEvaluacion("+X", 7, 7);
             AfirmarEvaluacion("-x", 3, -3);
         });
 
-        Probar(ref numero, "Errores de parsing del enunciado", () =>
-        {
+        Probar(ref numero, "Errores de parsing del enunciado", () => {
             AfirmarExcepcion<ErrorDeParsingException>(() => Compilador.Parse("(1 + 2"), "Paréntesis sin cerrar", "paréntesis sin cerrar");
             AfirmarExcepcion<ErrorDeParsingException>(() => Compilador.Parse(""), "vacía", "entrada vacía");
             AfirmarExcepcion<ErrorDeParsingException>(() => Compilador.Parse("1 + ?"), "Token inesperado", "token inesperado");
         });
 
-        Probar(ref numero, "Errores de evaluación", () =>
-        {
+        Probar(ref numero, "Errores de evaluación", () => {
             AfirmarExcepcion<DivideByZeroException>(() => Compilador.Parse("10 / (x - 2)").Evaluar(2), null, "división por cero");
         });
 
         Console.WriteLine($"\nTodas las pruebas pasaron correctamente. Total: {numero - 1} grupos.");
     }
 
-    private static void Probar(ref int numero, string descripcion, Action accion)
-    {
+    private static void Probar(ref int numero, string descripcion, Action accion) {
         Console.Write($"{numero}. {descripcion}... ");
         accion();
         Console.WriteLine("OK");
         numero++;
     }
 
-    private static void AfirmarEvaluacion(string expresion, int x, int esperado)
-    {
+    private static void AfirmarEvaluacion(string expresion, int x, int esperado) {
         var resultado = Compilador.Parse(expresion).Evaluar(x);
         Afirmar(
             resultado == esperado,
@@ -60,16 +52,11 @@ class Pruebas
     }
 
     private static void AfirmarExcepcion<TException>(Action accion, string? mensajeEsperado, string descripcion)
-        where TException : Exception
-    {
-        try
-        {
+        where TException : Exception {
+        try {
             accion();
-        }
-        catch (TException ex)
-        {
-            if (mensajeEsperado is not null)
-            {
+        } catch (TException ex) {
+            if (mensajeEsperado is not null) {
                 Afirmar(
                     ex.Message.Contains(mensajeEsperado, StringComparison.OrdinalIgnoreCase),
                     $"La prueba '{descripcion}' esperaba un mensaje que contuviera '{mensajeEsperado}', pero recibió '{ex.Message}'."
@@ -81,8 +68,7 @@ class Pruebas
         throw new InvalidOperationException($"La prueba '{descripcion}' esperaba una excepción de tipo {typeof(TException).Name}.");
     }
 
-    private static void Afirmar(bool condicion, string mensaje)
-    {
+    private static void Afirmar(bool condicion, string mensaje) {
         if (!condicion)
             throw new InvalidOperationException(mensaje);
     }

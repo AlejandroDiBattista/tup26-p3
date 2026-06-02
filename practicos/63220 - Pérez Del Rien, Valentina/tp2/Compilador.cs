@@ -1,12 +1,10 @@
 using System;
 
-class Compilador
-{
+class Compilador {
     private string texto = "";
     private int pos;
 
-    public Nodo Parsear(string input)
-    {
+    public Nodo Parsear(string input) {
         if (string.IsNullOrWhiteSpace(input))
             throw new Exception("Entrada vacía");
 
@@ -21,12 +19,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseExpresion()
-    {
+    private Nodo ParseExpresion() {
         Nodo nodo = ParseTermino();
 
-        while (pos < texto.Length && (texto[pos] == '+' || texto[pos] == '-'))
-        {
+        while (pos < texto.Length && (texto[pos] == '+' || texto[pos] == '-')) {
             char op = texto[pos];
             pos++;
 
@@ -41,12 +37,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseTermino()
-    {
+    private Nodo ParseTermino() {
         Nodo nodo = ParseFactor();
 
-        while (pos < texto.Length && (texto[pos] == '*' || texto[pos] == '/'))
-        {
+        while (pos < texto.Length && (texto[pos] == '*' || texto[pos] == '/')) {
             char op = texto[pos];
             pos++;
 
@@ -61,27 +55,23 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseFactor()
-    {
+    private Nodo ParseFactor() {
         if (pos >= texto.Length)
             throw new Exception("Expresión incompleta");
 
         char c = texto[pos];
 
-        if (c == '+')
-        {
+        if (c == '+') {
             pos++;
             return ParseFactor();
         }
 
-        if (c == '-')
-        {
+        if (c == '-') {
             pos++;
             return new NegativoNodo(ParseFactor());
         }
 
-        if (c == '(')
-        {
+        if (c == '(') {
             pos++;
             Nodo nodo = ParseExpresion();
 
@@ -92,8 +82,7 @@ class Compilador
             return nodo;
         }
 
-        if (char.IsDigit(c))
-        {
+        if (char.IsDigit(c)) {
             int inicio = pos;
 
             while (pos < texto.Length && char.IsDigit(texto[pos]))
@@ -105,8 +94,7 @@ class Compilador
             return new NumeroNodo(valor);
         }
 
-        if (c == 'x' || c == 'X')
-        {
+        if (c == 'x' || c == 'X') {
             pos++;
             return new VariableNodo();
         }

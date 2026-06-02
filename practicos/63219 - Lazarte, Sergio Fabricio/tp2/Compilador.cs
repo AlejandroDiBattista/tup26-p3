@@ -1,10 +1,8 @@
-class Compilador
-{
+class Compilador {
     private string texto = "";
     private int pos;
 
-    public static Nodo Parse(string entrada)
-    {
+    public static Nodo Parse(string entrada) {
         var c = new Compilador();
 
         if (string.IsNullOrWhiteSpace(entrada))
@@ -23,12 +21,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseExpresion()
-    {
+    private Nodo ParseExpresion() {
         Nodo nodo = ParseTermino();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
 
             if (Match('+'))
@@ -42,12 +38,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseTermino()
-    {
+    private Nodo ParseTermino() {
         Nodo nodo = ParseFactor();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
 
             if (Match('*'))
@@ -61,8 +55,7 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseFactor()
-    {
+    private Nodo ParseFactor() {
         SaltarEspacios();
 
         if (Match('+'))
@@ -71,8 +64,7 @@ class Compilador
         if (Match('-'))
             return new NegativoNodo(ParseFactor());
 
-        if (Match('('))
-        {
+        if (Match('(')) {
             var nodo = ParseExpresion();
 
             if (!Match(')'))
@@ -82,10 +74,9 @@ class Compilador
         }
 
         if (char.IsDigit(Peek()))
-        return ParseNumero();
+            return ParseNumero();
 
-        if (Peek() == 'x' || Peek() == 'X')
-        {
+        if (Peek() == 'x' || Peek() == 'X') {
             pos++;
             return new VariableNodo();
         }
@@ -93,8 +84,7 @@ class Compilador
         throw new FormatException("Token inesperado");
     }
 
-    private Nodo ParseNumero()
-    {
+    private Nodo ParseNumero() {
         int inicio = pos;
 
         while (char.IsDigit(Peek()))
@@ -103,24 +93,20 @@ class Compilador
         return new NumeroNodo(int.Parse(texto.Substring(inicio, pos - inicio)));
     }
 
-    private char Peek()
-    {
+    private char Peek() {
         if (pos >= texto.Length) return '\0';
         return texto[pos];
     }
 
-    private bool Match(char c)
-    {
-        if (Peek() == c)
-        {
+    private bool Match(char c) {
+        if (Peek() == c) {
             pos++;
             return true;
         }
         return false;
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (pos < texto.Length && char.IsWhiteSpace(texto[pos]))
             pos++;
     }

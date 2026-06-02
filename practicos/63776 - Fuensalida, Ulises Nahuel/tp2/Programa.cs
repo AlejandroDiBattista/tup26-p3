@@ -1,19 +1,12 @@
 using System;
 
-namespace CalculadoraUTN
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            if (args.Length == 0)
-            {
+namespace CalculadoraUTN {
+    class Program {
+        static void Main(string[] args) {
+            if (args.Length == 0) {
                 Comandos.ModoInteractivo();
-            }
-            else
-            {
-                switch (args[0].ToLower())
-                {
+            } else {
+                switch (args[0].ToLower()) {
                     case "--help":
                     case "-h":
                         Comandos.MostrarAyuda();
@@ -25,12 +18,9 @@ namespace CalculadoraUTN
                         Pruebas.EjecutarPruebas();
                         break;
                     default:
-                        if (args.Length == 2)
-                        {
+                        if (args.Length == 2) {
                             Comandos.ModoDirecto(args[0], args[1]);
-                        }
-                        else
-                        {
+                        } else {
                             Console.WriteLine("Error: Argumentos insuficientes. Use --help para ayuda.");
                         }
                         break;

@@ -1,9 +1,6 @@
-static class Program
-{
-    static void Main(string[] args)
-    {
-        try
-        {
+static class Program {
+    static void Main(string[] args) {
+        try {
             if (Comandos.Procesar(args))
                 return;
 
@@ -12,35 +9,28 @@ static class Program
 
             var expresion = Console.ReadLine() ?? "";
 
-            if (string.IsNullOrWhiteSpace(expresion))
-            {
+            if (string.IsNullOrWhiteSpace(expresion)) {
                 Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
                 return;
             }
 
             var funcion = Compilador.Parse(expresion);
 
-            while (true)
-            {
+            while (true) {
                 Console.Write("x = ");
                 var input = Console.ReadLine() ?? "";
 
                 if (string.IsNullOrWhiteSpace(input) || input == "fin")
                     break;
 
-                try
-                {
+                try {
                     int x = int.Parse(input);
                     Console.WriteLine(funcion.Evaluar(x));
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     Console.WriteLine($"Error: {ex.Message}");
                 }
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine($"Error: {ex.Message}");
         }
     }

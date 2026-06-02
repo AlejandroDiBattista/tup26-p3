@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import datetime as dt
 import fnmatch
+import hashlib
 import html
 import subprocess
 import re
+import shutil
 import sys
+import tempfile
 import unicodedata
 import zipfile
 from pathlib import Path
@@ -23,6 +26,7 @@ BOOK_SUBTITLE   = "C#, .NET y herramientas de desarrollo"
 BOOK_AUTHOR     = "Ing. Alejandro Di Battista"
 BOOK_COVER      = WORKDIR / "portada.jpg"
 EXCLUDED        = ["00.*.md", "09.*.md", "README.md", "CONTRIBUTING.md", "LICENSE.md", "examen.md"]
+MERMAID_TIMEOUT_SECONDS = 120
 
 
 def is_excluded(path: Path) -> bool:
@@ -274,6 +278,73 @@ def render_code_block(code: str, language: str) -> str:
     return wrap_code_block(_render_plain_code(code, language_class), lang)
 
 
+def mermaid_command() -> list[str]:
+    if mmdc := shutil.which("mmdc"):
+        return [mmdc]
+
+    if npx := shutil.which("npx"):
+        return [npx, "-y", "@mermaid-js/mermaid-cli"]
+
+    raise RuntimeError(
+        "Hay diagramas Mermaid, pero no se encontró Mermaid CLI. "
+        "Instale @mermaid-js/mermaid-cli o deje disponible el comando mmdc."
+    )
+
+
+def render_mermaid_svg(code: str, asset_name: str) -> bytes:
+    command = mermaid_command()
+
+    with tempfile.TemporaryDirectory(prefix="publicar-mermaid-") as tmpdir:
+        input_path = Path(tmpdir) / f"{asset_name}.mmd"
+        output_path = Path(tmpdir) / f"{asset_name}.svg"
+        input_path.write_text(code, encoding="utf-8")
+
+        try:
+            result = subprocess.run(
+                [
+                    *command,
+                    "-i",
+                    str(input_path),
+                    "-o",
+                    str(output_path),
+                    "--backgroundColor",
+                    "transparent",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False,
+                timeout=MERMAID_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                f"Mermaid CLI no terminó en {MERMAID_TIMEOUT_SECONDS} segundos "
+                f"al renderizar {asset_name}."
+            ) from exc
+
+        if result.returncode != 0 or not output_path.exists():
+            details = (result.stderr or result.stdout).strip()
+            raise RuntimeError(f"No se pudo renderizar el diagrama Mermaid {asset_name}: {details}")
+
+        return output_path.read_bytes()
+
+
+def render_mermaid_block(
+    code: str,
+    chapter_number: int,
+    assets: list[tuple[str, bytes]],
+) -> str:
+    digest = hashlib.sha1(code.encode("utf-8")).hexdigest()[:12]
+    asset_href = f"images/mermaid-{chapter_number:02d}-{digest}.svg"
+    asset_name = Path(asset_href).stem
+    assets.append((asset_href, render_mermaid_svg(code, asset_name)))
+    return (
+        f'<figure class="mermaid-diagram">'
+        f'<img src="{asset_href}" alt="Diagrama Mermaid" />'
+        f"</figure>"
+    )
+
+
 def wrap_xhtml_page(title: str, body: str, *, nav: bool = False) -> str:
     nav_attr = ' xmlns:epub="http://www.idpf.org/2007/ops"'
     return f"""<?xml version="1.0" encoding="utf-8"?>
@@ -301,10 +372,15 @@ def build_cover_page() -> str:
     return wrap_xhtml_page("Portada", body)
 
 
-def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: int) -> str:
+def markdown_to_xhtml(
+    markdown_text: str,
+    chapter_title: str,
+    chapter_number: int,
+) -> tuple[str, list[tuple[str, bytes]]]:
     markdown_text = strip_leading_title(markdown_text, chapter_title)
     lines = markdown_text.splitlines()
     parts: list[str] = []
+    assets: list[tuple[str, bytes]] = []
     paragraph: list[str] = []
     in_code = False
     code_lines: list[str] = []
@@ -346,7 +422,10 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
                 close_blockquote()
             if in_code:
                 code = "\n".join(code_lines)
-                parts.append(render_code_block(code, code_language))
+                if code_language == "mermaid":
+                    parts.append(render_mermaid_block(code, chapter_number, assets))
+                else:
+                    parts.append(render_code_block(code, code_language))
                 code_lines = []
                 code_language = ""
                 in_code = False
@@ -444,7 +523,10 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
     close_blockquote()
     if in_code:
         code = "\n".join(code_lines)
-        parts.append(render_code_block(code, code_language))
+        if code_language == "mermaid":
+            parts.append(render_mermaid_block(code, chapter_number, assets))
+        else:
+            parts.append(render_code_block(code, code_language))
 
     body = "\n".join(parts)
     chapter_body = f"""
@@ -456,7 +538,7 @@ def markdown_to_xhtml(markdown_text: str, chapter_title: str, chapter_number: in
   {body}
 </section>
 """
-    return wrap_xhtml_page(chapter_title, chapter_body)
+    return wrap_xhtml_page(chapter_title, chapter_body), assets
 
 
 def build_epub(markdown_files: list[Path]) -> None:
@@ -582,6 +664,17 @@ pre code {
 .code-block code {
   font-size: 0.85em;
   line-height: 1.56;
+}
+.mermaid-diagram {
+  margin: 1.25em 0 1.45em;
+  max-width: 100%;
+  page-break-inside: avoid;
+  text-align: center;
+}
+.mermaid-diagram img {
+  display: inline-block;
+  height: auto;
+  max-width: 100%;
 }
 table {
   background: transparent;
@@ -735,12 +828,15 @@ hr {
 """
 
     chapters: list[tuple[str, str, str]] = []
+    assets: dict[str, bytes] = {}
     for index, path in enumerate(markdown_files, start=1):
         source = path.read_text(encoding="utf-8")
         title = first_heading(source, path.stem)
         chapter_file = f"chapter-{index:02d}.xhtml"
-        xhtml = markdown_to_xhtml(source, title, index)
+        xhtml, chapter_assets = markdown_to_xhtml(source, title, index)
         chapters.append((chapter_file, title, xhtml))
+        for href, content in chapter_assets:
+            assets[href] = content
 
     toc_items = "\n".join(
         f'        <li><a href="{filename}">Capítulo {index}: {inline_markdown(title)}</a></li>'
@@ -774,6 +870,10 @@ hr {
     for index, (filename, _, _) in enumerate(chapters, start=1):
         manifest_items.append(
             f'    <item id="chap{index}" href="{filename}" media-type="application/xhtml+xml"/>'
+        )
+    for index, href in enumerate(sorted(assets), start=1):
+        manifest_items.append(
+            f'    <item id="diagram{index}" href="{href}" media-type="image/svg+xml"/>'
         )
 
     spine_items = ['    <itemref idref="cover"/>', '    <itemref idref="nav"/>']
@@ -820,6 +920,8 @@ hr {
         epub.writestr("OEBPS/content.opf", opf)
         for filename, _, xhtml in chapters:
             epub.writestr(f"OEBPS/{filename}", xhtml)
+        for href, content in assets.items():
+            epub.writestr(f"OEBPS/{href}", content)
 
 def markdown_raiz(root: Path) -> list[Path]:
     return sorted( path for path in root.iterdir() if path.is_file() and path.suffix.lower() == ".md" )

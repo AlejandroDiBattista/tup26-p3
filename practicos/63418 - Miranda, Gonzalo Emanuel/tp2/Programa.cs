@@ -1,11 +1,8 @@
 namespace TP2_GONZALO_CALCULADORA;
 
-static class Program 
-{
-    static void Main(string[] args) 
-    {
-        if (Comandos.Procesar(args))
-        {
+static class Program {
+    static void Main(string[] args) {
+        if (Comandos.Procesar(args)) {
             return;
         }
 
@@ -14,24 +11,21 @@ static class Program
 
         var expresion = Console.ReadLine() ?? "";
 
-        if (string.IsNullOrWhiteSpace(expresion))
-        {
+        if (string.IsNullOrWhiteSpace(expresion)) {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
 
         var funcion = Compilador.Parse(expresion);
 
-        while (true)
-        {
+        while (true) {
             Console.Write("x = ");
             var x = Console.ReadLine() ?? "";
 
-            if (string.IsNullOrWhiteSpace(x) || x.ToLower() == "fin")
-            {
+            if (string.IsNullOrWhiteSpace(x) || x.ToLower() == "fin") {
                 break;
             }
-            
+
             Console.WriteLine(funcion.Evaluar(int.Parse(x)));
         }
     }

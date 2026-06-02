@@ -1,76 +1,62 @@
-namespace calculadora;
+using System;
 
-// ─── Resultado del análisis de argumentos ────────────────────────────────────
-
-enum ModoEjecucion
+namespace CalculadoraAST
 {
-    Directo,
-    Interactivo,
-    Ayuda,
-    Pruebas
-}
-
-record ComandoParsed(
-    ModoEjecucion Modo,
-    string? Expresion = null,
-    int? Valor = null
-);
-
-// ─── Procesador de argumentos ────────────────────────────────────────────────
-
-static class Comandos
-{
-    public static ComandoParsed Parsear(string[] args)
+    static class Comandos 
     {
-        if (args.Length == 0)
-            return new ComandoParsed(ModoEjecucion.Interactivo);
-
-        // Flags de una sola opción
-        if (args.Length == 1)
+        public static bool Procesar(string[] args) 
         {
-            string flag = args[0].ToLower();
-            if (flag is "--help" or "-h")
-                return new ComandoParsed(ModoEjecucion.Ayuda);
+            switch (args) 
+            {
+                case ["--help"] or ["-h"] or ["--ayuda"]:
+                    Console.WriteLine("""
+Uso: calculadora [expresión valor] [--help] [--probar]
 
-            if (flag is "--test" or "--probar" or "-t" or "-p")
-                return new ComandoParsed(ModoEjecucion.Pruebas);
+Este programa permite analizar y evaluar expresiones matemáticas
+que pueden incluir la variable 'x'.
+
+Si se proporciona una expresión junto con un valor, el programa
+reemplaza 'x' por ese valor y muestra el resultado.
+
+Si se ejecuta sin argumentos, inicia un modo interactivo para
+ingresar una expresión y evaluarla con distintos valores de 'x'.
+
+Expresiones válidas:
+- Pueden contener números enteros, operadores binarios (+, -, *, /),
+  operadores unarios (+, -), paréntesis y la variable 'x'.
+- Ejemplo: (x - 1) * (x - 8/4) + 3
+
+Opciones:
+    --help, -h          Muestra esta ayuda y termina con código 0.
+    --test, -t, --probar Ejecuta pruebas automáticas.
+""");
+                    return true;
+
+                case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
+                    Pruebas.Ejecutar();
+                    return true;
+
+                case [var expresion, var valor]:
+                    try 
+                    {
+                        if (!int.TryParse(valor, out int x))
+                        {
+                            Console.WriteLine("Error: El valor de x provisto no es un entero válido.");
+                            return true;
+                        }
+
+                        var funcion = Compilador.Parse(expresion);
+                        Console.WriteLine(funcion.Evaluar(x));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    return true;
+
+                default:
+                    return false;
+            }
         }
-
-        // Modo directo: expresion + valor
-        if (args.Length == 2)
-        {
-            string expresion = args[0];
-
-            if (!int.TryParse(args[1], out int valor))
-                throw new ArgumentException($"Error: el valor '{args[1]}' no es un entero válido.");
-
-            return new ComandoParsed(ModoEjecucion.Directo, expresion, valor);
-        }
-
-        throw new ArgumentException(
-            "Error: argumentos inválidos. Use --help para ver las opciones disponibles.");
-    }
-
-    public static void MostrarAyuda()
-    {
-        Console.WriteLine("""
-            calculadora — Evalúa expresiones aritméticas con la variable x
-
-            Uso:
-              calculadora                     Modo interactivo
-              calculadora "expresion" valor   Evalúa la expresión con el valor dado
-              calculadora --help              Muestra esta ayuda
-              calculadora --test              Ejecuta pruebas automáticas
-
-            Expresiones soportadas:
-              Números enteros, variable x, operadores + - * /
-              Paréntesis y operadores unarios + y -
-
-            Ejemplos:
-              calculadora "1 + 2 * 3" 0
-              calculadora "(x - 1) * 2" 10
-              calculadora --test
-            """);
     }
 }
-

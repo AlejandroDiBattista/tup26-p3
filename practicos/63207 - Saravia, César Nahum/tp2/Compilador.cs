@@ -17,11 +17,9 @@ class Compilador {
             SkipEspacios();
             if (Match('+')) {
                 nodo = new SumaNodo(nodo, ParseTermino());
-            }
-            else if (Match('-')) {
+            } else if (Match('-')) {
                 nodo = new RestaNodo(nodo, ParseTermino());
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -33,18 +31,16 @@ class Compilador {
             SkipEspacios();
             if (Match('*')) {
                 nodo = new MultiplicacionNodo(nodo, ParseFactor());
-            }
-            else if (Match('/')) {
+            } else if (Match('/')) {
                 nodo = new DivisionNodo(nodo, ParseFactor());
-            }
-            else {
+            } else {
                 break;
             }
         }
 
         return nodo;
     }
-     private Nodo ParseFactor() {
+    private Nodo ParseFactor() {
         SkipEspacios();
         if (Match('+')) {
             return ParseFactor();

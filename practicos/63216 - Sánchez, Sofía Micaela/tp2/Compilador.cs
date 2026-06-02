@@ -1,16 +1,13 @@
-class Compilador
-{
+class Compilador {
     private string texto;
     private int pos;
 
-    private Compilador(string texto)
-    {
+    private Compilador(string texto) {
         this.texto = texto.Replace(" ", "");
         pos = 0;
     }
 
-    public static Nodo Parse(string expresion)
-    {
+    public static Nodo Parse(string expresion) {
         if (string.IsNullOrWhiteSpace(expresion))
             throw new FormatException("Token inesperado");
 
@@ -23,27 +20,22 @@ class Compilador
         return nodo;
     }
 
-    private bool Fin()
-    {
+    private bool Fin() {
         return pos >= texto.Length;
     }
 
-    private char Actual()
-    {
+    private char Actual() {
         return pos < texto.Length ? texto[pos] : '\0';
     }
 
-    private void Avanzar()
-    {
+    private void Avanzar() {
         pos++;
     }
 
-    private Nodo ParseExpresion()
-    {
+    private Nodo ParseExpresion() {
         Nodo nodo = ParseTermino();
 
-        while (Actual() == '+' || Actual() == '-')
-        {
+        while (Actual() == '+' || Actual() == '-') {
             char op = Actual();
             Avanzar();
 
@@ -58,12 +50,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseTermino()
-    {
+    private Nodo ParseTermino() {
         Nodo nodo = ParseFactor();
 
-        while (Actual() == '*' || Actual() == '/')
-        {
+        while (Actual() == '*' || Actual() == '/') {
             char op = Actual();
             Avanzar();
 
@@ -78,24 +68,20 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParseFactor()
-    {
+    private Nodo ParseFactor() {
         char c = Actual();
 
-        if (c == '+')
-        {
+        if (c == '+') {
             Avanzar();
             return ParseFactor();
         }
 
-        if (c == '-')
-        {
+        if (c == '-') {
             Avanzar();
             return new NegativoNodo(ParseFactor());
         }
 
-        if (c == '(')
-        {
+        if (c == '(') {
             Avanzar();
             Nodo nodo = ParseExpresion();
 
@@ -106,8 +92,7 @@ class Compilador
             return nodo;
         }
 
-        if (char.IsDigit(c))
-        {
+        if (char.IsDigit(c)) {
             int inicio = pos;
 
             while (char.IsDigit(Actual()))
@@ -117,8 +102,7 @@ class Compilador
             return new NumeroNodo(valor);
         }
 
-        if (c == 'x' || c == 'X')
-        {
+        if (c == 'x' || c == 'X') {
             Avanzar();
             return new VariableNodo();
         }

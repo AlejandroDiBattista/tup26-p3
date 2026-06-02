@@ -1,17 +1,13 @@
-static class Program
-{
-    static void Main(string[] args)
-    {
+static class Program {
+    static void Main(string[] args) {
         // --test
-        if (args.Length > 0 && (args[0] == "--test" || args[0] == "-t"))
-        {
+        if (args.Length > 0 && (args[0] == "--test" || args[0] == "-t")) {
             Pruebas.Ejecutar();
             return;
         }
 
         // --help
-        if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h"))
-        {
+        if (args.Length > 0 && (args[0] == "--help" || args[0] == "-h")) {
             Console.WriteLine("Uso:");
             Console.WriteLine("  calculadora \"expresion\" valor");
             Console.WriteLine("  calculadora --test");
@@ -20,26 +16,19 @@ static class Program
         }
 
         // modo directo
-        if (args.Length == 2)
-        {
-            try
-            {
+        if (args.Length == 2) {
+            try {
                 var nodo = Compilador.Parse(args[0]);
 
-                if (!int.TryParse(args[1], out int x))
-                {
+                if (!int.TryParse(args[1], out int x)) {
                     Console.WriteLine("Valor de x inválido");
                     return;
                 }
 
                 Console.WriteLine(nodo.Evaluar(x));
-            }
-            catch (FormatException ex)
-            {
+            } catch (FormatException ex) {
                 Console.WriteLine($"Error: {ex.Message}");
-            }
-            catch (DivideByZeroException)
-            {
+            } catch (DivideByZeroException) {
                 Console.WriteLine("Error: división por cero");
             }
 
@@ -56,36 +45,28 @@ static class Program
 
         Nodo funcion;
 
-        try
-        {
+        try {
             funcion = Compilador.Parse(expresion);
-        }
-        catch (FormatException ex)
-        {
+        } catch (FormatException ex) {
             Console.WriteLine($"Error: {ex.Message}");
             return;
         }
 
-        while (true)
-        {
+        while (true) {
             Console.Write("x = ");
             var entrada = Console.ReadLine();
 
-            if (string.IsNullOrWhiteSpace(entrada) || entrada == "fin") 
+            if (string.IsNullOrWhiteSpace(entrada) || entrada == "fin")
                 break;
 
-            if (!int.TryParse(entrada, out int x))
-            {
+            if (!int.TryParse(entrada, out int x)) {
                 Console.WriteLine("Valor inválido");
                 continue;
             }
 
-            try
-            {
+            try {
                 Console.WriteLine(funcion.Evaluar(x));
-            }
-            catch (DivideByZeroException)
-            {
+            } catch (DivideByZeroException) {
                 Console.WriteLine("Error: división por cero");
             }
         }

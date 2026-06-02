@@ -1,99 +1,80 @@
 using System;
 
-class Compilador
-{
+class Compilador {
     string texto;
     int pos;
 
-      char Actual => pos < texto.Length ? texto[pos] : '\0';
-      void Avanzar() => pos++;
+    char Actual => pos < texto.Length ? texto[pos] : '\0';
+    void Avanzar() => pos++;
 
-      void SaltarEspacio()
-    {
-        while(char.IsWhiteSpace(Actual))
+    void SaltarEspacio() {
+        while (char.IsWhiteSpace(Actual))
             Avanzar();
     }
 
-    public static Nodo Compilar(string texto)
-    {
-        var c = new Compilador {texto = texto};
-         var nodo = c.Expresion();
+    public static Nodo Compilar(string texto) {
+        var c = new Compilador { texto = texto };
+        var nodo = c.Expresion();
         c.SaltarEspacio();
 
-          if (c.pos < c.texto.Length)
+        if (c.pos < c.texto.Length)
             throw new Exception("Token inesperado");
 
         return nodo;
 
     }
-Nodo Expresion()
-    {
+    Nodo Expresion() {
         Nodo nodo = Termino();
 
-         while (true)
-        {
+        while (true) {
             SaltarEspacio();
 
-            if (Actual == '+')
-            {
+            if (Actual == '+') {
                 Avanzar();
                 nodo = new SumaNodo(nodo, Termino());
-            }
-            else if (Actual == '-')
-            {
+            } else if (Actual == '-') {
                 Avanzar();
                 nodo = new RestaNodo(nodo, Termino());
-            }
-            else break;
+            } else break;
         }
 
         return nodo;
 
-        
+
     }
 
-        Nodo Termino()
-    {
+    Nodo Termino() {
         Nodo nodo = Factor();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacio();
 
-            if (Actual == '*')
-            {
+            if (Actual == '*') {
                 Avanzar();
                 nodo = new MultiplicacionNodo(nodo, Factor());
-            }
-            else if (Actual == '/')
-            {
+            } else if (Actual == '/') {
                 Avanzar();
                 nodo = new DivisionNodo(nodo, Factor());
-            }
-            else break;
+            } else break;
         }
 
         return nodo;
     }
 
-     Nodo Factor()
-    {
+    Nodo Factor() {
         SaltarEspacio();
 
-        if (Actual == '+')
-        {
+        if (Actual == '+') {
             Avanzar();
             return Factor();
         }
 
-        if (Actual == '-')
-        {
+        if (Actual == '-') {
             Avanzar();
             return new NegativoNodo(Factor());
         }
 
-        if (Actual == '(')
-        {
+        if (Actual == '(') {
             Avanzar();
             Nodo nodo = Expresion();
 
@@ -108,8 +89,7 @@ Nodo Expresion()
         if (char.IsDigit(Actual))
             return Numero();
 
-        if (Actual == 'x' || Actual == 'X')
-        {
+        if (Actual == 'x' || Actual == 'X') {
             Avanzar();
             return new VariableNodo();
         }
@@ -117,15 +97,14 @@ Nodo Expresion()
         throw new Exception("Token inesperado");
     }
 
-  Nodo Numero()
-    {
+    Nodo Numero() {
         int inicio = pos;
 
         while (char.IsDigit(Actual))
             Avanzar();
 
-            string num = texto.Substring(inicio, pos - inicio);
-            return new NumeroNodo(int.Parse(num));
+        string num = texto.Substring(inicio, pos - inicio);
+        return new NumeroNodo(int.Parse(num));
     }
 
 }

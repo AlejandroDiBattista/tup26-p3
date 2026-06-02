@@ -2,8 +2,7 @@ using System.Text;
 
 namespace EditCsv;
 
-internal sealed class CsvEditorApp
-{
+internal sealed class CsvEditorApp {
     private const int RowNumberWidth = 6;
     private const int CellWidth = 18;
     private const int TopLines = 3;
@@ -17,37 +16,30 @@ internal sealed class CsvEditorApp
     private int _columnOffset;
     private string _statusMessage = "Archivo cargado.";
 
-    public CsvEditorApp(CsvDocument document)
-    {
+    public CsvEditorApp(CsvDocument document) {
         _document = document;
         _numericDisplayModes = Enumerable
             .Repeat(NumericDisplayMode.Integer, _document.Headers.Count)
             .ToList();
     }
 
-    public void Run()
-    {
+    public void Run() {
         var previousTreatControlCAsInput = Console.TreatControlCAsInput;
 
         Console.TreatControlCAsInput = true;
         SetCursorVisibility(false);
 
-        try
-        {
-            while (true)
-            {
+        try {
+            while (true) {
                 EnsureSelectionIsVisible();
                 Render();
 
                 var key = Console.ReadKey(intercept: true);
-                if (HandleKey(key))
-                {
+                if (HandleKey(key)) {
                     break;
                 }
             }
-        }
-        finally
-        {
+        } finally {
             Console.ResetColor();
             SetCursorVisibility(true);
             Console.TreatControlCAsInput = previousTreatControlCAsInput;
@@ -55,16 +47,13 @@ internal sealed class CsvEditorApp
         }
     }
 
-    private bool HandleKey(ConsoleKeyInfo key)
-    {
-        if (key.KeyChar == '.')
-        {
+    private bool HandleKey(ConsoleKeyInfo key) {
+        if (key.KeyChar == '.') {
             ToggleNumericDisplayMode();
             return false;
         }
 
-        switch (key.Key)
-        {
+        switch (key.Key) {
             case ConsoleKey.LeftArrow:
                 _selectedColumn = Math.Max(0, _selectedColumn - 1);
                 return false;
@@ -74,32 +63,28 @@ internal sealed class CsvEditorApp
                 return false;
 
             case ConsoleKey.UpArrow:
-                if (_document.Rows.Count > 0)
-                {
+                if (_document.Rows.Count > 0) {
                     _selectedRow = Math.Max(0, _selectedRow - 1);
                 }
 
                 return false;
 
             case ConsoleKey.DownArrow:
-                if (_document.Rows.Count > 0)
-                {
+                if (_document.Rows.Count > 0) {
                     _selectedRow = Math.Min(_document.Rows.Count - 1, _selectedRow + 1);
                 }
 
                 return false;
 
             case ConsoleKey.PageUp:
-                if (_document.Rows.Count > 0)
-                {
+                if (_document.Rows.Count > 0) {
                     _selectedRow = Math.Max(0, _selectedRow - VisibleDataRowCount());
                 }
 
                 return false;
 
             case ConsoleKey.PageDown:
-                if (_document.Rows.Count > 0)
-                {
+                if (_document.Rows.Count > 0) {
                     _selectedRow = Math.Min(_document.Rows.Count - 1, _selectedRow + VisibleDataRowCount());
                 }
 
@@ -107,8 +92,7 @@ internal sealed class CsvEditorApp
 
             case ConsoleKey.Home:
                 _selectedColumn = 0;
-                if (_document.Rows.Count > 0)
-                {
+                if (_document.Rows.Count > 0) {
                     _selectedRow = 0;
                 }
 
@@ -116,20 +100,16 @@ internal sealed class CsvEditorApp
 
             case ConsoleKey.End:
                 _selectedColumn = _document.Headers.Count - 1;
-                if (_document.Rows.Count > 0)
-                {
+                if (_document.Rows.Count > 0) {
                     _selectedRow = _document.Rows.Count - 1;
                 }
 
                 return false;
 
             case ConsoleKey.Tab:
-                if ((key.Modifiers & ConsoleModifiers.Shift) != 0)
-                {
+                if ((key.Modifiers & ConsoleModifiers.Shift) != 0) {
                     _selectedColumn = Math.Max(0, _selectedColumn - 1);
-                }
-                else
-                {
+                } else {
                     _selectedColumn = Math.Min(_document.Headers.Count - 1, _selectedColumn + 1);
                 }
 
@@ -181,15 +161,13 @@ internal sealed class CsvEditorApp
         }
     }
 
-    private void EditCurrentCell()
-    {
+    private void EditCurrentCell() {
         EnsureAtLeastOneRow();
         var currentValue = _document.GetCell(_selectedRow, _selectedColumn);
         var header = _document.Headers[_selectedColumn];
         var updatedValue = PromptInput($"Editar [{header}] fila {_selectedRow + 1}: ", currentValue);
 
-        if (updatedValue is null)
-        {
+        if (updatedValue is null) {
             SetStatus("Edicion cancelada.");
             return;
         }
@@ -198,48 +176,39 @@ internal sealed class CsvEditorApp
         SetStatus("Celda actualizada.");
     }
 
-    private void AddRow()
-    {
+    private void AddRow() {
         _document.InsertRowAfter(_document.Rows.Count == 0 ? -1 : _selectedRow);
         _selectedRow = Math.Min(_selectedRow + 1, _document.Rows.Count - 1);
         SetStatus("Fila agregada.");
     }
 
-    private void DeleteCurrentRow()
-    {
-        if (_document.Rows.Count == 0)
-        {
+    private void DeleteCurrentRow() {
+        if (_document.Rows.Count == 0) {
             SetStatus("No hay filas para borrar.");
             return;
         }
 
-        if (!PromptConfirmation($"Borrar fila {_selectedRow + 1}?"))
-        {
+        if (!PromptConfirmation($"Borrar fila {_selectedRow + 1}?")) {
             SetStatus("Borrado cancelado.");
             return;
         }
 
         _document.DeleteRow(_selectedRow);
 
-        if (_document.Rows.Count == 0)
-        {
+        if (_document.Rows.Count == 0) {
             _selectedRow = 0;
-        }
-        else
-        {
+        } else {
             _selectedRow = Math.Min(_selectedRow, _document.Rows.Count - 1);
         }
 
         SetStatus("Fila borrada.");
     }
 
-    private void SortByCurrentColumn()
-    {
+    private void SortByCurrentColumn() {
         var header = _document.Headers[_selectedColumn];
         var result = _document.SortByColumn(_selectedColumn);
 
-        switch (result)
-        {
+        switch (result) {
             case CsvDocument.SortResult.Ascending:
                 _selectedRow = 0;
                 _rowOffset = 0;
@@ -258,12 +227,10 @@ internal sealed class CsvEditorApp
         }
     }
 
-    private void AddColumn()
-    {
+    private void AddColumn() {
         var columnName = PromptInput("Nombre de la nueva columna: ", $"Columna {_selectedColumn + 2}");
 
-        if (columnName is null)
-        {
+        if (columnName is null) {
             SetStatus("Alta de columna cancelada.");
             return;
         }
@@ -274,10 +241,8 @@ internal sealed class CsvEditorApp
         SetStatus("Columna agregada.");
     }
 
-    private void RenameCurrentColumn()
-    {
-        if (!_document.HasHeader)
-        {
+    private void RenameCurrentColumn() {
+        if (!_document.HasHeader) {
             SetStatus("Renombrar columnas requiere abrir el CSV con encabezados.");
             return;
         }
@@ -285,8 +250,7 @@ internal sealed class CsvEditorApp
         var currentHeader = _document.Headers[_selectedColumn];
         var columnName = PromptInput("Nuevo nombre de la columna: ", currentHeader);
 
-        if (columnName is null)
-        {
+        if (columnName is null) {
             SetStatus("Renombrado cancelado.");
             return;
         }
@@ -295,18 +259,15 @@ internal sealed class CsvEditorApp
         SetStatus("Columna renombrada.");
     }
 
-    private void ChangeDelimiter()
-    {
+    private void ChangeDelimiter() {
         var input = PromptInput("Nuevo delimitador (, ; | \\t): ", FormatDelimiter(_document.Delimiter));
 
-        if (input is null)
-        {
+        if (input is null) {
             SetStatus("Cambio de delimitador cancelado.");
             return;
         }
 
-        if (!CommandLineOptions.TryParseDelimiter(input, out var delimiter))
-        {
+        if (!CommandLineOptions.TryParseDelimiter(input, out var delimiter)) {
             SetStatus("Delimitador invalido. Use un caracter o \\t.");
             return;
         }
@@ -315,23 +276,19 @@ internal sealed class CsvEditorApp
         SetStatus($"Delimitador cambiado a {FormatDelimiter(delimiter)}.");
     }
 
-    private void DeleteCurrentColumn()
-    {
-        if (_document.Headers.Count <= 1)
-        {
+    private void DeleteCurrentColumn() {
+        if (_document.Headers.Count <= 1) {
             SetStatus("Debe quedar al menos una columna.");
             return;
         }
 
         var header = _document.Headers[_selectedColumn];
-        if (!PromptConfirmation($"Borrar columna '{header}'?"))
-        {
+        if (!PromptConfirmation($"Borrar columna '{header}'?")) {
             SetStatus("Borrado de columna cancelado.");
             return;
         }
 
-        if (_selectedColumn >= 0 && _selectedColumn < _numericDisplayModes.Count)
-        {
+        if (_selectedColumn >= 0 && _selectedColumn < _numericDisplayModes.Count) {
             _numericDisplayModes.RemoveAt(_selectedColumn);
         }
 
@@ -340,22 +297,18 @@ internal sealed class CsvEditorApp
         SetStatus("Columna borrada.");
     }
 
-    private void SaveDocument()
-    {
+    private void SaveDocument() {
         _document.Save();
         SetStatus($"Archivo guardado en {_document.FilePath}.");
     }
 
-    private void ToggleNumericDisplayMode()
-    {
-        if (!_document.IsNumericColumn(_selectedColumn))
-        {
+    private void ToggleNumericDisplayMode() {
+        if (!_document.IsNumericColumn(_selectedColumn)) {
             SetStatus("La columna actual no es numerica.");
             return;
         }
 
-        _numericDisplayModes[_selectedColumn] = _numericDisplayModes[_selectedColumn] switch
-        {
+        _numericDisplayModes[_selectedColumn] = _numericDisplayModes[_selectedColumn] switch {
             NumericDisplayMode.Integer => NumericDisplayMode.TwoDecimals,
             _ => NumericDisplayMode.Integer
         };
@@ -366,15 +319,12 @@ internal sealed class CsvEditorApp
                 : $"Columna '{_document.Headers[_selectedColumn]}' en modo 2 decimales.");
     }
 
-    private bool ConfirmExit()
-    {
-        if (!_document.IsDirty)
-        {
+    private bool ConfirmExit() {
+        if (!_document.IsDirty) {
             return true;
         }
 
-        if (PromptConfirmation("Hay cambios sin guardar. Salir igual?"))
-        {
+        if (PromptConfirmation("Hay cambios sin guardar. Salir igual?")) {
             return true;
         }
 
@@ -382,8 +332,7 @@ internal sealed class CsvEditorApp
         return false;
     }
 
-    private void Render()
-    {
+    private void Render() {
         Console.Clear();
 
         WriteLine(0, $"editcsv | {_document.FilePath}");
@@ -394,8 +343,7 @@ internal sealed class CsvEditorApp
         RenderFooter();
     }
 
-    private void RenderGrid()
-    {
+    private void RenderGrid() {
         var visibleColumns = VisibleColumnCount();
         var visibleRows = VisibleDataRowCount();
         var top = TopLines;
@@ -403,21 +351,18 @@ internal sealed class CsvEditorApp
         WriteGridCell(0, top, "Fila", RowNumberWidth, false, true);
 
         var x = RowNumberWidth;
-        for (var columnIndex = _columnOffset; columnIndex < _document.Headers.Count && columnIndex < _columnOffset + visibleColumns; columnIndex++)
-        {
+        for (var columnIndex = _columnOffset; columnIndex < _document.Headers.Count && columnIndex < _columnOffset + visibleColumns; columnIndex++) {
             WriteSeparator(x, top);
             x++;
             WriteGridCell(x, top, _document.Headers[columnIndex], CellWidth, false, true);
             x += CellWidth;
         }
 
-        for (var rowOffset = 0; rowOffset < visibleRows; rowOffset++)
-        {
+        for (var rowOffset = 0; rowOffset < visibleRows; rowOffset++) {
             var rowIndex = _rowOffset + rowOffset;
             var y = top + 1 + rowOffset;
 
-            if (rowIndex >= _document.Rows.Count)
-            {
+            if (rowIndex >= _document.Rows.Count) {
                 ClearLine(y);
                 continue;
             }
@@ -425,8 +370,7 @@ internal sealed class CsvEditorApp
             WriteGridCell(0, y, (rowIndex + 1).ToString(), RowNumberWidth, false, true, true);
             x = RowNumberWidth;
 
-            for (var columnIndex = _columnOffset; columnIndex < _document.Headers.Count && columnIndex < _columnOffset + visibleColumns; columnIndex++)
-            {
+            for (var columnIndex = _columnOffset; columnIndex < _document.Headers.Count && columnIndex < _columnOffset + visibleColumns; columnIndex++) {
                 WriteSeparator(x, y);
                 x++;
 
@@ -438,14 +382,12 @@ internal sealed class CsvEditorApp
             }
         }
 
-        if (_document.Rows.Count == 0)
-        {
+        if (_document.Rows.Count == 0) {
             WriteLine(top + 1, "[sin filas] Presione A para agregar una fila nueva.");
         }
     }
 
-    private void RenderFooter()
-    {
+    private void RenderFooter() {
         var selectedHeader = _document.Headers[_selectedColumn];
         var selectedValue = _document.Rows.Count == 0 ? string.Empty : _document.GetCell(_selectedRow, _selectedColumn);
         var renderedValue = _document.Rows.Count == 0
@@ -460,12 +402,10 @@ internal sealed class CsvEditorApp
         WriteLine(statusLine, _statusMessage);
     }
 
-    private void EnsureSelectionIsVisible()
-    {
+    private void EnsureSelectionIsVisible() {
         _selectedColumn = Math.Clamp(_selectedColumn, 0, _document.Headers.Count - 1);
 
-        if (_document.Rows.Count == 0)
-        {
+        if (_document.Rows.Count == 0) {
             _selectedRow = 0;
             _rowOffset = 0;
             return;
@@ -474,30 +414,22 @@ internal sealed class CsvEditorApp
         _selectedRow = Math.Clamp(_selectedRow, 0, _document.Rows.Count - 1);
 
         var visibleRows = VisibleDataRowCount();
-        if (_selectedRow < _rowOffset)
-        {
+        if (_selectedRow < _rowOffset) {
             _rowOffset = _selectedRow;
-        }
-        else if (_selectedRow >= _rowOffset + visibleRows)
-        {
+        } else if (_selectedRow >= _rowOffset + visibleRows) {
             _rowOffset = _selectedRow - visibleRows + 1;
         }
 
         var visibleColumns = VisibleColumnCount();
-        if (_selectedColumn < _columnOffset)
-        {
+        if (_selectedColumn < _columnOffset) {
             _columnOffset = _selectedColumn;
-        }
-        else if (_selectedColumn >= _columnOffset + visibleColumns)
-        {
+        } else if (_selectedColumn >= _columnOffset + visibleColumns) {
             _columnOffset = _selectedColumn - visibleColumns + 1;
         }
     }
 
-    private void EnsureAtLeastOneRow()
-    {
-        if (_document.Rows.Count > 0)
-        {
+    private void EnsureAtLeastOneRow() {
+        if (_document.Rows.Count > 0) {
             return;
         }
 
@@ -505,35 +437,29 @@ internal sealed class CsvEditorApp
         _selectedRow = 0;
     }
 
-    private int VisibleColumnCount()
-    {
+    private int VisibleColumnCount() {
         var availableWidth = Math.Max(20, Console.WindowWidth - RowNumberWidth);
         return Math.Max(1, availableWidth / (CellWidth + 1));
     }
 
-    private int VisibleDataRowCount()
-    {
+    private int VisibleDataRowCount() {
         var availableHeight = Math.Max(4, Console.WindowHeight - TopLines - FooterLines - 1);
         return Math.Max(1, availableHeight);
     }
 
-    private string? PromptInput(string label, string initialValue)
-    {
+    private string? PromptInput(string label, string initialValue) {
         var buffer = new StringBuilder(initialValue);
         var cursorIndex = buffer.Length;
         var line = Console.WindowHeight - 1;
 
         SetCursorVisibility(true);
 
-        try
-        {
-            while (true)
-            {
+        try {
+            while (true) {
                 DrawPrompt(label, buffer.ToString(), cursorIndex, line);
                 var key = Console.ReadKey(intercept: true);
 
-                switch (key.Key)
-                {
+                switch (key.Key) {
                     case ConsoleKey.Enter:
                         return buffer.ToString();
 
@@ -557,8 +483,7 @@ internal sealed class CsvEditorApp
                         break;
 
                     case ConsoleKey.Backspace:
-                        if (cursorIndex > 0)
-                        {
+                        if (cursorIndex > 0) {
                             buffer.Remove(cursorIndex - 1, 1);
                             cursorIndex--;
                         }
@@ -566,16 +491,14 @@ internal sealed class CsvEditorApp
                         break;
 
                     case ConsoleKey.Delete:
-                        if (cursorIndex < buffer.Length)
-                        {
+                        if (cursorIndex < buffer.Length) {
                             buffer.Remove(cursorIndex, 1);
                         }
 
                         break;
 
                     default:
-                        if (!char.IsControl(key.KeyChar))
-                        {
+                        if (!char.IsControl(key.KeyChar)) {
                             buffer.Insert(cursorIndex, key.KeyChar);
                             cursorIndex++;
                         }
@@ -583,41 +506,33 @@ internal sealed class CsvEditorApp
                         break;
                 }
             }
-        }
-        finally
-        {
+        } finally {
             SetCursorVisibility(false);
         }
     }
 
-    private bool PromptConfirmation(string message)
-    {
+    private bool PromptConfirmation(string message) {
         var line = Console.WindowHeight - 1;
         WriteLine(line, $"{message} [s/N]");
 
-        while (true)
-        {
+        while (true) {
             var key = Console.ReadKey(intercept: true);
 
-            if (key.Key == ConsoleKey.S || key.Key == ConsoleKey.Y)
-            {
+            if (key.Key == ConsoleKey.S || key.Key == ConsoleKey.Y) {
                 return true;
             }
 
-            if (key.Key == ConsoleKey.N || key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Escape)
-            {
+            if (key.Key == ConsoleKey.N || key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Escape) {
                 return false;
             }
         }
     }
 
-    private void DrawPrompt(string label, string value, int cursorIndex, int line)
-    {
+    private void DrawPrompt(string label, string value, int cursorIndex, int line) {
         var available = Math.Max(10, Console.WindowWidth - label.Length - 1);
         var start = 0;
 
-        if (cursorIndex >= available)
-        {
+        if (cursorIndex >= available) {
             start = cursorIndex - available + 1;
         }
 
@@ -631,10 +546,8 @@ internal sealed class CsvEditorApp
         Console.SetCursorPosition(cursorColumn, line);
     }
 
-    private void WriteLine(int y, string content)
-    {
-        if (y < 0 || y >= Console.WindowHeight)
-        {
+    private void WriteLine(int y, string content) {
+        if (y < 0 || y >= Console.WindowHeight) {
             return;
         }
 
@@ -643,15 +556,12 @@ internal sealed class CsvEditorApp
         Console.Write(truncated.PadRight(Console.WindowWidth));
     }
 
-    private void ClearLine(int y)
-    {
+    private void ClearLine(int y) {
         WriteLine(y, string.Empty);
     }
 
-    private void WriteSeparator(int x, int y)
-    {
-        if (x < 0 || x >= Console.WindowWidth || y < 0 || y >= Console.WindowHeight)
-        {
+    private void WriteSeparator(int x, int y) {
+        if (x < 0 || x >= Console.WindowWidth || y < 0 || y >= Console.WindowHeight) {
             return;
         }
 
@@ -660,27 +570,20 @@ internal sealed class CsvEditorApp
         Console.Write("|");
     }
 
-    private void WriteGridCell(int x, int y, string text, int width, bool selected, bool header, bool rightAlign = false)
-    {
-        if (x >= Console.WindowWidth || y >= Console.WindowHeight)
-        {
+    private void WriteGridCell(int x, int y, string text, int width, bool selected, bool header, bool rightAlign = false) {
+        if (x >= Console.WindowWidth || y >= Console.WindowHeight) {
             return;
         }
 
         Console.SetCursorPosition(x, y);
 
-        if (selected)
-        {
+        if (selected) {
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.DarkBlue;
-        }
-        else if (header)
-        {
+        } else if (header) {
             Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.Gray;
-        }
-        else
-        {
+        } else {
             Console.ResetColor();
         }
 
@@ -689,20 +592,16 @@ internal sealed class CsvEditorApp
         Console.ResetColor();
     }
 
-    private void SetStatus(string message)
-    {
+    private void SetStatus(string message) {
         _statusMessage = message;
     }
 
-    private static string Fit(string text, int width)
-    {
-        if (width <= 0)
-        {
+    private static string Fit(string text, int width) {
+        if (width <= 0) {
             return string.Empty;
         }
 
-        if (string.IsNullOrEmpty(text))
-        {
+        if (string.IsNullOrEmpty(text)) {
             return string.Empty;
         }
 
@@ -711,76 +610,60 @@ internal sealed class CsvEditorApp
             .Replace('\n', ' ')
             .Replace('\t', ' ');
 
-        if (sanitized.Length <= width)
-        {
+        if (sanitized.Length <= width) {
             return sanitized;
         }
 
-        if (width <= 3)
-        {
+        if (width <= 3) {
             return sanitized[..width];
         }
 
         return sanitized[..(width - 3)] + "...";
     }
 
-    private static string FormatDelimiter(char delimiter)
-    {
-        return delimiter switch
-        {
+    private static string FormatDelimiter(char delimiter) {
+        return delimiter switch {
             '\t' => "\\t",
             _ => delimiter.ToString()
         };
     }
 
-    private string GetDisplayValue(int rowIndex, int columnIndex, bool isNumericColumn)
-    {
-        if (!isNumericColumn)
-        {
+    private string GetDisplayValue(int rowIndex, int columnIndex, bool isNumericColumn) {
+        if (!isNumericColumn) {
             return _document.GetCell(rowIndex, columnIndex);
         }
 
-        if (!_document.TryGetNumericCell(rowIndex, columnIndex, out var number))
-        {
+        if (!_document.TryGetNumericCell(rowIndex, columnIndex, out var number)) {
             return _document.GetCell(rowIndex, columnIndex);
         }
 
-        return _numericDisplayModes[columnIndex] switch
-        {
+        return _numericDisplayModes[columnIndex] switch {
             NumericDisplayMode.Integer => number.ToString("0"),
             NumericDisplayMode.TwoDecimals => number.ToString("0.00"),
             _ => _document.GetCell(rowIndex, columnIndex)
         };
     }
 
-    private string FormatNumericMode(int columnIndex)
-    {
-        if (!_document.IsNumericColumn(columnIndex))
-        {
+    private string FormatNumericMode(int columnIndex) {
+        if (!_document.IsNumericColumn(columnIndex)) {
             return "n/a";
         }
 
-        return _numericDisplayModes[columnIndex] switch
-        {
+        return _numericDisplayModes[columnIndex] switch {
             NumericDisplayMode.Integer => "enteros",
             NumericDisplayMode.TwoDecimals => "2 decimales",
             _ => "original"
         };
     }
 
-    private static void SetCursorVisibility(bool visible)
-    {
-        try
-        {
+    private static void SetCursorVisibility(bool visible) {
+        try {
             Console.CursorVisible = visible;
-        }
-        catch (PlatformNotSupportedException)
-        {
+        } catch (PlatformNotSupportedException) {
         }
     }
 
-    private enum NumericDisplayMode
-    {
+    private enum NumericDisplayMode {
         Integer,
         TwoDecimals
     }

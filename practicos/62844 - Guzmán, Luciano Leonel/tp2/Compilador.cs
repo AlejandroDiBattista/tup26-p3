@@ -45,9 +45,9 @@ class Compilador {
             while (VerActual() == '+' || VerActual() == '-') {
                 char op = Avanzar();
                 var derecho = ParseTermino();
-                
-                nodo = (op == '+') 
-                    ? new SumaNodo(nodo, derecho) 
+
+                nodo = (op == '+')
+                    ? new SumaNodo(nodo, derecho)
                     : new RestaNodo(nodo, derecho);
 
                 SaltarEspacios();
@@ -64,8 +64,8 @@ class Compilador {
                 char op = Avanzar();
                 var derecho = ParseFactor();
 
-                nodo = (op == '*') 
-                    ? new MultiplicacionNodo(nodo, derecho) 
+                nodo = (op == '*')
+                    ? new MultiplicacionNodo(nodo, derecho)
                     : new DivisionNodo(nodo, derecho);
 
                 SaltarEspacios();

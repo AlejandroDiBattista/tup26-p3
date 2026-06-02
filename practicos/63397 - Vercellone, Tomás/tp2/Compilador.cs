@@ -1,87 +1,145 @@
-class Compilador {
-    private List<string> tokens;
-    private int posicion;
 
-    private Compilador(string expresion) {
-        tokens = Tokenizar(expresion);
-        posicion = 0;
+
+static class Compilador {
+
+    
+    public static Nodo Parse(string texto) {
+        var tokens = Tokenizar(texto);
+        var parser = new Parser(tokens);
+        var arbol = parser.ParseExpresion();
+
+    
+        if (parser.HayMasTokens())
+            throw new Exception($"Token inesperado: '{parser.TokenActual()}'");
+
+        return arbol;
     }
 
-    public static Nodo Parse(string expresion) {
-        if (string.IsNullOrWhiteSpace(expresion))
-            throw new FormatException("Token inesperado: entrada vacía");
+   
+    static List<string> Tokenizar(string texto) {
+        var lista = new List<string>();
+        int i = 0;
 
-        var compilador = new Compilador(expresion);
-        var nodo = compilador.ParseExpresion();
+        while (i < texto.Length) {
+            char c = texto[i];
 
-        if (compilador.posicion < compilador.tokens.Count)
-            throw new FormatException($"Token inesperado: '{compilador.tokens[compilador.posicion]}'");
+            if (char.IsWhiteSpace(c)) {
+                i++;
+                continue;
+            }
+
+           
+            if (char.IsDigit(c)) {
+                int inicio = i;
+                while (i < texto.Length && char.IsDigit(texto[i]))
+                    i++;
+                lista.Add(texto[inicio..i]);
+                continue;
+            }
+
+           
+            if (c == 'x' || c == 'X') {
+                lista.Add("x");
+                i++;
+                continue;
+            }
+
+            
+            if ("+-*/()".Contains(c)) {
+                lista.Add(c.ToString());
+                i++;
+                continue;
+            }
+
+            throw new Exception($"Carácter no reconocido: '{c}'");
+        }
+
+        return lista;
+    }
+}
+
+class Parser(List<string> tokens) {
+    int pos = 0;
+
+    public bool HayMasTokens() => pos < tokens.Count;
+    public string TokenActual() => tokens[pos];
+
+    string Consumir() => tokens[pos++];
+
+    string Consumir(string esperado) {
+        if (!HayMasTokens())
+            throw new Exception($"Se esperaba '{esperado}' pero se llegó al final de la expresión.");
+        string tok = Consumir();
+        if (tok != esperado)
+            throw new Exception($"Se esperaba '{esperado}' pero se encontró '{tok}'.");
+        return tok;
+    }
+
+   
+    public Nodo ParseExpresion() {
+        var nodo = ParseTermino();
+
+        while (HayMasTokens() && (TokenActual() == "+" || TokenActual() == "-")) {
+            string op = Consumir();
+            var derecho = ParseTermino();
+            nodo = op == "+" ? new SumaNodo(nodo, derecho) : new RestaNodo(nodo, derecho);
+        }
 
         return nodo;
     }
 
-    private static List<string> Tokenizar(string expresion) {
-        var tokens = new List<string>();
-        int i = 0;
-        while (i < expresion.Length) {
-            if (char.IsWhiteSpace(expresion[i])) { i++; continue; }
-            if (char.IsDigit(expresion[i])) {
-                int j = i;
-                while (j < expresion.Length && char.IsDigit(expresion[j])) j++;
-                tokens.Add(expresion.Substring(i, j - i));
-                i = j; continue;
-            }
-            if (char.IsLetter(expresion[i])) {
-                if (char.ToLower(expresion[i]) == 'x') { tokens.Add("x"); i++; continue; }
-                throw new FormatException($"Token inesperado: '{expresion[i]}'");
-            }
-            if ("+-*/()".Contains(expresion[i])) { tokens.Add(expresion[i].ToString()); i++; continue; }
-            throw new FormatException($"Token inesperado: '{expresion[i]}'");
-        }
-        return tokens;
-    }
+  
+    Nodo ParseTermino() {
+        var nodo = ParseFactor();
 
-    private string? TokenActual => posicion < tokens.Count ? tokens[posicion] : null;
-
-    private string Consumir() {
-        if (posicion >= tokens.Count)
-            throw new FormatException("Token inesperado: se esperaba más entrada");
-        return tokens[posicion++];
-    }
-
-    private Nodo ParseExpresion() {
-        var izquierdo = ParseTermino();
-        while (TokenActual == "+" || TokenActual == "-") {
-            var op = Consumir();
-            var derecho = ParseTermino();
-            izquierdo = op == "+" ? new SumaNodo(izquierdo, derecho) : new RestaNodo(izquierdo, derecho);
-        }
-        return izquierdo;
-    }
-
-    private Nodo ParseTermino() {
-        var izquierdo = ParseFactor();
-        while (TokenActual == "*" || TokenActual == "/") {
-            var op = Consumir();
+        while (HayMasTokens() && (TokenActual() == "*" || TokenActual() == "/")) {
+            string op = Consumir();
             var derecho = ParseFactor();
-            izquierdo = op == "*" ? new MultiplicacionNodo(izquierdo, derecho) : new DivisionNodo(izquierdo, derecho);
+            nodo = op == "*" ? new MultiplicacionNodo(nodo, derecho) : new DivisionNodo(nodo, derecho);
         }
-        return izquierdo;
+
+        return nodo;
     }
 
-    private Nodo ParseFactor() {
-        if (TokenActual == "+") { Consumir(); return ParseFactor(); }
-        if (TokenActual == "-") { Consumir(); return new NegativoNodo(ParseFactor()); }
-        if (TokenActual == "(") {
+  
+    Nodo ParseFactor() {
+        if (!HayMasTokens())
+            throw new Exception("Expresión incompleta, se esperaba un valor o paréntesis.");
+
+        string tok = TokenActual();
+
+     
+        if (tok == "+") {
             Consumir();
-            var nodo = ParseExpresion();
-            if (TokenActual != ")") throw new FormatException("Se esperaba ')'");
-            Consumir();
-            return nodo;
+            return ParseFactor();
         }
-        if (TokenActual != null && int.TryParse(TokenActual, out int valor)) { Consumir(); return new NumeroNodo(valor); }
-        if (TokenActual == "x") { Consumir(); return new VariableNodo(); }
-        throw new FormatException($"Token inesperado: '{TokenActual ?? "fin de entrada"}'");
+
+  
+        if (tok == "-") {
+            Consumir();
+            return new NegativoNodo(ParseFactor());
+        }
+
+    
+        if (tok == "(") {
+            Consumir("(");
+            var expr = ParseExpresion();
+            Consumir(")");
+            return expr;
+        }
+
+ 
+        if (tok == "x") {
+            Consumir();
+            return new VariableNodo();
+        }
+
+      
+        if (int.TryParse(tok, out int numero)) {
+            Consumir();
+            return new NumeroNodo(numero);
+        }
+
+        throw new Exception($"Token inesperado: '{tok}'");
     }
 }
-

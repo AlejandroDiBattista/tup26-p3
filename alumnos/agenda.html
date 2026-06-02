@@ -382,6 +382,18 @@
 
     .detail-value a:hover { color: #8c3b2a; }
 
+    .detail-code {
+      width: 100%;
+      padding-top: 4px;
+      border-top: 1px solid rgba(33, 25, 18, .08);
+    }
+
+    .detail-code .detail-value {
+      font-family: ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas, Liberation Mono, monospace;
+      font-size: .78rem;
+      letter-spacing: .01em;
+    }
+
     .detail-empty {
       font-style: italic;
       opacity: .5;
@@ -573,7 +585,7 @@
             <circle cx="6.5" cy="6.5" r="5.2"/>
             <line x1="10.3" y1="10.3" x2="14" y2="14"/>
           </svg>
-          <input type="search" id="search" placeholder="Buscar por nombre, legajo, GitHub o la clave sin-telefono" autocomplete="off">
+          <input type="search" id="search" placeholder="Buscar por nombre, legajo, código, GitHub, sin-telefono o tp1 aprobado / tp2 revision" autocomplete="off">
         </div>
         <div class="tabs">
           <button class="tab active" data-filter="C7" data-filter-group="commission" data-label="C7">C7</button>
@@ -698,7 +710,8 @@
         const practicosRaw   = cols[5].trim();
         const presenteRaw    = cols[7].trim();
         const asistenciasRaw = cols[8].trim();
-        const codigoRaw      = cols[9]?.trim() ?? '';
+        const notaRaw        = cols[9]?.trim() ?? '';
+        const codigoRaw      = cols[10]?.trim() ?? '';
 
         const comma     = apellidoNombre.indexOf(',');
         const apellido  = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;
@@ -706,6 +719,7 @@
 
         const telefono  = (telefonoRaw === '—' || telefonoRaw === '-') ? '' : telefonoRaw;
         const gitHub    = (gitHubRaw   === '—' || gitHubRaw   === '-') ? '' : gitHubRaw;
+        const codigo    = (codigoRaw   === '—' || codigoRaw   === '-') ? '' : codigoRaw;
         const tieneFoto = /^(si|sí|true|yes)$/i.test(fotoRaw);
         const presente  = /^(si|sí|true|yes)$/i.test(presenteRaw);
         const asistencias = Number.parseInt(asistenciasRaw, 10);
@@ -713,9 +727,9 @@
         // CarpetaNombre exactly mirrors C# CarpetaNombre property
         const carpetaNombre = `${legajo} - ${apellido}, ${nombre}`;
         const fotoPaths     = tieneFoto ? fotoCandidates(carpetaNombre) : [];
-        const notaParts = codigoRaw.split('.');
-        const codigoLegajo = notaParts.length >= 1 ? Number.parseInt(notaParts[0], 10) : null;
-        const nota = notaParts.length >= 2 ? parseInt(notaParts[1].slice(-1), 10) + 1 : null;
+        const notaParts     = notaRaw
+        const codigoLegajo  = notaParts.length >= 1 ? Number.parseInt(notaParts[0], 10) : null;
+        const nota = parseInt(notaRaw);
         alumnos.push({
           legajo,
           apellido,
@@ -728,6 +742,7 @@
           practicosRaw,
           presente,
           asistencias: Number.isNaN(asistencias) ? 0 : asistencias,
+          codigo,
           codigoLegajo: Number.isNaN(codigoLegajo) ? null : codigoLegajo,
           carpetaNombre,
           fotoPath: '',
@@ -745,7 +760,7 @@
     }
 
     function extraerEstados(texto) {
-      return (texto.match(/[🟢🟡🟠🔴⚪]/gu) || []).map(emoji => emoji === '⚪' ? '⚪️' : emoji);
+      return (texto.match(/[🟢🟡🟠🔴⚪🟤]/gu) || []).map(emoji => emoji === '⚪' ? '⚪️' : emoji);
     }
 
     function contarEstados(texto) {
@@ -787,7 +802,49 @@
         case '🟡': return 'Pendiente';
         case '🟠': return 'Revisión';
         case '🔴': return 'Desaprobado';
+        case '⚫️': return 'Mal';
+        case '⚪️': return 'Sin estado';
         default: return 'Sin estado';
+      }
+    }
+
+    function normalizeSearchToken(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+    }
+
+    function estadoDesdeBusqueda(value) {
+      switch (normalizeSearchToken(value)) {
+        case 'aprobado':
+        case 'aprobada':
+        case 'aprobados':
+        case 'aprobadas':
+          return '🟢';
+        case 'pendiente':
+        case 'pendientes':
+          return '🟡';
+        case 'revision':
+        case 'revisar':
+        case 'revisado':
+        case 'revisados':
+          return '🟠';
+        case 'desaprobado':
+        case 'desaprobada':
+        case 'desaprobados':
+        case 'desaprobadas':
+          return '🔴';
+        case 'mal':
+          return '⚫️';
+        case 'sin-estado':
+        case 'sinestado':
+        case 'sin_estado':
+        case 'vacio':
+        case 'vacia':
+          return '⚪️';
+        default:
+          return null;
       }
     }
 
@@ -832,8 +889,8 @@
     }
 
     function notaClass(nota) {
-      if (nota >= 9) return 'grade-green';
-      if (nota >= 5) return 'grade-yellow';
+      if (nota >= 8) return 'grade-green';
+      if (nota >= 4) return 'grade-yellow';
       return 'grade-red';
     }
 
@@ -842,7 +899,7 @@
       const inits   = initials(alumno.apellido, alumno.nombre);
       const comBadge = `badge-comision-${alumno.comision.toLowerCase()}`;
       const codigoLegajoNoCoincide = alumno.codigoLegajo != null && alumno.codigoLegajo !== alumno.legajo;
-      const codigoBadge = `${codigoLegajoNoCoincide ? "‼️" : alumno.nota > 8 ? "🎖️" : ""}`;
+      const codigoBadge = `${alumno.codigo.length > 0 ? "🚨" : (alumno.nota >= 8 ? "🎖️" : "")}`;
       const notaHtml = alumno.nota != null
         ? `<span class="grade-badge ${notaClass(alumno.nota)}">${alumno.nota}${codigoBadge}</span>`
         : '';
@@ -854,6 +911,10 @@
       const ghHtml = alumno.gitHub
         ? `<span class="detail-value"><a href="https://github.com/${escHtml(alumno.gitHub)}" target="_blank" rel="noopener noreferrer">${escHtml(alumno.gitHub)}</a></span>`
         : `<span class="detail-value detail-empty">sin GitHub</span>`;
+
+      const codigoHtml = alumno.codigo
+        ? `<div class="detail detail-code"><span class="detail-value">Código: ${escHtml(alumno.codigo)}</span></div>`
+        : '';
 
       const avatarHtml = alumno.tieneFoto && alumno.fotoPath
         ? `<img class="avatar-img"
@@ -903,6 +964,7 @@
                 ${renderAttendance(alumno)}
               </div>
             </div>
+            ${codigoHtml}
           </div>
         </article>`;
     }
@@ -1006,23 +1068,62 @@
     }
 
     function parseSearchQuery(query) {
-      const normalized = query.toLowerCase();
+      const normalized = normalizeSearchToken(query);
       const terms = normalized.split(/[\s,]+/).filter(Boolean);
       const commissionTerms = ['c7', 'c9'].filter(term => terms.includes(term));
+      const practicoFilters = [];
+      const consumedIndexes = new Set();
+
+      for (let index = 0; index < terms.length; index++) {
+        const term = terms[index];
+        const tpMatch = term.match(/^tp(\d+)$/);
+        if (!tpMatch) continue;
+
+        const practico = Number.parseInt(tpMatch[1], 10);
+        let estado = null;
+
+        for (let cursor = index + 1; cursor < terms.length; cursor++) {
+          const candidate = terms[cursor];
+          if (candidate === 'para' || candidate === 'en') {
+            continue;
+          }
+
+          estado = estadoDesdeBusqueda(candidate);
+          if (estado) {
+            practicoFilters.push({ practico, estado });
+            consumedIndexes.add(index);
+            consumedIndexes.add(cursor);
+          }
+          break;
+        }
+      }
 
       return {
         requireSinTelefono: terms.includes('sin-telefono'),
         commissions: commissionTerms,
+        practicos: practicoFilters,
         text: terms
-          .filter(term => term !== 'sin-telefono' && term !== 'c7' && term !== 'c9')
+          .filter((term, index) => term !== 'sin-telefono' && term !== 'c7' && term !== 'c9' && term !== 'para' && term !== 'en' && !consumedIndexes.has(index))
           .join(' ')
           .trim(),
       };
     }
 
+    function matchesPracticoFilters(alumno, practicoFilters) {
+      if (!practicoFilters.length) {
+        return true;
+      }
+
+      const total = Math.max(totalPracticos, ...practicoFilters.map(filter => filter.practico));
+      const estados = normalizarEstados(alumno.practicosRaw || '', total);
+
+      return practicoFilters.every(filter => estados[filter.practico - 1] === filter.estado);
+    }
+
     function matchesSearch(alumno, parsed) {
       if (parsed.commissions.length > 0 && !parsed.commissions.includes(alumno.comision.toLowerCase())) return false;
       if (parsed.requireSinTelefono && !!alumno.telefono) return false;
+      if (!matchesPracticoFilters(alumno, parsed.practicos)) return false;
 
       if (!parsed.text) return true;
 
@@ -1032,6 +1133,7 @@
         alumno.nombre.toLowerCase().includes(q) ||
         alumno.apellidoNombre.toLowerCase().includes(q) ||
         String(alumno.legajo).includes(q) ||
+        alumno.codigo.toLowerCase().includes(q) ||
         alumno.gitHub.toLowerCase().includes(q) ||
         alumno.telefono.toLowerCase().includes(q)
       );

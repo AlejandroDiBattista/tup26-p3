@@ -13,14 +13,14 @@ class Compilador {
     private Nodo ParsearInterno(string expresion) {
         _entrada = expresion.Replace(" ", "");
         _pos = 0;
-        if (string.IsNullOrWhiteSpace(_entrada)) 
+        if (string.IsNullOrWhiteSpace(_entrada))
             throw new FormatException("Token inesperado: entrada vacía");
-        
+
         var nodo = ParsearExpresion();
-        
+
         if (_pos < _entrada.Length)
             throw new FormatException($"Token inesperado: {_entrada[_pos]}");
-            
+
         return nodo;
     }
 
@@ -62,7 +62,7 @@ class Compilador {
             return new NumeroNodo(int.Parse(num));
         }
         if (Actual == 'x' || Actual == 'X') { _pos++; return new VariableNodo(); }
-        
+
         throw new FormatException($"Token inesperado: {Actual}");
     }
 }

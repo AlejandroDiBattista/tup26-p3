@@ -7,9 +7,8 @@ static class Program {
         Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
         Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
 
-        
         var expresion = Console.ReadLine() ?? "";
-        if(string.IsNullOrWhiteSpace(expresion)) {
+        if (expresion.IsWhiteSpace()) {
             Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
             return;
         }
@@ -19,7 +18,7 @@ static class Program {
             Console.Write("x = ");
             var x = Console.ReadLine() ?? "";
 
-            if (string.IsNullOrWhiteSpace(x) || x == "fin") {
+            if (x.IsWhiteSpace() || x == "fin") {
                 break;
             }
 

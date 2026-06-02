@@ -6,101 +6,81 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 
 //Clase base de todos los nodos de la calculadora
-abstract class Node
-{
+abstract class Node {
     public abstract int Evaluar(int x);
 }
 //Nodo que Representa un numero entero
-class Numero : Node
-{
+class Numero : Node {
     public int valor;
-    public Numero(int valor)
-    {
+    public Numero(int valor) {
         this.valor = valor;
     }
-    public override int Evaluar(int x)
-    {
+    public override int Evaluar(int x) {
         return valor; //simpemente devuelve el valor del número
     }
 
 }
 //Nodo que representa la variable x
-class variable : Node
-{
-    public override int Evaluar (int x)
-    {
+class variable : Node {
+    public override int Evaluar(int x) {
         return x; //Devuelve el valor de la variable x
     }
 }
 
 //Nodo que representa un unario negativo (-x)
-class Negativo : Node
-{
+class Negativo : Node {
     private Node NodeInterno;
-    public Negativo(Node Node)
-    {
+    public Negativo(Node Node) {
         NodeInterno = Node; //Almacena el nodo interno que se va a evaluar
     }
-    public override int Evaluar(int x)
-    {
+    public override int Evaluar(int x) {
         return -NodeInterno.Evaluar(x); //Devuelve el negativo del valor del nodo interno
     }
 }
 // Clase base para operaciones binarias (dos operandos)
-abstract class NodoBinario : Node
-{
+abstract class NodoBinario : Node {
     protected Node Izq; // lado izquierdo
     protected Node Der; // lado derecho
 
-    public NodoBinario(Node i, Node d)
-    {
+    public NodoBinario(Node i, Node d) {
         Izq = i;
         Der = d;
     }
 }
 
 //suma
-class Suma : NodoBinario
-{
+class Suma : NodoBinario {
     public Suma(Node i, Node d) : base(i, d) { }
-    public override int Evaluar(int x)
-    {
+    public override int Evaluar(int x) {
         return Izq.Evaluar(x) + Der.Evaluar(x); //Devuelve la suma de los valores de los nodos izquierdo y derecho
     }
 }
 
 //Resta
-class Resta : NodoBinario
-{
+class Resta : NodoBinario {
     public Resta(Node i, Node d) : base(i, d) { }
-    public override int Evaluar(int x)
-    {
+    public override int Evaluar(int x) {
         return Izq.Evaluar(x) - Der.Evaluar(x); //Devuelve la resta de los valores de los nodos izquierdo y derecho
     }
 }
 
 //Multiplicacion
-class Multiplicacion : NodoBinario
-{
-    public Multiplicacion(Node i, Node d) : base(i, d) {}
-    
-        public override int Evaluar(int x)
-    {
+class Multiplicacion : NodoBinario {
+    public Multiplicacion(Node i, Node d) : base(i, d) { }
+
+    public override int Evaluar(int x) {
         return Izq.Evaluar(x) * Der.Evaluar(x); //Devuelve la multiplicacion de los valores de los nodos izquierdo y derecho
     }
 
-    
+
 }
 
 //Division
-class Division : NodoBinario
-{
-    public Division(Node i, Node d) : base(i, d) {}
-    public override int Evaluar(int x)
-    {
+class Division : NodoBinario {
+    public Division(Node i, Node d) : base(i, d) { }
+    public override int Evaluar(int x) {
         int division = Der.Evaluar(x); //Evalua el nodo derecho para obtener el divisor
-        if (division == 0)
-        {
+        if (division == 0) {
             throw new DivideByZeroException("No se puede dividir por cero"); //Lanza una excepción si el divisor es cero
         }
         return Izq.Evaluar(x) / division; //Devuelve la división de los valores de los nodos izquierdo y derecho
@@ -109,14 +89,12 @@ class Division : NodoBinario
 }
 
 //Clase principal para probar la calculadora
-class Compilador
-{
+class Compilador {
     private string input; //Expresion sin espacios
     private int pos; //Posicion actual en la cadena de entrada
 
     //Metodo Principal de parseo, recibe una expresion y devuelve el nodo raiz del arbol de expresion
-    public Node Parsear(string texto)
-    {
+    public Node Parsear(string texto) {
         input = texto.Replace(" ", ""); //Elimina los espacios de la cadena de entrada
         pos = 0; //Inicializa la posición en cero
         if (string.IsNullOrEmpty(input))
@@ -132,13 +110,11 @@ class Compilador
     }
 
     // Expresion := Termino { (+|-) Termino
-    private Node Expresion()
-    {
+    private Node Expresion() {
         Node nodo = Termino();
 
         while (pos < input.Length &&
-              (input[pos] == '+' || input[pos] == '-'))
-        {
+              (input[pos] == '+' || input[pos] == '-')) {
             char op = input[pos++];
             Node der = Termino();
 
@@ -152,13 +128,11 @@ class Compilador
     }
 
     // Termino := Factor { (*|/) Factor }
-    private Node Termino()
-    {
+    private Node Termino() {
         Node nodo = Factor();
 
         while (pos < input.Length &&
-              (input[pos] == '*' || input[pos] == '/'))
-        {
+              (input[pos] == '*' || input[pos] == '/')) {
             char op = input[pos++];
             Node der = Factor();
 
@@ -170,30 +144,26 @@ class Compilador
         return nodo;
     }
     // Factor := +Factor | -Factor | (Expresion) | numero | x
-    private Node Factor()
-    {
+    private Node Factor() {
         if (pos >= input.Length)
             throw new Exception("Token inesperado");
 
         char c = input[pos];
 
         // Operador unario +
-        if (c == '+')
-        {
+        if (c == '+') {
             pos++;
             return Factor();
         }
 
         // Operador unario -
-        if (c == '-')
-        {
+        if (c == '-') {
             pos++;
             return new Negativo(Factor());
         }
 
         // Paréntesis
-        if (c == '(')
-        {
+        if (c == '(') {
             pos++;
             Node nodo = Expresion();
 
@@ -205,8 +175,7 @@ class Compilador
         }
 
         // Número
-        if (char.IsDigit(c))
-        {
+        if (char.IsDigit(c)) {
             int inicio = pos;
 
             while (pos < input.Length && char.IsDigit(input[pos]))
@@ -215,9 +184,8 @@ class Compilador
             int valor = int.Parse(input.Substring(inicio, pos - inicio));
             return new Numero(valor);
         }
-// Variable x
-        if (c == 'x' || c == 'X')
-        {
+        // Variable x
+        if (c == 'x' || c == 'X') {
             pos++;
             return new variable();
         }
@@ -230,17 +198,14 @@ class Compilador
 
 #region COMANDOS
 
-class Comandos
-{
+class Comandos {
     // Detecta ayuda
-    public static bool EsHelp(string[] args)
-    {
+    public static bool EsHelp(string[] args) {
         return args.Contains("--help") || args.Contains("-h");
     }
 
     // Detecta tests
-    public static bool EsTest(string[] args)
-    {
+    public static bool EsTest(string[] args) {
         return args.Contains("--test") || args.Contains("-t") || args.Contains("-p");
     }
 }
@@ -249,10 +214,8 @@ class Comandos
 
 #region PRUEBAS
 
-class Pruebas
-{
-    public static void Ejecutar()
-    {
+class Pruebas {
+    public static void Ejecutar() {
         var comp = new Compilador();
 
         // Casos de prueba
@@ -265,8 +228,7 @@ class Pruebas
         Console.WriteLine("✔ Todas las pruebas pasaron");
     }
 
-    static void Test(Compilador comp, string expr, int x, int esperado)
-    {
+    static void Test(Compilador comp, string expr, int x, int esperado) {
         var nodo = comp.Parsear(expr);
         int resultado = nodo.Evaluar(x);
 
@@ -279,31 +241,25 @@ class Pruebas
 
 #region PROGRAMA PRINCIPAL
 
-class Program
-{
-    static void Main(string[] args)
-    {
+class Program {
+    static void Main(string[] args) {
         // Si pide ayuda
-        if (Comandos.EsHelp(args))
-        {
+        if (Comandos.EsHelp(args)) {
             MostrarAyuda();
             return;
         }
 
         // Si pide tests
-        if (Comandos.EsTest(args))
-        {
+        if (Comandos.EsTest(args)) {
             Pruebas.Ejecutar();
             return;
         }
 
         var compilador = new Compilador();
 
-        try
-        {
+        try {
             // 🔹 MODO DIRECTO
-            if (args.Length == 2)
-            {
+            if (args.Length == 2) {
                 string expr = args[0];
                 int x = int.Parse(args[1]);
 
@@ -311,15 +267,13 @@ class Program
                 Console.WriteLine(nodo.Evaluar(x));
             }
             // 🔹 MODO INTERACTIVO
-            else
-            {
+            else {
                 Console.Write("Expresión: ");
                 string expr = Console.ReadLine();
 
                 var nodo = compilador.Parsear(expr);
 
-                while (true)
-                {
+                while (true) {
                     Console.Write("x = ");
                     string input = Console.ReadLine();
 
@@ -331,16 +285,13 @@ class Program
                     Console.WriteLine(nodo.Evaluar(x));
                 }
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // Manejo de errores
             Console.WriteLine("Error: " + ex.Message);
         }
     }
 
-    static void MostrarAyuda()
-    {
+    static void MostrarAyuda() {
         Console.WriteLine("Uso:");
         Console.WriteLine("calculadora \"expresion\" valor");
         Console.WriteLine("calculadora --help");

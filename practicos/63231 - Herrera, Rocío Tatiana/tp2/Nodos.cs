@@ -4,22 +4,20 @@ abstract class Nodo {
     public abstract int Evaluar(int x = 0);
 }
 
-public abstract class Expresion
-{ public abstract int Calcular(int x=0);
-}
- 
-public class constante : Expresion
-{
-    private readonly int valor;
-    public constante(int valor) => valor=valor;
-    public override int Calcular(int x=0) => valor;
+public abstract class Expresion {
+    public abstract int Calcular(int x = 0);
 }
 
-public class variable : Expresion
-{
-    public override int Calcular (int x=0) => x;
+public class constante : Expresion {
+    private readonly int valor;
+    public constante(int valor) => valor = valor;
+    public override int Calcular(int x = 0) => valor;
 }
-  
+
+public class variable : Expresion {
+    public override int Calcular(int x = 0) => x;
+}
+
 public class UnarioNegativo : Expresion {
     private readonly Expresion _exp;
     public UnarioNegativo(Expresion exp) => _exp = exp;
@@ -52,9 +50,8 @@ public class Multiplicacion : Binario {
     public override int Calcular(int x = 0) => Izq.Calcular(x) * Der.Calcular(x);
 }
 
-public class Division : Binario
-{
-    public Cociente (Expresion izq, Expresion der) : base(izq, der) { }
+public class Division : Binario {
+    public Cociente(Expresion izq, Expresion der) : base(izq, der) { }
     public override int Calcular(int x = 0) {
         int divisor = Der.Calcular(x);
         if (divisor == 0) {

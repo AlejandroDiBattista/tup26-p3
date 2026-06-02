@@ -29,22 +29,22 @@ abstract class NodoBinario : Nodo {
 }
 
 class SumaNodo : NodoBinario {
-    public SumaNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public SumaNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izq.Evaluar(x) + Der.Evaluar(x);
 }
 
 class RestaNodo : NodoBinario {
-    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izq.Evaluar(x) - Der.Evaluar(x);
 }
 
 class MultiplicacionNodo : NodoBinario {
-    public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izq.Evaluar(x) * Der.Evaluar(x);
 }
 
 class DivisionNodo : NodoBinario {
-    public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) { }
 
     public override int Evaluar(int x = 0) {
         int divisor = Der.Evaluar(x);

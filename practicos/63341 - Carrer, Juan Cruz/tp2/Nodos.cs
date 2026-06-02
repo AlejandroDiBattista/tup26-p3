@@ -2,61 +2,113 @@ abstract class Nodo {
     public abstract int Evaluar(int x = 0);
 }
 
-class Numero : Nodo
-{
-    private int valor;
-    public Numero(int valor) => this.valor = valor;
-    public override int Evaluar(int x = 0) => valor;
-}
+class ValorNumero : Nodo {
 
-class Variable : Nodo
-{
-    public override int Evaluar(int x = 0) => x;
-}
+    private int numeroGuardado;
 
-class Negativo : Nodo
-{
-    private Nodo nodo;
-    public Negativo(Nodo nodo) => this.nodo = nodo;
-    public override int Evaluar(int x = 0) => -nodo.Evaluar(x);
-}
+    public ValorNumero(int valor) {
+        numeroGuardado = valor;
+    }
 
-abstract class Binario : Nodo
-{
-    protected Nodo izq, der;
-    public Binario(Nodo izq, Nodo der)
-    {
-        this.izq = izq;
-        this.der = der;
+    public override int Evaluar(int x = 0) {
+        return numeroGuardado;
     }
 }
 
-class Suma : Binario
-{
-    public Suma(Nodo i, Nodo d) : base(i, d) { }
-    public override int Evaluar(int x = 0) => izq.Evaluar(x) + der.Evaluar(x);
+class VariableX : Nodo {
+
+    public override int Evaluar(int x = 0) {
+        return x;
+    }
 }
 
-class Resta : Binario
-{
-    public Resta(Nodo i, Nodo d) : base(i, d) { }
-    public override int Evaluar(int x = 0) => izq.Evaluar(x) - der.Evaluar(x);
+class CambioSigno : Nodo {
+
+    private Nodo contenido;
+
+    public CambioSigno(Nodo nodo) {
+        contenido = nodo;
+    }
+
+    public override int Evaluar(int x = 0) {
+        return -contenido.Evaluar(x);
+    }
 }
 
-class Multiplicacion : Binario
-{
-    public Multiplicacion(Nodo i, Nodo d) : base(i, d) { }
-    public override int Evaluar(int x = 0) => izq.Evaluar(x) * der.Evaluar(x);
+abstract class OperacionBinaria : Nodo {
+
+    protected Nodo izquierda;
+    protected Nodo derecha;
+
+    public OperacionBinaria(
+        Nodo izq,
+        Nodo der
+    ) {
+
+        izquierda = izq;
+        derecha = der;
+    }
 }
 
-class Division : Binario
-{
-    public Division(Nodo i, Nodo d) : base(i, d) { }
+class OperacionSuma : OperacionBinaria {
 
-    public override int Evaluar(int x = 0)
-    {
-        var division = der.Evaluar(x);
-        if (division == 0) throw new DivideByZeroException();
-        return izq.Evaluar(x) / division;
+    public OperacionSuma(
+        Nodo izq,
+        Nodo der
+    ) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0) {
+
+        return izquierda.Evaluar(x)
+            + derecha.Evaluar(x);
+    }
+}
+
+class OperacionResta : OperacionBinaria {
+
+    public OperacionResta(
+        Nodo izq,
+        Nodo der
+    ) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0) {
+
+        return izquierda.Evaluar(x)
+            - derecha.Evaluar(x);
+    }
+}
+
+class OperacionMultiplicacion : OperacionBinaria {
+
+    public OperacionMultiplicacion(
+        Nodo izq,
+        Nodo der
+    ) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0) {
+
+        return izquierda.Evaluar(x)
+            * derecha.Evaluar(x);
+    }
+}
+
+class OperacionDivision : OperacionBinaria {
+
+    public OperacionDivision(
+        Nodo izq,
+        Nodo der
+    ) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0) {
+
+        var divisor =
+            derecha.Evaluar(x);
+
+        if (divisor == 0) {
+            throw new DivideByZeroException();
+        }
+
+        return izquierda.Evaluar(x)
+            / divisor;
     }
 }

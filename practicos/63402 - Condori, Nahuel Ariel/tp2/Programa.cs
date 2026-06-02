@@ -20,7 +20,7 @@ public class Programa {
     public static void ModoInteractivo() {
         Console.WriteLine("=== Calculadora Interactiva ===");
         Console.WriteLine("Escriba 'fin' o deje vacío en cualquier momento para salir.\n");
-        
+
         Console.Write("Ingrese la expresión matemática: ");
         string expresion = Console.ReadLine();
 

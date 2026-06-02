@@ -2,17 +2,14 @@ using System;
 using System.Collections.Generic;
 namespace TP2.Calculadora;
 
-public class ErrorDeParsingException : FormatException
-{
+public class ErrorDeParsingException : FormatException {
     public ErrorDeParsingException(string mensaje) : base(mensaje) { }
 }
-public class Compilador
-{
+public class Compilador {
     private string _expresion = "";
     private int _posicion = 0;
 
-    public Nodo Parsear(string expresion)
-    {
+    public Nodo Parsear(string expresion) {
         if (string.IsNullOrWhiteSpace(expresion))
             throw new Exception("Error: la expresión no puede estar vacía.");
 
@@ -32,12 +29,10 @@ public class Compilador
 
     private char Consumir() => _expresion[_posicion++];
 
-    private Nodo ParsearExpresion()
-    {
+    private Nodo ParsearExpresion() {
         Nodo izq = ParsearTermino();
 
-        while (CharActual == '+' || CharActual == '-')
-        {
+        while (CharActual == '+' || CharActual == '-') {
             char operador = Consumir();
             Nodo der = ParsearTermino();
             izq = operador == '+' ? new NodoSuma(izq, der) : new NodoResta(izq, der);
@@ -46,12 +41,10 @@ public class Compilador
         return izq;
     }
 
-    private Nodo ParsearTermino()
-    {
+    private Nodo ParsearTermino() {
         Nodo izq = ParsearFactor();
 
-        while (CharActual == '*' || CharActual == '/')
-        {
+        while (CharActual == '*' || CharActual == '/') {
             char operador = Consumir();
             Nodo der = ParsearFactor();
             izq = operador == '*' ? new NodoProducto(izq, der) : new NodoCociente(izq, der);
@@ -60,22 +53,18 @@ public class Compilador
         return izq;
     }
 
-    private Nodo ParsearFactor()
-    {
-        if (CharActual == '+')
-        {
+    private Nodo ParsearFactor() {
+        if (CharActual == '+') {
             Consumir();
             return ParsearFactor();
         }
 
-        if (CharActual == '-')
-        {
+        if (CharActual == '-') {
             Consumir();
             return new NodoNegacion(ParsearFactor());
         }
 
-        if (CharActual == '(')
-        {
+        if (CharActual == '(') {
             Consumir();
             Nodo nodo = ParsearExpresion();
 
@@ -87,22 +76,19 @@ public class Compilador
         }
 
 
-        if (CharActual == 'x' || CharActual == 'X')
-        {
+        if (CharActual == 'x' || CharActual == 'X') {
             Consumir();
             return new NodoVariable();
         }
 
-        if (char.IsDigit(CharActual))
-        {
+        if (char.IsDigit(CharActual)) {
             return LeerNumero();
         }
 
         throw new Exception($"Token inesperado '{CharActual}' en posición {_posicion}.");
     }
 
-    private NodoNumero LeerNumero()
-    {
+    private NodoNumero LeerNumero() {
         int inicio = _posicion;
         while (char.IsDigit(CharActual))
             Consumir();

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": 1,
+    "Nombre": "Ana",
+    "Telefonos": "",
+    "Email": "ana@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  },
+  {
+    "Id": 2,
+    "Nombre": "susana",
+    "Telefonos": "",
+    "Email": "susana@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  },
+  {
+    "Id": 3,
+    "Nombre": "juan",
+    "Telefonos": "",
+    "Email": "juan@gmail.com",
+    "Notas": "",
+    "Favorito": false
+  },
+  {
+    "Id": 4,
+    "Nombre": "guille",
+    "Telefonos": "",
+    "Email": "guille@gmail.com",
+    "Notas": "",
+    "Favorito": true
+  },
+  {
+    "Id": 5,
+    "Nombre": "matias",
+    "Telefonos": "",
+    "Email": "matias@gmail.com",
+    "Notas": "",
+    "Favorito": true
+  }
+]

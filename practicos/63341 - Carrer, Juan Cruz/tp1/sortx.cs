@@ -1,23 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
+using   System;
+using   System.Collections.Generic;
+using   System.IO;
+using   System.Linq;
+using   System.Text;
 
 try
 {
     var config = ParseArgs(args);
-
-    var text = ReadInput(config);
-
-    var rows = ParseDelimited(text, config);
-
-    var sorted = SortRows(rows, config);
-
-    var output = Serialize(sorted, config);
-
-    WriteOutput(output, config);
+    var inputText = ReadInput(config);
+    var rows = ParseDelimited(inputText, config);
+    var sortedRows = SortRows(rows, config);
+    var outputText = Serialize(sortedRows, config);
+    WriteOutput(outputText, config);
 }
 catch (Exception ex)
 {
@@ -27,8 +21,8 @@ catch (Exception ex)
 
 AppConfig ParseArgs(string[] args)
 {
-    string? input = null;
-    string? output = null;
+    string? inputFile = null;
+    string? outputFile = null;
     string delimiter = ",";
     bool noHeader = false;
     var sortFields = new List<SortField>();
@@ -39,21 +33,21 @@ AppConfig ParseArgs(string[] args)
     {
         var arg = args[i];
 
-        switch (arg)
+        switch (args[i])
         {
             case "-i":
-            case "--input":
-                input = args[++i];
+            case"--input":
+                inputFile = args[++i];
                 break;
 
             case "-o":
             case "--output":
-                output = args[++i];
+                outputFile = args[++i];
                 break;
 
             case "-d":
             case "--delimiter":
-                delimiter = args[++i] == "\\t" ? "\t" : args[i];
+                delimiter = args[++i];
                 break;
 
             case "-nh":
@@ -75,109 +69,95 @@ AppConfig ParseArgs(string[] args)
 
             default:
                 if (arg.StartsWith("-"))
-                    throw new Exception($"Opción desconocida: {arg}");
-
+                    throw new ArgumentException($"Opción desconocida: {arg}");
+                
                 positionals.Add(arg);
                 break;
         }
     }
-    
 
-    // Posicionales
-    if (positionals.Count > 0 && input == null)
-        input = positionals[0];
+    if (positionals.Count > 0 && inputFile == null)
+        inputFile = positionals[0];
 
-    if (positionals.Count > 1 && output == null)
-        output = positionals[1];
+    if (positionals.Count > 1 && outputFile == null)
+        outputFile = positionals[1];
 
-    if (sortFields.Count == 0)
-        throw new Exception("Debe especificar al menos un campo de ordenamiento con -b");
-
-    return new AppConfig(input, output, delimiter, noHeader, sortFields);
+    return new AppConfig(inputFile, outputFile, delimiter, noHeader, sortFields);
 }
 
 void ShowHelp()
 {
     Console.WriteLine(@"
-Uso:
-  sortx [input [output]] -b campo[:tipo[:orden]]...
+    Uso: 
+        sortx [input [output]] -b campo[ :tipo[:orden]]...
 
-Opciones:
-  -b, --by           Campo de ordenamiento
-  -i, --input        Archivo de entrada
-  -o, --output       Archivo de salida
-  -d, --delimiter    Delimitador (default ,)
-  -nh, --no-header   Sin encabezado
-  -h, --help         Mostrar ayuda
+    Opciones:
+      -b, --by                    Campo de ordenamiento (puede repetirse)
+      -i, --input <archivo>       Archivo de entrada (CSV)
+      -o, --output <archivo>      Archivo de salida (CSV)
+      -d, --delimiter <carácter>  Delimitador (por defecto: ',')
+      -nh, --no-header            Indica que el CSV no tiene fila de encabezado
+      -h, --help                  Muestra esta ayuda
 
-Ejemplos:
-  sortx empleados.csv -b apellido
-  sortx empleados.csv -b salario:num:desc
-");
+      Ejemplo:
+        sortx empleados.csv -b apellido
+        sortx empleados.csv -b salario:num:desc
+    ");
 }
 
 string ReadInput(AppConfig config)
 {
-    // Si hay archivo → leer archivo
-    if (!string.IsNullOrEmpty(config.InputFile))
-    {
+    if (!string.IsNullOrEmpty(config.InputFile)) {
         if (!File.Exists(config.InputFile))
-            throw new Exception($"Archivo no encontrado: {config.InputFile}");
+            throw new FileNotFoundException($"Archivo no encontrado: {config.InputFile}");
 
         return File.ReadAllText(config.InputFile);
     }
 
-    // Si no hay archivo → leer stdin
-    if (!Console.IsInputRedirected)
-        throw new Exception("No se especificó archivo de entrada ni hay datos en stdin");
+    if (Console.IsInputRedirected)
+        throw new InvalidOperationException("No se puede leer de la entrada estándar redirigida sin un archivo de entrada especificado.");
 
     using var reader = Console.In;
-    return reader.ReadToEnd();
+    return Console.In.ReadToEnd();
 }
 
-List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+List<Dictionary<string, string>> ParseDelimited(string texto, AppConfig config)
 {
     var rows = new List<Dictionary<string, string>>();
-
-    var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    var lines = texto.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
     if (lines.Length == 0)
         return rows;
 
     string[] headers;
 
-    if (!config.NoHeader)
-    {
+    if (!config.NoHeader) {
         headers = lines[0].Split(config.Delimiter);
 
-        for (int i = 1; i < lines.Length; i++)
-        {
-            var values = lines[i].Split(config.Delimiter);
+        for (int i = 1; i < lines.Length; i++) {
+            var value = lines[i].Split(config.Delimiter);
+            var dictio  = new Dictionary<string, string>();
 
-            var dict = new Dictionary<string, string>();
+            for (int j = 0; j < headers.Length && j < value.Length; j++)
+                dictio[headers[j]] = value[j];
 
-            for (int j = 0; j < headers.Length; j++)
-                dict[headers[j]] = values[j];
-
-            rows.Add(dict);
-        }
+            rows.Add(dictio);
+        }   
     }
-    else
-    {
-        var first = lines[0].Split(config.Delimiter);
-        headers = Enumerable.Range(0, first.Length).Select(i => i.ToString()).ToArray();
+    else {
+        var primero = lines[0].Split(config.Delimiter);
+        headers  = Enumerable.Range(0, primero.Length).Select(i => $"col{i}").ToArray();
 
-        foreach (var line in lines)
-        {
-            var values = line.Split(config.Delimiter);
-            var dict = new Dictionary<string, string>();
+        foreach (var line in lines) {
+            var value = line.Split(config.Delimiter);
+            var dictio  = new Dictionary<string, string>();
 
-            for (int j = 0; j < headers.Length; j++)
-                dict[headers[j]] = values[j];
+            for (int j = 0; j < headers.Length && j < value.Length; j++)
+                dictio[headers[j]] = value[j];
 
-            rows.Add(dict);
+            rows.Add(dictio);
         }
-    }
+    }   
 
     return rows;
 }
@@ -189,37 +169,37 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
 
     IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
 
-    foreach (var field in config.SortFields)
+    foreach (var sortField in config.SortFields)
     {
-        Func<Dictionary<string, string>, object> key = row =>
+        Func<Dictionary<string, string>, IComparable> keySelector = row =>
         {
-            if (!row.ContainsKey(field.Name))
-                throw new Exception($"Columna inexistente: {field.Name}");
+            if (!row.ContainsKey(sortField.Nombre))
+                throw new ArgumentException($"Campo no encontrado: {sortField.Nombre}");
 
-            var value = row[field.Name];
-
-            if (field.Numeric)
+            var value = row[sortField.Nombre];
+            if (sortField.Numerico)
             {
-                if (!double.TryParse(value, out var num))
-                    throw new Exception($"Valor no numérico: {value}");
-
+                if (!double.TryParse(value, out double num))
+                    throw new ArgumentException($"Valor no numérico en campo '{sortField.Nombre}': {value}");
                 return num;
             }
-
             return value;
         };
 
         if (ordered == null)
         {
-            ordered = field.Descending ? rows.OrderByDescending(key) : rows.OrderBy(key);
+            ordered = sortField.Descendente
+                ? rows.OrderByDescending(keySelector)
+                : rows.OrderBy(keySelector);
         }
         else
         {
-            ordered = field.Descending ? ordered.ThenByDescending(key) : ordered.ThenBy(key);
+            ordered = sortField.Descendente
+                ? ordered.ThenByDescending(keySelector)
+                : ordered.ThenBy(keySelector);
         }
     }
-
-    return (ordered ?? Enumerable.Empty<Dictionary<string, string>>()).ToList();
+    return ordered?.ToList() ?? rows;
 }
 
 string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
@@ -227,8 +207,8 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
     if (rows.Count == 0)
         return "";
 
-    var sb = new StringBuilder();
     var headers = rows[0].Keys.ToList();
+    var sb = new StringBuilder();
 
     if (!config.NoHeader)
         sb.AppendLine(string.Join(config.Delimiter, headers));
@@ -244,48 +224,45 @@ string Serialize(List<Dictionary<string, string>> rows, AppConfig config)
 
 void WriteOutput(string output, AppConfig config)
 {
-    if (!string.IsNullOrEmpty(config.OutputFile))
-    {
+    if (!string.IsNullOrEmpty(config.OutputFile)) {
         File.WriteAllText(config.OutputFile, output);
     }
-    else
-    {
-        Console.WriteLine(output);
+    else {
+        Console.Write(output);
     }
 }
 
 SortField ParseSortField(string spec)
 {
     var parts = spec.Split(':');
-
-    var name = parts[0];
-
-    bool numeric = false;
-    bool desc = false;
+    string nombre = parts[0];
+    bool numerico = false;
+    bool descendente = false;
 
     if (parts.Length > 1)
     {
-        numeric = parts[1] switch
+        numerico = parts[1] switch
         {
             "num" => true,
-            "alpha" => false,
-            _ => throw new Exception($"Tipo inválido: {parts[1]}")
+            "str" => false,
+            _ => throw new ArgumentException($"Tipo inválido: {parts[1]}")
         };
     }
 
     if (parts.Length > 2)
     {
-        desc = parts[2] switch
+        descendente = parts[2] switch
         {
-            "desc" => true,
             "asc" => false,
-            _ => throw new Exception($"Orden inválido: {parts[2]}")
+            "desc" => true,
+            _ => throw new ArgumentException($"Orden inválido: {parts[2]}")
         };
     }
 
-    return new SortField(name, numeric, desc);
+    return new SortField(nombre, numerico, descendente);
 }
-record SortField(string Name, bool Numeric, bool Descending);
+
+record SortField(string Nombre, bool Numerico, bool Descendente);
 
 record AppConfig(
     string?         InputFile,
@@ -294,3 +271,4 @@ record AppConfig(
     bool            NoHeader,
     List<SortField> SortFields
 );
+

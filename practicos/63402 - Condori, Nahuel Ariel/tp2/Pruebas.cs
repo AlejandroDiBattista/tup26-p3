@@ -12,7 +12,7 @@ public static class Pruebas {
         Probar("(x - 1) * (x - 8 / 4) + 3", 10, 75, ref pasadas, ref fallidas);
         Probar("-(3 + 2)", 0, -5, ref pasadas, ref fallidas);
         Probar("10 / 2", 0, 5, ref pasadas, ref fallidas);
-        
+
         // Prueba de error
         ProbarError("(1 + 2", 0, ref pasadas, ref fallidas);
 

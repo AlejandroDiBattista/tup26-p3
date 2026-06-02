@@ -46,11 +46,13 @@ class WAppService {
     readonly TimeSpan timeout;
     readonly Dictionary<string, ContactoWhatsApp?> contactosPorAutor = new(StringComparer.OrdinalIgnoreCase);
 
-    public WAppService(string? store = null, TimeSpan? timeout = null) {
+    public WAppService(string? store = null, TimeSpan? timeout = null, bool sincronizar = true) {
         this.store = store;
-        this.timeout = timeout ?? TimeSpan.FromMinutes(5);
+        this.timeout = timeout ?? TimeSpan.FromMinutes(1);
 
-        Sincronizar();
+        if (sincronizar) {
+            Sincronizar();
+        }
     }
 
     static void ValidarNoVacio(string valor, string parametro) {
@@ -108,7 +110,7 @@ class WAppService {
 
     void Sincronizar() {
         try {
-            Ejecutar([ "sync", "--once", "--idle-exit", "5s", "--refresh-contacts", "--refresh-groups" ]);
+            Ejecutar(["sync", "--once", "--idle-exit", "5s", "--refresh-contacts", "--refresh-groups"]);
         } catch (InvalidOperationException ex) when (EsErrorAutenticacionWacli(ex)) {
             Log.Warning("Aviso: wacli no está autenticado; se usa la base local para grupos y contactos.");
         } catch (InvalidOperationException ex) {
@@ -419,9 +421,9 @@ class WAppService {
     }
 
     static bool EsMensajeVacio(MensajeWhatsApp mensaje) =>
-        mensaje.Fecha.Year  == 1970 &&
-        mensaje.Fecha.Month == 1    &&
-        mensaje.Fecha.Day   == 1;
+        mensaje.Fecha.Year == 1970 &&
+        mensaje.Fecha.Month == 1 &&
+        mensaje.Fecha.Day == 1;
 
     public string ObtenerTelefonoAutorMensaje(MensajeWhatsApp mensaje) {
         ContactoWhatsApp? contacto = BuscarContactoAutorMensaje(mensaje);
@@ -578,10 +580,10 @@ class WAppService {
         string[] partes = fila.Split('\t');
 
         long ts = partes.Length > 0 && long.TryParse(partes[0].Trim(), out long valorTs) ? valorTs : 0;
-        string senderJid  = partes.Length > 1 ? partes[1].Trim() : string.Empty;
+        string senderJid = partes.Length > 1 ? partes[1].Trim() : string.Empty;
         string senderName = partes.Length > 2 ? partes[2].Trim() : string.Empty;
-        string content    = partes.Length > 3 ? partes[3].Trim() : string.Empty;
-        bool fromMe       = partes.Length > 4 && (partes[4].Trim() == "1" || partes[4].Trim().Equals("true", StringComparison.OrdinalIgnoreCase));
+        string content = partes.Length > 3 ? partes[3].Trim() : string.Empty;
+        bool fromMe = partes.Length > 4 && (partes[4].Trim() == "1" || partes[4].Trim().Equals("true", StringComparison.OrdinalIgnoreCase));
 
         DateTime fecha = ConvertirUnixAFechaLocal(ts);
 
@@ -648,32 +650,32 @@ class WAppService {
 
     static string? DetectarMime(string rutaArchivo) {
         return AppPaths.ExtensionArchivo(rutaArchivo) switch {
-            ".jpg"  or ".jpeg" => "image/jpeg",
-            ".png"  => "image/png",
-            ".gif"  => "image/gif",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
             ".webp" => "image/webp",
             ".heic" => "image/heic",
-            ".ogg"  or ".opus" => "audio/ogg",
-            ".mp3"  => "audio/mpeg",
-            ".m4a"  => "audio/mp4",
-            ".aac"  => "audio/aac",
-            ".wav"  => "audio/wav",
+            ".ogg" or ".opus" => "audio/ogg",
+            ".mp3" => "audio/mpeg",
+            ".m4a" => "audio/mp4",
+            ".aac" => "audio/aac",
+            ".wav" => "audio/wav",
             ".flac" => "audio/flac",
-            ".pdf"  => "application/pdf",
-            ".txt"  => "text/plain",
-            ".csv"  => "text/csv",
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            ".csv" => "text/csv",
             ".json" => "application/json",
             ".html" or ".htm" => "text/html",
-            ".doc"  => "application/msword",
+            ".doc" => "application/msword",
             ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            ".xls"  => "application/vnd.ms-excel",
+            ".xls" => "application/vnd.ms-excel",
             ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            ".ppt"  => "application/vnd.ms-powerpoint",
+            ".ppt" => "application/vnd.ms-powerpoint",
             ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            ".zip"  => "application/zip",
-            ".rar"  => "application/vnd.rar",
-            ".7z"   => "application/x-7z-compressed",
-            _       => null
+            ".zip" => "application/zip",
+            ".rar" => "application/vnd.rar",
+            ".7z" => "application/x-7z-compressed",
+            _ => null
         };
     }
 
@@ -825,11 +827,11 @@ class WAppService {
 
         ProcessStartInfo startInfo = new ProcessStartInfo {
             FileName = "sqlite3",
-            RedirectStandardInput  = false,
+            RedirectStandardInput = false,
             RedirectStandardOutput = true,
-            RedirectStandardError  = true,
-            UseShellExecute        = false,
-            CreateNoWindow         = true
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
 
         startInfo.ArgumentList.Add(rutaDb);
@@ -873,11 +875,11 @@ class WAppService {
     string EjecutarYObtenerSalida(List<string> argumentos) {
         ProcessStartInfo startInfo = new ProcessStartInfo {
             FileName = "wacli",
-            RedirectStandardInput  = true,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
-            RedirectStandardError  = true,
-            UseShellExecute        = false,
-            CreateNoWindow         = true
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
 
         if (!string.IsNullOrWhiteSpace(store)) {
@@ -948,13 +950,13 @@ class WAppService {
             return $"{(int)duracion.TotalMinutes}m";
         }
 
-        int horas    = (int)duracion.TotalHours;
-        int minutos  = duracion.Minutes;
+        int horas = (int)duracion.TotalHours;
+        int minutos = duracion.Minutes;
         int segundos = duracion.Seconds;
 
         StringBuilder sb = new();
 
-        if (horas > 0)   { sb.Append($"{horas}h"); }
+        if (horas > 0) { sb.Append($"{horas}h"); }
 
         if (minutos > 0) { sb.Append($"{minutos}m"); }
 

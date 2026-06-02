@@ -1,12 +1,10 @@
 using System;
 
-public class Compilador
-{
+public class Compilador {
     private string _entrada;
     private int _posicion;
 
-    public Nodo Parsear(string entrada)
-    {
+    public Nodo Parsear(string entrada) {
         if (string.IsNullOrWhiteSpace(entrada))
             throw new Exception("Error: Entrada vacía.");
 
@@ -21,11 +19,9 @@ public class Compilador
         return resultado;
     }
 
-    private Nodo ParsearExpresion()
-    {
+    private Nodo ParsearExpresion() {
         Nodo nodo = ParsearTermino();
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
             if (Coincidir('+'))
                 nodo = new SumaNodo(nodo, ParsearTermino());
@@ -37,11 +33,9 @@ public class Compilador
         return nodo;
     }
 
-    private Nodo ParsearTermino()
-    {
+    private Nodo ParsearTermino() {
         Nodo nodo = ParsearFactor();
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
             if (Coincidir('*'))
                 nodo = new MultiplicacionNodo(nodo, ParsearFactor());
@@ -53,8 +47,7 @@ public class Compilador
         return nodo;
     }
 
-    private Nodo ParsearFactor()
-    {
+    private Nodo ParsearFactor() {
         SaltarEspacios();
         if (_posicion >= _entrada.Length)
             throw new Exception("Error: Se esperaba un factor (token inesperado).");
@@ -62,8 +55,7 @@ public class Compilador
         if (Coincidir('+')) return new PositivoNodo(ParsearFactor());
         if (Coincidir('-')) return new NegativoNodo(ParsearFactor());
 
-        if (Coincidir('('))
-        {
+        if (Coincidir('(')) {
             Nodo nodo = ParsearExpresion();
             SaltarEspacios();
             if (!Coincidir(')'))
@@ -71,16 +63,14 @@ public class Compilador
             return nodo;
         }
 
-        if (char.IsDigit(Actual()))
-        {
+        if (char.IsDigit(Actual())) {
             int inicio = _posicion;
             while (_posicion < _entrada.Length && char.IsDigit(Actual()))
                 _posicion++;
             return new NumeroNodo(int.Parse(_entrada.Substring(inicio, _posicion - inicio)));
         }
 
-        if (Actual() == 'x' || Actual() == 'X')
-        {
+        if (Actual() == 'x' || Actual() == 'X') {
             _posicion++;
             return new VariableNodo();
         }
@@ -90,18 +80,15 @@ public class Compilador
 
     private char Actual() => _posicion < _entrada.Length ? _entrada[_posicion] : '\0';
 
-    private bool Coincidir(char esperado)
-    {
-        if (Actual() == esperado)
-        {
+    private bool Coincidir(char esperado) {
+        if (Actual() == esperado) {
             _posicion++;
             return true;
         }
         return false;
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (_posicion < _entrada.Length && char.IsWhiteSpace(_entrada[_posicion]))
             _posicion++;
     }

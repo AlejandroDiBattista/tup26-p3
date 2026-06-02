@@ -1,22 +1,18 @@
 namespace EditCsv;
 
-internal sealed class CommandLineOptions
-{
+internal sealed class CommandLineOptions {
     public string? FilePath { get; private set; }
     public bool HasHeader { get; private set; } = true;
     public char? Delimiter { get; private set; }
     public bool ShowHelp { get; private set; }
 
-    public static CommandLineOptions Parse(string[] args)
-    {
+    public static CommandLineOptions Parse(string[] args) {
         var options = new CommandLineOptions();
 
-        for (var i = 0; i < args.Length; i++)
-        {
+        for (var i = 0; i < args.Length; i++) {
             var arg = args[i];
 
-            switch (arg)
-            {
+            switch (arg) {
                 case "-h":
                 case "--help":
                     options.ShowHelp = true;
@@ -28,8 +24,7 @@ internal sealed class CommandLineOptions
 
                 case "-d":
                 case "--delimiter":
-                    if (i + 1 >= args.Length)
-                    {
+                    if (i + 1 >= args.Length) {
                         throw new ArgumentException("Falta el delimitador luego de -d/--delimiter.");
                     }
 
@@ -37,8 +32,7 @@ internal sealed class CommandLineOptions
                     break;
 
                 default:
-                    if (arg.StartsWith('-'))
-                    {
+                    if (arg.StartsWith('-')) {
                         throw new ArgumentException($"Opcion no reconocida: {arg}");
                     }
 
@@ -50,8 +44,7 @@ internal sealed class CommandLineOptions
         return options;
     }
 
-    public static void PrintHelp()
-    {
+    public static void PrintHelp() {
         Console.WriteLine("""
             editcsv - editor TUI de archivos CSV
             
@@ -81,24 +74,18 @@ internal sealed class CommandLineOptions
             """);
     }
 
-    internal static bool TryParseDelimiter(string value, out char delimiter)
-    {
-        try
-        {
+    internal static bool TryParseDelimiter(string value, out char delimiter) {
+        try {
             delimiter = ParseDelimiter(value);
             return true;
-        }
-        catch (ArgumentException)
-        {
+        } catch (ArgumentException) {
             delimiter = default;
             return false;
         }
     }
 
-    private static char ParseDelimiter(string value)
-    {
-        return value switch
-        {
+    private static char ParseDelimiter(string value) {
+        return value switch {
             "\\t" => '\t',
             "" => throw new ArgumentException("El delimitador no puede ser vacio."),
             _ when value.Length == 1 => value[0],

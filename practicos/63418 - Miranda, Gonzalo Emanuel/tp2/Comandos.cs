@@ -1,10 +1,8 @@
 namespace TP2_GONZALO_CALCULADORA;
-static class Comandos
-{
-    public static bool Procesar(string[] args)
-    {
-        switch (args)
-        {
+
+static class Comandos {
+    public static bool Procesar(string[] args) {
+        switch (args) {
             case ["--help"] or ["-h"] or ["--ayuda"]:
                 Console.WriteLine("""
 
@@ -31,7 +29,7 @@ static class Comandos
                 return true;
 
             case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar(); 
+                Pruebas.Ejecutar();
                 return true;
 
             case [var expresion, var valor]:

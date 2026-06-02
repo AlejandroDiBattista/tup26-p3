@@ -92,11 +92,9 @@ internal sealed record BinaryNode(string Operator, ExpressionNode Left, Expressi
 
         if (leftIsNumeric && rightIsNumeric) {
             comparison = left.ToNumber().CompareTo(right.ToNumber());
-        }
-        else if (left.Kind == CalcValueKind.Text || right.Kind == CalcValueKind.Text) {
+        } else if (left.Kind == CalcValueKind.Text || right.Kind == CalcValueKind.Text) {
             comparison = string.Compare(left.ToText(), right.ToText(), StringComparison.CurrentCultureIgnoreCase);
-        }
-        else {
+        } else {
             comparison = left.ToNumber().CompareTo(right.ToNumber());
         }
 

@@ -1,204 +1,292 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using System.Globalization;
+
+record SortField(string Name, bool Numeric, bool Descending);
+
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields
+);
 
 try
 {
-    var config = LeerArgumentos(args);
-    var contenido = LeerEntrada(config);
-    var filas = ProcesarTexto(contenido, config);
-    var filasOrdenadas = OrdenarFilas(filas, config);
-    var resultado = Serializar(filasOrdenadas, config);
-    EscribirSalida(resultado, config);
+    var config = ParseArgs(args);
+
+    if (config == null)
+        return;
+
+    var text = ReadInput(config);
+
+    var (header, rows) = ParseDelimited(text, config);
+
+    var sorted = SortRows(rows, config);
+
+    var output = Serialize(header, sorted, config);
+
+    WriteOutput(output, config);
 }
 catch (Exception ex)
 {
     Console.Error.WriteLine($"Error: {ex.Message}");
     Environment.Exit(1);
 }
-Configuracion LeerArgumentos(string[] argumentos)
+
+AppConfig? ParseArgs(string[] args)
 {
-    string? entrada = null;
-    string? salida = null;
-    string delim = ",";
+    string? input = null;
+    string? output = null;
+    string delimiter = ",";
     bool noHeader = false;
-    var criterios = new List<CriterioOrden>();
 
-    for (int i = 0; i < argumentos.Length; i++)
+    var sortFields = new List<SortField>();
+    var positional = new List<string>();
+
+    for (int i = 0; i < args.Length; i++)
     {
-        string arg = argumentos[i];
+        switch (args[i])
+        {
+            case "-h":
+            case "--help":
+                ShowHelp();
+                return null;
 
-        if (arg == "-h" || arg == "--help")
-        {
-            Console.WriteLine("Uso: sortx [input [output]] [opciones]");
-            Environment.Exit(0);
-        }
-        else if (arg == "-i" || arg == "--input")
-        {
-            entrada = argumentos[++i];
-        }
-        else if (arg == "-o" || arg == "--output")
-        {
-            salida = argumentos[++i];
-        }
-        else if (arg == "-d" || arg == "--delimiter")
-        {
-            delim = argumentos[++i].Replace("\\t", "\t");
-        }
-        else if (arg == "-nh" || arg == "--no-header")
-        {
-            noHeader = true;
-        }
-        else if (arg == "-b" || arg == "--by")
-        {
-            string[] partes = argumentos[++i].Split(':');
-            string campo = partes[0];
-            bool esNum = partes.Length > 1 && partes[1] == "num";
-            bool esDesc = partes.Length > 2 && partes[2] == "desc";
-            criterios.Add(new CriterioOrden(campo, esNum, esDesc));
-        }
-        else
-        {
-            if (entrada == null) entrada = arg;
-            else if (salida == null) salida = arg;
+            case "-i":
+            case "--input":
+                input = args[++i];
+                break;
+
+            case "-o":
+            case "--output":
+                output = args[++i];
+                break;
+
+            case "-d":
+            case "--delimiter":
+                delimiter = args[++i] == "\\t" ? "\t" : args[i];
+                break;
+
+            case "-nh":
+            case "--no-header":
+                noHeader = true;
+                break;
+
+            case "-b":
+            case "--by":
+
+                var parts = args[++i].Split(':');
+
+                var field = parts[0];
+
+                bool numeric = false;
+                bool desc = false;
+
+                if (parts.Length > 1)
+                    numeric = parts[1] == "num";
+
+                if (parts.Length > 2)
+                    desc = parts[2] == "desc";
+
+                sortFields.Add(new SortField(field, numeric, desc));
+
+                break;
+
+            default:
+                positional.Add(args[i]);
+                break;
         }
     }
-    return new Configuracion(entrada, salida, delim, noHeader, criterios);
+
+    if (input == null && positional.Count > 0)
+        input = positional[0];
+
+    if (output == null && positional.Count > 1)
+        output = positional[1];
+
+    if (sortFields.Count == 0)
+        throw new Exception("Debe especificar al menos un campo de ordenamiento");
+
+    return new AppConfig(
+        input,
+        output,
+        delimiter,
+        noHeader,
+        sortFields
+    );
 }
-string LeerEntrada(Configuracion config)
+
+string ReadInput(AppConfig config)
 {
-    if (config.ArchivoEntrada != null)
-    {
-        return File.ReadAllText(config.ArchivoEntrada);
-    }
+    if (config.InputFile != null)
+        return File.ReadAllText(config.InputFile);
 
     return Console.In.ReadToEnd();
 }
-List<Dictionary<string, string>> ProcesarTexto(string texto, Configuracion config)
+
+(List<string>? Header, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config)
 {
-    var lineas = texto.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-    var listaResultante = new List<Dictionary<string, string>>();
+    var lines = text
+        .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-    if (lineas.Length == 0) return listaResultante;
+    if (lines.Length == 0)
+        throw new Exception("Archivo vacío");
 
-    string[] encabezados;
-    int indiceInicio = 0;
+    List<string>? header = null;
 
-    if (config.SinEncabezado)
+    int start = 0;
+
+    if (!config.NoHeader)
     {
-        string[] columnasFilaUno = lineas[0].Split(config.Delimitador);
-        encabezados = new string[columnasFilaUno.Length];
-        for (int i = 0; i < columnasFilaUno.Length; i++) encabezados[i] = i.ToString();
+        header = lines[0]
+            .Split(config.Delimiter)
+            .ToList();
+
+        start = 1;
+    }
+
+    var rows = new List<Dictionary<string, string>>();
+
+    for (int i = start; i < lines.Length; i++)
+    {
+        var values = lines[i].Split(config.Delimiter);
+
+        var row = new Dictionary<string, string>();
+
+        if (config.NoHeader)
+        {
+            for (int j = 0; j < values.Length; j++)
+            {
+                row[j.ToString()] = values[j];
+            }
+        }
+        else
+        {
+            for (int j = 0; j < header!.Count; j++)
+            {
+                row[header[j]] = j < values.Length
+                    ? values[j]
+                    : "";
+            }
+        }
+
+        rows.Add(row);
+    }
+
+    if (rows.Count == 0)
+        return (header, rows);
+
+    foreach (var sf in config.SortFields)
+    {
+        if (!rows[0].ContainsKey(sf.Name))
+            throw new Exception($"Columna inexistente: {sf.Name}");
+    }
+
+    return (header, rows);
+}
+
+List<Dictionary<string, string>> SortRows(
+    List<Dictionary<string, string>> rows,
+    AppConfig config
+)
+{
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+    for (int i = 0; i < config.SortFields.Count; i++)
+    {
+        var sf = config.SortFields[i];
+
+        Func<Dictionary<string, string>, object> selector = row =>
+        {
+            var value = row[sf.Name];
+
+            if (sf.Numeric)
+            {
+                double.TryParse(
+                    value,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out double number
+                );
+
+                return number;
+            }
+
+            return value;
+        };
+
+        if (i == 0)
+        {
+            ordered = sf.Descending
+                ? rows.OrderByDescending(selector)
+                : rows.OrderBy(selector);
+        }
+        else
+        {
+            ordered = sf.Descending
+                ? ordered!.ThenByDescending(selector)
+                : ordered!.ThenBy(selector);
+        }
+    }
+
+    return ordered!.ToList();
+}
+
+string Serialize(
+    List<string>? header,
+    List<Dictionary<string, string>> rows,
+    AppConfig config
+)
+{
+    var lines = new List<string>();
+
+    if (!config.NoHeader && header != null)
+    {
+        lines.Add(string.Join(config.Delimiter, header));
+    }
+
+    foreach (var row in rows)
+    {
+        IEnumerable<string> values;
+
+        if (config.NoHeader)
+        {
+            values = row
+                .OrderBy(x => int.Parse(x.Key))
+                .Select(x => x.Value);
+        }
+        else
+        {
+            values = header!.Select(h => row[h]);
+        }
+
+        lines.Add(string.Join(config.Delimiter, values));
+    }
+
+    return string.Join(Environment.NewLine, lines);
+}
+
+void WriteOutput(string text, AppConfig config)
+{
+    if (config.OutputFile != null)
+    {
+        File.WriteAllText(config.OutputFile, text);
     }
     else
     {
-        encabezados = lineas[0].Split(config.Delimitador);
-        indiceInicio = 1;
+        Console.WriteLine(text);
     }
-    for (int i = indiceInicio; i < lineas.Length; i++)
-    {
-        string[] celdas = lineas[i].Split(config.Delimitador);
-        var filaDiccionario = new Dictionary<string, string>();
-
-        for (int j = 0; j < encabezados.Length; j++)
-        {
-            filaDiccionario[encabezados[j]] = j < celdas.Length ? celdas[j] : "";
-        }
-        listaResultante.Add(filaDiccionario);
-    }
-    if (!config.SinEncabezado)
-    {
-        var filaHeader = new Dictionary<string, string>();
-        foreach (var nombreColumna in encabezados)
-        {
-            filaHeader[nombreColumna] = nombreColumna;
-        }
-        listaResultante.Insert(0, filaHeader);
-    }
-
-    return listaResultante;
 }
-List<Dictionary<string, string>> OrdenarFilas(List<Dictionary<string, string>> filas, Configuracion config)
+
+void ShowHelp()
 {
-    if (config.Criterios.Count == 0 || filas.Count < 2) return filas;
+    Console.WriteLine("""
+sortx [input [output]] [-b|--by campo[:tipo[:orden]]]
+      [-i|--input input]
+      [-o|--output output]
+      [-d|--delimiter delimitador]
+      [-nh|--no-header]
+      [-h|--help]
 
-    Dictionary<string, string>? encabezadoGuardado = null;
-    var datosAOrdenar = new List<Dictionary<string, string>>();
-
-    if (!config.SinEncabezado)
-    {
-        encabezadoGuardado = filas[0];
-        for (int i = 1; i < filas.Count; i++) datosAOrdenar.Add(filas[i]);
-    }
-    else
-    {
-        foreach (var f in filas) datosAOrdenar.Add(f);
-    }
-    datosAOrdenar.Sort((a, b) =>
-    {
-        foreach (var criterio in config.Criterios)
-        {
-            if (!a.ContainsKey(criterio.Campo)) throw new Exception($"Campo '{criterio.Campo}' no encontrado.");
-
-            int comparacion = 0;
-            if (criterio.EsNumerico)
-            {
-                double numA = double.Parse(a[criterio.Campo]);
-                double numB = double.Parse(b[criterio.Campo]);
-                comparacion = numA.CompareTo(numB);
-            }
-            else
-            {
-                comparacion = string.Compare(a[criterio.Campo], b[criterio.Campo]);
-            }
-
-            if (comparacion != 0)
-            {
-                return criterio.EsDescendente ? -comparacion : comparacion;
-            }
-        }
-        return 0;
-    });
-    if (encabezadoGuardado != null) datosAOrdenar.Insert(0, encabezadoGuardado);
-    return datosAOrdenar;
+""");
 }
-string Serializar(List<Dictionary<string, string>> filas, Configuracion config)
-{
-    var sb = new StringBuilder();
-    foreach (var fila in filas)
-    {
-        var valoresFila = new List<string>();
-        foreach (var clave in fila.Keys)
-        {
-            valoresFila.Add(fila[clave]);
-        }
-
-        sb.AppendLine(string.Join(config.Delimitador, valoresFila));
-    }
-    return sb.ToString().TrimEnd();
-}
-void EscribirSalida(string contenido, Configuracion config)
-{
-    if (config.ArchivoSalida != null)
-    {
-        File.WriteAllText(config.ArchivoSalida, contenido);
-    }
-    else
-    {
-        Console.Write(contenido);
-    }
-}
-
-
-
-
-
-record CriterioOrden(string Campo, bool EsNumerico, bool EsDescendente);
-record Configuracion(
-    string? ArchivoEntrada,
-    string? ArchivoSalida,
-    string Delimitador,
-    bool SinEncabezado,
-    List<CriterioOrden> Criterios
-);

@@ -1,238 +1,120 @@
-﻿# Trabajo Práctico 3 — `AgendaT` - 
-## Aplicación de Agenda TUI con persistencia en SQLite e import/export JSON
+﻿# Programación 3
 
-**Entrega:** Hasta el viernes 22 de MAYO de 2026 a las 21:00hs
+>[!IMPORTANT]
+> Está publicado el TP4: Catálogo REST.
+> Deben presentarlo hasta el martes 2 de junio.
 
----
+(Ver enunciado completo: [enunciados/tp4/enunciado.md](enunciados/tp4/enunciado.md))
+(Ver instrucción de entrega: [como-entregar-practico.md](como-entregar-practico.md))
 
-## Descripción
 
-Desarrollar una aplicación de terminal llamada **`agenda`** que permita **gestionar una agenda de contactos** desde una **interfaz de usuario en terminal (TUI)**, con persistencia en **SQLite** e intercambio de datos en **JSON**.
+# ¿Cómo aprobar la materia?
 
-La aplicación debe ofrecer un CRUD completo de contactos (alta, baja, modificación, consulta) con búsqueda activa, además de importación y exportación a archivos JSON.
+Para aprobar la materia se debe asistir, presentar los prácticos y aprobar los parciales.
+Dependiendo del desempeño en cada uno de estos aspectos, el alumno podrá quedar libre, regular o promocionar la materia.
 
-El objetivo del trabajo es construir una aplicación interactiva separando claramente las responsabilidades de **interfaz visual**, **lógica de coordinación**, **persistencia en base de datos** e **interoperabilidad con archivos externos**.
+## ¿Cómo regularizo la materia?
+- Debe tener al menos 15 asistencias a clase verificadas.
+- Debe aprobar al menos 3 trabajos prácticos.
+- Debe aprobar ambos parciales con 4 o más.
 
----
+## ¿Cómo promociono la materia?
+- Debe tener al menos 30 asistencias a clase verificadas.
+- Debe aprobar todos los trabajos prácticos.
+- Debe aprobar ambos parciales con 8 o más.
+- Los trabajos prácticos se contabilizarán como 2 asistencias a clase, a los fines de la promoción.
 
-## Formato de entrega
 
-El trabajo debe entregarse como **un único archivo `.cs`** usando el modo *file-based* de .NET 10 (sin `.csproj`). Las dependencias se declaran al principio del archivo:
+## Sobre la asistencia a clase
+- La materia es presencial; la asistencia es obligatoria.
+- Los trabajos prácticos aprobados se pueden considerar como asistencia a clase a los fines de la promoción.
+- A la fecha, quedan 15 clases para finalizar el cursado.
 
-> En agenda.cs esta el esqueleto con las dependencias que debe ser tomado como referencia:
 
-Y se ejecuta con:
+## Sobre la evaluación de los trabajos prácticos
+- Los trabajos prácticos serán aprobados o rechazados en función de que se ejecuten sin error. 
+- No se les dará una nota numérica.
+- El trabajo es *estrictamente individual* y debe ser realizado en persona por el alumno.
+- La práctica se realizará en la computadora del alumno.
+- El alumno tiene libertad para usar cualquier recurso de aprendizaje, pero *no podrá usar la IA para hacer* los trabajos prácticos.
 
-```bash
-dotnet run agenda.cs
-dotnet run agenda.cs -- agenda.db
-```
 
-A pesar de estar en un solo archivo, **el código debe estar organizado en clases con responsabilidades separadas** (ver sección "Diseño requerido").
+## ¿Cómo se evaluarán los parciales?
+- Los alumnos que tengan todos los prácticos aprobados y no alcancen la nota para la promoción podrán rendir un recuperatorio del primer parcial para mejorar su nota.
+- El último trabajo práctico actuará como examen final, que deberá defenderse en forma presencial ante el docente.
+- Si el sistema ejecuta sin error el trabajo práctico, la nota será un 5.
+- La defensa consistirá en la resolución de 5 consignas; cada una le dará un punto, por lo que podrá obtener hasta un 10.
+- La consigna consistirá en explicar el código y/o realizar cambios en él para resolver un problema o agregar una funcionalidad.
+- La defensa se realizará en la fecha acordada para cada grupo, en forma pública y presencial.
 
----
 
-## Sintaxis
+## Recuperación Trabajos prácticos
 
-```bash
-agenda [archivo.db]
-```
+Dada la enorme cantidad de irregularidades detectadas en el TP3, se procedió a analizar detalladamente los trabajos prácticos anteriores.
 
-### Argumentos posicionales
-
-| Argumento    | Descripción                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------- |
-| `archivo.db` | Ruta opcional al archivo SQLite. Por defecto `agenda.db`. Si no existe, se crea con el schema necesario. |
-
----
-
-## Modelo de contacto
-
-Cada contacto debe registrar al menos:
-
-- `Id`       (entero, autogenerado por la base)
-- `Nombre`   (texto, obligatorio)
-- `Telefonos`(texto)
-- `Email`    (texto)
-- `Notas`    (texto multilínea)
-- `Favorito` (booleano)
-
----
-
-## Funcionalidad requerida
-
-### Estructura visual
-
-La ventana principal debe contener:
-
-- **Barra de menú superior** con menús desplegables.
-- **Campo de búsqueda** activa.
-- **Panel de lista** de contactos, con indicador visual para favoritos.
-- **Panel de detalle** del contacto seleccionado.
-- **Barra de estado** con el mensaje de la última operación.
-
-### Menús
-
-| Menú         | Opciones                                            |
-| ------------ | --------------------------------------------------- |
-| `Archivo`    | Importar JSON, Exportar JSON, Salir.                |
-| `Contactos`  | Nuevo, Editar, Eliminar.                            |
-| `Ver`        | Solo favoritos (toggle).                            |
-| `Ayuda`      | Acerca de.                                          |
-
-### Operaciones y atajos
-
-| Acción                    | Atajo              |
-| ------------------------- | ------------------ |
-| Nuevo contacto            | `F2` / `Ctrl+N`    |
-| Editar contacto           | `F3` / `Enter`     |
-| Eliminar contacto         | `Del` / `Ctrl+D`   |
-| Importar desde JSON       | `Ctrl+I`           |
-| Exportar a JSON           | `Ctrl+E`           |
-| Foco en búsqueda          | `F4`               |
-| Salir                     | `Ctrl+Q`           |
-
-### Búsqueda activa
-
-El campo de búsqueda debe filtrar la lista **en tiempo real** mientras el usuario tipea, comparando contra `Nombre`, `Telefonos` y `Email`. El filtro debe combinarse con el toggle de **solo favoritos**.
-
-### Validaciones
-
-- El `Nombre` no puede estar vacío.
-- Si se ingresa `Email`, debe contener `@`.
-- Antes de **eliminar** un contacto, pedir confirmación.
-- Antes de **importar**, mostrar la cantidad de contactos a agregar y pedir confirmación.
-- Los telefonos pueden tener hasta 5 numeros separados por comas, pero deben ser ingresados en campos individuales en el diálogo de edición.
-
-### Persistencia
-
-- Toda alta, modificación o eliminación debe quedar **persistida inmediatamente** en la base SQLite.
-- Al **importar** un JSON, los contactos se agregan como registros nuevos con `Id` asignado por la base; no se conservan los ids del archivo.
-- Al **exportar**, se vuelcan todos los contactos a un archivo JSON legible (con tildes y `ñ` correctas).
-
----
-
-## Comportamiento esperado
-
-Al iniciar el programa:
-
-1. Abrir (o crear) la base SQLite indicada por argumento, o `agenda.db` si no se indicó ninguna.
-2. Cargar los contactos existentes desde la base.
-3. Mostrar la interfaz visual.
-4. Mantenerse activo respondiendo a teclado y menús hasta que el usuario decida salir.
-
-### Errores
-
-Ante condiciones inválidas, el programa debe informar el error con un mensaje claro mediante un `MessageBox`. Casos esperables:
-
-- Archivo de base inaccesible o corrupto.
-- Archivo JSON inexistente al importar.
-- JSON con formato inválido.
-- Nombre vacío al guardar un contacto.
-- Email sin `@` al guardar un contacto.
-
----
-
-## Ejemplos de uso
-
-```bash
-# Iniciar la agenda con la base por defecto (agenda.db)
-dotnet run agenda.cs
-
-# Iniciar con un archivo de base específico
-dotnet run agenda.cs -- contactos-2026.db
-```
-
-Una vez dentro de la TUI:
-
-- `F2` abre el diálogo de nuevo contacto.
-- Tipear en el campo de búsqueda filtra la lista.
-- `Enter` sobre un contacto abre el diálogo de edición.
-- `Ctrl+E` exporta a JSON y pide la ruta de salida.
-- `Ctrl+Q` cierra la aplicación.
-
----
-
-## Diseño requerido
-
-A pesar de estar todo en un único archivo, el código debe separar claramente las siguientes responsabilidades, **cada una en su propia clase**:
+## Rehacer TP3 _(para Promocionar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP3: 
+> **sábado 29 de mayo**
 
 ```text
-1. Procesar argumentos    → top-level code: leer args y arrancar la app
-2. Ventana principal      → AgendaWindow: layout, menús, eventos, coordinación
-3. Diálogo de edición     → ContactDialog: campos, validación, devolver contacto
-4. Persistencia           → SqliteAgendaStore: CRUD con Dapper.Contrib
-5. Interoperabilidad JSON → JsonAgendaIO: leer y escribir archivos JSON
-6. Modelo de datos        → Contacto: la clase con [Table] y [Key]
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------- -----  ---  --  ------
+61161   González, Thomas Ezequiel  🟢🟢🟠   10   5  - - C
+63207   Saravia, César Nahum       🟢🟢🟠    9  10  - - B
+63213   Marina Noguera, Morena     🟢🟢🟠   11   9  - - C
+63216   Sánchez, Sofía Micaela     🟢🟢🟠   11  10  - - B
+63300   Álvarez, Hernán Fabricio   🟢🟢🟠    9  10  - - B
+63354   Perondi, Luciano           🟢🟢🟠    8  10  - - A
+63456   Ávila Lahr, Joaquín        🟢🟢🟠   12  10  - - A
 ```
 
-### Modelo
 
-Se espera una clase de contacto con la siguiente forma general:
+## Rehacer TP1 _(para Promocionar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP1: 
+> **sábado 29 de mayo**
 
-```csharp
-[Table("Contactos")]
-public sealed class Contacto {
-    [Key] public int    Id        { get; set; }
-          public string Nombre    { get; set; } = "";
-          public string Telefonos { get; set; } = "";
-          public string Email     { get; set; } = "";
-          public string Notas     { get; set; } = "";
-          public bool   Favorito  { get; set; }
-
-    public Contacto Clone();
-}
-```
-
-### Stack tecnológico requerido
-
-- **Terminal.Gui** v2 para la TUI.
-- **Microsoft.Data.Sqlite** para la conexión a SQLite.
-- **Dapper** + **Dapper.Contrib** para el CRUD.
-- **System.Text.Json** para la importación y exportación.
-
-### Reglas de arquitectura
-
-- El diálogo de edición **no** toca la base de datos: sólo devuelve datos. La ventana principal decide si persistir.
-- Cada operación CRUD debe actualizar **primero** la base y **después** la lista en memoria.
-- La lista visible (`filteredContacts`) es derivada de la lista completa (`contacts`) más los filtros activos; nunca al revés.
-- El menú no debe contener lógica: cada `MenuItem` delega en un método de la ventana.
-
-### Organización dentro del archivo
-
-El orden sugerido dentro del archivo `agenda.cs` es:
 
 ```text
-1. directivas #:package y #:property
-2. usings
-3. top-level code (procesar args, crear store, arrancar la app)
-4. clase AgendaWindow
-5. clase ContactDialog
-6. clase SqliteAgendaStore
-7. clase JsonAgendaIO
-8. clase Contacto
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------- -----  ---  --  ------
+62844   Guzmán, Luciano Leonel     🟠🟢🟢   11  10  D - -
+63182   González Rojas, Emmanuel   🟠🟢🟢   13  10  D - -
+63397   Vercellone, Tomás          🟠🟢🔴   10   9  B - -
+63493   Busnelli, Bruno            🟠🟢🔴    6  10  E - -
+63647   Paz, Valentina             🟠🟢🟢    9  10  B - -
 ```
 
----
 
-## Casos de prueba mínimos
+## Rehacer TP1 y TP2 _(para Promocionar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP1 y TP2:
+> **miércoles 2 de junio**
 
-| Caso                                                               | Resultado esperado                                                          |
-| -------------------------------------------------------------------| ----------------------------------------------------------------------|
-| `dotnet run agenda.cs`                                             | Crea `agenda.db` si no existe y abre la TUI.                          |
-| `dotnet run agenda.cs -- otra.db`                                  | Usa `otra.db` como archivo de base.                                   |
-| Crear un contacto con nombre `"Ana"`                               | Aparece en la lista y persiste tras reiniciar la app.                 |
-| Crear un contacto con nombre vacío                                 | Error de validación, el diálogo no se cierra.                         |
-| Crear un contacto con email `"ana"`                                | Error de validación: el email debe contener `@`.                      |
-| Eliminar un contacto                                               | Pide confirmación; al aceptar, desaparece.                            |
-| Buscar `"ana"` en una agenda con `"Ana"`, `"Juan"` y `"Susana"`    | La lista muestra `"Ana"` y `"Susana"`.                                |
-| Marcar `"Solo favoritos"` con dos favoritos en una lista de cinco  | La lista muestra solo los dos favoritos.                              |
-| Exportar a `salida.json` y luego importar el mismo archivo         | Los contactos se duplican (ids nuevos), no chocan con los existentes. |
-| Importar un archivo JSON inexistente                               | Mensaje de error claro, la app sigue funcionando.                     |
-| Cerrar con `Ctrl+Q`                                                | La aplicación finaliza limpiamente y restaura la terminal.            |
 
----
+```text
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------- -----  ---  --  ------
+61026   Thompson, María José       🟠🟠🟢   12   9  F C -
+61490   Valdez Bustamante, Tomás   🟠🟠🔴   13  13  A A -
+63150   Carlino, Joaquín           🟠🟠🔴   13  13  A A -
+```
 
-## Entrega
 
-- Un único archivo `agenda.cs` en la carpeta `/tp3`.
+## Rehacer TP1, TP2 y TP3 _(para No Recursar)_
+> [!IMPORTANT]
+> Plazo para entregar el TP1, TP2 y TP3: **sábado 5 de junio**
+
+```text
+Legajo  Alumno                     TP     As.  1P  Grupos
+------  -------------------------  -----  ---  --  ------
+61489   Gómez, Tomás               🟠🟠🟠   12   9  F C C
+61641   Figueroa, Nahuel Ramón     🟠🟠🟠   11   4  F C C
+61801   Benega, Maximiliano        🟠🟠🟠    7   6  F C C
+63218   Cortés, Guillermo Augusto  🟠🟠🟠   11  10  G B B
+63341   Carrer, Juan Cruz          🟠🟠🟠    8  10  G B B
+63345   García, Franco Tomás       🟠🟠🟠    6  10  E B B
+63494   Medina, Lourdes Natalia    🟠🟠🟠    9  10  C D B
+63737   Galván, Rocío Julieta      🟠🟠🟠   10  10  G D B
+```

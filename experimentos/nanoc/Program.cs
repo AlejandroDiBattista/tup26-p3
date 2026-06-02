@@ -67,8 +67,7 @@ while (true) {
         Console.WriteLine();
         Console.WriteLine($"NanoC> {response.Text}");
         Console.WriteLine();
-    }
-    catch (Exception ex) {
+    } catch (Exception ex) {
         Console.WriteLine();
         Console.WriteLine("NanoC> Ocurrio un error al ejecutar el agente.");
         Console.WriteLine(ex.Message);
@@ -87,8 +86,7 @@ static async Task<bool> TryHandleLocalCommandAsync(
     string input,
     AIAgent agent,
     NanoConfiguration configuration,
-    Action<AgentSession> setSession)
-{
+    Action<AgentSession> setSession) {
     if (!input.StartsWith('/')) {
         return false;
     }
@@ -133,7 +131,7 @@ static async Task<bool> TryHandleLocalCommandAsync(
     }
 }
 
-    static void PrintBanner(NanoConfiguration configuration) {
+static void PrintBanner(NanoConfiguration configuration) {
     Console.WriteLine("NanoC");
     Console.WriteLine($"Modelo: {configuration.Model}");
     Console.WriteLine($"Workspace: {configuration.Workspace}");
@@ -281,8 +279,7 @@ sealed class WorkspaceTools {
         try {
             process.Start();
             process.WaitForExitAsync(cts.Token).GetAwaiter().GetResult();
-        }
-        catch (OperationCanceledException) {
+        } catch (OperationCanceledException) {
             TryKill(process);
             return $"$ {command}\nexit_code: timeout\n--- STDOUT ---\n(timeout)\n--- STDERR ---\nEl comando excedio 30 segundos.";
         }
@@ -331,8 +328,7 @@ sealed class WorkspaceTools {
             if (!process.HasExited) {
                 process.Kill(entireProcessTree: true);
             }
-        }
-        catch {
+        } catch {
         }
     }
 }

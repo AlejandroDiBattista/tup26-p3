@@ -29,29 +29,29 @@ public class NegativoNodo : Nodo {
 public abstract class NodoBinario : Nodo {
     protected Nodo Izquierdo { get; }
     protected Nodo Derecho { get; }
-    protected NodoBinario(Nodo izq, Nodo der) { 
-        Izquierdo = izq; 
-        Derecho = der; 
+    protected NodoBinario(Nodo izq, Nodo der) {
+        Izquierdo = izq;
+        Derecho = der;
     }
 }
 
 public class SumaNodo : NodoBinario {
-    public SumaNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public SumaNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izquierdo.Evaluar(x) + Derecho.Evaluar(x);
 }
 
 public class RestaNodo : NodoBinario {
-    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izquierdo.Evaluar(x) - Derecho.Evaluar(x);
 }
 
 public class MultiplicacionNodo : NodoBinario {
-    public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) => Izquierdo.Evaluar(x) * Derecho.Evaluar(x);
 }
 
 public class DivisionNodo : NodoBinario {
-    public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) {}
+    public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) { }
     public override int Evaluar(int x = 0) {
         int divisor = Derecho.Evaluar(x);
         if (divisor == 0) throw new DivideByZeroException("Error: División por cero.");

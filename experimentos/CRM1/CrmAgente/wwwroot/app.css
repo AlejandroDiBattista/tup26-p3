@@ -1,0 +1,622 @@
+:root {
+    --bg: #f4efe6;
+    --surface: #fbf8f1;
+    --ink: #2b2723;
+    --ink-soft: #6b6359;
+    --line: #e3dccf;
+    --accent: #c0492b;
+    --accent-soft: #e8d3c4;
+    --gold: #b08642;
+    --green: #4a7c52;
+    --shadow: 0 1px 2px rgba(43, 39, 35, 0.04), 0 8px 24px rgba(43, 39, 35, 0.06);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .display {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+/* ---- Layout shell ---- */
+.shell {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    min-height: 100vh;
+}
+
+.main-area {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Barra superior con la marca y las solapas de navegacion. */
+.topbar {
+    background: var(--ink);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    padding: 1rem 3rem;
+}
+
+.brand {
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--surface);
+}
+
+.brand span {
+    color: var(--accent);
+}
+
+.brand small {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.tabs a {
+    color: #c9c0b2;
+    padding: 0.5rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.15s ease;
+}
+
+.tabs a:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--surface);
+}
+
+.tabs a.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.content {
+    padding: 2.5rem 3rem;
+    max-width: 1100px;
+}
+
+.page-head {
+    margin-bottom: 2rem;
+}
+
+.page-head h1 {
+    font-size: 2.2rem;
+    margin: 0 0 0.3rem;
+}
+
+.page-head p {
+    color: var(--ink-soft);
+    margin: 0;
+}
+
+/* ---- Cards & surfaces ---- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.4rem;
+    box-shadow: var(--shadow);
+}
+
+.row {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+}
+
+/* ---- Tables / lists ---- */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.list-item {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.list-item:hover {
+    border-color: var(--accent-soft);
+    transform: translateX(2px);
+}
+
+.list-item .who {
+    font-weight: 500;
+    font-size: 1.05rem;
+}
+
+.list-item .meta {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+}
+
+/* ---- Badges (etapas) ---- */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.badge-Prospecto { background: #e7e2d6; color: #6b6359; }
+.badge-Contactado { background: #d8e3ea; color: #3d5a6b; }
+.badge-Propuesta { background: #f0e2c8; color: #8a6d2f; }
+.badge-Negociacion { background: var(--accent-soft); color: var(--accent); }
+.badge-Ganada { background: #d6e8d8; color: var(--green); }
+.badge-Perdida { background: #e8d6d4; color: #9a4034; }
+
+/* ---- Pipeline board ---- */
+.board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.8rem;
+}
+
+.col {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.8rem;
+    min-height: 200px;
+}
+
+.col h3 {
+    font-size: 0.85rem;
+    margin: 0 0 0.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+}
+
+.col .total {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 0.8rem;
+}
+
+.deal {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0.6rem 0.7rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--accent);
+}
+
+.deal .d-who {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.deal .d-amt {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+.deal .deal-etapa {
+    margin-top: 0.5rem;
+    width: 100%;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.deal .deal-etapa:hover {
+    border-color: var(--accent);
+}
+
+/* ---- Forms ---- */
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.02em;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.3rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.btn:hover {
+    opacity: 0.88;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent-soft);
+}
+
+/* ---- Ficha 360 ---- */
+.ficha-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 1.4rem;
+}
+
+.ficha-head h2 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.ficha-head .empresa {
+    color: var(--accent);
+    font-size: 1rem;
+}
+
+.ficha-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.4rem;
+}
+
+.timeline-item {
+    border-left: 2px solid var(--line);
+    padding: 0 0 1rem 1rem;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.timeline-item .t-tipo {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.timeline-item .t-fecha {
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+.timeline-item .t-detalle {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin-top: 0.2rem;
+}
+
+/* ---- Agente / chat ---- */
+.agente-box {
+    max-width: 720px;
+}
+
+.chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-bottom: 1.2rem;
+    min-height: 120px;
+}
+
+.msg {
+    padding: 0.8rem 1.1rem;
+    border-radius: 14px;
+    max-width: 80%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.msg-user {
+    align-self: flex-end;
+    background: var(--ink);
+    color: var(--surface);
+    border-bottom-right-radius: 4px;
+}
+
+.msg-bot {
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+}
+
+.msg-sm {
+    font-size: 0.82rem;
+    padding: 0.55rem 0.8rem;
+}
+
+.chat-input {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.chat-input input {
+    flex: 1;
+}
+
+.hint {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.8rem;
+}
+
+.hint code {
+    background: var(--accent-soft);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+/* ---- Panel lateral del agente ---- */
+.agente-lateral-wrap {
+    border-left: 1px solid var(--line);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.agente-lateral {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.agente-lateral-head {
+    padding: 1.4rem 1.2rem 1rem;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+}
+
+.agente-lateral-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+}
+
+.agente-filtro-badge {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+    width: 100%;
+    text-align: center;
+}
+
+.agente-contexto-activo {
+    font-size: 0.78rem;
+    background: #eef4ee;
+    border: 1px solid #b8d6ba;
+    border-radius: 7px;
+    padding: 0.4rem 0.6rem;
+    color: var(--green);
+    margin-top: 0.4rem;
+}
+
+.agente-contexto-empresa {
+    color: var(--ink-soft);
+    font-weight: 400;
+}
+
+.agente-lateral-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.agente-empty {
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+}
+
+/* ---- Candidatos a desambiguar (lista clicable en el panel) ---- */
+.agente-candidatos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.agente-candidatos-titulo {
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.1rem;
+}
+
+.agente-candidato {
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+}
+
+.agente-candidato:hover {
+    border-color: var(--accent);
+    background: #fdf5ef;
+}
+
+.agente-candidato .who {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--ink);
+}
+
+.agente-candidato .meta {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+}
+
+/* ---- Oportunidades presentadas como tarjetas en el panel ---- */
+.agente-oportunidades {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.agente-oportunidad {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.45rem 0.6rem;
+}
+
+.agente-oportunidad-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+}
+
+.agente-oportunidad .who {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--ink);
+}
+
+.agente-oportunidad .meta {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-top: 0.15rem;
+}
+
+.agente-oportunidad .badge {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    padding: 0.12rem 0.5rem;
+}
+
+.agente-lateral-input {
+    padding: 0.9rem 1rem;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+}
+
+.agente-warn {
+    font-size: 0.75rem;
+    color: var(--gold);
+    margin: 0 0 0.5rem;
+}
+
+.agente-hint {
+    font-size: 0.72rem;
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+/* ---- Filtro activo en lista de contactos ---- */
+.filtro-agente-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--accent-soft);
+    border: 1px solid #e0b8a8;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.875rem;
+    color: var(--accent);
+}
+
+.filtro-agente-banner span {
+    flex: 1;
+}
+
+.list-item-destacado {
+    border-color: var(--accent-soft);
+    background: #fdf5ef;
+}
+
+.empty {
+    color: var(--ink-soft);
+    font-style: italic;
+    padding: 1rem 0;
+}

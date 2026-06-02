@@ -4,15 +4,16 @@ class Compilador {
             throw new FormatException("Token inesperado");
         }
 
-        var analizador = new Analizador (expression);
+        var analizador = new Analizador(expression);
         var raiz = analizador.ParseExpression();
         analizador.SaltarBlancos();
 
         if (!analizador.EOF) throw new FormatException("Token inesperado");
 
-        return raiz;}
+        return raiz;
+    }
 
-        private class Analizador {
+    private class Analizador {
         private readonly string texto;
         private int pos;
 
@@ -34,7 +35,7 @@ class Compilador {
         public void SaltarBlancos() {
             while (!EOF && char.IsWhiteSpace(Peek())) pos++;
         }
-         public Nodo ParseExpression() {
+        public Nodo ParseExpression() {
             var nodo = ParseTermino();
             while (true) {
                 SaltarBlancos();
@@ -130,5 +131,5 @@ class Compilador {
             throw new FormatException("Token inesperado");
         }
     }
-    
+
 }

@@ -1,15 +1,12 @@
-class Compilador
-{
+class Compilador {
     private string texto = "";
     private int posicion = 0;
 
-    public static Nodo Parse(string entrada)
-    {
+    public static Nodo Parse(string entrada) {
         if (string.IsNullOrWhiteSpace(entrada))
             throw new FormatException("Token inesperado");
 
-        var parser = new Compilador
-        {
+        var parser = new Compilador {
             texto = entrada,
             posicion = 0
         };
@@ -22,12 +19,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Expresion()
-    {
+    private Nodo Expresion() {
         var nodo = Termino();
 
-        while (true)
-        {
+        while (true) {
             if (Coincide('+'))
                 nodo = new SumaNodo(nodo, Termino());
             else if (Coincide('-'))
@@ -39,12 +34,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Termino()
-    {
+    private Nodo Termino() {
         var nodo = Factor();
 
-        while (true)
-        {
+        while (true) {
             if (Coincide('*'))
                 nodo = new MultiplicacionNodo(nodo, Factor());
             else if (Coincide('/'))
@@ -56,15 +49,13 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Factor()
-    {
+    private Nodo Factor() {
         SaltarEspacios();
 
         if (Coincide('+')) return Factor();
         if (Coincide('-')) return new NegativoNodo(Factor());
 
-        if (Coincide('('))
-        {
+        if (Coincide('(')) {
             var nodo = Expresion();
 
             if (!Coincide(')'))
@@ -82,8 +73,7 @@ class Compilador
         throw new FormatException("Token inesperado");
     }
 
-    private Nodo LeerNumero()
-    {
+    private Nodo LeerNumero() {
         int inicio = posicion;
 
         while (posicion < texto.Length && char.IsDigit(texto[posicion]))
@@ -93,26 +83,22 @@ class Compilador
         return new NumeroNodo(valor);
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (posicion < texto.Length && char.IsWhiteSpace(texto[posicion]))
             posicion++;
     }
 
-    private bool Coincide(char caracter)
-    {
+    private bool Coincide(char caracter) {
         SaltarEspacios();
 
-        if (posicion < texto.Length && texto[posicion] == caracter)
-        {
+        if (posicion < texto.Length && texto[posicion] == caracter) {
             posicion++;
             return true;
         }
 
         return false;
     }
-    private char Ver()
-    {
+    private char Ver() {
         SaltarEspacios();
         return posicion < texto.Length ? texto[posicion] : '\0';
     }

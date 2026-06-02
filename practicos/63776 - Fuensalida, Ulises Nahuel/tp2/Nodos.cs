@@ -1,7 +1,6 @@
 using System;
 
-namespace CalculadoraUTN
-{
+namespace CalculadoraUTN {
     abstract class Nodo { public abstract int Evaluar(int x = 0); }
 
     class NumeroNodo : Nodo {

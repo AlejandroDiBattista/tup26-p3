@@ -1,16 +1,13 @@
-public class Compilador
-{
+public class Compilador {
     private string _texto = "";
     private int _pos;
 
-    public static Nodo Parse(string texto)
-    {
+    public static Nodo Parse(string texto) {
         Compilador compilador = new Compilador();
         return compilador.Parsear(texto);
     }
 
-    public Nodo Parsear(string texto)
-    {
+    public Nodo Parsear(string texto) {
         if (string.IsNullOrWhiteSpace(texto))
             throw new FormatException("Entrada vacía.");
 
@@ -27,14 +24,12 @@ public class Compilador
         return resultado;
     }
 
-    private Nodo ParsearExpresion()
-    {
+    private Nodo ParsearExpresion() {
         Nodo nodo = ParsearTermino();
 
         SaltarEspacios();
 
-        while (_pos < _texto.Length && (_texto[_pos] == '+' || _texto[_pos] == '-'))
-        {
+        while (_pos < _texto.Length && (_texto[_pos] == '+' || _texto[_pos] == '-')) {
             char operador = _texto[_pos];
             _pos++;
             SaltarEspacios();
@@ -52,14 +47,12 @@ public class Compilador
         return nodo;
     }
 
-    private Nodo ParsearTermino()
-    {
+    private Nodo ParsearTermino() {
         Nodo nodo = ParsearFactor();
 
         SaltarEspacios();
 
-        while (_pos < _texto.Length && (_texto[_pos] == '*' || _texto[_pos] == '/'))
-        {
+        while (_pos < _texto.Length && (_texto[_pos] == '*' || _texto[_pos] == '/')) {
             char operador = _texto[_pos];
             _pos++;
             SaltarEspacios();
@@ -77,8 +70,7 @@ public class Compilador
         return nodo;
     }
 
-    private Nodo ParsearFactor()
-    {
+    private Nodo ParsearFactor() {
         SaltarEspacios();
 
         if (Match('+'))
@@ -87,8 +79,7 @@ public class Compilador
         if (Match('-'))
             return new NegativoNodo(ParsearFactor());
 
-        if (Match('('))
-        {
+        if (Match('(')) {
             Nodo nodo = ParsearExpresion();
             SaltarEspacios();
 
@@ -100,8 +91,7 @@ public class Compilador
 
         char actual = Peek();
 
-        if (actual == 'x' || actual == 'X')
-        {
+        if (actual == 'x' || actual == 'X') {
             _pos++;
             return new VariableNodo();
         }
@@ -115,8 +105,7 @@ public class Compilador
         throw new FormatException($"Token inesperado: '{actual}'");
     }
 
-    private Nodo ParsearNumero()
-    {
+    private Nodo ParsearNumero() {
         int inicio = _pos;
 
         while (char.IsDigit(Peek()))
@@ -128,16 +117,13 @@ public class Compilador
         return new NumeroNodo(numero);
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (_pos < _texto.Length && char.IsWhiteSpace(_texto[_pos]))
             _pos++;
     }
 
-    private bool Match(char c)
-    {
-        if (Peek() == c)
-        {
+    private bool Match(char c) {
+        if (Peek() == c) {
             _pos++;
             return true;
         }
@@ -145,8 +131,7 @@ public class Compilador
         return false;
     }
 
-    private char Peek()
-    {
+    private char Peek() {
         if (_pos >= _texto.Length)
             return '\0';
 

@@ -1,18 +1,15 @@
 using System;
 
-class Compilador
-{
+class Compilador {
     private readonly string texto;
     private int posicion;
 
-    private Compilador(string texto)
-    {
+    private Compilador(string texto) {
         this.texto = texto ?? "";
         this.posicion = 0;
     }
 
-    public static Nodo Parse(string expresion)
-    {
+    public static Nodo Parse(string expresion) {
         Compilador compilador = new Compilador(expresion);
         Nodo nodo = compilador.ParsearExpresion();
         compilador.SaltarEspacios();
@@ -23,26 +20,19 @@ class Compilador
         return nodo;
     }
 
-    private Nodo ParsearExpresion()
-    {
+    private Nodo ParsearExpresion() {
         Nodo izquierdo = ParsearTermino();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
 
-            if (Coincide('+'))
-            {
+            if (Coincide('+')) {
                 Nodo derecho = ParsearTermino();
                 izquierdo = new SumaNodo(izquierdo, derecho);
-            }
-            else if (Coincide('-'))
-            {
+            } else if (Coincide('-')) {
                 Nodo derecho = ParsearTermino();
                 izquierdo = new RestaNodo(izquierdo, derecho);
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
@@ -50,26 +40,19 @@ class Compilador
         return izquierdo;
     }
 
-    private Nodo ParsearTermino()
-    {
+    private Nodo ParsearTermino() {
         Nodo izquierdo = ParsearFactor();
 
-        while (true)
-        {
+        while (true) {
             SaltarEspacios();
 
-            if (Coincide('*'))
-            {
+            if (Coincide('*')) {
                 Nodo derecho = ParsearFactor();
                 izquierdo = new MultiplicacionNodo(izquierdo, derecho);
-            }
-            else if (Coincide('/'))
-            {
+            } else if (Coincide('/')) {
                 Nodo derecho = ParsearFactor();
                 izquierdo = new DivisionNodo(izquierdo, derecho);
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
@@ -77,8 +60,7 @@ class Compilador
         return izquierdo;
     }
 
-    private Nodo ParsearFactor()
-    {
+    private Nodo ParsearFactor() {
         SaltarEspacios();
 
         if (Fin())
@@ -90,8 +72,7 @@ class Compilador
         if (Coincide('-'))
             return new NegativoNodo(ParsearFactor());
 
-        if (Coincide('('))
-        {
+        if (Coincide('(')) {
             Nodo interno = ParsearExpresion();
             SaltarEspacios();
 
@@ -106,8 +87,7 @@ class Compilador
         if (char.IsDigit(c))
             return ParsearNumero();
 
-        if (c == 'x' || c == 'X')
-        {
+        if (c == 'x' || c == 'X') {
             posicion++;
             return new VariableNodo();
         }
@@ -115,8 +95,7 @@ class Compilador
         throw new FormatException("Token inesperado");
     }
 
-    private Nodo ParsearNumero()
-    {
+    private Nodo ParsearNumero() {
         int inicio = posicion;
 
         while (!Fin() && char.IsDigit(Actual()))
@@ -127,18 +106,15 @@ class Compilador
         return new NumeroNodo(valor);
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (!Fin() && char.IsWhiteSpace(Actual()))
             posicion++;
     }
 
-    private bool Coincide(char esperado)
-    {
+    private bool Coincide(char esperado) {
         SaltarEspacios();
 
-        if (!Fin() && Actual() == esperado)
-        {
+        if (!Fin() && Actual() == esperado) {
             posicion++;
             return true;
         }
@@ -146,13 +122,11 @@ class Compilador
         return false;
     }
 
-    private char Actual()
-    {
+    private char Actual() {
         return texto[posicion];
     }
 
-    private bool Fin()
-    {
+    private bool Fin() {
         return posicion >= texto.Length;
     }
 }

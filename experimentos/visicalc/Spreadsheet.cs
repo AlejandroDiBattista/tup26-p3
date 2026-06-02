@@ -59,10 +59,10 @@ internal sealed class Spreadsheet {
 
         CellValue value = Evaluate(address);
         return value.Kind switch {
-            CellValueKind.Empty  => new CellView(string.Empty, AlignRight: false, IsError: false),
+            CellValueKind.Empty => new CellView(string.Empty, AlignRight: false, IsError: false),
             CellValueKind.Number => new CellView(FormatNumber(value.Number), AlignRight: true, IsError: false),
-            CellValueKind.Text   => new CellView(value.Text, AlignRight: false, IsError: false),
-            CellValueKind.Error  => new CellView("#ERR", AlignRight: false, IsError: true),
+            CellValueKind.Text => new CellView(value.Text, AlignRight: false, IsError: false),
+            CellValueKind.Error => new CellView("#ERR", AlignRight: false, IsError: true),
             _ => new CellView("?", AlignRight: false, IsError: true)
         };
     }
@@ -71,10 +71,10 @@ internal sealed class Spreadsheet {
         string raw = GetRaw(address);
         CellValue value = Evaluate(address);
         string rendered = value.Kind switch {
-            CellValueKind.Empty  => "(vacia)",
+            CellValueKind.Empty => "(vacia)",
             CellValueKind.Number => FormatNumber(value.Number),
-            CellValueKind.Text   => value.Text,
-            CellValueKind.Error  => $"ERROR: {value.Text}",
+            CellValueKind.Text => value.Text,
+            CellValueKind.Error => $"ERROR: {value.Text}",
             _ => "?"
         };
 
@@ -86,7 +86,7 @@ internal sealed class Spreadsheet {
             return (1, 1);
         }
 
-        int maxRow    = cells.Keys.Max(address => address.Row) + 1;
+        int maxRow = cells.Keys.Max(address => address.Row) + 1;
         int maxColumn = cells.Keys.Max(address => address.Column) + 1;
         return (Math.Max(1, maxRow), Math.Max(1, maxColumn));
     }
@@ -128,7 +128,7 @@ internal sealed class Spreadsheet {
     }
 
     public string RenderSnapshot(int maxRows = 10, int maxColumns = 8) {
-        int rows    = Math.Min(RowCount, maxRows);
+        int rows = Math.Min(RowCount, maxRows);
         int columns = Math.Min(ColumnCount, maxColumns);
         const int rowHeaderWidth = 5;
         const int cellWidth = 12;
@@ -155,7 +155,7 @@ internal sealed class Spreadsheet {
         return builder.ToString();
     }
 
-    private CellValue EvaluateInternal( CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private CellValue EvaluateInternal(CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         if (cache.TryGetValue(address, out CellValue cached)) {
             return cached;
         }
@@ -185,11 +185,11 @@ internal sealed class Spreadsheet {
         }
     }
 
-    private CellValue EvaluateFormula( string formula, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private CellValue EvaluateFormula(string formula, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         try {
             FormulaParser parser = new(
                 formula,
-                resolveCell:  address      => ResolveNumericCell(address, cache, stack),
+                resolveCell: address => ResolveNumericCell(address, cache, stack),
                 resolveRange: (start, end) => ResolveRange(start, end, cache, stack));
 
             double result = parser.Parse();
@@ -203,7 +203,7 @@ internal sealed class Spreadsheet {
         }
     }
 
-    private double ResolveNumericCell( CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private double ResolveNumericCell(CellAddress address, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         CellValue value = EvaluateInternal(address, cache, stack);
         if (value.TryGetNumber(out double number)) {
             return number;
@@ -215,7 +215,7 @@ internal sealed class Spreadsheet {
                 : $"La celda {address} no contiene un valor numerico.");
     }
 
-    private IEnumerable<double> ResolveRange( CellAddress start, CellAddress end, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
+    private IEnumerable<double> ResolveRange(CellAddress start, CellAddress end, Dictionary<CellAddress, CellValue> cache, HashSet<CellAddress> stack) {
         int minRow = Math.Min(start.Row, end.Row);
         int maxRow = Math.Max(start.Row, end.Row);
         int minColumn = Math.Min(start.Column, end.Column);

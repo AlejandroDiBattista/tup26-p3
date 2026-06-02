@@ -3,10 +3,8 @@ using System.Collections.Generic;
 namespace TP2.Calculadora;
 
 static class Comandos {
-    public static bool Procesar(string[] args) 
-    {
-        switch (args)
-        {
+    public static bool Procesar(string[] args) {
+        switch (args) {
             case ["--help"] or ["-h"] or ["--ayuda"]:
                 MostrarAyuda();
                 return true;
@@ -23,29 +21,22 @@ static class Comandos {
                 return false;
         }
     }
-    private static void EjecutarModoDirecto(string expresion, string valor)
-    {
-        try
-        {
+    private static void EjecutarModoDirecto(string expresion, string valor) {
+        try {
             if (!int.TryParse(valor, out int x))
                 throw new Exception($"Error: '{valor}' no es un valor entero válido para x.");
 
             var compilador = new Compilador();
             Nodo arbol = compilador.Parsear(expresion);
             Console.WriteLine(arbol.Evaluar(x));
-        }
-        catch (DivideByZeroException)
-        {
+        } catch (DivideByZeroException) {
             Console.WriteLine("Error: división por cero.");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             Console.WriteLine(e.Message);
         }
     }
 
-    private static void MostrarAyuda()
-    {
+    private static void MostrarAyuda() {
         Console.WriteLine("""
 
 Uso: dotnet run -- [opciones] [<expresión> <valor>]

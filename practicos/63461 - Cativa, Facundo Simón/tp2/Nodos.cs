@@ -1,103 +1,84 @@
 using System;
 
-abstract class Nodo
-{
+abstract class Nodo {
     public abstract int Evaluar(int x = 0);
 }
 
 
 
-class NumeroNodo : Nodo
-{
+class NumeroNodo : Nodo {
     public int Valor;
 
-    public NumeroNodo(int valor)
-    {
+    public NumeroNodo(int valor) {
         Valor = valor;
     }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         return Valor;
     }
 }
 
-class VariableNodo : Nodo
-{
-    public override int Evaluar(int x = 0)
-    {
+class VariableNodo : Nodo {
+    public override int Evaluar(int x = 0) {
         return x;
     }
 }
 
 
 
-class NegativoNodo : Nodo
-{
+class NegativoNodo : Nodo {
     public Nodo Expr;
 
-    public NegativoNodo(Nodo expr)
-    {
+    public NegativoNodo(Nodo expr) {
         Expr = expr;
     }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         return -Expr.Evaluar(x);
     }
 }
 
 
 
-abstract class NodoBinario : Nodo
-{
+abstract class NodoBinario : Nodo {
     public Nodo Izq;
     public Nodo Der;
 
-    public NodoBinario(Nodo izq, Nodo der)
-    {
+    public NodoBinario(Nodo izq, Nodo der) {
         Izq = izq;
         Der = der;
     }
 }
 
 
-class SumaNodo : NodoBinario
-{
+class SumaNodo : NodoBinario {
     public SumaNodo(Nodo izq, Nodo der) : base(izq, der) { }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         return Izq.Evaluar(x) + Der.Evaluar(x);
     }
 }
 
-class RestaNodo : NodoBinario
-{
+class RestaNodo : NodoBinario {
     public RestaNodo(Nodo izq, Nodo der) : base(izq, der) { }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         return Izq.Evaluar(x) - Der.Evaluar(x);
     }
 }
 
-class MultiplicacionNodo : NodoBinario
-{
+class MultiplicacionNodo : NodoBinario {
     public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) { }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         return Izq.Evaluar(x) * Der.Evaluar(x);
     }
 }
 
-class DivisionNodo : NodoBinario
-{
+class DivisionNodo : NodoBinario {
     public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) { }
 
-    public override int Evaluar(int x = 0)
-    {
+    public override int Evaluar(int x = 0) {
         int divisor = Der.Evaluar(x);
 
         if (divisor == 0)

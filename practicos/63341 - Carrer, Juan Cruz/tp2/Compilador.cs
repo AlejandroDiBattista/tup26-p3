@@ -1,117 +1,222 @@
 class Compilador {
-    private string input = "";
-    private int pos = 0;
 
-    public static Nodo Parse(string expresion) {
-        if (string.IsNullOrWhiteSpace(expresion)) throw new FormatException ("Token inesperado");
+        private string codigoFuente = "";
+        private int posicionActual = 0;
 
-        var p = new Compilador
-        {
-            input = expresion,
-            pos = 0
-        };
+        public static Nodo Parse(
+        string expresion
+        ) {
 
-        var nodo = p.ParseExpresion();
+        if (
+            string.IsNullOrWhiteSpace(
+                expresion
+            )
+        ) {
 
-        p.SaltarEspacios();
-        if (p.pos < p.input.Length) throw new FormatException("Token inesperado");
+            throw new FormatException(
+                "Token inesperado"
+            );
+        }
 
-        return nodo;
+        var parser = new Compilador();
+
+        parser.codigoFuente = expresion;
+        parser.posicionActual = 0;
+
+        var resultadoFinal =
+            parser.LeerExpresion();
+
+        parser.OmitirEspacios();
+
+        if (
+            parser.posicionActual
+            < parser.codigoFuente.Length
+        ) {
+
+            throw new FormatException(
+                "Token inesperado"
+            );
+        }
+
+        return resultadoFinal;
     }
 
-    private Nodo ParseExpresion()
-{
-    var nodo = ParseTermino();
-    while (true)
-    {
-        SaltarEspacios();
-        
-        if(Match('+'))
-        {
-            nodo = new Suma(nodo, ParseTermino());
+    private Nodo LeerExpresion() {
+
+        var nodoActual = LeerTermino();
+
+        while (true) {
+
+            OmitirEspacios();
+
+            if (Coincide('+')) {
+
+                nodoActual =
+                    new OperacionSuma(
+                        nodoActual,
+                        LeerTermino()
+                    );
+            }
+            else if (Coincide('-')) {
+
+                nodoActual =
+                    new OperacionResta(
+                        nodoActual,
+                        LeerTermino()
+                    );
+            }
+            else {
+                break;
+            }
         }
-        else if (Match('-'))
-        {
-            nodo = new Resta(nodo, ParseTermino());
-        }
-        else
-        {
-            break;
-        }           
+
+        return nodoActual;
     }
-    return nodo;
+
+    private Nodo LeerTermino() {
+
+        var nodoActual = LeerFactor();
+
+        while (true) {
+
+            OmitirEspacios();
+
+            if (Coincide('*')) {
+
+                nodoActual =
+                    new OperacionMultiplicacion(
+                        nodoActual,
+                        LeerFactor()
+                    );
+            }
+            else if (Coincide('/')) {
+
+                nodoActual =
+                    new OperacionDivision(
+                        nodoActual,
+                        LeerFactor()
+                    );
+            }
+            else {
+                break;
+            }
+        }
+
+        return nodoActual;
+    }
+
+    private Nodo LeerFactor() {
+
+    OmitirEspacios();
+
+    if (Coincide('+')) {
+        return LeerFactor();
+    }
+
+    if (Coincide('-')) {
+
+        return new CambioSigno(
+            LeerFactor()
+        );
+    }
+
+    if (Coincide('(')) {
+
+        var nodoInterno =
+            LeerExpresion();
+
+        if (!Coincide(')')) {
+
+            throw new FormatException(
+                "Se esperaba ')'"
+            );
+        }
+
+        return nodoInterno;
+    }
+
+    if (
+        char.IsDigit(
+            CaracterActual()
+        )
+    ) {
+
+        return LeerNumero();
+    }
+
+    if (
+        char.ToLower(
+            CaracterActual()
+        ) == 'x'
+    ) {
+
+        posicionActual++;
+
+        return new VariableX();
+    }
+
+    throw new FormatException(
+        "Token inesperado"
+    );
 }
 
-    private Nodo ParseTermino()
-{
-    var nodo = ParseFactor();
-    while (true)
-    {
-        SaltarEspacios();
-        if (Match('*'))
-        {
-            nodo = new Multiplicacion(nodo, ParseFactor());
-        }
-        else if (Match('/'))
-        {
-            nodo = new Division(nodo, ParseFactor());
-        }
-        else
-        {
-            break;
-        }
-    }
-    return nodo;
+private char CaracterActual() {
+
+    return posicionActual
+        < codigoFuente.Length
+        ? codigoFuente[posicionActual]
+        : '\0';
 }
 
-    private Nodo ParseFactor()
-{
-    SaltarEspacios();
+private bool Coincide(char simbolo) {
 
-    if (Match('+')) return ParseFactor();
-    if (Match('-')) return new Negativo(ParseFactor());
+    if (
+        CaracterActual()
+        == simbolo
+    ) {
 
-    if (Match('('))
-    {
-        var nodo = ParseExpresion();
-        if (!Match(')')) throw new FormatException("Se esperaba ')'");
-        return nodo;
-    }
+        posicionActual++;
 
-    if (char.IsDigit(Peek())) return ParseNumero();
-
-    if (char.ToLower(Peek()) == 'x')
-    {
-        pos++;
-        return new Variable();
-    }
-
-    throw new FormatException("Token inesperado");
-}
-
-    private char Peek() => pos < input.Length ? input[pos] : '\0';
-
-private bool Match(char c)
-{
-    if (Peek() == c)
-    {
-        pos++;
         return true;
     }
+
     return false;
 }
 
-private void SaltarEspacios()
-{
-    while (char.IsWhiteSpace(Peek())) pos++;
+private void OmitirEspacios() {
+
+    while (
+        char.IsWhiteSpace(
+            CaracterActual()
+        )
+    ) {
+
+        posicionActual++;
+    }
 }
 
-private Nodo ParseNumero()
-{
-    int inicio = pos;
-    while (char.IsDigit(Peek())) pos++;
-    var texto = input[inicio..pos];
-    return new Numero(int.Parse(texto));
+private Nodo LeerNumero() {
+
+    int inicio = posicionActual;
+
+    while (
+        char.IsDigit(
+            CaracterActual()
+        )
+    ) {
+
+        posicionActual++;
+    }
+
+    var textoNumero =
+        codigoFuente[
+            inicio..posicionActual
+        ];
+
+    return new ValorNumero(
+        int.Parse(textoNumero)
+    );
 }
 }
+
 

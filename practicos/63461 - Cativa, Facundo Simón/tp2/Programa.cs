@@ -1,11 +1,8 @@
 using System;
 
-class Programa
-{
-    static void Main(string[] args)
-    {
-        try
-        {
+class Programa {
+    static void Main(string[] args) {
+        try {
             // si hay comandos (help, test, directo)
             if (Comandos.Procesar(args))
                 return;
@@ -19,8 +16,7 @@ class Programa
 
             var funcion = Compilador.Parse(expresion);
 
-            while (true)
-            {
+            while (true) {
                 Console.Write("Ingrese valor de x (o fin): ");
                 string input = Console.ReadLine();
 
@@ -32,9 +28,7 @@ class Programa
 
                 Console.WriteLine($"Resultado: {resultado}");
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine("Error: " + ex.Message);
         }
     }

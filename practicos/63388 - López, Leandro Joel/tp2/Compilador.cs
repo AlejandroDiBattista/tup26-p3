@@ -7,9 +7,9 @@ class Compilador {
 
         Nodo nodo = Termino();
 
-        while (Match('+') || Match ('-')) {
-            
-            char operador = texto [Posicion - 1];
+        while (Match('+') || Match('-')) {
+
+            char operador = texto[Posicion - 1];
             Nodo derecha = Termino();
             nodo = operador == '+' ? new SumaNodo(nodo, derecha) : new RestaNodo(nodo, derecha);
         }

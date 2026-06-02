@@ -36,8 +36,7 @@ internal sealed class NanoCalcApp {
                     return;
                 }
             }
-        }
-        finally {
+        } finally {
             Console.ResetColor();
             SetCursorVisibility(true);
             Console.TreatControlCAsInput = previousTreatControl;
@@ -105,8 +104,7 @@ internal sealed class NanoCalcApp {
             case ConsoleKey.Enter:
                 if (_document.GetRaw(_current).StartsWith('=')) {
                     EnterFormulaLine();
-                }
-                else {
+                } else {
                     EditCurrentCell();
                 }
                 return false;
@@ -247,8 +245,7 @@ internal sealed class NanoCalcApp {
                         break;
                 }
             }
-        }
-        finally {
+        } finally {
             _referencePreview = null;
             SetCursorVisibility(false);
         }
@@ -292,8 +289,7 @@ internal sealed class NanoCalcApp {
         try {
             var command = CommandParser.Parse(commandText, _current, _document, _engine);
             return ExecuteCommand(command);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             SetStatus(ex.Message);
             return false;
         }
@@ -307,8 +303,7 @@ internal sealed class NanoCalcApp {
         try {
             var command = CommandParser.Parse(shortcut.CommandLine, _current, _document, _engine);
             return ExecuteCommand(command);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             SetStatus(ex.Message);
             return false;
         }
@@ -514,8 +509,7 @@ internal sealed class NanoCalcApp {
             _document.SetRaw(address, text);
             SetStatus($"Celda {address.ToA1()} actualizada.");
             return true;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             SetStatus(string.IsNullOrWhiteSpace(ex.Message) ? "Expresion invalida." : ex.Message);
             return false;
         }
@@ -601,8 +595,7 @@ internal sealed class NanoCalcApp {
         try {
             _document.SetRaw(_current, string.Empty);
             SetStatus($"Celda {_current.ToA1()} borrada.");
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             SetStatus(string.IsNullOrWhiteSpace(ex.Message) ? "No se pudo borrar la celda." : ex.Message);
         }
     }
@@ -785,15 +778,13 @@ internal sealed class NanoCalcApp {
 
         if (address.Row < _rowOffset) {
             _rowOffset = address.Row;
-        }
-        else if (address.Row >= _rowOffset + visibleRows) {
+        } else if (address.Row >= _rowOffset + visibleRows) {
             _rowOffset = address.Row - visibleRows + 1;
         }
 
         if (address.Column < _columnOffset) {
             _columnOffset = address.Column;
-        }
-        else if (address.Column >= _columnOffset + visibleColumns) {
+        } else if (address.Column >= _columnOffset + visibleColumns) {
             _columnOffset = address.Column - visibleColumns + 1;
         }
     }
@@ -880,8 +871,7 @@ internal sealed class NanoCalcApp {
                         break;
                 }
             }
-        }
-        finally {
+        } finally {
             _referencePreview = null;
             SetCursorVisibility(false);
         }
@@ -943,8 +933,7 @@ internal sealed class NanoCalcApp {
                         break;
                 }
             }
-        }
-        finally {
+        } finally {
             SetCursorVisibility(false);
         }
     }
@@ -991,24 +980,19 @@ internal sealed class NanoCalcApp {
         if (selected) {
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.DarkBlue;
-        }
-        else if (header && highlight == GridHighlightKind.ActiveHeader) {
+        } else if (header && highlight == GridHighlightKind.ActiveHeader) {
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
-        }
-        else if (header && highlight == GridHighlightKind.ReferenceHeader) {
+        } else if (header && highlight == GridHighlightKind.ReferenceHeader) {
             Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.Yellow;
-        }
-        else if (header) {
+        } else if (header) {
             Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.Gray;
-        }
-        else if (highlight == GridHighlightKind.ReferenceCell) {
+        } else if (highlight == GridHighlightKind.ReferenceCell) {
             Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.DarkYellow;
-        }
-        else {
+        } else {
             Console.ResetColor();
         }
 
@@ -1110,8 +1094,7 @@ internal sealed class NanoCalcApp {
     private static void SetCursorVisibility(bool visible) {
         try {
             Console.CursorVisible = visible;
-        }
-        catch (PlatformNotSupportedException) {
+        } catch (PlatformNotSupportedException) {
         }
     }
 }

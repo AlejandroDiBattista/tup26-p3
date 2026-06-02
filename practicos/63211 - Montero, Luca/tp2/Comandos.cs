@@ -1,31 +1,25 @@
 using System;
 
-public class Comandos
-{
-    public static void Procesar(string[] args)
-    {
-        if (args.Length == 0)
-        {
+public class Comandos {
+    public static void Procesar(string[] args) {
+        if (args.Length == 0) {
             ModoInteractivo();
             return;
         }
 
         string arg1 = args[0].ToLower();
 
-        if (arg1 == "--help" || arg1 == "-h")
-        {
+        if (arg1 == "--help" || arg1 == "-h") {
             MostrarAyuda();
             Environment.Exit(0);
         }
 
-        if (arg1 == "--test" || arg1 == "-t" || arg1 == "-p")
-        {
+        if (arg1 == "--test" || arg1 == "-t" || arg1 == "-p") {
             Pruebas.Ejecutar();
             return;
         }
 
-        if (args.Length == 2)
-        {
+        if (args.Length == 2) {
             ModoDirecto(args[0], args[1]);
             return;
         }
@@ -34,8 +28,7 @@ public class Comandos
         MostrarAyuda();
     }
 
-    private static void MostrarAyuda()
-    {
+    private static void MostrarAyuda() {
         Console.WriteLine("calculadora [expresion valor] [--help] [--test]");
         Console.WriteLine("Opciones:");
         Console.WriteLine("  --help, -h   Muestra la ayuda y termina.");
@@ -45,10 +38,8 @@ public class Comandos
         Console.WriteLine("  valor        Valor entero con el que se reemplaza la variable x.");
     }
 
-    private static void ModoDirecto(string expresion, string valorStr)
-    {
-        try
-        {
+    private static void ModoDirecto(string expresion, string valorStr) {
+        try {
             if (!int.TryParse(valorStr, out int x))
                 throw new Exception("Error: Valor de x inválido.");
 
@@ -56,15 +47,12 @@ public class Comandos
             Nodo ast = compilador.Parsear(expresion);
             int resultado = ast.Evaluar(x);
             Console.WriteLine(resultado);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine(ex.Message);
         }
     }
 
-    private static void ModoInteractivo()
-    {
+    private static void ModoInteractivo() {
         Console.Write("Ingrese la expresión a evaluar: ");
         string expresion = Console.ReadLine();
 
@@ -72,37 +60,29 @@ public class Comandos
 
         Compilador compilador = new Compilador();
         Nodo ast;
-        try
-        {
+        try {
             ast = compilador.Parsear(expresion);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine(ex.Message);
             return;
         }
 
-        while (true)
-        {
+        while (true) {
             Console.Write("Ingrese valor para x (o 'fin' para salir): ");
             string entrada = Console.ReadLine();
 
             if (string.IsNullOrWhiteSpace(entrada) || entrada.ToLower() == "fin")
                 break;
 
-            if (!int.TryParse(entrada, out int x))
-            {
+            if (!int.TryParse(entrada, out int x)) {
                 Console.WriteLine("Error: Valor de x inválido.");
                 continue;
             }
 
-            try
-            {
+            try {
                 int resultado = ast.Evaluar(x);
                 Console.WriteLine($"Resultado: {resultado}");
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.WriteLine(ex.Message);
             }
         }

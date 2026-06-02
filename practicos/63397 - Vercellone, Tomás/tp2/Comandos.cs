@@ -3,7 +3,6 @@ static class Comandos {
         switch (args) {
             case ["--help"] or ["-h"] or ["--ayuda"]:
                 Console.WriteLine("""
-
 Uso: dotnet run -- [opciones] [<expresión> <valor>]
 
     Este programa permite analizar y evaluar expresiones matemáticas
@@ -11,27 +10,28 @@ Uso: dotnet run -- [opciones] [<expresión> <valor>]
 
     Si se proporciona una expresión junto con un valor, el programa
     reemplaza 'x' por ese valor y muestra el resultado.
-
     Si se ejecuta sin argumentos, inicia un modo interactivo para
     ingresar una expresión y evaluarla con distintos valores de 'x'.
 
 Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
+    Pueden contener operaciones básicas (+, -, *, /) y la variable 'x'.
+    Ejemplo: (x - 1) * (x - 8/4) + 3
 
 Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
-
+    --help,   -h,  --ayuda             Muestra esta ayuda.
+    --test,   -t,  --probar,  -p       Ejecuta pruebas automáticas.
 """);
                 return true;
 
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
+            case ["--probar"] or ["-p"] or ["--test"] or ["-t"] or ["--prueba"]:
                 Pruebas.Ejecutar();
                 return true;
 
             case [var expresion, var valor]:
-                var x = int.Parse(valor);
+                if (!int.TryParse(valor, out int x)) {
+                    Console.Error.WriteLine($"Error: '{valor}' no es un número entero válido.");
+                    return true;
+                }
                 var funcion = Compilador.Parse(expresion);
                 Console.WriteLine(funcion.Evaluar(x));
                 return true;
@@ -41,4 +41,3 @@ Opciones:
         }
     }
 }
-

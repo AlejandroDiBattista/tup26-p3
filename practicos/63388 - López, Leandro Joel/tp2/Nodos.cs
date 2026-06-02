@@ -10,7 +10,7 @@ class NumeroNodo : Nodo {
     }
 
     public override int Evaluar(int x = 0) => valor;
-    
+
 }
 
 class VariableNodo : Nodo {
@@ -62,66 +62,66 @@ class DivisionNodo : BinarioNodo {
 
     private Nodo Factor() {
 
-    if (Match('+')) return Factor();
-    if (Match('-')) return new negativoNodo(Factor());
-       
-    if (Match('(')) {
-        Nodo nodo = Expresion();
-        Expect(')');
+        if (Match('+')) return Factor();
+        if (Match('-')) return new negativoNodo(Factor());
 
-        return nodo;
+        if (Match('(')) {
+            Nodo nodo = Expresion();
+            Expect(')');
+
+            return nodo;
+        }
+
+        if (Peek() == 'x' || Peek() == 'X') {
+            Posicion++;
+            return new VariableNodo();
+        }
+
+
+        if (char.IsDigit(Peek())) {
+
+            return new NumeroNodo(valor);
+
+            throw new Exception($"Carácter inesperado: {Peek()}");
+        }
+
     }
 
-    if (Peek() == 'x' || Peek() == 'X') {
-        Posicion++;
-        return new VariableNodo();
+    private Nodo Numero() {
+
+        int inicio = Posicion;
+
+        while (Posicion < texto.Length && char.IsDigit(Peek()))
+            Posicion++;
+
+        return new NumeroNodo(int.Parse(texto.Substring(inicio, Posicion - inicio)));
     }
 
+    private char Peek() => Posicion < texto.Length ? texto[Posicion] : '\0';
+    private bool Match(char expected) {
 
-    if (char.IsDigit(Peek())) {
-        
-        return new NumeroNodo(valor);
+        if (Peek() == expected) {
+            Posicion++;
+            return true;
+        }
+        return false;
 
-        throw new Exception($"Carácter inesperado: {Peek()}");
     }
-    
-}
 
-private Nodo Numero() {
+    public Nodo Parse(string entrada) {
 
-    int inicio = Posicion;
+        if (string.IsNullOrWhiteSpace(entrada))
+            throw new ArgumentException("La expresión no puede estar vacía.");
 
-    while (Posicion < texto.Length && char.IsDigit(Peek()))
-        Posicion++;
-    
-    return new NumeroNodo(int.Parse(texto.Substring(inicio, Posicion - inicio)));
-}
+        texto = entrada;
+        Posicion = 0;
 
-private char Peek() => Posicion < texto.Length ? texto[Posicion] : '\0';
-private bool Match(char expected) {
-    
-    if (Peek() == expected) {
-        Posicion++;
-        return true;
-    }
-    return false;
+        var resultado = Expresion();
 
-}
-
-public Nodo Parse(string entrada) {
-    
-    if (string.IsNullOrWhiteSpace(entrada))
-        throw new ArgumentException("La expresión no puede estar vacía.");
-
-    texto = entrada;
-    Posicion = 0;
-
-    var resultado = Expresion();
-
-    if (Posicion < texto.Length)
-        throw new Exception($"Carácter inesperado al final de la expresión: {Peek()}");
+        if (Posicion < texto.Length)
+            throw new Exception($"Carácter inesperado al final de la expresión: {Peek()}");
 
         return resultado;
-}
+    }
 
 }

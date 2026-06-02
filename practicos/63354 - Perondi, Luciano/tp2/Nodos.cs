@@ -6,7 +6,7 @@ class numeroNodo(int valor) : Nodo {    // override del metodo Evaluar para que 
                                         // aca x no importa, solo se evaluan los enteros 
     public override int Evaluar(int x = 0) {
         return valor;
-    }   
+    }
 }
 
 class variableNodo : Nodo {     // clase que cuando sea evaluada va devolver el valor de x (que lo da el usuario)

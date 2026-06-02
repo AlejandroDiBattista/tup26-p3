@@ -1,31 +1,26 @@
 using System;
 
-class Comandos
-{
+class Comandos {
     public bool EsHelp { get; private set; }
     public bool EsTest { get; private set; }
     public string? Expresion { get; private set; }
     public int? ValorX { get; private set; }
 
-    public Comandos(string[] args)
-    {
+    public Comandos(string[] args) {
         if (args.Length == 0)
             return;
 
-        if (args[0] == "--help" || args[0] == "-h")
-        {
+        if (args[0] == "--help" || args[0] == "-h") {
             EsHelp = true;
             return;
         }
 
-        if (args[0] == "--test" || args[0] == "-t")
-        {
+        if (args[0] == "--test" || args[0] == "-t") {
             EsTest = true;
             return;
         }
 
-        if (args.Length == 2)
-        {
+        if (args.Length == 2) {
             if (string.IsNullOrWhiteSpace(args[0]))
                 throw new Exception("Entrada vacía");
 

@@ -40,8 +40,7 @@ internal sealed class EvaluationEngine {
             };
 
             return CacheAndReturn(address, value);
-        }
-        finally {
+        } finally {
             _visiting.Remove(address);
         }
     }
@@ -299,8 +298,7 @@ internal sealed class EvaluationEngine {
     private CalcValue SafeEvaluate(ExpressionNode expression, EvaluationContext context) {
         try {
             return expression.Evaluate(context);
-        }
-        catch {
+        } catch {
             return CalcValue.Error("#error");
         }
     }

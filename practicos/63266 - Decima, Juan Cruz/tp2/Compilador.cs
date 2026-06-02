@@ -1,18 +1,15 @@
-class Compilador
-{
+class Compilador {
 
     private readonly string _expresion;
     private int _pos;
 
 
-    public static Nodo Parse(string expresion)
-    {
+    public static Nodo Parse(string expresion) {
         var compilador = new Compilador(expresion);
         var nodo = compilador.ParseExpresion();
 
         compilador.SaltarEspacios();
-        if (compilador._pos < compilador._expresion.Length)
-        {
+        if (compilador._pos < compilador._expresion.Length) {
             throw new FormatException(
                 $"Token inesperado: '{compilador._expresion[compilador._pos]}'");
         }
@@ -20,24 +17,20 @@ class Compilador
         return nodo;
     }
 
-    private Compilador(string expresion)
-    {
+    private Compilador(string expresion) {
         _expresion = expresion;
     }
 
-    private Nodo ParseExpresion()
-    {
+    private Nodo ParseExpresion() {
         SaltarEspacios();
 
-        if (Fin())
-        {
+        if (Fin()) {
             throw new FormatException("Token inesperado: entrada vacía.");
         }
 
         Nodo izquierda = ParseTermino();
 
-        while (!Fin())
-        {
+        while (!Fin()) {
             SaltarEspacios();
             if (Fin()) break;
 
@@ -56,13 +49,10 @@ class Compilador
     }
 
 
-    private Nodo ParseTermino()
-
-    {
+    private Nodo ParseTermino() {
         Nodo izquierda = ParseFactor();
 
-        while (!Fin())
-        {
+        while (!Fin()) {
             SaltarEspacios();
             if (Fin()) break;
 
@@ -80,40 +70,32 @@ class Compilador
         return izquierda;
     }
 
-    private Nodo ParseFactor()
-
-
-    {
+    private Nodo ParseFactor() {
         SaltarEspacios();
 
-        if (Fin())
-        {
+        if (Fin()) {
             throw new FormatException(
                 "Token inesperado: se esperaba un factor pero se llegó al final de la expresión.");
         }
 
         char c = Actual();
 
-        if (c == '+')
-        {
+        if (c == '+') {
             _pos++;
             return ParseFactor();
         }
 
-        if (c == '-')
-        {
+        if (c == '-') {
             _pos++;
             return new NegativoNodo(ParseFactor());
         }
 
-        if (c == '(')
-        {
+        if (c == '(') {
             _pos++;
             Nodo nodo = ParseExpresion();
 
             SaltarEspacios();
-            if (Fin() || Actual() != ')')
-            {
+            if (Fin() || Actual() != ')') {
                 throw new FormatException("Se esperaba ')'");
             }
 
@@ -121,26 +103,22 @@ class Compilador
             return nodo;
         }
 
-        if (c == 'x' || c == 'X')
-        {
+        if (c == 'x' || c == 'X') {
             _pos++;
             return new VariableNodo();
         }
 
-        if (char.IsDigit(c))
-        {
+        if (char.IsDigit(c)) {
             return ParseNumero();
         }
 
         throw new FormatException($"Token inesperado: '{c}'");
     }
 
-    private Nodo ParseNumero()
-    {
+    private Nodo ParseNumero() {
         int inicio = _pos;
 
-        while (!Fin() && char.IsDigit(Actual()))
-        {
+        while (!Fin() && char.IsDigit(Actual())) {
             _pos++;
         }
 
@@ -148,21 +126,17 @@ class Compilador
         return new NumeroNodo(numero);
     }
 
-    private void SaltarEspacios()
-    {
-        while (!Fin() && char.IsWhiteSpace(Actual()))
-        {
+    private void SaltarEspacios() {
+        while (!Fin() && char.IsWhiteSpace(Actual())) {
             _pos++;
         }
     }
 
-        private bool Fin()
-    {
+    private bool Fin() {
         return _pos >= _expresion.Length;
     }
 
-        private char Actual()
-    {
+    private char Actual() {
         return _expresion[_pos];
     }
 }

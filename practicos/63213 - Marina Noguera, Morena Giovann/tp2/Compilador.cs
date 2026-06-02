@@ -1,24 +1,20 @@
 namespace TP2.Calculadora;
 
-public class Compilador 
-{
+public class Compilador {
     private readonly string _entrada;
     private int _pos;
     private char Actual => _pos < _entrada.Length ? _entrada[_pos] : '\0';
 
-    public Compilador(string entrada) 
-    { 
-        _entrada = entrada.Replace(" ", ""); 
-        _pos = 0; 
+    public Compilador(string entrada) {
+        _entrada = entrada.Replace(" ", "");
+        _pos = 0;
     }
 
     public static Nodo Parse(string entrada) => new Compilador(entrada).ParsearExpresion();
 
-    private Nodo ParsearExpresion() 
-    {
+    private Nodo ParsearExpresion() {
         var nodoIzq = ParsearTermino();
-        while (Actual == '+' || Actual == '-') 
-        {
+        while (Actual == '+' || Actual == '-') {
             char op = Actual;
             _pos++;
             var nodoDer = ParsearTermino();
@@ -27,11 +23,9 @@ public class Compilador
         return nodoIzq;
     }
 
-    private Nodo ParsearTermino() 
-    {
+    private Nodo ParsearTermino() {
         var nodoIzq = ParsearFactor();
-        while (Actual == '*' || Actual == '/') 
-        {
+        while (Actual == '*' || Actual == '/') {
             char op = Actual;
             _pos++;
             var nodoDer = ParsearFactor();
@@ -40,13 +34,11 @@ public class Compilador
         return nodoIzq;
     }
 
-    private Nodo ParsearFactor() 
-    {
+    private Nodo ParsearFactor() {
         if (Actual == '-') { _pos++; return new NegativoNodo(ParsearFactor()); }
         if (Actual == '+') { _pos++; return ParsearFactor(); }
 
-        if (Actual == '(') 
-        {
+        if (Actual == '(') {
             _pos++;
             var nodo = ParsearExpresion();
             if (Actual != ')') throw new FormatException("Se esperaba ')'");
@@ -54,17 +46,15 @@ public class Compilador
             return nodo;
         }
 
-        if (char.IsDigit(Actual)) 
-        {
-            string n = ""; 
+        if (char.IsDigit(Actual)) {
+            string n = "";
             while (char.IsDigit(Actual)) n += _entrada[_pos++];
             return new NumeroNodo(int.Parse(n));
         }
 
-        if (Actual == 'x' || Actual == 'X') 
-        { 
-            _pos++; 
-            return new VariableNodo(); 
+        if (Actual == 'x' || Actual == 'X') {
+            _pos++;
+            return new VariableNodo();
         }
 
         throw new FormatException($"Token inesperado: {Actual}");

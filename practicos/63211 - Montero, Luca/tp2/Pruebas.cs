@@ -1,9 +1,7 @@
 using System;
 
-public class Pruebas
-{
-    public static void Ejecutar()
-    {
+public class Pruebas {
+    public static void Ejecutar() {
         Console.WriteLine("Ejecutando pruebas automáticas...\n");
 
         Probar("1 + 2 * 3", 0, 7);
@@ -19,39 +17,28 @@ public class Pruebas
         Console.WriteLine("\nPruebas finalizadas.");
     }
 
-    private static void Probar(string expresion, int x, int esperado)
-    {
-        try
-        {
+    private static void Probar(string expresion, int x, int esperado) {
+        try {
             Compilador compilador = new Compilador();
             Nodo ast = compilador.Parsear(expresion);
             int resultado = ast.Evaluar(x);
-            if (resultado == esperado)
-            {
+            if (resultado == esperado) {
                 Console.WriteLine($"[OK]    '{expresion}' con x={x} == {resultado}");
-            }
-            else
-            {
+            } else {
                 Console.WriteLine($"[FALLO] '{expresion}' con x={x}. Esperado: {esperado}, Obtenido: {resultado}");
             }
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.WriteLine($"[FALLO] '{expresion}'. Excepción inesperada: {ex.Message}");
         }
     }
 
-    private static void ProbarError(string expresion, int x)
-    {
-        try
-        {
+    private static void ProbarError(string expresion, int x) {
+        try {
             Compilador compilador = new Compilador();
             Nodo ast = compilador.Parsear(expresion);
-            ast.Evaluar(x); 
+            ast.Evaluar(x);
             Console.WriteLine($"[FALLO] '{expresion}'. Debería haber fallado pero no lo hizo.");
-        }
-        catch (Exception)
-        {
+        } catch (Exception) {
             Console.WriteLine($"[OK]    '{expresion}' lanzó un error esperado.");
         }
     }

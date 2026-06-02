@@ -1,8 +1,6 @@
 # Trabajo Práctico 3 — `AgendaT` - 
 ## Aplicación de Agenda TUI con persistencia en SQLite e import/export JSON
 
-**Entrega:** Hasta el viernes 22 de MAYO de 2026 a las 21:00hs
-
 ---
 
 ## Descripción

@@ -1,10 +1,8 @@
 // Pruebas.cs
 using System;
 
-public static class Pruebas
-{
-    public static void Ejecutar()
-    {
+public static class Pruebas {
+    public static void Ejecutar() {
         var compilador = new Compilador();
         var casos = new (string exp, int x, int esperado)[] {
             ("1 + 2 * 3", 0, 7),
@@ -17,8 +15,7 @@ public static class Pruebas
         Console.WriteLine("Ejecutando pruebas...");
         int pasadas = 0;
 
-        foreach (var c in casos)
-        {
+        foreach (var c in casos) {
             try {
                 int result = compilador.Parsear(c.exp).Evaluar(c.x);
                 if (result == c.esperado) pasadas++;
@@ -27,7 +24,7 @@ public static class Pruebas
                 Console.WriteLine($"Error en {c.exp}: {e.Message}");
             }
         }
-        
+
         Console.WriteLine($"{pasadas}/{casos.Length} pruebas pasaron correctamente.");
     }
 }

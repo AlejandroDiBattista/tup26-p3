@@ -1,149 +1,117 @@
-namespace calculadora;
+using System;
+using System.Text;
 
-// ─── Compilador: parser de descenso recursivo ────────────────────────────────
-//
-//  Gramática:
-//    Expresion := Termino  { ('+' | '-') Termino  }
-//    Termino   := Factor   { ('*' | '/') Factor   }
-//    Factor    := '+' Factor
-//              | '-' Factor
-//              | '(' Expresion ')'
-//              | numero
-//              | 'x' | 'X'
-
-class Compilador
+namespace CalculadoraAST
 {
-    private string _texto = "";
-    private int _pos;
-
-    // ─── API pública ─────────────────────────────────────────────────────────
-
-    public Nodo Compilar(string expresion)
+    public static class Compilador
     {
-        _texto = expresion.Trim();
-        _pos = 0;
+        public static Nodo Parse(string entrada)
+        {
+            if (string.IsNullOrWhiteSpace(entrada))
+                throw new Exception("Error de sintaxis: Entrada vacía");
 
-        if (_texto.Length == 0)
-            throw new ErrorDeParsing("Error: la expresión está vacía.");
+            var parser = new Parser(entrada);
+            Nodo ast = parser.Parsear();
 
-        Nodo resultado = ParsearExpresion();
+            if (parser.TokenActual != '\0')
+                throw new Exception($"Error de sintaxis: Carácter inesperado al final '{parser.TokenActual}'");
 
-        SkipEspacios();
-        if (_pos < _texto.Length)
-            throw new ErrorDeParsing($"Error: token inesperado '{_texto[_pos]}' en posición {_pos}.");
-
-        return resultado;
+            return ast;
+        }
     }
 
-    // ─── Expresion := Termino { ('+' | '-') Termino } ────────────────────────
-
-    private Nodo ParsearExpresion()
+    public class Parser
     {
-        Nodo nodo = ParsearTermino();
+        private int _posicion;
+        private readonly string _entrada;
+        
+        
+        public char TokenActual => _posicion < _entrada.Length ? _entrada[_posicion] : '\0';
 
-        while (true)
-        {
-            SkipEspacios();
-            if (_pos >= _texto.Length) break;
-
-            char op = _texto[_pos];
-            if (op != '+' && op != '-') break;
-
-            _pos++;
-            Nodo der = ParsearTermino();
-            nodo = op == '+' ? new SumaNodo(nodo, der) : new RestaNodo(nodo, der);
+        public Parser(string entrada)
+        {      
+            _entrada = entrada.Replace(" ", "");
+            _posicion = 0;
         }
 
-        return nodo;
-    }
+        private void Avanzar() => _posicion++;
 
-    // ─── Termino := Factor { ('*' | '/') Factor } ───────────────────────────
-
-    private Nodo ParsearTermino()
-    {
-        Nodo nodo = ParsearFactor();
-
-        while (true)
+        public Nodo Parsear()
         {
-            SkipEspacios();
-            if (_pos >= _texto.Length) break;
+            Nodo nodo = ParsearTermino();
 
-            char op = _texto[_pos];
-            if (op != '*' && op != '/') break;
+            while (TokenActual == '+' || TokenActual == '-')
+            {
+                char op = TokenActual;
+                Avanzar();
+                Nodo derecho = ParsearTermino();
 
-            _pos++;
-            Nodo der = ParsearFactor();
-            nodo = op == '*' ? new MultiplicacionNodo(nodo, der) : new DivisionNodo(nodo, der);
+                if (op == '+') nodo = new SumaNodo(nodo, derecho);
+                else nodo = new RestaNodo(nodo, derecho);
+            }
+
+            return nodo;
         }
 
-        return nodo;
-    }
-
-    // ─── Factor := unario | '(' Expresion ')' | numero | x ──────────────────
-
-    private Nodo ParsearFactor()
-    {
-        SkipEspacios();
-
-        if (_pos >= _texto.Length)
-            throw new ErrorDeParsing("Error: se esperaba un valor pero la expresión terminó.");
-
-        char c = _texto[_pos];
-
-        // Unario positivo (no cambia nada)
-        if (c == '+')
+        private Nodo ParsearTermino()
         {
-            _pos++;
-            return ParsearFactor();
+            Nodo nodo = ParsearFactor();
+
+            while (TokenActual == '*' || TokenActual == '/')
+            {
+                char op = TokenActual;
+                Avanzar();
+                Nodo derecho = ParsearFactor();
+
+                if (op == '*') nodo = new MultiplicacionNodo(nodo, derecho);
+                else nodo = new DivisionNodo(nodo, derecho);
+            }
+
+            return nodo;
         }
 
-        // Unario negativo
-        if (c == '-')
+        private Nodo ParsearFactor()
         {
-            _pos++;
-            Nodo operando = ParsearFactor();
-            return new NegativoNodo(operando);
+            if (TokenActual == '+')
+            {
+                Avanzar();
+                return new PositivoNodo(ParsearFactor());
+            }
+
+            if (TokenActual == '-')
+            {
+                Avanzar();
+                return new NegativoNodo(ParsearFactor());
+            }
+
+            if (TokenActual == '(')
+            {
+                Avanzar();
+                Nodo nodo = Parsear();
+                if (TokenActual != ')')
+                    throw new Exception("Error de sintaxis: Paréntesis sin cerrar. Se esperaba ')'");
+                Avanzar(); 
+                return nodo;
+            }
+
+            if (char.IsDigit(TokenActual))
+            {
+                StringBuilder sb = new StringBuilder();
+                while (char.IsDigit(TokenActual))
+                {
+                    sb.Append(TokenActual);
+                    Avanzar();
+                }
+                return new NumeroNodo(int.Parse(sb.ToString()));
+            }
+
+            if (TokenActual == 'x' || TokenActual == 'X')
+            {
+                Avanzar();
+                return new VariableNodo();
+            }
+
+            throw new Exception($"Error de sintaxis: Token inesperado '{TokenActual}'");
         }
-
-        // Paréntesis
-        if (c == '(')
-        {
-            _pos++;
-            Nodo interior = ParsearExpresion();
-            SkipEspacios();
-
-            if (_pos >= _texto.Length || _texto[_pos] != ')')
-                throw new ErrorDeParsing("Error: paréntesis sin cerrar.");
-
-            _pos++;
-            return interior;
-        }
-
-        // Variable x / X
-        if (c == 'x' || c == 'X')
-        {
-            _pos++;
-            return new VariableNodo();
-        }
-
-        // Número entero
-        if (char.IsDigit(c))
-        {
-            int inicio = _pos;
-            while (_pos < _texto.Length && char.IsDigit(_texto[_pos]))
-                _pos++;
-            int valor = int.Parse(_texto[inicio.._pos]);
-            return new NumeroNodo(valor);
-        }
-
-        throw new ErrorDeParsing($"Error: token inesperado '{c}' en posición {_pos}.");
-    }
-
-    // ─── Utilidades ──────────────────────────────────────────────────────────
-
-    private void SkipEspacios()
-    {
-        while (_pos < _texto.Length && _texto[_pos] == ' ')
-            _pos++;
     }
 }

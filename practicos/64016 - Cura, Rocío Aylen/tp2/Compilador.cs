@@ -2,13 +2,11 @@ using System.ComponentModel;
 using System.Dynamic;
 using System.Reflection.Metadata;
 
-class Compilador
-{
+class Compilador {
     private string input;
     private int pos;
 
-    public static Nodo Parse(string texto)
-    {
+    public static Nodo Parse(string texto) {
         if (string.IsNullOrWhiteSpace(texto))
             throw new FormatException("Token inesperado");
 
@@ -24,23 +22,19 @@ class Compilador
         return resultado;
     }
 
-    private char Actual()
-    {
+    private char Actual() {
         if (pos >= input.Length) return '\0';
         return input[pos];
     }
 
-    private char Consumir()
-    {
+    private char Consumir() {
         return input[pos++];
     }
 
-    private Nodo Expresion()
-    {
+    private Nodo Expresion() {
         Nodo nodo = Termino();
 
-        while (Actual() == '+' || Actual() == '-')
-        {
+        while (Actual() == '+' || Actual() == '-') {
             char op = Consumir();
             Nodo der = Termino();
             nodo = new Binaria(nodo, op, der);
@@ -49,12 +43,10 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Termino()
-    {
+    private Nodo Termino() {
         Nodo nodo = Factor();
 
-        while (Actual() == '*' || Actual() == '/')
-        {
+        while (Actual() == '*' || Actual() == '/') {
             char op = Consumir();
             Nodo der = Factor();
             nodo = new Binaria(nodo, op, der);
@@ -63,13 +55,11 @@ class Compilador
         return nodo;
     }
 
-    private Nodo Factor()
-    {
+    private Nodo Factor() {
         char c = Actual();
 
-        
-        if (c == '+' || c == '-')
-        {
+
+        if (c == '+' || c == '-') {
             char op = Consumir();
             Nodo expr = Factor();
 
@@ -77,21 +67,18 @@ class Compilador
             return new Unaria('-', expr);
         }
 
-        
-        if (c == 'x' || c == 'X')
-        {
+
+        if (c == 'x' || c == 'X') {
             Consumir();
             return new Variable();
         }
 
-        
-        if (char.IsDigit(c))
-        {
+
+        if (char.IsDigit(c)) {
             return Numero();
         }
 
-        if (c == '(')
-        {
+        if (c == '(') {
             Consumir();
             Nodo expr = Expresion();
 
@@ -105,12 +92,10 @@ class Compilador
         throw new FormatException("Token inesperado");
     }
 
-    private Nodo Numero()
-    {
+    private Nodo Numero() {
         int inicio = pos;
 
-        while (char.IsDigit(Actual()))
-        {
+        while (char.IsDigit(Actual())) {
             Consumir();
         }
 

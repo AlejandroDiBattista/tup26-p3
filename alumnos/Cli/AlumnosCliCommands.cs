@@ -24,7 +24,10 @@ class TrabajoPracticoSettings : CommandSettings {
     public string TrabajoPractico { get; init; } = string.Empty;
 }
 
-sealed class BajarPrsSettings : TrabajoPracticoSettings {
+sealed class BajarPrsSettings : CommandSettings {
+    [CommandArgument(0, "[tp]")]
+    public string? TrabajoPractico { get; init; }
+
     [CommandOption("--forzar")]
     public bool Forzar { get; init; }
 }
@@ -112,6 +115,11 @@ sealed class CrearCarpetasCommand : Command<VacioSettings> {
 sealed class PublicarCommand : Command<PublicarPracticoSettings> {
     protected override int Execute(CommandContext context, PublicarPracticoSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.PublicarPractico(settings.TrabajoPractico, settings.Forzar);
+}
+
+sealed class PublicarRehacerCommand : Command<TrabajoPracticoSettings> {
+    protected override int Execute(CommandContext context, TrabajoPracticoSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.PublicarRehacer(settings.TrabajoPractico);
 }
 
 sealed class PrsCommand : Command<VacioSettings> {

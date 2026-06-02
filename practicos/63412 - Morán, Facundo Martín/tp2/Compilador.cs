@@ -41,12 +41,12 @@ class Compilador {
                 throw new FormatException("Se esperaba ')'");
             _cursor++;
             return nodo;
-        }   
+        }
 
         if (actual == 'x' || actual == 'X') { _cursor++; return new VariableNodo(); }
 
         if (char.IsDigit(actual)) return ParseNumero();
-throw new FormatException($"Token inesperado: '{actual}'");
+        throw new FormatException($"Token inesperado: '{actual}'");
     }
     private Nodo ParseTermino() {
         Nodo resultado = ParseFactor();

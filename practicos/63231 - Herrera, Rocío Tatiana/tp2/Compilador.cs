@@ -14,7 +14,7 @@ public class Parser {
         _pos = 0;
     }
 
-   
+
     public static Expresion Analizar(string expresion) {
         var p = new Parser(expresion);
         var resultado = p.LeerExpresion();
@@ -28,7 +28,7 @@ public class Parser {
     private Expresion LeerExpresion() {
         Expresion nodo = LeerTermino();
 
-        while (_pos < _cadena.Length && 
+        while (_pos < _cadena.Length &&
               (_cadena[_pos] == '+' || _cadena[_pos] == '-')) {
             char op = _cadena[_pos++];
             Expresion der = LeerTermino();
@@ -44,7 +44,7 @@ public class Parser {
     private Expresion LeerTermino() {
         Expresion nodo = LeerFactor();
 
-        while (_pos < _cadena.Length && 
+        while (_pos < _cadena.Length &&
               (_cadena[_pos] == '*' || _cadena[_pos] == '/')) {
             char op = _cadena[_pos++];
             Expresion der = LeerFactor();
@@ -57,7 +57,7 @@ public class Parser {
         return nodo;
     }
 
-private Expresion LeerFactor() {
+    private Expresion LeerFactor() {
         if (_pos >= _cadena.Length)
             throw new FormatException("Token inesperado");
 

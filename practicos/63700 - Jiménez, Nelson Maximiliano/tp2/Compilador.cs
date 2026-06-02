@@ -1,10 +1,8 @@
-class Compilador
-{
+class Compilador {
     private string _input;
     private int _pos;
 
-    public Nodo Parsear(string input)
-    {
+    public Nodo Parsear(string input) {
         _input = input.Replace(" ", "");
         _pos = 0;
 
@@ -22,12 +20,10 @@ class Compilador
     char Actual() => _pos < _input.Length ? _input[_pos] : '\0';
     void Avanzar() => _pos++;
 
-    Nodo Expresion()
-    {
+    Nodo Expresion() {
         var nodo = Termino();
 
-        while (Actual() == '+' || Actual() == '-')
-        {
+        while (Actual() == '+' || Actual() == '-') {
             char op = Actual();
             Avanzar();
             var der = Termino();
@@ -40,12 +36,10 @@ class Compilador
         return nodo;
     }
 
-    Nodo Termino()
-    {
+    Nodo Termino() {
         var nodo = Factor();
 
-        while (Actual() == '*' || Actual() == '/')
-        {
+        while (Actual() == '*' || Actual() == '/') {
             char op = Actual();
             Avanzar();
             var der = Factor();
@@ -58,22 +52,18 @@ class Compilador
         return nodo;
     }
 
-    Nodo Factor()
-    {
-        if (Actual() == '+')
-        {
+    Nodo Factor() {
+        if (Actual() == '+') {
             Avanzar();
             return Factor();
         }
 
-        if (Actual() == '-')
-        {
+        if (Actual() == '-') {
             Avanzar();
             return new NegativoNodo(Factor());
         }
 
-        if (Actual() == '(')
-        {
+        if (Actual() == '(') {
             Avanzar();
             var expr = Expresion();
 
@@ -84,13 +74,11 @@ class Compilador
             return expr;
         }
 
-        if (char.IsDigit(Actual()))
-        {
+        if (char.IsDigit(Actual())) {
             return Numero();
         }
 
-        if (Actual() == 'x' || Actual() == 'X')
-        {
+        if (Actual() == 'x' || Actual() == 'X') {
             Avanzar();
             return new VariableNodo();
         }
@@ -98,8 +86,7 @@ class Compilador
         throw new Exception("Token inesperado");
     }
 
-    Nodo Numero()
-    {
+    Nodo Numero() {
         int inicio = _pos;
 
         while (char.IsDigit(Actual()))

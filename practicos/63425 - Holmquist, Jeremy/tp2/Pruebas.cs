@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-public class Pruebas
-{
-    public static void EjecutarPruebas()
-    {
+public class Pruebas {
+    public static void EjecutarPruebas() {
         Console.WriteLine("=== Ejecutando Pruebas Automáticas ===\n");
 
         int pasadas = 0;
@@ -12,8 +10,7 @@ public class Pruebas
 
         var casos = ObtenerCasosPrueba();
 
-        foreach (var caso in casos)
-        {
+        foreach (var caso in casos) {
             totales++;
             bool paso = EjecutarCaso(caso);
             if (paso) pasadas++;
@@ -24,63 +21,47 @@ public class Pruebas
         Console.WriteLine($"║ Pasadas: {pasadas}/{totales} de pruebas            ║");
         Console.WriteLine("╚════════════════════════════╝");
 
-        if (pasadas == totales)
-        {
+        if (pasadas == totales) {
             Console.WriteLine("✓ Todas las pruebas pasaron");
             Environment.Exit(0);
-        }
-        else
-        {
+        } else {
             Console.WriteLine($"✗ {totales - pasadas} prueba(s) fallaron");
             Environment.Exit(1);
         }
     }
 
-    private static bool EjecutarCaso(CasoPrueba caso)
-    {
-        try
-        {
+    private static bool EjecutarCaso(CasoPrueba caso) {
+        try {
             var compilador = new Compilador(caso.Expresion);
             Nodo ast = compilador.Parsear();
             int resultado = ast.Evaluar(caso.ValorX);
 
-            if (resultado == caso.ResultadoEsperado)
-            {
+            if (resultado == caso.ResultadoEsperado) {
                 Console.WriteLine($"✓ {caso.Descripcion}");
                 Console.WriteLine($"  Expresión: '{caso.Expresion}' con x={caso.ValorX}");
                 Console.WriteLine($"  Resultado: {resultado}");
                 return true;
-            }
-            else
-            {
+            } else {
                 Console.WriteLine($"✗ {caso.Descripcion}");
                 Console.WriteLine($"  Expresión: '{caso.Expresion}' con x={caso.ValorX}");
                 Console.WriteLine($"  Resultado: {resultado} (esperado: {caso.ResultadoEsperado})");
                 return false;
             }
-        }
-        catch (Exception ex)
-        {
-            if (caso.DebefallarCon != null)
-            {
+        } catch (Exception ex) {
+            if (caso.DebefallarCon != null) {
                 bool esErrorEsperado = ex.Message.Contains(caso.DebefallarCon);
-                if (esErrorEsperado)
-                {
+                if (esErrorEsperado) {
                     Console.WriteLine($"✓ {caso.Descripcion} (Error esperado)");
                     Console.WriteLine($"  Expresión: '{caso.Expresion}'");
                     Console.WriteLine($"  Error: {ex.Message}");
                     return true;
-                }
-                else
-                {
+                } else {
                     Console.WriteLine($"✗ {caso.Descripcion} (Error diferente)");
                     Console.WriteLine($"  Esperado: {caso.DebefallarCon}");
                     Console.WriteLine($"  Obtuvimos: {ex.Message}");
                     return false;
                 }
-            }
-            else
-            {
+            } else {
                 Console.WriteLine($"✗ {caso.Descripcion} (Excepción inesperada)");
                 Console.WriteLine($"  Expresión: '{caso.Expresion}'");
                 Console.WriteLine($"  Error: {ex.Message}");
@@ -89,8 +70,7 @@ public class Pruebas
         }
     }
 
-    private static List<CasoPrueba> ObtenerCasosPrueba()
-    {
+    private static List<CasoPrueba> ObtenerCasosPrueba() {
         return new List<CasoPrueba>
         {
             new CasoPrueba
@@ -277,8 +257,7 @@ public class Pruebas
         };
     }
 
-    private class CasoPrueba
-    {
+    private class CasoPrueba {
         public string Descripcion { get; set; }
         public string Expresion { get; set; }
         public int ValorX { get; set; }

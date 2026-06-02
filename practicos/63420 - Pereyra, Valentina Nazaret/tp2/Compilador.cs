@@ -1,18 +1,15 @@
 using System;
 
-class Compilador
-{
+class Compilador {
     string text;
     int pos;
 
-    Compilador(string input)
-    {
+    Compilador(string input) {
         text = input;
         pos = 0;
     }
 
-    public static Nodo Compilar(string input)
-    {
+    public static Nodo Compilar(string input) {
         var c = new Compilador(input);
         var nodo = c.Expresion();
         if (c.pos < c.text.Length)
@@ -24,75 +21,58 @@ class Compilador
 
     void Avanzar() => pos++;
 
-    void Espacios()
-    {
+    void Espacios() {
         while (char.IsWhiteSpace(Actual)) Avanzar();
     }
 
-    Nodo Expresion()
-    {
+    Nodo Expresion() {
         var nodo = Termino();
 
-        while (true)
-        {
+        while (true) {
             Espacios();
-            if (Actual == '+')
-            {
+            if (Actual == '+') {
                 Avanzar();
                 nodo = new SumaNodo(nodo, Termino());
-            }
-            else if (Actual == '-')
-            {
+            } else if (Actual == '-') {
                 Avanzar();
                 nodo = new RestaNodo(nodo, Termino());
-            }
-            else break;
+            } else break;
         }
 
         return nodo;
     }
 
-    Nodo Termino()
-    {
+    Nodo Termino() {
         var nodo = Factor();
 
-        while (true)
-        {
+        while (true) {
             Espacios();
-            if (Actual == '*')
-            {
+            if (Actual == '*') {
                 Avanzar();
                 nodo = new MultiplicacionNodo(nodo, Factor());
-            }
-            else if (Actual == '/')
-            {
+            } else if (Actual == '/') {
                 Avanzar();
                 nodo = new DivisionNodo(nodo, Factor());
-            }
-            else break;
+            } else break;
         }
 
         return nodo;
     }
 
-    Nodo Factor()
-    {
+    Nodo Factor() {
         Espacios();
 
-        if (Actual == '+')
-        {
+        if (Actual == '+') {
             Avanzar();
             return Factor();
         }
 
-        if (Actual == '-')
-        {
+        if (Actual == '-') {
             Avanzar();
             return new NegativoNodo(Factor());
         }
 
-        if (Actual == '(')
-        {
+        if (Actual == '(') {
             Avanzar();
             var nodo = Expresion();
 
@@ -106,8 +86,7 @@ class Compilador
         if (char.IsDigit(Actual))
             return Numero();
 
-        if (Actual == 'x' || Actual == 'X')
-        {
+        if (Actual == 'x' || Actual == 'X') {
             Avanzar();
             return new VariableNodo();
         }
@@ -115,8 +94,7 @@ class Compilador
         throw new Exception("Token inesperado");
     }
 
-    Nodo Numero()
-    {
+    Nodo Numero() {
         int inicio = pos;
 
         while (char.IsDigit(Actual)) Avanzar();

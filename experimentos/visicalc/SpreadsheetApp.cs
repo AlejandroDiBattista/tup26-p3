@@ -170,7 +170,7 @@ internal static class SpreadsheetApp {
         }
     }
 
-    private static void Render( Spreadsheet sheet, int selectedRow, int selectedColumn, int topRow, int leftColumn, string? currentFile, bool showRawValues, string status) {
+    private static void Render(Spreadsheet sheet, int selectedRow, int selectedColumn, int topRow, int leftColumn, string? currentFile, bool showRawValues, string status) {
         Console.Clear();
         Console.CursorVisible = false;
 

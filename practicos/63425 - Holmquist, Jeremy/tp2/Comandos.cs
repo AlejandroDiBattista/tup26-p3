@@ -1,36 +1,29 @@
 using System;
 
 
-public class Comandos
-{
-    public static void ProcesarArgumentos(string[] args)
-    {
-        if (args.Length == 0)
-        {
+public class Comandos {
+    public static void ProcesarArgumentos(string[] args) {
+        if (args.Length == 0) {
             ModoInteractivo();
             return;
         }
 
-        
-        if (args[0] == "--help" || args[0] == "-h")
-        {
+
+        if (args[0] == "--help" || args[0] == "-h") {
             MostrarAyuda();
             Environment.Exit(0);
         }
 
-        if (args[0] == "--test" || args[0] == "-t")
-        {
+        if (args[0] == "--test" || args[0] == "-t") {
             Pruebas.EjecutarPruebas();
             Environment.Exit(0);
         }
 
-        if (args.Length >= 2)
-        {
+        if (args.Length >= 2) {
             string expresion = args[0];
             string valorStr = args[1];
 
-            if (!int.TryParse(valorStr, out int valor))
-            {
+            if (!int.TryParse(valorStr, out int valor)) {
                 Console.Error.WriteLine($"Error: valor '{valorStr}' no es un entero válido");
                 Environment.Exit(1);
             }
@@ -44,89 +37,69 @@ public class Comandos
         Environment.Exit(1);
     }
 
-    private static void EvaluarDirecto(string expresion, int valor)
-    {
-        try
-        {
+    private static void EvaluarDirecto(string expresion, int valor) {
+        try {
             var compilador = new Compilador(expresion);
             Nodo ast = compilador.Parsear();
             int resultado = ast.Evaluar(valor);
             Console.WriteLine(resultado);
-        }
-        catch (DivideByZeroException ex)
-        {
+        } catch (DivideByZeroException ex) {
             Console.Error.WriteLine($"Error: {ex.Message}");
             Environment.Exit(1);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.Error.WriteLine($"Error de parsing: {ex.Message}");
             Environment.Exit(1);
         }
     }
 
-    private static void ModoInteractivo()
-    {
+    private static void ModoInteractivo() {
         Console.WriteLine("=== Calculadora Interactiva ===");
         Console.WriteLine("Ingrese una expresión con la variable x:");
         string expresionStr = Console.ReadLine();
 
-        if (string.IsNullOrEmpty(expresionStr))
-        {
+        if (string.IsNullOrEmpty(expresionStr)) {
             Console.WriteLine("Expresión vacía. Saliendo.");
             return;
         }
 
         Nodo ast;
-        try
-        {
+        try {
             var compilador = new Compilador(expresionStr);
             ast = compilador.Parsear();
             Console.WriteLine($"✓ Expresión compilada correctamente");
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Console.Error.WriteLine($"Error de parsing: {ex.Message}");
             return;
         }
 
         Console.WriteLine("\nIngrese valores para x (escriba 'fin' para terminar):");
 
-        while (true)
-        {
+        while (true) {
             Console.Write("> ");
             string entrada = Console.ReadLine();
 
-            if (string.IsNullOrEmpty(entrada) || entrada.ToLower() == "fin")
-            {
+            if (string.IsNullOrEmpty(entrada) || entrada.ToLower() == "fin") {
                 Console.WriteLine("Hasta luego.");
                 break;
             }
 
-            if (!int.TryParse(entrada, out int valor))
-            {
+            if (!int.TryParse(entrada, out int valor)) {
                 Console.Error.WriteLine($"Error: '{entrada}' no es un entero válido");
                 continue;
             }
 
-            try
-            {
+            try {
                 int resultado = ast.Evaluar(valor);
                 Console.WriteLine($"Resultado: {resultado}");
-            }
-            catch (DivideByZeroException ex)
-            {
+            } catch (DivideByZeroException ex) {
                 Console.Error.WriteLine($"Error: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Console.Error.WriteLine($"Error en evaluación: {ex.Message}");
             }
         }
     }
 
-    private static void MostrarAyuda()
-    {
+    private static void MostrarAyuda() {
         Console.WriteLine("╔════════════════════════════════════════════════════╗");
         Console.WriteLine("║  Calculadora - Evaluador de Expresiones Aritméticas ║");
         Console.WriteLine("╚════════════════════════════════════════════════════╝");

@@ -1,6 +1,6 @@
 class Compilador {
     private string _texto = "";
-    private int    _pos   = 0;
+    private int _pos = 0;
 
     private char Actual => _pos < _texto.Length ? _texto[_pos] : '\0';
 

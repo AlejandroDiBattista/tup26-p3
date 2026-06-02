@@ -6,51 +6,44 @@
 record SortField(string Name, bool Numeric, bool Descending);
 
 record AppConfig(
-    string?         InputFile,
-    string?         OutputFile,
-    string          Delimiter,
-    bool            NoHeader,
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
     List<SortField> SortFields
 );
 
 // ─── Pipeline principal ───────────────────────────────────────────────────────
 
-try
-{
-    var config  = ParseArgs(args);
-    var raw     = ReadInput(config);
-    var rows    = ParseDelimited(raw, config);
-    var sorted  = SortRows(rows, config);
-    var output  = Serialize(sorted, config);
+try {
+    var config = ParseArgs(args);
+    var raw = ReadInput(config);
+    var rows = ParseDelimited(raw, config);
+    var sorted = SortRows(rows, config);
+    var output = Serialize(sorted, config);
     WriteOutput(output, config);
-}
-catch (Exception ex)
-{
+} catch (Exception ex) {
     Console.Error.WriteLine($"Error: {ex.Message}");
     Environment.Exit(1);
 }
 
 // ─── 1. ParseArgs ─────────────────────────────────────────────────────────────
 
-AppConfig ParseArgs(string[] args)
-{
-    if (args.Length == 0 || args.Contains("-h") || args.Contains("--help"))
-    {
+AppConfig ParseArgs(string[] args) {
+    if (args.Length == 0 || args.Contains("-h") || args.Contains("--help")) {
         PrintHelp();
         Environment.Exit(0);
     }
 
-    string?         inputFile  = null;
-    string?         outputFile = null;
-    string          delimiter  = ",";
-    bool            noHeader   = false;
+    string? inputFile = null;
+    string? outputFile = null;
+    string delimiter = ",";
+    bool noHeader = false;
     List<SortField> sortFields = new();
-    int             positional = 0;
+    int positional = 0;
 
-    for (int i = 0; i < args.Length; i++)
-    {
-        switch (args[i])
-        {
+    for (int i = 0; i < args.Length; i++) {
+        switch (args[i]) {
             case "-b" or "--by":
                 sortFields.Add(ParseSortField(Next()));
                 break;
@@ -75,14 +68,11 @@ AppConfig ParseArgs(string[] args)
                 if (args[i].StartsWith('-'))
                     throw new ArgumentException($"Opción desconocida: {args[i]}");
 
-                if (positional == 0)      { inputFile  = args[i]; positional++; }
-                else if (positional == 1) { outputFile = args[i]; positional++; }
-                else throw new ArgumentException("Demasiados argumentos posicionales.");
+                if (positional == 0) { inputFile = args[i]; positional++; } else if (positional == 1) { outputFile = args[i]; positional++; } else throw new ArgumentException("Demasiados argumentos posicionales.");
                 break;
         }
 
-        string Next()
-        {
+        string Next() {
             if (i + 1 >= args.Length)
                 throw new ArgumentException($"Se esperaba un valor después de '{args[i]}'.");
             return args[++i];
@@ -92,17 +82,15 @@ AppConfig ParseArgs(string[] args)
     return new AppConfig(inputFile, outputFile, delimiter, noHeader, sortFields);
 }
 
-SortField ParseSortField(string spec)
-{
-    var parts      = spec.Split(':');
-    var name       = parts[0];
-    var numeric    = parts.Length > 1 && parts[1].Equals("num",   StringComparison.OrdinalIgnoreCase);
-    var descending = parts.Length > 2 && parts[2].Equals("desc",  StringComparison.OrdinalIgnoreCase);
+SortField ParseSortField(string spec) {
+    var parts = spec.Split(':');
+    var name = parts[0];
+    var numeric = parts.Length > 1 && parts[1].Equals("num", StringComparison.OrdinalIgnoreCase);
+    var descending = parts.Length > 2 && parts[2].Equals("desc", StringComparison.OrdinalIgnoreCase);
     return new SortField(name, numeric, descending);
 }
 
-void PrintHelp()
-{
+void PrintHelp() {
     Console.WriteLine("""
         sortx — Ordena archivos de texto delimitados (CSV, TSV, PSV, etc.)
 
@@ -130,8 +118,7 @@ void PrintHelp()
 
 // ─── 2. ReadInput ─────────────────────────────────────────────────────────────
 
-string ReadInput(AppConfig config)
-{
+string ReadInput(AppConfig config) {
     if (config.InputFile is null)
         return Console.In.ReadToEnd();
 
@@ -143,8 +130,7 @@ string ReadInput(AppConfig config)
 
 // ─── 3. ParseDelimited ───────────────────────────────────────────────────────
 
-(string[]? Header, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config)
-{
+(string[]? Header, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config) {
     var lines = text.ReplaceLineEndings("\n")
                     .Split('\n')
                     .Where(l => l.Trim().Length > 0)
@@ -155,24 +141,19 @@ string ReadInput(AppConfig config)
 
     string[]? header = null;
 
-    if (!config.NoHeader)
-    {
+    if (!config.NoHeader) {
         header = lines[0].Split(config.Delimiter);
-        lines  = lines.Skip(1).ToList();
+        lines = lines.Skip(1).ToList();
     }
 
-    var rows = lines.Select(line =>
-    {
+    var rows = lines.Select(line => {
         var fields = line.Split(config.Delimiter);
-        var dict   = new Dictionary<string, string>();
+        var dict = new Dictionary<string, string>();
 
-        if (header is not null)
-        {
+        if (header is not null) {
             for (int i = 0; i < header.Length; i++)
                 dict[header[i]] = i < fields.Length ? fields[i] : "";
-        }
-        else
-        {
+        } else {
             for (int i = 0; i < fields.Length; i++)
                 dict[i.ToString()] = fields[i];
         }
@@ -187,16 +168,13 @@ string ReadInput(AppConfig config)
 
 (string[]? Header, List<Dictionary<string, string>> Rows) SortRows(
     (string[]? Header, List<Dictionary<string, string>> Rows) data,
-    AppConfig config)
-{
+    AppConfig config) {
     if (config.SortFields.Count == 0)
         return data;
 
     // Validar que todos los campos existan
-    if (data.Rows.Count > 0)
-    {
-        foreach (var sf in config.SortFields)
-        {
+    if (data.Rows.Count > 0) {
+        foreach (var sf in config.SortFields) {
             if (!data.Rows[0].ContainsKey(sf.Name))
                 throw new ArgumentException($"Campo no encontrado: '{sf.Name}'");
         }
@@ -209,8 +187,7 @@ string ReadInput(AppConfig config)
         ? data.Rows.OrderByDescending(r => GetKey(r, first))
         : data.Rows.OrderBy(r => GetKey(r, first));
 
-    foreach (var sf in config.SortFields.Skip(1))
-    {
+    foreach (var sf in config.SortFields.Skip(1)) {
         var capture = sf;
         ordered = capture.Descending
             ? ordered.ThenByDescending(r => GetKey(r, capture))
@@ -219,8 +196,7 @@ string ReadInput(AppConfig config)
 
     return (data.Header, ordered.ToList());
 
-    IComparable GetKey(Dictionary<string, string> row, SortField sf)
-    {
+    IComparable GetKey(Dictionary<string, string> row, SortField sf) {
         var val = row.TryGetValue(sf.Name, out var v) ? v : "";
         if (sf.Numeric)
             return double.TryParse(val, out var n) ? n : double.MinValue;
@@ -232,15 +208,13 @@ string ReadInput(AppConfig config)
 
 string Serialize(
     (string[]? Header, List<Dictionary<string, string>> Rows) data,
-    AppConfig config)
-{
+    AppConfig config) {
     var sb = new System.Text.StringBuilder();
 
     if (data.Header is not null)
         sb.AppendLine(string.Join(config.Delimiter, data.Header));
 
-    foreach (var row in data.Rows)
-    {
+    foreach (var row in data.Rows) {
         IEnumerable<string> keys = data.Header is not null
             ? (IEnumerable<string>)data.Header
             : row.Keys;
@@ -253,10 +227,8 @@ string Serialize(
 
 // ─── 6. WriteOutput ───────────────────────────────────────────────────────────
 
-void WriteOutput(string text, AppConfig config)
-{
-    if (config.OutputFile is null)
-    {
+void WriteOutput(string text, AppConfig config) {
+    if (config.OutputFile is null) {
         Console.Write(text);
         return;
     }

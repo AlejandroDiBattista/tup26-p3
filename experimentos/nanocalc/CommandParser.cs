@@ -192,8 +192,7 @@ internal static class CommandParser {
     private static int ParseColumnOrHeader(string token, SpreadsheetDocument document, EvaluationEngine engine) {
         try {
             return ParseColumn(token);
-        }
-        catch (InvalidOperationException) {
+        } catch (InvalidOperationException) {
             for (var column = 0; column < CellAddress.MaxColumns; column++) {
                 var header = document.GetDisplayValue(new CellAddress(0, column), engine).ToText();
                 if (string.Equals(header, token, StringComparison.CurrentCultureIgnoreCase)) {

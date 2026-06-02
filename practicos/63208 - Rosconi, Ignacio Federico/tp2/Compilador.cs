@@ -1,9 +1,7 @@
 using System;
 
-static class Compilador
-{
-    public static Nodo Compilar(string texto)
-    {
+static class Compilador {
+    public static Nodo Compilar(string texto) {
         Parser p = new Parser(texto);
         Nodo nodo = p.Expresion();
 
@@ -13,13 +11,11 @@ static class Compilador
         return nodo;
     }
 
-    class Parser
-    {
+    class Parser {
         string txt;
         int pos;
 
-        public Parser(string t)
-        {
+        public Parser(string t) {
             txt = t;
             pos = 0;
         }
@@ -28,75 +24,58 @@ static class Compilador
         public bool HayMas() => pos < txt.Length;
         void Avanzar() => pos++;
 
-        void Espacios()
-        {
+        void Espacios() {
             while (char.IsWhiteSpace(Actual)) Avanzar();
         }
 
-        public Nodo Expresion()
-        {
+        public Nodo Expresion() {
             Nodo nodo = Termino();
 
-            while (true)
-            {
+            while (true) {
                 Espacios();
-                if (Actual == '+')
-                {
+                if (Actual == '+') {
                     Avanzar();
                     nodo = new SumaNodo(nodo, Termino());
-                }
-                else if (Actual == '-')
-                {
+                } else if (Actual == '-') {
                     Avanzar();
                     nodo = new RestaNodo(nodo, Termino());
-                }
-                else break;
+                } else break;
             }
 
             return nodo;
         }
 
-        Nodo Termino()
-        {
+        Nodo Termino() {
             Nodo nodo = Factor();
 
-            while (true)
-            {
+            while (true) {
                 Espacios();
-                if (Actual == '*')
-                {
+                if (Actual == '*') {
                     Avanzar();
                     nodo = new MultiplicacionNodo(nodo, Factor());
-                }
-                else if (Actual == '/')
-                {
+                } else if (Actual == '/') {
                     Avanzar();
                     nodo = new DivisionNodo(nodo, Factor());
-                }
-                else break;
+                } else break;
             }
 
             return nodo;
         }
 
-        Nodo Factor()
-        {
+        Nodo Factor() {
             Espacios();
 
-            if (Actual == '+')
-            {
+            if (Actual == '+') {
                 Avanzar();
                 return Factor();
             }
 
-            if (Actual == '-')
-            {
+            if (Actual == '-') {
                 Avanzar();
                 return new NegativoNodo(Factor());
             }
 
-            if (Actual == '(')
-            {
+            if (Actual == '(') {
                 Avanzar();
                 Nodo nodo = Expresion();
                 if (Actual != ')') throw new Exception("Paréntesis sin cerrar");
@@ -106,8 +85,7 @@ static class Compilador
 
             if (char.IsDigit(Actual)) return Numero();
 
-            if (Actual == 'x' || Actual == 'X')
-            {
+            if (Actual == 'x' || Actual == 'X') {
                 Avanzar();
                 return new VariableNodo();
             }
@@ -115,8 +93,7 @@ static class Compilador
             throw new Exception("Token inesperado");
         }
 
-        Nodo Numero()
-        {
+        Nodo Numero() {
             int inicio = pos;
             while (char.IsDigit(Actual)) Avanzar();
             int valor = int.Parse(txt.Substring(inicio, pos - inicio));

@@ -1,7 +1,5 @@
 # Trabajo Práctico — Herramienta CLI: `sortx`
 
-**Entrega:**  8 de ABRIL de 2025 a las 23:59hs
-
 ---
 
 ## Descripción

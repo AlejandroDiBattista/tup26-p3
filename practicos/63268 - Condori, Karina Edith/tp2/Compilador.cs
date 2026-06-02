@@ -1,18 +1,15 @@
 using System;
 
-public class Compilador
-{
+public class Compilador {
     private readonly string input;
     private int pos;
 
-    private Compilador(string expresion)
-    {
+    private Compilador(string expresion) {
         input = expresion;
         pos = 0;
     }
 
-    public static Nodo Parsear(string expresion)
-    {
+    public static Nodo Parsear(string expresion) {
         if (string.IsNullOrWhiteSpace(expresion))
             throw new Exception("Error: Entrada vacía.");
 
@@ -26,78 +23,63 @@ public class Compilador
         return ast;
     }
 
-    private void SaltarEspacios()
-    {
+    private void SaltarEspacios() {
         while (pos < input.Length && char.IsWhiteSpace(input[pos])) pos++;
     }
 
-    private char? Peek()
-    {
+    private char? Peek() {
         SaltarEspacios();
         if (pos >= input.Length) return null;
         return input[pos];
     }
 
-    private char Leer()
-    {
+    private char Leer() {
         SaltarEspacios();
         return input[pos++];
     }
 
-    private Nodo ParsearExpresion()
-    {
+    private Nodo ParsearExpresion() {
         Nodo nodo = ParsearTermino();
-        while (true)
-        {
+        while (true) {
             char? op = Peek();
-            if (op == '+' || op == '-')
-            {
+            if (op == '+' || op == '-') {
                 Leer(); // Consume el operador
                 Nodo derecho = ParsearTermino();
                 if (op == '+') nodo = new SumaNodo(nodo, derecho);
                 else nodo = new RestaNodo(nodo, derecho);
-            }
-            else break;
+            } else break;
         }
         return nodo;
     }
 
-    private Nodo ParsearTermino()
-    {
+    private Nodo ParsearTermino() {
         Nodo nodo = ParsearFactor();
-        while (true)
-        {
+        while (true) {
             char? op = Peek();
-            if (op == '*' || op == '/')
-            {
+            if (op == '*' || op == '/') {
                 Leer();
                 Nodo derecho = ParsearFactor();
                 if (op == '*') nodo = new MultiplicacionNodo(nodo, derecho);
                 else nodo = new DivisionNodo(nodo, derecho);
-            }
-            else break;
+            } else break;
         }
         return nodo;
     }
 
-    private Nodo ParsearFactor()
-    {
+    private Nodo ParsearFactor() {
         char? token = Peek();
         if (token == null) throw new Exception("Error: Expresión incompleta, token inesperado.");
 
-        if (token == '+')
-        {
+        if (token == '+') {
             Leer();
             return new PositivoNodo(ParsearFactor());
         }
-        if (token == '-')
-        {
+        if (token == '-') {
             Leer();
             return new NegativoNodo(ParsearFactor());
         }
 
-        if (token == '(')
-        {
+        if (token == '(') {
             Leer();
             Nodo nodo = ParsearExpresion();
             char? cierre = Peek();
@@ -106,17 +88,14 @@ public class Compilador
             return nodo;
         }
 
-        if (token == 'x' || token == 'X')
-        {
+        if (token == 'x' || token == 'X') {
             Leer();
             return new VariableNodo();
         }
 
-        if (char.IsDigit(token.Value))
-        {
+        if (char.IsDigit(token.Value)) {
             int valor = 0;
-            while (pos < input.Length && char.IsDigit(input[pos]))
-            {
+            while (pos < input.Length && char.IsDigit(input[pos])) {
                 valor = valor * 10 + (input[pos] - '0');
                 pos++;
             }

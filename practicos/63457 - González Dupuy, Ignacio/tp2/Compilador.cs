@@ -49,7 +49,7 @@ class Compilador {
 
         return nodo;
     }
-        private static Nodo Factor() {
+    private static Nodo Factor() {
         if (pos >= texto.Length)
             throw new FormatException("Token inesperado");
 

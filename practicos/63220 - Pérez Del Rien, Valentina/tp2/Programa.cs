@@ -1,49 +1,39 @@
 using System;
 
-class Program
-{
-    static void Main(string[] args)
-    {
-        try
-        {
+class Program {
+    static void Main(string[] args) {
+        try {
             var cmd = new Comandos(args);
 
-            if (cmd.EsHelp)
-            {
+            if (cmd.EsHelp) {
                 MostrarHelp();
                 return;
             }
 
-            if (cmd.EsTest)
-            {
+            if (cmd.EsTest) {
                 Pruebas.Ejecutar();
                 return;
             }
 
-            if (cmd.Expresion != null && cmd.ValorX.HasValue)
-            {
+            if (cmd.Expresion != null && cmd.ValorX.HasValue) {
                 EjecutarDirecto(cmd.Expresion, cmd.ValorX.Value);
                 return;
             }
 
             ModoInteractivo();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             Console.WriteLine("Error: " + e.Message);
         }
     }
 
-    static void EjecutarDirecto(string expr, int x)
-    {
+    static void EjecutarDirecto(string expr, int x) {
         var comp = new Compilador();
         var ast = comp.Parsear(expr);
 
         Console.WriteLine(ast.Evaluar(x));
     }
 
-    static void ModoInteractivo()
-    {
+    static void ModoInteractivo() {
         Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
         Console.Write("Ingrese una expresión matemática con la variable 'x': \n> ");
 
@@ -55,8 +45,7 @@ class Program
         var comp = new Compilador();
         var ast = comp.Parsear(expr);
 
-        while (true)
-        {
+        while (true) {
             Console.Write("x = ");
             string input = Console.ReadLine() ?? "";
 
@@ -70,8 +59,7 @@ class Program
         }
     }
 
-    static void MostrarHelp()
-    {
+    static void MostrarHelp() {
         Console.WriteLine("Uso:");
         Console.WriteLine("calculadora \"expresion\" valor");
         Console.WriteLine("--help | -h");

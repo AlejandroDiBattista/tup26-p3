@@ -1,7 +1,7 @@
 #!/usr/bin/env dotnet
 #:property PublishAot=false
 
-#:package Terminal.Gui@2.0.1
+#:package Terminal.Gui@*
 #:package Microsoft.Data.Sqlite@*
 #:package Dapper@*
 #:package Dapper.Contrib@*
@@ -16,21 +16,24 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
-
-/// ==== 
-/// Estes es un archivo de referencia con el esqueleto del proyecto.
-/// No es un código de ejemplo, sino el punto de partida para el desarrollo del trabajo práctico. 
-/// ====
+using System.Collections.ObjectModel;
 
 // Punto de entrada
-using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+string dbPath = args.Length > 0 ? args[0] : "agenda.db";
 
+using (SqliteAgendaStore store = new(dbPath)) {
+    Application.Init();
+    Application.Run(new AgendaWindow(store));
+    Application.Shutdown();
+}
 
 // Ventana principal
-public sealed class AgendaWindow : Runnable {
+public sealed class AgendaWindow : Window{
 
-    public AgendaWindow() {
+    private readonly SqliteAgendaStore store;
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store ?? throw new ArgumentNullException(nameof(store));
+        contacts = store.GetAll();
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
@@ -44,33 +47,128 @@ public sealed class AgendaWindow : Runnable {
             Menus = [
                 new MenuBarItem("_Archivo", [
                     new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
+                    null!,
+                    new MenuItem("_Editar contacto", null!, EditarContacto),
+                    new MenuItem("_Eliminar contacto", null!, EliminarContacto),
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        listView = new ListView() {
+            X = 0,
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
-
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
-        };
-
-        Add(menu, openButton);
+        RefreshList();;
+        Add(menu, listView);
     }
+    private List<Contacto> contacts = [];
+    private ListView listView = null!;
+    private void RefreshList() {
+    listView.SetSource(
+        new ObservableCollection<string>(
+            contacts.Select(c => c.Nombre)
+        )
+    );
+}
+private void AbrirDialogo() {
+        var dialog = new ContactoDialog();
 
-    private void AbrirDialogo() {
-        EjemploDialog dialog = new();
-        App!.Run(dialog);
+        Application.Run(dialog);
+
+        if (dialog.Resultado != null) {
+            store.Insert(dialog.Resultado);
+            contacts.Add(dialog.Resultado);
+
+            RefreshList();;
+        }
     }
+    private void EliminarContacto() {
+    if (contacts.Count == 0)
+        return;
 
+    if (listView.SelectedItem is not int index)
+        return;
+
+    var contacto = contacts[index];
+
+    var confirmDialog = new Dialog()
+    {
+        Title = "Confirmar",
+        Width = 40,
+        Height = 7
+    };
+
+    var label = new Label()
+    {
+        Text = "¿Eliminar contacto?",
+        X = 1,
+        Y = 1
+    };
+
+    bool aceptar = false;
+
+    var btnSi = new Button()
+    {
+        Text = "Sí",
+        X = 10,
+        Y = 3
+    };
+
+    var btnNo = new Button()
+    {
+        Text = "No",
+        X = 20,
+        Y = 3
+    };
+
+    btnSi.Accepting += (_, e) => {
+        aceptar = true;
+        Application.RequestStop();
+    };
+
+    btnNo.Accepting += (_, e) => {
+        Application.RequestStop();
+    };
+
+    confirmDialog.Add(label);
+    confirmDialog.AddButton(btnSi);
+    confirmDialog.AddButton(btnNo);
+
+    Application.Run(confirmDialog);
+
+    if (!aceptar)
+        return;
+
+    store.Delete(contacto);
+    contacts.RemoveAt(index);
+
+    RefreshList();
+}
+    private void EditarContacto() {
+        if (contacts.Count == 0)
+            return;
+
+        if (listView.SelectedItem is not int index)
+            return;
+
+        var original = contacts[index];
+
+        var dialog = new ContactoDialog(original);
+        Application.Run(dialog);
+
+        if (dialog.Resultado != null) {
+            store.Update(dialog.Resultado);
+
+            contacts[index] = dialog.Resultado;
+
+            RefreshList();;
+        }
+    }
     private void SolicitarSalir() {
-        App!.RequestStop();
+        Application.RequestStop();
     }
 
     protected override bool OnKeyDown(Key key) {
@@ -84,35 +182,99 @@ public sealed class AgendaWindow : Runnable {
 }
 
 // Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog {
-    public EjemploDialog() {
-        Title  = "Diálogo de ejemplo";
+public sealed class ContactoDialog : Dialog {
+
+    private TextField nombreField;
+    private TextField telefonoField;
+    private TextField emailField;
+    private TextView notasField;
+
+    public Contacto? Resultado { get; private set; }
+    private Contacto? contactoOriginal;
+
+    public ContactoDialog(Contacto? contacto = null) {
+        Title = contacto == null ? "Nuevo Contacto" : "Editar Contacto";
         Width  = 50;
-        Height = 8;
+        Height = 18;
 
-        Label message = new() {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X    = Pos.Center(),
-            Y    = 1
+        contactoOriginal = contacto;
+        Add(new Label() { Text = "Nombre:", X = 1, Y = 1 });
+        nombreField = new TextField() { Text = "", X = 15, Y = 1, Width = 30 };
+
+        Add(new Label() { Text = "Teléfono:", X = 1, Y = 3 });
+        telefonoField = new TextField() { Text = "", X = 15, Y = 3, Width = 30 };
+
+        Add(new Label() { Text = "Email:", X = 1, Y = 5 });
+        emailField = new TextField() { Text = "", X = 15, Y = 5, Width = 30 };
+
+        Add(new Label() { Text = "Notas:", X = 1, Y = 7 });
+        notasField = new TextView() { X = 15, Y = 7, Width = 30, Height = 4 };
+    
+        if (contacto != null) {
+            nombreField.Text = contacto.Nombre ?? "";
+            telefonoField.Text = contacto.Telefonos ?? "";
+            emailField.Text = contacto.Email ?? "";
+            notasField.Text = contacto.Notas ?? "";
+        }
+
+        Button guardar = new() { Text = "_Guardar", IsDefault = true };
+        Button cancelar = new() { Text = "_Cancelar" };
+
+        guardar.Accepting += (_, e) => {
+            Resultado = contactoOriginal?.Clone() ?? new Contacto();
+
+            Resultado.Nombre = nombreField.Text.ToString() ?? "";
+            Resultado.Telefonos = telefonoField.Text.ToString() ?? "";
+            Resultado.Email = emailField.Text.ToString() ?? "";
+            Resultado.Notas = notasField.Text.ToString() ?? "";
+
+            Application.RequestStop();
+            e.Handled = true;
         };
-
-        Button closeButton = new() {
-            Text      = "_Cerrar",
-            IsDefault = true
-        };
-
-        closeButton.Accepting += (_, e) => {
-            App!.RequestStop();
+        cancelar.Accepting += (_, e) => {
+            Resultado = null;
+            Application.RequestStop();
             e.Handled = true;
         };
 
-        Add(message);
-        AddButton(closeButton);
+        Add(nombreField, telefonoField, emailField, notasField);
+        AddButton(guardar);
+        AddButton(cancelar);
     }
 }
 
 
-public class SqliteAgendaStore {}
+public class SqliteAgendaStore : IDisposable {
+    private readonly DbConnection connection;
+    public SqliteAgendaStore(string path) {
+        connection = new SqliteConnection($"Data Source={path}");
+        connection.Open();
+        connection.Execute(@"
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT,
+                Email TEXT,
+                Notas TEXT,
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+        ");
+    }
+    public List<Contacto> GetAll() {
+        return connection.Query<Contacto>("SELECT * FROM Contactos").ToList();
+    }
+    public void Insert(Contacto c) {
+        var id = connection.Insert(c);
+        c.Id = (int)id;
+    }
+    public void Delete(Contacto c) {
+        connection.Delete(c);
+    }
+    public void Update(Contacto c) {
+        connection.Update(c);
+    }
+    public void Dispose() => connection.Dispose();
+}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
@@ -123,4 +285,15 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+      public Contacto Clone() {
+        return new Contacto {
+            Id = Id,
+            Nombre = Nombre,
+            Telefonos = Telefonos,
+            Email = Email,
+            Notas = Notas,
+            Favorito = Favorito
+        };
+    }
 }
