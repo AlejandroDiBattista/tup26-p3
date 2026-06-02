@@ -5,7 +5,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
-// ── Configuración ──────────────────────────────────────────────────────────
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,14 +16,14 @@ builder.Services.ConfigureHttpJsonOptions(opt =>
 
 var app = builder.Build();
 
-// ── Inicialización de la base de datos ────────────────────────────────────
+
 
 using (var scope = app.Services.CreateScope()) {
     var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
     repositorio.Iniciar();
 }
 
-// ── Endpoints ─────────────────────────────────────────────────────────────
+
 app.MapGet("/productos", (CatalogoRepositorio repo) =>
     Results.Ok(repo.ListarProductos()));
 
@@ -97,7 +97,7 @@ static bool ProductoValido(ProductoNuevoDto dto, out string error) {
     return true;
 }
 
-// ── Modelo ────────────────────────────────────────────────────────────────
+
 
 enum TipoMovimiento { Compra, Venta, Ajuste }
 
@@ -122,21 +122,20 @@ record ProductoNuevoDto(string Codigo, string Nombre, decimal Precio, int Stock)
 record MovimientoNuevoDto(TipoMovimiento Tipo, int Cantidad);
 
 
-// ── DbContext ─────────────────────────────────────────────────────────────
+
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 
-    public override void OnModelCreating(ModelBuilder modelBuilder) {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<Producto>()
             .HasIndex(p => p.Codigo)
             .IsUnique();
     }
 }
 
-// ── Repositorio ───────────────────────────────────────────────────────────
 
 class CatalogoRepositorio {
     private readonly CatalogoDb db;
@@ -158,7 +157,7 @@ class CatalogoRepositorio {
         }
     }
 
-    public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Codigo).ToList();
+    public List<Producto> ListarProductos() => db.Productos.OrderBy(p => p.Codigo).ToList();
 
     public Producto? ObtenerProducto(int id) => db.Productos.Find(id);
 
@@ -198,6 +197,35 @@ class CatalogoRepositorio {
         db.SaveChanges();
         return true;
     }
+
+    public List<MovimientoDeProducto> ListarMovimientos(int productoId) =>
+        db.Movimientos
+          .Where(m => m.ProductoId == productoId)
+          .OrderByDescending(m => m.Fecha)
+          .ToList();
+
+    public MovimientoDeProducto? RegistrarMovimiento(int productoId, MovimientoNuevoDto dto) {
+        var producto = db.Productos.Find(productoId);
+        if (producto is null) return null;
+
+        producto.Stock = dto.Tipo switch {
+            TipoMovimiento.Compra => producto.Stock + dto.Cantidad,
+            TipoMovimiento.Venta => producto.Stock - dto.Cantidad,
+            TipoMovimiento.Ajuste => dto.Cantidad,
+            _ => producto.Stock
+        };
+
+        var movimiento = new MovimientoDeProducto {
+            ProductoId = productoId,
+            Tipo = dto.Tipo,
+            Cantidad = dto.Cantidad,
+            Fecha = DateTime.Now,
+        };
+        db.Movimientos.Add(movimiento);
+        db.SaveChanges();
+        return movimiento;
+    }
+
 
     public bool CodigoEnUso(string codigo, int? exceptoId = null) =>
         db.Productos.Any(p => p.Codigo == codigo.Trim() && (!exceptoId.HasValue || p.Id != exceptoId.Value));
