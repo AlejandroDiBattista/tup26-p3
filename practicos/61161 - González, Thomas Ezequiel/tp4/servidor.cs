@@ -35,13 +35,34 @@ app.Run("http://localhost:5050");
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record class Producto(int Id, 
+ string Codigo, 
+string Nombre, 
+ decimal Precio, 
+int Stock);
+enum TipoMovimiento
+{
+    Compra,
+    Venta,
+    Ajuste
+}
+
+record class MovimientoDeProducto(
+    int Id,
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha
+);
+
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos =>
+    Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
