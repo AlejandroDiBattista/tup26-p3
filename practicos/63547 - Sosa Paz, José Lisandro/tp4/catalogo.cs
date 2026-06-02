@@ -359,6 +359,7 @@ void RegistrarMovimiento(TipoMovimiento tipo)
     CargarProductos();
 }
 
+// Dialogos para agregar o editar productos desde la TUI.
 ProductoEntrada? MostrarDialogoProducto(string titulo, Producto? producto)
 {
     var dialogo = DialogoBase(titulo, 52, 15);
