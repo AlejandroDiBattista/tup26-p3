@@ -43,12 +43,12 @@ class CatalogoWindow : Window
                 new MenuItem("_Salir", "", () => Application.RequestStop())
             }),
             new MenuBarItem("_Productos", new MenuItem[] {
-                new MenuItem("_Nuevo", "", () => MessageBox.Query("Info", "Pronto", "OK")),
-                new MenuItem("_Editar", "", () => MessageBox.Query("Info", "Pronto", "OK")),
-                new MenuItem("_Eliminar", "", () => MessageBox.Query("Info", "Pronto", "OK"))
+                new MenuItem("_Nuevo", "", () => AgregarProducto()),
+                new MenuItem("_Editar", "", () => EditarProducto()),
+                new MenuItem("_Eliminar", "", () => EliminarProducto())
             }),
             new MenuBarItem("_Stock", new MenuItem[] {
-                new MenuItem("_Registrar Movimiento", "", () => MessageBox.Query("Info", "Pronto", "OK"))
+                new MenuItem("_Registrar Movimiento", "", () => RegistrarMovimiento())
             })
         });
         Add(menu);
@@ -71,8 +71,7 @@ class CatalogoWindow : Window
         frameDer.Add(_detalleMovimientos);
 
         Add(frameIzq, frameDer);
-
-        // Llamo a los datos de una al arrancar
+        
         _ = CargarDatos();
     }
 
@@ -86,7 +85,7 @@ class CatalogoWindow : Window
         }
         catch (Exception)
         {
-            MessageBox.ErrorQuery("Error", "Fijate si el servidor.cs esta corriendo", "OK");
+            MessageBox.ErrorQuery("Error", "Fijate si el servidor esta corriendo", "OK");
         }
     }
 
@@ -100,7 +99,7 @@ class CatalogoWindow : Window
             
         var lineas = _filtrados.Select(p => $"{p.Codigo} | {p.Nombre} | ${p.Precio} | Stock: {p.Stock}").ToList();
         _listaProductos.SetSource(new ObservableCollection<string>(lineas));
-        _detalleMovimientos.Text = ""; // limpio el historial si cambia la busqueda
+        _detalleMovimientos.Text = ""; 
     }
 
     async Task CargarHistorial()
@@ -124,7 +123,7 @@ class CatalogoWindow : Window
             }
             else
             {
-                txt += "No hay movimientos registrados.";
+                txt += "No hay movimientos.";
             }
             
             _detalleMovimientos.Text = txt;
@@ -133,6 +132,168 @@ class CatalogoWindow : Window
         {
             _detalleMovimientos.Text = "Error al cargar historial.";
         }
+    }
+
+    // --- ACCIONES CRUD ---
+
+    void AgregarProducto()
+    {
+        var prod = new Producto();
+        var dialog = new DialogoProducto(prod);
+        Application.Run(dialog);
+        
+        if (dialog.Guardar) {
+            _ = _api.PostAsJsonAsync("/productos", prod).ContinueWith(t => CargarDatos());
+        }
+    }
+
+    void EditarProducto()
+    {
+        int idx = _listaProductos.SelectedItem ?? -1;
+        if (idx < 0 || idx >= _filtrados.Count) {
+            MessageBox.ErrorQuery("Aviso", "Selecciona un producto primero", "OK");
+            return;
+        }
+        
+        var prod = _filtrados[idx];
+        var dialog = new DialogoProducto(prod);
+        Application.Run(dialog);
+        
+        if (dialog.Guardar) {
+            _ = _api.PutAsJsonAsync($"/productos/{prod.Id}", prod).ContinueWith(t => CargarDatos());
+        }
+    }
+
+    void EliminarProducto()
+    {
+        int idx = _listaProductos.SelectedItem ?? -1;
+        if (idx < 0 || idx >= _filtrados.Count) {
+            MessageBox.ErrorQuery("Aviso", "Selecciona un producto primero", "OK");
+            return;
+        }
+        
+        var prod = _filtrados[idx];
+        var c = MessageBox.Query("Ojo", $"Seguro que queres borrar {prod.Nombre}?", "Si", "No");
+        if (c == 0) {
+            _ = _api.DeleteAsync($"/productos/{prod.Id}").ContinueWith(t => CargarDatos());
+        }
+    }
+
+    void RegistrarMovimiento()
+    {
+        int idx = _listaProductos.SelectedItem ?? -1;
+        if (idx < 0 || idx >= _filtrados.Count) {
+            MessageBox.ErrorQuery("Aviso", "Selecciona un producto primero", "OK");
+            return;
+        }
+        
+        var prod = _filtrados[idx];
+        var dialog = new DialogoMovimiento();
+        Application.Run(dialog);
+        
+        if (dialog.Guardar) {
+            var mov = new Movimiento {
+                Tipo = dialog.Tipo,
+                Cantidad = dialog.Cantidad
+            };
+            
+            _ = _api.PostAsJsonAsync($"/productos/{prod.Id}/movimientos", mov).ContinueWith(async t => {
+                await CargarDatos();
+                // forzamos la actualizacion del historial
+                Application.Invoke(async () => await CargarHistorial());
+            });
+        }
+    }
+}
+
+// --- DIALOGOS RUSTICOS ---
+
+class DialogoProducto : Dialog
+{
+    public bool Guardar = false;
+    TextField _txtCodigo, _txtNombre, _txtPrecio, _txtStock;
+
+    public DialogoProducto(Producto p)
+    {
+        Title = "Formulario de Producto";
+        Width = 50; Height = 14;
+
+        Add(new Label { Text = "Codigo:", X = 1, Y = 1 });
+        _txtCodigo = new TextField { Text = p.Codigo, X = 10, Y = 1, Width = 30 };
+        Add(_txtCodigo);
+
+        Add(new Label { Text = "Nombre:", X = 1, Y = 3 });
+        _txtNombre = new TextField { Text = p.Nombre, X = 10, Y = 3, Width = 30 };
+        Add(_txtNombre);
+
+        Add(new Label { Text = "Precio:", X = 1, Y = 5 });
+        _txtPrecio = new TextField { Text = p.Precio.ToString(), X = 10, Y = 5, Width = 30 };
+        Add(_txtPrecio);
+
+        Add(new Label { Text = "Stock:", X = 1, Y = 7 });
+        _txtStock = new TextField { Text = p.Stock.ToString(), X = 10, Y = 7, Width = 30 };
+        Add(_txtStock);
+
+        var btnGuardar = new Button { Text = "Guardar", X = 10, Y = 9 };
+        var btnCancelar = new Button { Text = "Cancelar", X = 25, Y = 9 };
+
+        btnCancelar.Accepting += (s, e) => Application.RequestStop();
+        btnGuardar.Accepting += (s, e) => {
+            p.Codigo = _txtCodigo.Text?.ToString() ?? "";
+            p.Nombre = _txtNombre.Text?.ToString() ?? "";
+            decimal.TryParse(_txtPrecio.Text?.ToString(), out decimal pre);
+            p.Precio = pre;
+            int.TryParse(_txtStock.Text?.ToString(), out int stk);
+            p.Stock = stk;
+            
+            Guardar = true;
+            e.Handled = true;
+            Application.RequestStop();
+        };
+
+        Add(btnGuardar, btnCancelar);
+    }
+}
+
+class DialogoMovimiento : Dialog
+{
+    public bool Guardar = false;
+    public string Tipo = "";
+    public int Cantidad = 0;
+    
+    RadioGroup _rgTipo;
+    TextField _txtCant;
+
+    public DialogoMovimiento()
+    {
+        Title = "Movimiento de Stock";
+        Width = 50; Height = 10;
+
+        _rgTipo = new RadioGroup { RadioLabels = new[] { "Compra", "Venta", "Ajuste" }, X = 1, Y = 1 };
+        Add(_rgTipo);
+
+        Add(new Label { Text = "Cant:", X = 15, Y = 2 });
+        _txtCant = new TextField { Text = "0", X = 22, Y = 2, Width = 15 };
+        Add(_txtCant);
+
+        var btnOk = new Button { Text = "Aceptar", X = 10, Y = 5 };
+        var btnCancelar = new Button { Text = "Cancelar", X = 25, Y = 5 };
+
+        btnCancelar.Accepting += (s, e) => Application.RequestStop();
+        btnOk.Accepting += (s, e) => {
+            if (_rgTipo.SelectedItem == 0) Tipo = "Compra";
+            if (_rgTipo.SelectedItem == 1) Tipo = "Venta";
+            if (_rgTipo.SelectedItem == 2) Tipo = "Ajuste";
+            
+            int.TryParse(_txtCant.Text?.ToString(), out int c);
+            Cantidad = c;
+            
+            Guardar = true;
+            e.Handled = true;
+            Application.RequestStop();
+        };
+
+        Add(btnOk, btnCancelar);
     }
 }
 
@@ -152,4 +313,4 @@ class Movimiento
     public string Tipo { get; set; } = "";
     public int Cantidad { get; set; }
     public DateTime Fecha { get; set; }
-}
+}           
