@@ -438,4 +438,104 @@ private void RegisterMovement(TipoMovimiento type) {
     }
 }
 
+public sealed class ProductDialog : Dialog {
+    private readonly TextField codeField;
+    private readonly TextField nameField;
+    private readonly TextField priceField;
+    private readonly TextField stockField;
 
+public new bool Accepted { get; private set; }
+public ProductoRequest? Product { get; private set; }
+
+public ProductDialog(Producto? product = null) {
+      Title = product is null ? "Agregar producto" : "Modificar producto";
+        Width = 70;
+        Height = 13;
+
+        Label codeLabel = LabelAt("Codigo:", 1, 1);
+        codeField = FieldAt(Pos.Right(codeLabel) + 1, 1, product?.Codigo ?? "");
+
+        Label nameLabel = LabelAt("Precio:", 1, 3);
+        nameField = FieldAt(Pos.Right(nameLabel) + 1, 3, product?.Nombre ?? "");
+
+        Label priceLabel = LabelAt("Precio:", 1, 5);  
+        priceField = FieldAt(Pos.Right(priceLabel) + 1, 5, (product?.Precio ?? 0).ToString(CultureInfo.CurrentCulture));
+
+        Label stockLabel = LabelAt("Stock:", 1, 7);
+        stockField = FieldAt(Pos.Right(stockLabel) + 1, 7, (product?.Stock ?? 0).ToString(CultureInfo.CurrentCulture));
+
+        Button saveButton = new() {
+            Text = "_Guardar",
+            IsDefault = true,
+        };
+        saveButton.Accepting += (_, e) => {
+            if (TryBuildProduct(out ProductoRequest? result)) {
+                Product = result;
+                Accepted = true;
+                App!.RequestStop();
+            }
+
+            e.Handled = true;
+        };
+
+        Button cancelButton = new() {
+            Text = "_Cancelar"
+        };
+        cancelButton.Accepting += (_, e) => {
+            Accepted = false;
+            App!.RequestStop();
+            e.Handled = true;   
+        };
+
+      Add(codeLabel, codeField, nameLabel, nameField, priceLabel, priceField, stockLabel, stockField);
+      AddButton(saveButton);
+      AddButton(cancelButton);
+}
+
+private bool TryBuildProduct(out ProductoRequest? product) {
+    product = null;
+    string code = codeField.Text?.ToString()?.Trim() ?? "";
+    string name = nameField.Text?.ToString()?.Trim() ?? "";
+
+    if (string.IsNullOrWhiteSpace(code)) {
+        MessageBox.ErrorQuery(App!, "Validacion", "El codigo no puede estar vacio.", "Aceptar");
+        return false;
+        }
+    
+    if (string.IsNullOrWhiteSpace(name)) {
+        MessageBox.ErrorQuery(App!, "Validacion", "El nombre no puede estar vacio.", "Aceptar");
+        return false;
+    }
+
+    if (!decimal.TryParse(priceField.Text?.ToString(), NumberStyles.Number, CultureInfo.CurrentCulture, out decimal price) || price < 0) {
+            MessageBox.ErrorQuery(App!, "Validacion", "El precio debe ser un numero mayor o igual que cero.", "Aceptar");
+            return false;
+        }
+
+        if (!int.TryParse(stockField.Text?.ToString(), NumberStyles.Integer, CultureInfo.CurrentCulture, out int stock) || stock < 0) {
+            MessageBox.ErrorQuery(App!, "Validacion", "El stock debe ser un entero mayor o igual que cero.", "Aceptar");
+            return false;
+        }
+
+        product = new ProductoRequest(code, name, price, stock);
+        return true;
+    }
+
+    private static Label LabelAt(string text, int x, int y) {
+        return new Label() {
+            Text = text,
+            X = x,
+            Y = y,
+            Width = 9
+        };
+    }
+
+    private static TextField FieldAt(Pos x, int y, string text) {
+        return new TextField() {
+            Text = text,
+            X = x,
+            Y = y,
+            Width = Dim.Fill(1)
+        };
+    }
+}
