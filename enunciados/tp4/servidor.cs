@@ -61,7 +61,13 @@ app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepos
     return Results.Ok(r.GetMovimientos(productoId));
 });
 
-
+app.MapPost("/productos/{productoId}/movimientos", (int productoId, MovimientoInput input, CatalogoRepositorio r)=> {
+    var p = r.GetById(productoId);
+    if (p is null) return Results.NotFound("Producto no encontrado");
+    var error = RegistrarMovimiento(productoId, mov);
+    if (error is not null) return Results.BadRequest(error);
+    return Results.Created($"/productos/{productoId}/movimientos/{mov.Id}", mov);
+});
 
 app.Run("http://localhost:5050");
 
@@ -71,28 +77,69 @@ app.Run("http://localhost:5050");
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 
+public class Producto {
+    public int Id { get; set; }
+    public string Codigo { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+}
+
+public class Movimiento {
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    public string Tipo { get; set; } = "Compra";
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+}
+
 // ── DbContext ─────────────────────────────────────────────────────────────
 
-class CatalogoDb : DbContext {
+public class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Movimiento> Movimientos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
 
-class CatalogoRepositorio {
+public class CatalogoRepositorio {
     private readonly CatalogoDb db;
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
 
     public void Iniciar() {
         db.Database.EnsureCreated();
-
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.AddRange(
+            new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 },
+            new Producto { Codigo = "P002", Nombre = "Café Molido 250g", Precio = 2200m, Stock = 50 }
+            );
             db.SaveChanges();
         }
     }
 
+    public List<Producto> GetAll() => db.Productos.ToList();
     public Producto? GetById(int id) => db.Productos.Find(id);
+    public bool ExisteCodigo(string codigo) => db.Productos.Any(p => p.Codigo == codigo);
+
+    public void Insert(Producto p) {
+        db.Productos.Add(p);
+        db.SaveChanges();
+    }
+
+    public void Update(int id, Producto input) {
+        var p = db.Productos.Find(id);
+        p.Codigo = input.Codigo;
+        p.Nombre = input.Nombre;
+        p.Precio = input.Precio;
+        p.Stock = input.Stock;
+        db.SaveChanges();
+    }
+
+    public void Delete(int id) {
+        var p = db.Productos.Find(id);
+        db.Productos.Remove(p);
+        db.SaveChanges();
+    }
 }
