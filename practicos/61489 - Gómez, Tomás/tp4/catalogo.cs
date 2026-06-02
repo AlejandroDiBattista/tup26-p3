@@ -114,29 +114,19 @@ public class Program
         }
     }
 
+    static void CargarMovimientos() 
+    {
+        if (productoSeleccionado == null) return;
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
+        try {
+            var jsonOpciones = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var respuesta = http.GetFromJsonAsync<List<MovimientoDeProducto>>($"/productos/{productoSeleccionado.Id}/movimientos", jsonOpciones).Result;
+            
+            listaMovimientos = respuesta ?? new List<MovimientoDeProducto>();
+            listMovimientosUI.SetSource(new ObservableCollection<MovimientoDeProducto>(listaMovimientos));
+        } catch {
+            listaMovimientos.Clear();
+            listMovimientosUI.SetSource(new ObservableCollection<MovimientoDeProducto>(listaMovimientos));
+        }
+    }
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
-};
-
-ventana.Add(detalleProducto);
-
-app.Run(ventana);
-
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
-}
-
-// ── DTO ───────────────────────────────────────────────────────────────────
-
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
