@@ -40,6 +40,7 @@ public sealed class AgendaWindow : Runnable {
 
     private List<Contacto> contacts = new List<Contacto>();
     private List<Contacto> filteredContacts = new List<Contacto>();
+    private bool soloFavoritos = false;
 
     private ListView contactsList = null!;
     private TextField searchField = null!;
@@ -72,6 +73,9 @@ public sealed class AgendaWindow : Runnable {
                     new MenuItem("_Nuevo", "Ctrl+N", NuevoContacto),
                     new MenuItem("_Editar", "Ctrl+E", EditarContacto),
                     new MenuItem("_Eliminar", "Ctrl+D", EliminarContacto)
+                ]),
+                new MenuBarItem("_Ver", [
+                new MenuItem("_Solo favoritos", "", ToggleFavoritos)
                 ])
             ]
         };
@@ -149,7 +153,17 @@ public sealed class AgendaWindow : Runnable {
     {
         string filtro = searchField.Text?.ToString()?.ToLower() ?? "";
 
-        filteredContacts = contacts.Where(c => c.Nombre.ToLower().Contains(filtro) || c.Telefonos.ToLower().Contains(filtro) || c.Email.ToLower().Contains(filtro)).ToList();
+        filteredContacts = contacts.Where(c => {
+        bool coincideBusqueda =
+        c.Nombre.ToLower().Contains(filtro) ||
+        c.Telefonos.ToLower().Contains(filtro) ||
+        c.Email.ToLower().Contains(filtro);
+
+        bool coincideFavorito =
+        !soloFavoritos || c.Favorito;
+
+        return coincideBusqueda && coincideFavorito;
+        }).ToList();
 
         RefreshList();
     }
@@ -249,6 +263,13 @@ public sealed class AgendaWindow : Runnable {
         ApplyFilters();
 
         statusBar.Text = $"Contacto '{contacto.Nombre}' eliminado";
+    }
+
+    private void ToggleFavoritos(){
+        soloFavoritos = !soloFavoritos;
+        ApplyFilters();
+
+        statusBar.Text = soloFavoritos ? "Filtro: solo favoritos" : "Filtro: todos los contactos";
     }
 
     private void SolicitarSalir() {
