@@ -46,7 +46,17 @@ var detalle = new Label()
 
 listaProductos.SetSource<string>(listaStrings);
 
-void ActualizarDetalle(int index)
+var movimientosStrings = new ObservableCollection<string>();
+var listaMovimientos = new ListView()
+{
+    X = 82,
+    Y = 0,
+    Width = 60,
+    Height = 20
+};
+listaMovimientos.SetSource<string>(movimientosStrings);
+
+async Task ActualizarDetalle(int index)
 {
     if (index < 0 || index >= productos.Count) return;
 
@@ -59,17 +69,29 @@ void ActualizarDetalle(int index)
     Precio: ${p.Precio}
     Stock: {p.Stock}
     """;
+
+    using var http = new HttpClient();
+    var movimientos = await CargarMovimientosAsync(http, p.Id);
+
+    movimientosStrings.Clear();
+
+    foreach (var m in movimientos)
+    {
+        movimientosStrings.Add($"{m.Tipo} {m.Cantidad} ({m.Fecha})");
+    }
 }
 
 ActualizarDetalle(0);
 
-app.AddTimeout(TimeSpan.FromMilliseconds(200), () =>
+app.AddTimeout(TimeSpan.FromMilliseconds(300), () =>
 {
     if (listaProductos.SelectedItem.HasValue)
-        ActualizarDetalle(listaProductos.SelectedItem.Value);
+        _ = ActualizarDetalle(listaProductos.SelectedItem.Value);
+
     return true;
 });
-ventana.Add(listaProductos, detalle);
+
+ventana.Add(listaProductos, detalle, listaMovimientos);
 
 app.Run(ventana);
 
@@ -79,6 +101,13 @@ static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http) {
         ?? new List<ProductoDto>();
 }
 
+static async Task<List<MovimientoDto>> CargarMovimientosAsync(HttpClient http, int productoId)
+{
+    var url = $"http://localhost:5050/movimientos?productoId={productoId}";
+    return await http.GetFromJsonAsync<List<MovimientoDto>>(url)
+        ?? new List<MovimientoDto>();
+}
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
