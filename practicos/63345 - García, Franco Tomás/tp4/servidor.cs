@@ -37,6 +37,16 @@ app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) =
     return Results.Created($"/productos/{nuevo.Id}", nuevo);
 });
 
+app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio repo) => {
+    var ok = repo.ActualizarProducto(id, producto);
+    return ok ? Results.NoContent() : Results.NotFound();
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
+    var ok = repo.EliminarProducto(id);
+    return ok ? Results.NoContent() : Results.NotFound();
+});
+
 app.Run("http://localhost:5050");
 
 
@@ -76,6 +86,30 @@ class CatalogoRepositorio {
         db.SaveChanges();
         return producto;
     }
+    public bool ActualizarProducto(int id, Producto datos) {
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
+
+        var actualizado = producto with {
+            Codigo = datos.Codigo,
+            Nombre = datos.Nombre,
+            Precio = datos.Precio,
+            Stock = datos.Stock
+        };
+
+        db.Entry(producto).CurrentValues.SetValues(actualizado);
+        db.SaveChanges();
+        return true;
+    }
+    public bool EliminarProducto(int id) {
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
+
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
+    }
+    
     public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
     public void Iniciar() {
         db.Database.EnsureCreated();
