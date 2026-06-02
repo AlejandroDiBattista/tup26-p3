@@ -35,12 +35,43 @@ var listaProductos = new ListView()
     Height = 20
 };
 
+var detalle = new Label()
+{
+    X = 0,
+    Y = 22,
+    Width = 80,
+    Height = 5,
+    Text = "Seleccioná un producto..."
+};
+
 listaProductos.SetSource<string>(listaStrings);
 
-ventana.Add(listaProductos);
+void ActualizarDetalle(int index)
+{
+    if (index < 0 || index >= productos.Count) return;
+
+    var p = productos[index];
+
+    detalle.Text = $"""
+    Id: {p.Id}
+    Código: {p.Codigo}
+    Nombre: {p.Nombre}
+    Precio: ${p.Precio}
+    Stock: {p.Stock}
+    """;
+}
+
+ActualizarDetalle(0);
+
+app.AddTimeout(TimeSpan.FromMilliseconds(200), () =>
+{
+    if (listaProductos.SelectedItem.HasValue)
+        ActualizarDetalle(listaProductos.SelectedItem.Value);
+    return true;
+});
+ventana.Add(listaProductos, detalle);
 
 app.Run(ventana);
-
 
 static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http) {
     const string url = "http://localhost:5050/productos";
