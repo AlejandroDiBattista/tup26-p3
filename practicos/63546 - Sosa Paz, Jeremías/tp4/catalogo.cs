@@ -26,6 +26,7 @@ class CatalogoWindow : Window
 {
     HttpClient _api;
     List<Producto> _productos = new();
+    List<Producto> _filtrados = new();
     ListView _listaProductos;
     TextView _detalleMovimientos;
     TextField _txtBuscar;
@@ -54,17 +55,84 @@ class CatalogoWindow : Window
 
         Add(new Label { Text = "Buscar:", X = 1, Y = 2 });
         _txtBuscar = new TextField { Text = "", X = 9, Y = 2, Width = 40 };
+        _txtBuscar.TextChanged += (s, e) => FiltrarLista();
         Add(_txtBuscar);
 
         var frameIzq = new FrameView { Title = " Productos (Maestro) ", X = 1, Y = 4, Width = Dim.Percent(50), Height = Dim.Fill(1) };
         _listaProductos = new ListView { Width = Dim.Fill(), Height = Dim.Fill() };
+        _listaProductos.Accepting += async (s, e) => {
+            e.Handled = true;
+            await CargarHistorial();
+        };
         frameIzq.Add(_listaProductos);
 
-        var frameDer = new FrameView { Title = " Historial Movimientos (Detalle) ", X = Pos.Right(frameIzq) + 1, Y = 4, Width = Dim.Fill(1), Height = Dim.Fill(1) };
+        var frameDer = new FrameView { Title = " Historial Movimientos (Enter en la lista para ver) ", X = Pos.Right(frameIzq) + 1, Y = 4, Width = Dim.Fill(1), Height = Dim.Fill(1) };
         _detalleMovimientos = new TextView { Width = Dim.Fill(), Height = Dim.Fill(), ReadOnly = true };
         frameDer.Add(_detalleMovimientos);
 
         Add(frameIzq, frameDer);
+
+        // Llamo a los datos de una al arrancar
+        _ = CargarDatos();
+    }
+
+    async Task CargarDatos()
+    {
+        try
+        {
+            var res = await _api.GetFromJsonAsync<List<Producto>>("/productos");
+            if (res != null) _productos = res;
+            FiltrarLista();
+        }
+        catch (Exception)
+        {
+            MessageBox.ErrorQuery("Error", "Fijate si el servidor.cs esta corriendo", "OK");
+        }
+    }
+
+    void FiltrarLista()
+    {
+        var texto = _txtBuscar.Text?.ToString()?.ToLower() ?? "";
+        
+        _filtrados = _productos.Where(p => 
+            p.Nombre.ToLower().Contains(texto) || 
+            p.Codigo.ToLower().Contains(texto)).ToList();
+            
+        var lineas = _filtrados.Select(p => $"{p.Codigo} | {p.Nombre} | ${p.Precio} | Stock: {p.Stock}").ToList();
+        _listaProductos.SetSource(new ObservableCollection<string>(lineas));
+        _detalleMovimientos.Text = ""; // limpio el historial si cambia la busqueda
+    }
+
+    async Task CargarHistorial()
+    {
+        int idx = _listaProductos.SelectedItem ?? -1;
+        if (idx < 0 || idx >= _filtrados.Count) return;
+        
+        var prod = _filtrados[idx];
+        
+        try
+        {
+            var movs = await _api.GetFromJsonAsync<List<Movimiento>>($"/productos/{prod.Id}/movimientos");
+            
+            var txt = $"Historial de: {prod.Nombre}\n\n";
+            if (movs != null && movs.Count > 0)
+            {
+                foreach(var m in movs)
+                {
+                    txt += $"> {m.Fecha:dd/MM/yyyy HH:mm} - {m.Tipo}: {m.Cantidad} uds.\n";
+                }
+            }
+            else
+            {
+                txt += "No hay movimientos registrados.";
+            }
+            
+            _detalleMovimientos.Text = txt;
+        }
+        catch
+        {
+            _detalleMovimientos.Text = "Error al cargar historial.";
+        }
     }
 }
 
