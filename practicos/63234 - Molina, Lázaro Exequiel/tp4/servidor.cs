@@ -189,3 +189,11 @@ class ServicioCatalogo {
         return new(ProductoDto.Desde(producto), MovimientoDto.Desde(movimiento), null);
     }
 
+    private static string? ValidarProducto(ProductoEntrada entrada) {
+        if (string.IsNullOrWhiteSpace(entrada.Codigo)) return "El codigo es obligatorio.";
+        if (string.IsNullOrWhiteSpace(entrada.Nombre)) return "El nombre es obligatorio.";
+        if (entrada.Precio < 0) return "El precio no puede ser negativo.";
+        if (entrada.Stock < 0) return "El stock no puede ser negativo.";
+        return null;
+    }
+}
