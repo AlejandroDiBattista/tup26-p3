@@ -32,16 +32,28 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
 app.Run("http://localhost:5050");
 
 
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
-
+record class MovimientoDeProducto(
+    int Id,
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha
+);
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
