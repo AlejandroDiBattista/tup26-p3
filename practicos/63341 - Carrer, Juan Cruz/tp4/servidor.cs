@@ -35,13 +35,62 @@ app.Run("http://localhost:5050");
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+enum TipoMovimiento
+{
+    Compra,
+    Venta,
+    Ajuste
+}
+
+class Producto
+{
+    public int Id { get; set; }
+
+    public string Codigo { get; set; } = "";
+
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+
+    public List<MovimientoProducto> Movimientos { get; set; } = new();
+}
+
+class MovimientoProducto
+{
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+
+    public Producto? Producto { get; set; }
+}
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
-class CatalogoDb : DbContext {
-    public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
+class CatalogoDb : DbContext
+{
+    public CatalogoDb(DbContextOptions<CatalogoDb> options)
+        : base(options)
+    {
+    }
+
     public DbSet<Producto> Productos => Set<Producto>();
+
+    public DbSet<MovimientoProducto> Movimientos => Set<MovimientoProducto>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Producto>()
+            .HasIndex(x => x.Codigo)
+            .IsUnique();
+    }
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -55,7 +104,12 @@ class CatalogoRepositorio {
         db.Database.EnsureCreated();
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.Add(new Producto {
+            Codigo = "P001",
+            Nombre = "Yerba Mate 500g",
+            Precio = 1500m,
+            Stock = 100
+        });
             db.SaveChanges();
         }
     }
