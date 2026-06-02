@@ -85,3 +85,15 @@ app.MapDelete("/productos/{id:int}", async (int id, CatalogoDb db) => {
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoDb db) => {
+    var existeProducto = await db.Productos.AnyAsync(p => p.Id == productoId);
+    if (!existeProducto) return Results.NotFound($"No existe un producto con id {productoId}.");
+
+    var movimientos = await db.Movimientos
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .Select(m => MovimientoDto.DesdeModelo(m))
+        .ToListAsync();
+
+    return Results.Ok(movimientos);
+});
