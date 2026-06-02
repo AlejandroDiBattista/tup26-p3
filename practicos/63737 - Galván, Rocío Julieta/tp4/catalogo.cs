@@ -177,6 +177,188 @@ class CatalogoWindow : Window {
     }
 }
 
+class ProductoDialog : Dialog {
+    private readonly TextField _codigoField;
+    private readonly TextField _nombreField;
+    private readonly TextField _precioField;
+    private readonly TextField _stockField;
+
+    public new ProductoDto? Result { get; private set; }
+
+    public ProductoDialog(ProductoDto? producto = null) {
+        Title  = producto is null ? "Nuevo producto" : "Editar producto";
+        Width  = 60;
+        Height = 18;
+
+        var lblCodigo = new Label { Text = "Código:",  X = 1, Y = 1 };
+        var lblNombre = new Label { Text = "Nombre:",  X = 1, Y = 3 };
+        var lblPrecio = new Label { Text = "Precio:",  X = 1, Y = 5 };
+        var lblStock  = new Label { Text = "Stock:",   X = 1, Y = 7 };
+
+        _codigoField = new TextField {
+            X = 12, Y = 1, Width = Dim.Fill(2),
+            Text = producto?.Codigo ?? ""
+        };
+        _nombreField = new TextField {
+            X = 12, Y = 3, Width = Dim.Fill(2),
+            Text = producto?.Nombre ?? ""
+        };
+        _precioField = new TextField {
+            X = 12, Y = 5, Width = Dim.Fill(2),
+            Text = producto?.Precio.ToString() ?? ""
+        };
+        _stockField = new TextField {
+            X = 12, Y = 7, Width = Dim.Fill(2),
+            Text = producto?.Stock.ToString() ?? ""
+        };
+
+        var btnGuardar = new Button {
+            Text = "_Guardar",
+            X = Pos.Center() - 10,
+            Y = Pos.AnchorEnd(2),
+            IsDefault = true
+        };
+        btnGuardar.Accepting += (_, e) => {
+            if (string.IsNullOrWhiteSpace(_codigoField.Text)) {
+                MessageBox.ErrorQuery(App!, "Error", "El código es obligatorio", "Ok");
+                _codigoField.SetFocus();
+                e.Handled = true;
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(_nombreField.Text)) {
+                MessageBox.ErrorQuery(App!, "Error", "El nombre es obligatorio", "Ok");
+                _nombreField.SetFocus();
+                e.Handled = true;
+                return;
+            }
+            if (!decimal.TryParse(_precioField.Text, out decimal precio) || precio <= 0) {
+                MessageBox.ErrorQuery(App!, "Error", "El precio debe ser un número mayor que cero", "Ok");
+                _precioField.SetFocus();
+                e.Handled = true;
+                return;
+            }
+            if (!int.TryParse(_stockField.Text, out int stock) || stock < 0) {
+                MessageBox.ErrorQuery(App!, "Error", "El stock debe ser un número positivo", "Ok");
+                _stockField.SetFocus();
+                e.Handled = true;
+                return;
+            }
+
+            Result = new ProductoDto(
+                producto?.Id ?? 0,
+                _codigoField.Text,
+                _nombreField.Text,
+                precio,
+                stock
+            );
+
+            RequestStop();
+            e.Handled = true;
+        };
+
+        var btnCancelar = new Button {
+            Text = "_Cancelar",
+            X = Pos.Center() + 2,
+            Y = Pos.AnchorEnd(2)
+        };
+        btnCancelar.Accepting += (_, e) => {
+            Result = null;
+            RequestStop();
+            e.Handled = true;
+        };
+
+        Add(lblCodigo, lblNombre, lblPrecio, lblStock,
+            _codigoField, _nombreField, _precioField, _stockField,
+            btnGuardar, btnCancelar);
+    }
+
+class MovimientoDialog : Dialog {
+    private readonly CheckBox  _chkCompra;
+    private readonly CheckBox  _chkVenta;
+    private readonly CheckBox  _chkAjuste;
+    private readonly TextField _cantidadField;
+
+    public new MovimientoDto? Result { get; private set; }
+
+    public MovimientoDialog(ProductoDto producto) {
+        Title  = $"Registrar movimiento — {producto.Nombre}";
+        Width  = 60;
+        Height = 16;
+
+        var lblTipo = new Label { Text = "Tipo:", X = 1, Y = 1 };
+
+        _chkCompra = new CheckBox { Text = "_Compra", X = 1, Y = 2, Value = CheckState.Checked };
+        _chkVenta  = new CheckBox { Text = "_Venta",  X = 1, Y = 4 };
+        _chkAjuste = new CheckBox { Text = "_Ajuste", X = 1, Y = 6 };
+
+        _chkCompra.ValueChanged += (_, _) => {
+            _chkVenta.Value  = CheckState.UnChecked;
+            _chkAjuste.Value = CheckState.UnChecked;
+        };
+        _chkVenta.ValueChanged += (_, _) => {
+            _chkCompra.Value = CheckState.UnChecked;
+            _chkAjuste.Value = CheckState.UnChecked;
+        };
+        _chkAjuste.ValueChanged += (_, _) => {
+            _chkCompra.Value = CheckState.UnChecked;
+            _chkVenta.Value  = CheckState.UnChecked;
+        };
+
+        var lblCantidad = new Label { Text = "Cantidad:", X = 1, Y = 8 };
+        _cantidadField  = new TextField { X = 12, Y = 8, Width = Dim.Fill(2) };
+
+
+        var lblStock = new Label {
+            Text = $"Stock actual: {producto.Stock}",
+            X = 1, Y = 10
+        };
+
+        var btnGuardar = new Button {
+            Text = "_Guardar",
+            X = Pos.Center() - 10,
+            Y = Pos.AnchorEnd(2),
+            IsDefault = true
+        };
+
+        btnGuardar.Accepting += (_, e) => {
+            if (!int.TryParse(_cantidadField.Text, out int cantidad) || cantidad <= 0) {
+                MessageBox.ErrorQuery(App!, "Error", "La cantidad debe ser mayor que cero", "Ok");
+                _cantidadField.SetFocus();
+                e.Handled = true;
+                return;
+            }
+
+            string tipo = _chkVenta.Value  == CheckState.Checked ? "Venta"  :
+                          _chkAjuste.Value == CheckState.Checked ? "Ajuste" :
+                          "Compra";
+
+            Result = new MovimientoDto(0, producto.Id, tipo, cantidad, DateTime.Now);
+            RequestStop();
+            e.Handled = true;
+        };
+
+        var btnCancelar = new Button {
+            Text = "_Cancelar",
+            X = Pos.Center() + 2,
+            Y = Pos.AnchorEnd(2)
+        };
+        btnCancelar.Accepting += (_, e) => {
+            Result = null;
+            RequestStop();
+            e.Handled = true;
+        };
+
+        Add(lblTipo, _chkCompra, _chkVenta, _chkAjuste,
+            lblCantidad, _cantidadField, lblStock,
+            btnGuardar, btnCancelar);
+    }
+}
+
+
+
+}
+
+
 // ── dtos ────//
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
