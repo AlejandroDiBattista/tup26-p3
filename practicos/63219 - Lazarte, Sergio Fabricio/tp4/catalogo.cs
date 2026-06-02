@@ -166,7 +166,24 @@ public sealed class CatalogoWindow : Runnable
         return base.OnKeyDown(key);
     }
 
-    private void AgregarProducto()    { }
+    private void AgregarProducto()
+    {
+        var dlg = new ProductoDialog(App!, "Agregar Producto", new ProductoDto(0,"","",0,0));
+        App!.Run(dlg);
+        if (!dlg.WasAccepted) return;
+        var d = dlg.Resultado!;
+        Task.Run(async () => {
+            try {
+                var r = await _http.PostAsJsonAsync("/productos",
+                    new { d.Codigo, d.Nombre, d.Precio, d.Stock });
+                r.EnsureSuccessStatusCode();
+                await RecargarProductos();
+                App!.Invoke(() => MostrarInfo("Listo", "Producto agregado."));
+            } catch (Exception ex) {
+                App!.Invoke(() => MostrarError("Error", ex.Message));
+            }
+        });
+    }
     private void EditarProducto()     { }
     private void EliminarProducto()   { }
     private void RegistrarMovimiento(){ }
@@ -176,6 +193,88 @@ public sealed class CatalogoWindow : Runnable
 
     private void MostrarError(string titulo, string msg)
         => MessageBox.ErrorQuery(App!, titulo, msg, "OK");
+}
+
+public sealed class ProductoDialog : Dialog
+{
+    public bool         WasAccepted { get; private set; }
+    public ProductoDto? Resultado   { get; private set; }
+
+    private readonly IApplication _app;
+    private readonly ProductoDto  _orig;
+    private TextField _txtCodigo = null!;
+    private TextField _txtNombre = null!;
+    private TextField _txtPrecio = null!;
+    private TextField _txtStock  = null!;
+
+    public ProductoDialog(IApplication app, string titulo, ProductoDto producto)
+    {
+        _app   = app;
+        _orig  = producto;
+        Title  = titulo;
+        Width  = 55;
+        Height = 14;
+        BuildLayout();
+    }
+
+    private void BuildLayout()
+    {
+        Add(new Label { Text = "Código (*):", X = 1, Y = 1 });
+        _txtCodigo = new TextField { Text = _orig.Codigo, X = 15, Y = 1, Width = Dim.Fill(2) };
+        Add(_txtCodigo);
+
+        Add(new Label { Text = "Nombre (*):", X = 1, Y = 3 });
+        _txtNombre = new TextField { Text = _orig.Nombre, X = 15, Y = 3, Width = Dim.Fill(2) };
+        Add(_txtNombre);
+
+        Add(new Label { Text = "Precio (*):", X = 1, Y = 5 });
+        _txtPrecio = new TextField {
+            Text = _orig.Precio == 0 ? "" : _orig.Precio.ToString("F2"),
+            X = 15, Y = 5, Width = 18
+        };
+        Add(_txtPrecio);
+
+        Add(new Label { Text = "Stock (*):", X = 1, Y = 7 });
+        _txtStock = new TextField {
+            Text = _orig.Stock == 0 ? "" : _orig.Stock.ToString(),
+            X = 15, Y = 7, Width = 12
+        };
+        Add(_txtStock);
+
+        var btnGuardar  = new Button { Text = "_Guardar",  IsDefault = true };
+        var btnCancelar = new Button { Text = "_Cancelar" };
+        btnGuardar.Accepting  += (_, e) => { Guardar();  e.Handled = true; };
+        btnCancelar.Accepting += (_, e) => { Cancelar(); e.Handled = true; };
+        AddButton(btnGuardar);
+        AddButton(btnCancelar);
+    }
+
+    private void Guardar()
+    {
+        string codigo    = _txtCodigo.Text.Trim();
+        string nombre    = _txtNombre.Text.Trim();
+        string precioStr = _txtPrecio.Text.Trim();
+        string stockStr  = _txtStock.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(nombre)) {
+            MessageBox.ErrorQuery(_app, "Validación", "Código y nombre son obligatorios.", "OK");
+            return;
+        }
+        if (!decimal.TryParse(precioStr, out decimal precio) || precio < 0) {
+            MessageBox.ErrorQuery(_app, "Validación", "Precio inválido.", "OK");
+            return;
+        }
+        if (!int.TryParse(stockStr, out int stock) || stock < 0) {
+            MessageBox.ErrorQuery(_app, "Validación", "Stock inválido.", "OK");
+            return;
+        }
+
+        Resultado   = new ProductoDto(_orig.Id, codigo, nombre, precio, stock);
+        WasAccepted = true;
+        App!.RequestStop();
+    }
+
+    private void Cancelar() { WasAccepted = false; App!.RequestStop(); }
 }
 
 public enum TipoMovimiento { Compra, Venta, Ajuste }
