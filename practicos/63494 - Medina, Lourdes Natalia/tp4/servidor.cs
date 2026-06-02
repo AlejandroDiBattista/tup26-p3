@@ -13,16 +13,15 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options => {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
-builder.Services.AddDbContext<CatalogoContext>(options =>
+builder.Services.AddDbContext<CatalogoDbContext>(options =>
     options.UseSqlite($"Data Source={databasePath}"));
 
     WebApplication app = builder.Build();
 
-    using (IServiceScope scope = app.Services.CreateScope()) {
-        CatalogoDbContext db = scope.ServiceProvider.GetRequiredService<CatalogoContext>();
-        db.Database.EnsureCreated();
-    }
-
+  using (IServiceScope scope = app.Services.CreateScope()) {
+    CatalogoDbContext db = scope.ServiceProvider.GetRequiredService<CatalogoDbContext>();
+    db.Database.EnsureCreated();
+}
     app.MapGet("/", () => Results.Ok(new {
     Aplicacion = "Catalogo de productos",
     Endpoints = new[] {
@@ -36,11 +35,12 @@ builder.Services.AddDbContext<CatalogoContext>(options =>
     }
 }));
 
-app.MapGet("/productos", async (CatalogoContext db) => 
-await db.Productos
-.AsNoTracking()
+app.MapGet("/productos", async (CatalogoDbContext db) =>
+    await db.Productos
+        .AsNoTracking()
         .OrderBy(p => p.Codigo)
         .ToListAsync());
+
 
 app.MapGet("/productos/{id:int}", async (int id, CatalogoDbContext db) => {
     Producto? producto = await db.Productos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
