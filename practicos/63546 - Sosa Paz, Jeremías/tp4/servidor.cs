@@ -40,6 +40,35 @@ app.MapDelete("/productos/{id}", async (int id, AppDb db) => {
     return Results.Ok();
 });
 
+// NUEVO: Endpoints para los movimientos de stock
+app.MapGet("/productos/{id}/movimientos", async (int id, AppDb db) => {
+    var movs = await db.Movimientos.Where(m => m.ProductoId == id).ToListAsync();
+    return Results.Ok(movs);
+});
+
+app.MapPost("/productos/{id}/movimientos", async (int id, Movimiento m, AppDb db) => {
+    var prod = await db.Productos.FindAsync(id);
+    if (prod == null) return Results.NotFound();
+    
+    m.ProductoId = id;
+    m.Fecha = DateTime.Now;
+
+    if (m.Tipo == "Compra") {
+        prod.Stock += m.Cantidad;
+    }
+    if (m.Tipo == "Venta") {
+        prod.Stock -= m.Cantidad;
+    }
+    if (m.Tipo == "Ajuste") {
+        prod.Stock = m.Cantidad;
+    }
+    
+    db.Movimientos.Add(m);
+    await db.SaveChangesAsync();
+    
+    return Results.Ok(prod);
+});
+
 app.Run();
 
 class AppDb : DbContext 
