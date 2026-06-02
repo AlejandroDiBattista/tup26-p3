@@ -13,62 +13,57 @@ builder.Services.AddScoped<CatalogoRepositorio>();
 
 var app = builder.Build();
 
-// ── Inicialización de la base de datos ────────────────────────────────────
+// ── Inicialización de la base de datos ───────────────────────────────────────────────────────────────
 
-using (var scope = app.Services.CreateScope()) {
-    var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
-    repositorio.Iniciar();
+using (var scope = app.Services.CreateScope())
+{
+    var repo = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
+    repo.Iniciar();
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
-    var productos = repositorio.TraerProductos();
-    return Results.Ok(productos);
-});
+app.MapGet("/productos", (CatalogoRepositorio repo) =>
+    Results.Ok(repo.TraerProductos()));
 
-app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProductoPorId(id);
-    return producto is null ? Results.NotFound() : Results.Ok(producto);
-});
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repo) =>
+    repo.TraerProductoPorId(id) is { } p ? Results.Ok(p) : Results.NotFound());
 
-app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) => {
-    var nuevo = repositorio.CrearProducto(producto);
-    return Results.Created($"/productos/{nuevo.Id}", nuevo);
-});
+app.MapPost("/productos", (Producto producto, CatalogoRepositorio repo) =>
+    Results.Created("", repo.CrearProducto(producto)));
 
-app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio repo) => {
-    var ok = repo.ActualizarProducto(id, producto);
-    return ok ? Results.NoContent() : Results.NotFound();
-});
+app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio repo) =>
+    repo.ActualizarProducto(id, producto) ? Results.NoContent() : Results.NotFound());
 
-app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
-    var ok = repo.EliminarProducto(id);
-    return ok ? Results.NoContent() : Results.NotFound();
-});
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) =>
+    repo.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
 
-app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repo) => {
-    var movimientos = repo.TraerMovimientos(id);
-    return Results.Ok(movimientos);
-});
+app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repo) =>
+    Results.Ok(repo.TraerMovimientos(id)));
 
-app.MapPost("/productos/{id}/movimientos", (int id, MovimientoDto dto, CatalogoRepositorio repo) => {
+app.MapPost("/productos/{id}/movimientos", (int id, MovimientoDto dto, CatalogoRepositorio repo) =>
+{
     var ok = repo.RegistrarMovimiento(id, dto.Tipo, dto.Cantidad);
-    return ok ? Results.Ok() : Results.BadRequest();
+    return ok ? Results.Ok() : Results.BadRequest("Stock inválido o producto inexistente");
 });
 
 app.Run("http://localhost:5050");
 
+// ── DTO ───────────────────────────────────────────────────────────────────
+
 record MovimientoDto(TipoMovimiento Tipo, int Cantidad);
-enum TipoMovimiento {
+
+enum TipoMovimiento
+{
     Compra,
     Venta,
     Ajuste
 }
 
-// ── Modelo ────────────────────────────────────────────────────────────────
+// ── Modelo ───────────────────────────────────────────────────────────────
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+
 record class MovimientoDeProducto(
     int Id,
     int ProductoId,
@@ -76,64 +71,77 @@ record class MovimientoDeProducto(
     int Cantidad,
     DateTime Fecha
 );
-// ── DbContext ─────────────────────────────────────────────────────────────
 
-class CatalogoDb : DbContext {
-    public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
+// ── DbContext ────────────────────────────────────────────────────────────────────
+
+class CatalogoDb : DbContext
+{
+    public CatalogoDb(DbContextOptions<CatalogoDb> opt) : base(opt) { }
+
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
-// ── Repositorio ───────────────────────────────────────────────────────────
+// ── Repositorio ──────────────────────────────────────────────────────────────────
 
-class CatalogoRepositorio {
+class CatalogoRepositorio
+{
     private readonly CatalogoDb db;
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
+
     public Producto? TraerProductoPorId(int id) => db.Productos.Find(id);
-    public Producto CrearProducto(Producto producto) {
-        db.Productos.Add(producto);
+
+    public Producto CrearProducto(Producto p)
+    {
+        db.Productos.Add(p);
         db.SaveChanges();
-        return producto;
+        return p;
     }
-    public bool ActualizarProducto(int id, Producto datos) {
-        var producto = db.Productos.Find(id);
-        if (producto is null) return false;
 
-        var actualizado = producto with {
-            Codigo = datos.Codigo,
-            Nombre = datos.Nombre,
-            Precio = datos.Precio,
-            Stock = datos.Stock
-        };
+    public bool ActualizarProducto(int id, Producto datos)
+    {
+        var p = db.Productos.Find(id);
+        if (p is null) return false;
 
-        db.Entry(producto).CurrentValues.SetValues(actualizado);
+        db.Entry(p).CurrentValues.SetValues(datos);
         db.SaveChanges();
         return true;
     }
-    public bool EliminarProducto(int id) {
-        var producto = db.Productos.Find(id);
-        if (producto is null) return false;
 
-        db.Productos.Remove(producto);
+    public bool EliminarProducto(int id)
+    {
+        var p = db.Productos.Find(id);
+        if (p is null) return false;
+
+        db.Remove(p);
         db.SaveChanges();
         return true;
     }
-    public bool RegistrarMovimiento(int productoId, TipoMovimiento tipo, int cantidad) {
-        var producto = db.Productos.Find(productoId);
-        if (producto is null) return false;
 
-        int nuevoStock = producto.Stock;
+    public List<Producto> TraerProductos() =>
+        db.Productos.OrderBy(p => p.Id).ToList();
 
-        switch (tipo) {
+    public List<MovimientoDeProducto> TraerMovimientos(int id) =>
+        db.Movimientos.Where(m => m.ProductoId == id)
+                      .OrderByDescending(m => m.Fecha)
+                      .ToList();
+
+    public bool RegistrarMovimiento(int productoId, TipoMovimiento tipo, int cantidad)
+    {
+        var p = db.Productos.Find(productoId);
+        if (p is null) return false;
+
+        var nuevoStock = p.Stock;
+
+        switch (tipo)
+        {
             case TipoMovimiento.Compra:
                 nuevoStock += cantidad;
                 break;
-
             case TipoMovimiento.Venta:
                 nuevoStock -= cantidad;
                 break;
-
             case TipoMovimiento.Ajuste:
                 nuevoStock = cantidad;
                 break;
@@ -141,37 +149,23 @@ class CatalogoRepositorio {
 
         if (nuevoStock < 0) return false;
 
-        var actualizado = producto with { Stock = nuevoStock };
-        db.Entry(producto).CurrentValues.SetValues(actualizado);
+        db.Entry(p).CurrentValues.SetValues(p with { Stock = nuevoStock });
 
-        var movimiento = new MovimientoDeProducto(
-            0,
-            productoId,
-            tipo,
-            cantidad,
-            DateTime.Now
-        );
-
-        db.Movimientos.Add(movimiento);
+        db.Movimientos.Add(new MovimientoDeProducto(
+            0, productoId, tipo, cantidad, DateTime.Now));
 
         db.SaveChanges();
         return true;
     }
-    public List<MovimientoDeProducto> TraerMovimientos(int productoId) =>
-    db.Movimientos
-      .Where(m => m.ProductoId == productoId)
-      .OrderByDescending(m => m.Fecha)
-      .ToList();
-    public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
-    public void Iniciar() {
+
+    public void Iniciar()
+    {
         db.Database.EnsureCreated();
 
-        if (!db.Productos.Any()) {
+        if (!db.Productos.Any())
+        {
             db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
             db.SaveChanges();
         }
     }
-
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }

@@ -2,112 +2,242 @@
 #:property PublishAot=false
 
 using System.Net.Http.Json;
+using System.Collections.ObjectModel;
+using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
-using Terminal.Gui;
-using System.Collections.ObjectModel;
 
-// ── Consulta inicial al servidor ──────────────────────────────────────────
-List<ProductoDto> productos;
-try {
-    using var http = new HttpClient();
-    productos = await CargarProductosAsync(http);
-} catch (HttpRequestException ex) {
-    Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
-    return;
-}
+using var http = new HttpClient();
 
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
+// ───────────────────────── DATA ─────────────────────────
+
+List<ProductoDto> productos =
+    await http.GetFromJsonAsync<List<ProductoDto>>("http://localhost:5050/productos")
+    ?? new();
+
+List<MovimientoDto> movimientos = new();
+
+// ───────────────────────── APP ─────────────────────────
 
 using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Productos (ESC para salir) " };
+using Window win = new() { Title = "CatalogoREST TP4 - VERSION FINAL" };
 
-var listaStrings = new ObservableCollection<string>(
-    productos.Select(p => $"{p.Codigo} - {p.Nombre} (${p.Precio}) [Stock: {p.Stock}]")
-);
+// ───────────────────────── UI DATA ─────────────────────────
 
-var listaProductos = new ListView()
+var prodData = new ObservableCollection<string>();
+var movData = new ObservableCollection<string>();
+
+var lista = new ListView()
 {
     X = 0,
-    Y = 0,
-    Width = 80,
+    Y = 1,
+    Width = 60,
     Height = 20
 };
 
 var detalle = new Label()
 {
-    X = 0,
-    Y = 22,
-    Width = 80,
-    Height = 5,
-    Text = "Seleccioná un producto..."
-};
-
-listaProductos.SetSource<string>(listaStrings);
-
-var movimientosStrings = new ObservableCollection<string>();
-var listaMovimientos = new ListView()
-{
-    X = 82,
-    Y = 0,
+    X = 62,
+    Y = 1,
     Width = 60,
-    Height = 20
+    Height = 10
 };
-listaMovimientos.SetSource<string>(movimientosStrings);
 
-async Task ActualizarDetalle(int index)
+var inputCantidad = new TextField()
 {
-    if (index < 0 || index >= productos.Count) return;
+    X = 62,
+    Y = 12,
+    Width = 10,
+    Text = "1"
+};
 
-    var p = productos[index];
+var movList = new ListView()
+{
+    X = 62,
+    Y = 15,
+    Width = 60,
+    Height = 10
+};
 
-    detalle.Text = $"""
-    Id: {p.Id}
-    Código: {p.Codigo}
-    Nombre: {p.Nombre}
-    Precio: ${p.Precio}
-    Stock: {p.Stock}
-    """;
+lista.SetSource<string>(prodData);
+movList.SetSource<string>(movData);
 
-    using var http = new HttpClient();
-    var movimientos = await CargarMovimientosAsync(http, p.Id);
+// ───────────────────────── MENU ─────────────────────────
 
-    movimientosStrings.Clear();
-
-    foreach (var m in movimientos)
+var menu = new MenuBar(new[]
+{
+    new MenuBarItem("_Productos", new[]
     {
-        movimientosStrings.Add($"{m.Tipo} {m.Cantidad} ({m.Fecha})");
-    }
+        new MenuItem("Agregar", "", () => FormProducto(null)),
+        new MenuItem("Editar", "", () => EditarProducto()),
+        new MenuItem("Eliminar", "", () => EliminarProducto())
+    }),
+    new MenuBarItem("_Movimientos", new[]
+    {
+        new MenuItem("Compra", "", async () => await Movimiento("Compra")),
+        new MenuItem("Venta", "", async () => await Movimiento("Venta")),
+        new MenuItem("Ajuste", "", async () => await Movimiento("Ajuste"))
+    })
+});
+
+// ───────────────────────── RENDER ─────────────────────────
+
+void RenderProductos()
+{
+    prodData.Clear();
+
+    foreach (var p in productos)
+        prodData.Add($"{p.Codigo} - {p.Nombre} | ${p.Precio} | Stock:{p.Stock}");
 }
 
-ActualizarDetalle(0);
-
-app.AddTimeout(TimeSpan.FromMilliseconds(300), () =>
+void RenderMovimientos()
 {
-    if (listaProductos.SelectedItem.HasValue)
-        _ = ActualizarDetalle(listaProductos.SelectedItem.Value);
+    movData.Clear();
 
+    foreach (var m in movimientos)
+        movData.Add($"{m.Tipo} {m.Cantidad}");
+}
+
+
+async Task Update()
+{
+    if (!lista.SelectedItem.HasValue) return;
+
+    var p = productos[lista.SelectedItem.Value];
+
+    detalle.Text =
+        $"ID: {p.Id}\n" +
+        $"Codigo: {p.Codigo}\n" +
+        $"Nombre: {p.Nombre}\n" +
+        $"Precio: {p.Precio}\n" +
+        $"Stock: {p.Stock}";
+
+    movimientos =
+        await http.GetFromJsonAsync<List<MovimientoDto>>(
+            $"http://localhost:5050/productos/{p.Id}/movimientos"
+        ) ?? new();
+
+    RenderMovimientos();
+}
+
+// ───────────────────────── MOVIMIENTOS ─────────────────────────
+
+async Task Movimiento(string tipo)
+{
+    if (!lista.SelectedItem.HasValue) return;
+
+    var p = productos[lista.SelectedItem.Value];
+
+    if (!int.TryParse(inputCantidad.Text.ToString(), out int cant))
+        return;
+
+    await http.PostAsJsonAsync(
+        $"http://localhost:5050/productos/{p.Id}/movimientos",
+        new MovimientoDto(tipo, cant)
+    );
+
+    await Refrescar();
+}
+
+// ───────────────────────── CRUD PRODUCTOS ─────────────────────────
+
+async Task Refrescar()
+{
+    productos =
+        await http.GetFromJsonAsync<List<ProductoDto>>("http://localhost:5050/productos")
+        ?? new();
+
+    RenderProductos();
+    await Update();
+}
+
+async Task EliminarProducto()
+{
+    if (!lista.SelectedItem.HasValue) return;
+
+    var p = productos[lista.SelectedItem.Value];
+
+    await http.DeleteAsync($"http://localhost:5050/productos/{p.Id}");
+
+    await Refrescar();
+}
+
+// ───────────────────────── FORM PRODUCTO ─────────────────────────
+
+void FormProducto(ProductoDto? edit)
+{
+    var w = new Window()
+    {
+        Title = edit == null ? "Nuevo Producto" : "Editar Producto",
+        Width = 60,
+        Height = 12,
+        X = 10,
+        Y = 5
+    };
+
+    var txtCodigo = new TextField() { X = 1, Y = 1, Width = 20, Text = edit?.Codigo ?? "" };
+    var txtNombre = new TextField() { X = 1, Y = 3, Width = 20, Text = edit?.Nombre ?? "" };
+    var txtPrecio = new TextField() { X = 1, Y = 5, Width = 20, Text = edit?.Precio.ToString() ?? "0" };
+    var txtStock  = new TextField() { X = 1, Y = 7, Width = 20, Text = edit?.Stock.ToString() ?? "0" };
+
+    var info = new Label()
+    {
+        X = 1,
+        Y = 9,
+        Text = "ENTER = Guardar | ESC = Cancelar"
+    };
+
+    w.Add(txtCodigo, txtNombre, txtPrecio, txtStock, info);
+
+w.Accepting += async (sender, args) =>
+{
+    var prod = new ProductoDto(
+        edit?.Id ?? 0,
+        txtCodigo.Text.ToString(),
+        txtNombre.Text.ToString(),
+        decimal.Parse(txtPrecio.Text.ToString()),
+        int.Parse(txtStock.Text.ToString())
+    );
+
+    if (edit == null)
+        await http.PostAsJsonAsync("http://localhost:5050/productos", prod);
+    else
+        await http.PutAsJsonAsync($"http://localhost:5050/productos/{edit.Id}", prod);
+
+    win.Remove(w);
+
+    args.Handled = true;
+
+    await Refrescar();
+};
+
+    win.Add(w);
+}
+
+
+void EditarProducto()
+{
+    if (!lista.SelectedItem.HasValue) return;
+
+    var p = productos[lista.SelectedItem.Value];
+    FormProducto(p);
+}
+
+app.AddTimeout(TimeSpan.FromMilliseconds(200), () =>
+{
+    _ = Update();
     return true;
 });
 
-ventana.Add(listaProductos, detalle, listaMovimientos);
+// ───────────────────────── UI ─────────────────────────
 
-app.Run(ventana);
+win.Add(menu, lista, detalle, movList, inputCantidad);
 
-static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http) {
-    const string url = "http://localhost:5050/productos";
-    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
-        ?? new List<ProductoDto>();
-}
+RenderProductos();
 
-static async Task<List<MovimientoDto>> CargarMovimientosAsync(HttpClient http, int productoId)
-{
-    var url = $"http://localhost:5050/movimientos?productoId={productoId}";
-    return await http.GetFromJsonAsync<List<MovimientoDto>>(url)
-        ?? new List<MovimientoDto>();
-}
-// ── DTO ───────────────────────────────────────────────────────────────────
+app.Run(win);
+
+// ───────────────────────── DTO ─────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
-record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
+record MovimientoDto(string Tipo, int Cantidad);
