@@ -55,6 +55,13 @@ public sealed class AgendaWindow : Runnable {
     private void ImportarJson(){
         try{
             List<Contacto> importados = JsonAgendaIO.Importar("contactos.json");
+            
+            MessageBox.Query(
+                App!,
+                "Importar",
+                $"Se importarán {importados.Count} contactos",
+                "OK"
+            );
 
             foreach (Contacto c in importados){
                 c.Id = 0;
@@ -312,7 +319,7 @@ public sealed class AgendaWindow : Runnable {
         soloFavoritos = !soloFavoritos;
         ApplyFilters();
 
-        statusBar.Text = soloFavoritos ? "Filtro: solo favoritos" : "Filtro: todos los contactos";
+        statusBar.Text = soloFavoritos ? "Mostrando solo favoritos" : "Mostrandos todos los contactos";
     }
 
     private void SolicitarSalir() {
@@ -330,8 +337,15 @@ public sealed class AgendaWindow : Runnable {
             return true;
         }
 
-        if (key == Key.E.WithCtrl) {
+        if (key == Key.Enter) {
             EditarContacto();
+            return true;
+        }
+
+        if (key == Key.F4)
+        {
+            searchField.SetFocus();
+
             return true;
         }
 
@@ -359,7 +373,7 @@ public sealed class ContactDialog : Dialog {
 
     public ContactDialog(Contacto? contacto = null) {
 
-    Title = "Nuevo contacto";
+    Title = contacto == null ? "Nuevo contacto" : "Editar contacto";
     Width = 70;
     Height = 22;
 
@@ -587,6 +601,13 @@ public class JsonAgendaIO {
     }
 
     public static List<Contacto> Importar(string archivo){
+        if (!File.Exists(archivo))
+        {
+            throw new FileNotFoundException(
+                $"No existe el archivo '{archivo}'"
+            );
+        }
+
         string json = File.ReadAllText(archivo);
 
         return JsonSerializer.Deserialize<List<Contacto>>(json) ?? new List<Contacto>();
