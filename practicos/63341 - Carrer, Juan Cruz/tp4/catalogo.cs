@@ -31,18 +31,77 @@ var detalle = new Label()
     X = 42,
     Y = 1,
     Width = 50,
-    Height = 20
+    Height = 8
+};
+
+var movimientosLabel = new Label()
+{
+    X = 42,
+    Y = 10,
+    Width = 60,
+    Height = 15
 };
 
 CargarLista();
 MostrarDetalle();
 
-listaProductos.Accepting += (_, _) => {
+async Task MostrarMovimientos()
+{
+    if (productos.Count == 0)
+    {
+        movimientosLabel.Text = "";
+        return;
+    }
+
+    int indice = listaProductos.SelectedItem ?? 0;
+
+    var prod = productos[indice];
+
+    var movimientos =
+        await http.GetFromJsonAsync<List<MovimientoDto>>(
+            $"http://localhost:5050/productos/{prod.Id}/movimientos"
+        );
+
+    movimientos ??= new();
+
+    if (movimientos.Count == 0)
+    {
+        movimientosLabel.Text =
+            """
+            MOVIMIENTOS
+
+            Sin movimientos
+            """;
+
+        return;
+    }
+
+    var texto =
+        """
+        MOVIMIENTOS
+
+        """;
+
+    foreach (var mov in movimientos)
+    {
+        texto +=
+            $"{mov.Tipo} | " +
+            $"{mov.Cantidad} | " +
+            $"{mov.Fecha:g}\n";
+    }
+
+    movimientosLabel.Text = texto;
+}
+
+await MostrarMovimientos();
+
+listaProductos.Accepting += async (_, _) => {
     MostrarDetalle();
+    await MostrarMovimientos();
 };
 
 ventana.Add(listaProductos);
-ventana.Add(detalle);
+ventana.Add(movimientosLabel);
 
 app.Run(ventana);
 
@@ -101,4 +160,12 @@ record ProductoDto(
     string Nombre,
     decimal Precio,
     int Stock
+);
+
+record MovimientoDto(
+    int Id,
+    int ProductoId,
+    string Tipo,
+    int Cantidad,
+    DateTime Fecha
 );
