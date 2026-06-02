@@ -20,6 +20,7 @@ using (var scope = app.Services.CreateScope())
     contexto.Database.EnsureCreated();
 }
 
+// Endpoints para administrar productos del catalogo.
 app.MapGet("/productos", async (CatalogoContexto contexto) =>
     await contexto.Productos.OrderBy(p => p.Codigo).ToListAsync());
 
