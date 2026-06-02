@@ -1,20 +1,36 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
 
+using System.Collections.ObjectModel;
+
 using System.Net.Http.Json;
 using Terminal.Gui.App;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+
 using Terminal.Gui.Views;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-ProductoDto producto;
+const string BaseUrl = "http://localhost:5050";
+
+List<ProductoDto> productosIniciales;
 try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
+    using var clientePrueba = new HttpClient();
+    productosIniciales = await clientePrueba.GetFromJsonAsync<List<ProductoDto>>($"{BaseUrl}/productos") ?? [];
 } catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
+    Console.Error.WriteLine("Verifica que servidor.cs este corriendo en http://localhost:5050");
     return;
+}
+
+using IApplication appTui = Application.Create();
+appTui.Init();
+
+var ventana = new Window {
+    Title = " CatalogoREST - F1 Agregar  F2 Editar  F3 Eliminar  F4 Movimiento  ESC Salir ",
+    X = 0, Y = 0,
+    Width = Dim.Fill(), Height = Dim.Fill(),
 }
 
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
