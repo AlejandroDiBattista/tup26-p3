@@ -94,3 +94,25 @@ class ServicioCatalogo {
         var producto = await db.Productos.FindAsync(id);
         return producto is null ? null : ProductoDto.Desde(producto);
     }
+
+    public async Task<ResultadoProducto> CrearProductoAsync(ProductoEntrada entrada) {
+        var error = ValidarProducto(entrada);
+        if (error is not null) return new(null, error);
+
+        var codigo = entrada.Codigo.Trim().ToUpperInvariant();
+        if (await db.Productos.AnyAsync(p => p.Codigo == codigo)) {
+            return new(null, $"Ya existe un producto con codigo {codigo}.");
+        }
+
+        var producto = new Producto {
+            Codigo = codigo,
+            Nombre = entrada.Nombre.Trim(),
+            Precio = entrada.Precio,
+            Stock = entrada.Stock
+        };
+
+        db.Productos.Add(producto);
+        await db.SaveChangesAsync();
+
+        return new(ProductoDto.Desde(producto), null);
+    }
