@@ -5,11 +5,12 @@ using System.Net.Http.Json;
 using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
+using Terminal.Gui.Input;
 using System.Collections.ObjectModel;
 
 using var http = new HttpClient();
 
-var productos = await CargarProductos();
+List<ProductoDto> productos = await CargarProductos();
 
 using IApplication app = Application.Create().Init();
 
@@ -100,6 +101,15 @@ listaProductos.Accepting += async (_, _) => {
     await MostrarMovimientos();
 };
 
+var menu = new MenuBar([
+    new MenuBarItem("_Producto", [
+        new MenuItem("_Agregar", "", async () => {
+            await AbrirAltaProducto();
+        })
+    ])
+]);
+
+ventana.Add(menu);
 ventana.Add(listaProductos);
 ventana.Add(movimientosLabel);
 
@@ -153,6 +163,61 @@ void MostrarDetalle()
         """;
 }
 
+async Task AbrirAltaProducto()
+{
+    var dialogo = new Dialog()
+    {
+        Title = "Nuevo producto",
+        Width = 60,
+        Height = 20
+    };
+
+    var codigoTxt = new TextField() { X = 15, Y = 2, Width = 30 };
+    var nombreTxt = new TextField() { X = 15, Y = 4, Width = 30 };
+    var precioTxt = new TextField() { X = 15, Y = 6, Width = 30 };
+    var stockTxt = new TextField() { X = 15, Y = 8, Width = 30 };
+
+    dialogo.Add(new Label("Codigo:") { X = 2, Y = 2 });
+    dialogo.Add(new Label("Nombre:") { X = 2, Y = 4 });
+    dialogo.Add(new Label("Precio:") { X = 2, Y = 6 });
+    dialogo.Add(new Label("Stock:") { X = 2, Y = 8 });
+
+    dialogo.Add(codigoTxt);
+    dialogo.Add(nombreTxt);
+    dialogo.Add(precioTxt);
+    dialogo.Add(stockTxt);
+
+    var guardarBtn = new Button("Guardar") { X = 10, Y = 12 };
+    var cancelarBtn = new Button("Cancelar") { X = 25, Y = 12 };
+
+    guardarBtn.Accepting += async (_, _) =>
+    {
+        var nuevo = new ProductoNuevoDto(
+            0,
+            codigoTxt.Text.ToString() ?? "",
+            nombreTxt.Text.ToString() ?? "",
+            decimal.Parse(precioTxt.Text.ToString() ?? "0"),
+            int.Parse(stockTxt.Text.ToString() ?? "0")
+        );
+
+        await http.PostAsJsonAsync("http://localhost:5050/productos", nuevo);
+
+        productos = await CargarProductos();
+        CargarLista();
+
+        Application.RequestStop(dialogo);
+    };
+
+    cancelarBtn.Accepting += (_, _) =>
+    {
+        Application.RequestStop(dialogo);
+    };
+
+    dialogo.Add(guardarBtn);
+    dialogo.Add(cancelarBtn);
+
+    Application.Run(dialogo);
+}
 
 record ProductoDto(
     int Id,
@@ -168,4 +233,12 @@ record MovimientoDto(
     string Tipo,
     int Cantidad,
     DateTime Fecha
+);
+
+record ProductoNuevoDto(
+    int Id,
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
 );
