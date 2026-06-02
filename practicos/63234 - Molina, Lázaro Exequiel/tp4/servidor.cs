@@ -63,3 +63,10 @@ app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, Mo
         ? Results.BadRequest(resultado.Error)
         : Results.Created($"/productos/{productoId}/movimientos/{resultado.Movimiento!.Id}", resultado);
 });
+
+app.Run("http://localhost:5050");
+
+class ServicioCatalogo {
+    private readonly TiendaDb db;
+
+    public ServicioCatalogo(TiendaDb db) => this.db = db;
