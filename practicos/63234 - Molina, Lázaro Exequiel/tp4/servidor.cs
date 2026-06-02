@@ -15,3 +15,8 @@ builder.Services.AddDbContext<TiendaDb>(opt => opt.UseSqlite("Data Source=catalo
 builder.Services.AddScoped<ServicioCatalogo>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope()) {
+    var servicio = scope.ServiceProvider.GetRequiredService<ServicioCatalogo>();
+    servicio.PrepararBase();
+}
