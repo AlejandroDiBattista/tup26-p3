@@ -32,3 +32,9 @@ app.MapGet("/productos", async (CatalogoDb db) =>
         .Select(p => ProductoDto.DesdeModelo(p))
         .ToListAsync()
 );
+app.MapGet("/productos/{id:int}", async (int id, CatalogoDb db) => {
+    var producto = await db.Productos.FindAsync(id);
+    return producto is null
+        ? Results.NotFound($"No existe un producto con id {id}.")
+        : Results.Ok(ProductoDto.DesdeModelo(producto));
+});
