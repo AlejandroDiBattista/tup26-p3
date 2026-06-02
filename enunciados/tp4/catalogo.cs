@@ -41,7 +41,7 @@ public class ProductoDto {
     };
 }
 
-public class MovimientoDeProductoDto {
+public class MovimientoDto {
     public int Id { get; set; }
     public int ProductoId { get; set; }
     public string Tipo { get; set; } = "Compra";
@@ -229,6 +229,97 @@ public sealed class CatalogoWindow : Runnable {
         statusLabel.Text = $"{mensaje}  | F2 Nuevo | F3 Editar | Del Eliminar | F5 Movimiento | Ctrl+Q Salir";
     }
 
-    
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.F2) {
+            NuevoProducto();
+            return true;
+        }
+        if (key == Key.F3) {
+            EditarProducto();
+            return true;
+        }
+        if (key == Key.DeleteChar) {
+            EliminarProducto();
+            return true;
+        }
+        if (key == Key.F5) {
+            RegistrarMovimiento();
+            return true;
+        }
+        if (key == Key.Q.WithCtrl) { 
+            App!.RequestStop();    
+            return true; }
+        return base.OnKeyDown(key);
+    }
+}
+
+public sealed class ProductoDialog : Dialog {
+    public new bool Accepted { get; private set; }
+    public ProductoDto Producto { get; private set; }
+    private readonly TextField codigoField;
+    private readonly TextField nombreField;
+    private readonly TextField precioField;
+    private readonly TextField stockField;
+
+    public ProductoDialog(ProductoDto p) {
+        Producto = p;
+        Title = "Producto";
+        Width = 55;
+        Height = 16;
+
+        Add(new Label(){Text="Código:", X=1, Y=1});
+        codigoField = new TextField(){X=15, Y=1, Width=35, Text=p.Codigo};
+        Add(codigoField);
+
+        Add(new Label(){Text="Nombre:", X=1, Y=3});
+        nombreField = new TextField(){X=15, Y=3, Width=35, Text=p.Nombre};
+        Add(nombreField);
+
+        Add(new Label(){Text="Precio:", X=1, Y=5});
+        precioField = new TextField(){X=15, Y=5, Width=35, Text=p.Precio.ToString()};
+        Add(precioField);
+
+        Add(new Label(){Text="Stock:", X=1, Y=7});
+        stockField = new TextField(){X=15, Y=7, Width=35, Text=p.Stock.ToString()};
+        Add(stockField);
+
+        Button guardar= new() { Text = "_Guardar", X=15, Y=10 };
+        guardar.Accepting += (_, e) => {Save(); e.Handled = true;};
+        AddButton(guardar);
+
+        Button cancelar = new() { Text = "_Cancelar"};
+        cancelar.Accepting += (_, e) => {App!.RequestStop(); e.Handled = true;};
+        AddButton(cancelar);
+    }
+
+    private void Save() {
+        string codigo = codigoField.Text.ToString() ?? "";
+        string nombre = nombreField.Text.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(codigo)|| string.IsNullOrWhiteSpace(nombre)) {
+            MessageBox.ErrorQuery(App!, "Error", "Código y Nombre no pueden estar vacíos", "OK");
+            return;
+        }
+        if (!decimal.TryParse(precioField.Text.ToString(), out decimal precio) || precio < 0) {
+            MessageBox.ErrorQuery(App!, "Error", "Precio debe ser un número positivo", "OK");
+            return;
+        }
+        if (!int.TryParse(stockField.Text.ToString(), out int stock) || stock < 0) {
+            MessageBox.ErrorQuery(App!, "Error", "Stock debe ser un número positivo", "OK");
+            return;
+        }
+        Producto.Codigo = codigo;
+        Producto.Nombre = nombre;
+        Producto.Precio = precio;
+        Producto.Stock = stock;
+        Accepted = true;
+        App!.RequestStop();
+    }
+}
+
+public sealed class MovimientoDialog : Dialog {
+    public new bool Accepted { get; private set; }
+    public MovimientoDto Movimiento { get; private set; } = new();
+    private readonly ListView tipoList;
+    private readonly TextField cantidadField;
 
 }
