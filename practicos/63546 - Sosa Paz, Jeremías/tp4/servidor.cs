@@ -1,3 +1,10 @@
+#!/usr/bin/env dotnet
+#:sdk Microsoft.NET.Sdk.Web
+#:package Microsoft.EntityFrameworkCore.Sqlite@*
+#:property PublishAot=false
+
+using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,7 +47,6 @@ app.MapDelete("/productos/{id}", async (int id, AppDb db) => {
     return Results.Ok();
 });
 
-// NUEVO: Endpoints para los movimientos de stock
 app.MapGet("/productos/{id}/movimientos", async (int id, AppDb db) => {
     var movs = await db.Movimientos.Where(m => m.ProductoId == id).ToListAsync();
     return Results.Ok(movs);
