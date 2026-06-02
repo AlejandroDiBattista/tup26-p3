@@ -83,3 +83,14 @@ class ServicioCatalogo {
 
         db.SaveChanges();
     }
+
+    public async Task<List<ProductoDto>> ListarProductosAsync() =>
+        await db.Productos
+            .OrderBy(p => p.Codigo)
+            .Select(p => ProductoDto.Desde(p))
+            .ToListAsync();
+
+    public async Task<ProductoDto?> BuscarProductoAsync(int id) {
+        var producto = await db.Productos.FindAsync(id);
+        return producto is null ? null : ProductoDto.Desde(producto);
+    }
