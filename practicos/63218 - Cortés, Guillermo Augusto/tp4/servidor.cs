@@ -35,13 +35,35 @@ app.Run("http://localhost:5050");
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record class Producto(
+    int Id,
+    string Codigo, 
+    string Nombre, 
+    decimal Precio, 
+    int Stock
+);
+
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
+
+record class MovimientoDeProducto(
+    int Id, 
+    int ProductoId, 
+    TipoMovimiento Tipo, 
+    int Cantidad, 
+    DateTime Fecha
+);
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+
+    public DbSet<MovimientoDeProducto> Moviminetos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -55,11 +77,39 @@ class CatalogoRepositorio {
         db.Database.EnsureCreated();
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.AddRange(
+            new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100),
+            new Producto(2, "P002", "Azucar 1kg", 1200m, 50),
+            new Producto(3, "P003", "Cafe 500g", 2500m, 30)   
+            );
             db.SaveChanges();
         }
     }
 
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+    public List<Producto> TraerProductos() =>
+        db.Productos.OrderBy(p => p.Id).ToList();
+
+    public Producto? TraerProductoPorId(int id) =>
+        db.Productos.Find(id);
+
+    public Producto AgregarProducto(Producto producto) {
+        db.Productos.Add(producto);
+        db.SaveChanges();
+        return producto;
+    }
+
+    public bool EliminarProducto(int id) {
+
+        var producto = db.Productos.Find(id);
+
+        if (producto is null)
+            return false;
+
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+
+        return true;
+    }
 }
