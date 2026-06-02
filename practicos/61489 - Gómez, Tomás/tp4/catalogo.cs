@@ -177,3 +177,39 @@ public class Program
 
         Application.Run(dialog);
     }
+    static void DialogoEditarProducto() 
+    {
+        if (productoSeleccionado == null) return;
+
+        var dialog = new Dialog { Title = "Editar Producto", Width = 50, Height = 12 };
+        
+        var txtCodigo = new TextField { Text = productoSeleccionado.Codigo, X = 10, Y = 1, Width = 30 };
+        var txtNombre = new TextField { Text = productoSeleccionado.Nombre, X = 10, Y = 3, Width = 30 };
+        var txtPrecio = new TextField { Text = productoSeleccionado.Precio.ToString(), X = 10, Y = 5, Width = 30 };
+
+        dialog.Add(new Label { Text = "Código:", X = 1, Y = 1 }, txtCodigo);
+        dialog.Add(new Label { Text = "Nombre:", X = 1, Y = 3 }, txtNombre);
+        dialog.Add(new Label { Text = "Precio:", X = 1, Y = 5 }, txtPrecio);
+
+        var btnGuardar = new Button { Text = "Actualizar", IsDefault = true };
+        btnGuardar.Accepting += (s, e) => {
+            productoSeleccionado.Codigo = txtCodigo.Text.ToString();
+            productoSeleccionado.Nombre = txtNombre.Text.ToString();
+            productoSeleccionado.Precio = decimal.TryParse(txtPrecio.Text.ToString(), out var p) ? p : 0;
+
+            var res = http.PutAsJsonAsync($"/productos/{productoSeleccionado.Id}", productoSeleccionado).Result;
+            if (res.IsSuccessStatusCode) {
+                Application.RequestStop();
+                CargarProductos();
+            }
+        };
+
+        var btnCancelar = new Button { Text = "Cancelar" };
+        btnCancelar.Accepting += (s, e) => Application.RequestStop();
+
+        dialog.AddButton(btnGuardar);
+        dialog.AddButton(btnCancelar);
+
+        Application.Run(dialog);
+    }
+
