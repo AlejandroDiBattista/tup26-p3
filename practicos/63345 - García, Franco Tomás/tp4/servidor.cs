@@ -27,6 +27,16 @@ app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
     return Results.Ok(productos);
 });
 
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProductoPorId(id);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
+});
+
+app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) => {
+    var nuevo = repositorio.CrearProducto(producto);
+    return Results.Created($"/productos/{nuevo.Id}", nuevo);
+});
+
 app.Run("http://localhost:5050");
 
 
@@ -60,7 +70,12 @@ class CatalogoRepositorio {
     private readonly CatalogoDb db;
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
-    
+    public Producto? TraerProductoPorId(int id) => db.Productos.Find(id);
+    public Producto CrearProducto(Producto producto) {
+        db.Productos.Add(producto);
+        db.SaveChanges();
+        return producto;
+    }
     public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
     public void Iniciar() {
         db.Database.EnsureCreated();
