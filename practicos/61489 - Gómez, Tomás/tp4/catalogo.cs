@@ -213,3 +213,18 @@ public class Program
         Application.Run(dialog);
     }
 
+    static void EliminarProducto() 
+    {
+        if (productoSeleccionado == null) return;
+
+        var resp = MessageBox.Query("Confirmar", $"¿Seguro querés eliminar {productoSeleccionado.Nombre}?", "Sí", "No");
+        if (resp == 0) {
+            var res = http.DeleteAsync($"/productos/{productoSeleccionado.Id}").Result;
+            if (res.IsSuccessStatusCode) {
+                productoSeleccionado = null;
+                CargarProductos();
+                listaMovimientos.Clear();
+            listMovimientosUI.SetSource(new ObservableCollection<MovimientoDeProducto>(listaMovimientos));
+            }
+        }
+    }
