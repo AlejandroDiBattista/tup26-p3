@@ -197,3 +197,20 @@ class ServicioCatalogo {
         return null;
     }
 }
+
+class TiendaDb : DbContext {
+    public TiendaDb(DbContextOptions<TiendaDb> options) : base(options) { }
+
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeStock> Movimientos => Set<MovimientoDeStock>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>().HasIndex(p => p.Codigo).IsUnique();
+        modelBuilder.Entity<Producto>().Property(p => p.Precio).HasPrecision(18, 2);
+        modelBuilder.Entity<MovimientoDeStock>()
+            .HasOne(m => m.Producto)
+            .WithMany(p => p.Movimientos)
+            .HasForeignKey(m => m.ProductoId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
