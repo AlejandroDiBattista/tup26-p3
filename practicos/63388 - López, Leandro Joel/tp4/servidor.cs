@@ -127,19 +127,128 @@ app.MapPut("/productos/{id:int}", async(int id, ProductoRequest request, Catalog
     return Results.Ok(producto.ToDto());
 });
 
+app.MapDelete("/productos/{id:int}", async(int id, CatalogoDbContext db) => {
+
+    var producto = await db.Productos.FindAsync(id);
+    if (producto is null) {
+        return Results.NotFound(new ApiError("No existe un producto con ese ID"));
+    }
+
+    db.Productos.Remove(producto);
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
+});
+
+app.MapGet("/productos/{productoId:int}/movimientos", async(int productoId, CatalogoDbContext db) => {
+
+    var existeproducto = await db.Productos.AnyAsync(producto => producto.Id == productoId);
+    if (!existeproducto) {
+        return Results.NotFound(new ApiError("No existe un producto con ese ID"));
+    }
+
+    var movimientos = await db.Movimiento
+    .AsNoTracking()
+    .Where(movimiento => movimiento.ProductoId == productoId)
+    .OrderByDescending(movimiento => movimiento.Fecha)
+    .Select(movimiento => movimiento.ToDto())
+    .ToListAsync();
+
+    return Results.Ok(movimientos);
+});
+
+app.MapPost("/productos/{productoId:int}/movimientos", async(int productoId, MovimientoRequest request, CatalogoDbContext db) => {
+
+    if (request.Cantidad <= 0) {
+        return Results.BadRequest(new ApiError("La cantidad debe ser mayor a cero"));
+    }
+
+    var producto = await db.Productos.FindAsync(productoId);
+    if (producto is null) {
+        return Results.NotFound(new ApiError("No existe un producto con ese ID"));
+    }
+
+    var nuevoStock = request.Tipo switch {
+        TipoMovimiento.Compra => producto.Stock + request.Cantidad,
+        TipoMovimiento.Venta => producto.Stock - request.Cantidad,
+        TipoMovimiento.Ajuste => request.Cantidad,
+        _ => producto.Stock
+    };
+
+    if (nuevoStock < 0) {
+        return Results.BadRequest(new ApiError("El movimiento no se puede registrar porque dejaría el stock en negativo"));
+    }
+
+    using var tx = await db.Database.BeginTransactionAsync();
+
+    producto.Stock = nuevoStock;
+    var movimiento = new MovimientoDeProducto {
+        
+        ProductoId = productoId,
+        Tipo = request.Tipo,
+        Cantidad = request.Cantidad,
+        Fecha = DateTime.Now
+    };
+
+    db.Movimiento.Add(movimiento);
+    await db.SaveChangesAsync();
+    await tx.CommitAsync();
+
+    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento.ToDto());
+});
+
 app.Run("http://localhost:5050");
+
+static string? ValidarProducto(ProductoRequest request) {
+
+    if (string.IsNullOrWhiteSpace(request.Codigo)) {
+
+        return "El código es obligatorio";
+    }
+
+    if (string.Codigo.Trim().Length > 30) {
+
+        return "El código no puede exceder los 30 caracteres";
+    }
+
+    if (string.IsNullOrWhiteSpace(request.Nombre)) {
+
+        return "El nombre es obligatorio";
+    }
+
+    if (string.Nombre.Trim().Length > 100) {
+
+        return "El nombre no puede exceder los 100 caracteres";
+    }
+
+    if (request.Precio < 0) {
+
+        return "El precio no puede ser negativo";
+    }
+
+    if (request.Stock < 0) {
+
+        return "El stock no puede ser negativo";
+    }
+
+    return null;
+}
+
+static string NormalizarCodigo(string codigo) => codigo.Trim().ToUpperInvariant();
 
 
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record class MovimientoDeProducto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDbContext : DbContext {
     public CatalogoDbContext(DbContextOptions<CatalogoDbContext> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimiento => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
