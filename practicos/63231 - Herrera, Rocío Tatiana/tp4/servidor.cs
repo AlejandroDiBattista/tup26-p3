@@ -58,3 +58,22 @@ app.MapPost("/productos", async (ProductoCrearDto dto, CatalogoDb db) => {
 
     return Results.Created($"/productos/{producto.Id}", ProductoDto.DesdeModelo(producto));
 });
+app.MapPut("/productos/{id:int}", async (int id, ProductoCrearDto dto, CatalogoDb db) => {
+    var producto = await db.Productos.FindAsync(id);
+    if (producto is null) return Results.NotFound($"No existe un producto con id {id}.");
+
+    var error = ValidarProducto(dto.Codigo, dto.Nombre, dto.Precio, dto.Stock);
+    if (error is not null) return Results.BadRequest(error);
+
+    var codigo = dto.Codigo.Trim().ToUpperInvariant();
+    var existeCodigo = await db.Productos.AnyAsync(p => p.Id != id && p.Codigo == codigo);
+    if (existeCodigo) return Results.Conflict($"Ya existe otro producto con codigo {codigo}.");
+
+    producto.Codigo = codigo;
+    producto.Nombre = dto.Nombre.Trim();
+    producto.Precio = dto.Precio;
+    producto.Stock = dto.Stock;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(ProductoDto.DesdeModelo(producto));
+});
