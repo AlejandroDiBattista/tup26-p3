@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Json;
 using System.Text.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography.X509Certificates;
 
 // ── Configuración ──────────────────────────────────────────────────────────
 
@@ -183,7 +184,7 @@ app.MapPost("/productos/{productoId:int}/movimientos", async(int productoId, Mov
 
     producto.Stock = nuevoStock;
     var movimiento = new MovimientoDeProducto {
-        
+        Producto = producto,
         ProductoId = productoId,
         Tipo = request.Tipo,
         Cantidad = request.Cantidad,
@@ -234,21 +235,107 @@ static string? ValidarProducto(ProductoRequest request) {
     return null;
 }
 
-static string NormalizarCodigo(string codigo) => codigo.Trim().ToUpperInvariant();
+static string NormalizarCodigo(string codigo){
+
+     return codigo.Trim().ToUpperInvariant(); 
+     }
 
 
-
+});
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
-record class MovimientoDeProducto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+public sealed class Producto {
+
+    public int Id { get; set; }
+
+    [MaxLength(30)]
+    public string Codigo { get; set; } = "";
+
+    [MaxLength(100)]
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+
+    public List<MovimientoDeProducto> Movimientos { get; set; } = ;
+
+}
+public class MovimientoDeProducto {
+
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public Producto? Producto { get; set; }
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+
+public enum TipoMovimiento {
+
+    Compra,
+    Venta,
+    Ajuste
+}
+
+public sealed record ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
+
+public sealed record MovimientoRequest(TipoMovimiento Tipo, int Cantidad);
+
+public sealed record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+
+public sealed record MovimientoDto(int Id, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+
+public sealed record ApiError(string Error);
+
+public static record DtoExtensions {
+
+    public static ProductoDto ToDto(this Producto producto) =>
+        new ProductoDto(producto.Id, producto.Codigo, producto.Nombre, producto.Precio, producto.Stock);
+
+    public static MovimientoDto ToDto(this MovimientoDeProducto movimiento) =>
+        new MovimientoDto(movimiento.Id, movimiento.Tipo, movimiento.Cantidad, movimiento.Fecha);
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
-class CatalogoDbContext : DbContext {
-    public CatalogoDbContext(DbContextOptions<CatalogoDbContext> options) : base(options) { }
+public sealedclass CatalogoDbContext (DbContextOptions<CatalogoDbContext> options): DbContext {
+
     public DbSet<Producto> Productos => Set<Producto>();
-    public DbSet<MovimientoDeProducto> Movimiento => Set<MovimientoDeProducto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+
+        modelBuilder.Entity<Producto>(entity => {
+
+            entity.HasKey(producto => producto.Id);
+            entity.HasIndex(producto => producto.Codigo).IsUnique();
+            entity.Property(producto => producto.Codigo).IsRequired().HasMaxLength(30);
+            entity.Property(producto => producto.Nombre).IsRequired().HasMaxLength(100);
+            entity.Property(producto => producto.Precio)().HasColumnType("decimal(18,2)");
+            entity.Property(producto => producto.Stock).IsRequired();
+            entity.HasMany(Producto => Producto.Movimientos)
+                .WithOne(movimiento => movimiento.Producto)
+                .HasForeignKey(movimiento => movimiento.ProductoId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MovimientoDeProducto>(entity => {
+            
+            entity.HasKey(movimiento => movimiento.Id);
+            entity.Property(movimiento => movimiento.Tipo).HasConversion<string>().HasMaxLength(20);
+            entity.Property(movimiento => movimiento.Cantidad).IsRequired();
+            entity.Property(movimiento => movimiento.Fecha).IsRequired();
+        });
+    }
+
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
