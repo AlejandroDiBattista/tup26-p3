@@ -35,7 +35,7 @@
     {
         X = 1,
         Y = 0,
-        Text = "[A]gregar  [M]odificar  [E]liminar [C]ompra  [V]enta  [J]Ajuste"
+        Text = "Acciones"
     };
 
     Add(menu);
@@ -47,18 +47,32 @@
             var listaProductos = new ListView
             {
                 X = 1,
-                Y = 4,
+                Y = 6,
+                Width = 46,
+                Height = 7
             };
             var detalle = new Label
     {
         X = 50,
-        Y = 15,
+        Y = 14,
         Text = "Seleccione un producto"
     };
+            var informacion = new Label
+            {
+                X = 1,
+                Y = 14,
+                Text = ""
+            };
+            var estado = new Label
+            {
+                X = 1,
+                Y = 15,
+                Text = ""
+            };
             var agregar = new Button    
     {
         X = 1,
-        Y = productos.Count + 5,
+        Y = 3,
         Text = "Agregar"
     };
     agregar.Accepting += async (_, _) =>
@@ -75,21 +89,24 @@
 
     var modificar = new Button
     {
-        X = 15,
-        Y = productos.Count + 5,
+        X = 13,
+        Y = 3,
         Text = "Modificar"
     };
 
     var eliminar = new Button
     {
-        X = 30,
-        Y = productos.Count + 5,
+        X = 29,
+        Y = 3,
         Text = "Eliminar"
     };
     modificar.Accepting += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice || indice < 0 || indice >= filtrados.Count)
+        {
+            estado.Text = "Seleccione un producto para modificar.";
             return;
+        }
 
         var producto = filtrados[indice];
         var request = ProductoDialog.Mostrar(App!, producto);
@@ -98,13 +115,17 @@
 
         await api.ModificarProductoAsync(producto.Id, request);
         productos = await api.ListarProductosAsync();
+        estado.Text = "Producto modificado.";
         RefrescarLista();
     };
 
     eliminar.Accepting += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice || indice < 0 || indice >= filtrados.Count)
+        {
+            estado.Text = "Seleccione un producto para eliminar.";
             return;
+        }
 
         var producto = filtrados[indice];
         if ((MessageBox.Query(App!, "Eliminar", $"Eliminar {producto.Nombre}?", "No", "Si") ?? 0) != 1)
@@ -112,36 +133,43 @@
 
         await api.EliminarProductoAsync(producto.Id);
         productos = await api.ListarProductosAsync();
+        estado.Text = "Producto eliminado.";
         RefrescarLista();
     };
 
     var compra = new Button
     {
-        X = 45,
-        Y = productos.Count + 5,
+        X = 1,
+        Y = 4,
         Text = "Compra"
     };
 
     var venta = new Button
     {
-        X = 60,
-        Y = productos.Count + 5,
+        X = 13,
+        Y = 4,
         Text = "Venta"
     };
 
     var ajuste = new Button
     {
-        X = 75,
-        Y = productos.Count + 5,
+        X = 25,
+        Y = 4,
         Text = "Ajuste"
     };
     compra.Accepting += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
+        {
+            estado.Text = "Seleccione un producto para registrar compra.";
             return;
+        }
 
         if (indice < 0 || indice >= filtrados.Count)
+        {
+            estado.Text = "Seleccione un producto para registrar compra.";
             return;
+        }
 
         var producto = filtrados[indice];
         var cantidad = CantidadDialog.Mostrar(App!, TipoMovimiento.Compra);
@@ -155,6 +183,7 @@
                 cantidad.Value);
 
         productos = await api.ListarProductosAsync();
+        estado.Text = $"Compra registrada para {producto.Nombre}.";
         RefrescarLista();
 
         Console.WriteLine(
@@ -164,10 +193,16 @@
     venta.Accepting += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
+        {
+            estado.Text = "Seleccione un producto para registrar venta.";
             return;
+        }
 
         if (indice < 0 || indice >= filtrados.Count)
+        {
+            estado.Text = "Seleccione un producto para registrar venta.";
             return;
+        }
 
         var producto = filtrados[indice];
         var cantidad = CantidadDialog.Mostrar(App!, TipoMovimiento.Venta);
@@ -181,6 +216,7 @@
                 cantidad.Value);
 
         productos = await api.ListarProductosAsync();
+        estado.Text = $"Venta registrada para {producto.Nombre}.";
         RefrescarLista();
 
         Console.WriteLine(
@@ -190,10 +226,16 @@
     ajuste.Accepting += async (_, _) =>
     {
         if (listaProductos.SelectedItem is not int indice)
+        {
+            estado.Text = "Seleccione un producto para registrar ajuste.";
             return;
+        }
 
         if (indice < 0 || indice >= filtrados.Count)
+        {
+            estado.Text = "Seleccione un producto para registrar ajuste.";
             return;
+        }
 
         var producto = filtrados[indice];
         var cantidad = CantidadDialog.Mostrar(App!, TipoMovimiento.Ajuste);
@@ -207,6 +249,7 @@
                 cantidad.Value);
 
         productos = await api.ListarProductosAsync();
+        estado.Text = $"Ajuste registrado para {producto.Nombre}.";
         RefrescarLista();
 
         Console.WriteLine(
@@ -227,22 +270,18 @@
                         filtrados.Select(p =>
                             $"{p.Codigo,-10} {p.Nombre,-25} ${p.Precio,10:N2} Stock:{p.Stock}")
                         .ToList()));
+                informacion.Text = $"Productos encontrados: {filtrados.Count}";
             }
 
             buscar.TextChanged += (_, _) => RefrescarLista();
             RefrescarLista();
 
-            var informacion = new Label
-            {
-                X = 1,
-                Y = productos.Count + 3,
-                Text = $"Productos encontrados: {filtrados.Count}"
-            };
-
             var historial = new ListView
     {
         X = 50,
-        Y = 3
+        Y = 6,
+        Width = 38,
+        Height = 7
     };
 
     historial.SetSource(
@@ -283,6 +322,7 @@
             Add(historial);
             Add(detalle);
             Add(informacion);
+            Add(estado);
             Add(agregar);
             Add(modificar);
             Add(eliminar);
