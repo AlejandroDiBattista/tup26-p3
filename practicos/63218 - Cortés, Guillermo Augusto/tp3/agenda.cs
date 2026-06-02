@@ -47,6 +47,11 @@ public sealed class AgendaWindow : Runnable {
     private TextView detailView = null!;
     private Label statusBar = null!;
 
+    private void ExportarJson(){
+        JsonAgendaIO.Exportar("contactos.json", contacts);
+        statusBar.Text = "Contactos exportados a contactos.json";
+    }
+
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
         Title  = "Agenda - Terminal.Gui";
@@ -67,6 +72,7 @@ public sealed class AgendaWindow : Runnable {
         {
             Menus = [
                 new MenuBarItem("_Archivo", [
+                new MenuItem("_Exportar JSON", "Ctrl+X", ExportarJson),
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ]),
                 new MenuBarItem("_Contacto", [
@@ -533,7 +539,16 @@ public sealed class SqliteAgendaStore {
         return cn.Delete(contacto);
     }
 }
-public class JsonAgendaIO {}
+public class JsonAgendaIO {
+    public static void Exportar(string archivo, List<Contacto> contactos){
+        JsonSerializerOptions options = new(){
+            WriteIndented = true
+        };
+
+        string json = JsonSerializer.Serialize(contactos, options);
+        File.WriteAllText(archivo, json);
+    }
+}
 
 [Table("Contactos")]
 public class Contacto {
