@@ -322,4 +322,51 @@ public sealed class MovimientoDialog : Dialog {
     private readonly ListView tipoList;
     private readonly TextField cantidadField;
 
+    public MovimientoDialog(string nombreProducto) {
+        Title = $"Movimiento - {nombreProducto}";
+        Width = 45;
+        Height = 14;
+
+        Add(new Label(){Text="Tipo:", X=1, Y=1});
+        tipoList = new ListView() {
+            X=10,
+            Y=1,
+            Width=15,
+            Height=3
+        };
+        tipoList.SetSource<string>(
+            new System.Collections.ObjectModel.ObservableCollection<string>(["Compra", "Venta", "Ajuste"])
+        );
+        Add(tipoList);
+
+        Add(new Label(){Text="Cantidad:", X=1, Y=6});
+        cantidadField = new TextField(){X=12, Y=6, Width=20, Text=""};
+        Add(cantidadField);
+
+        Button guardar= new() { Text= "_Guardar"};
+        guardar.Accepting += (_, e) => {Save(); e.Handled = true;};
+        AddButton(guardar);
+
+        Button cancelar = new() { Text = "_Cancelar"};
+        cancelar.Accepting += (_, e) => {App!.RequestStop(); e.Handled = true;};
+        AddButton(cancelar);
+    }
+
+    private void Save() {
+        if (!int.TryParse(cantidadField.Text.ToString(), out int cantidad) || cantidad <= 0) {
+            MessageBox.ErrorQuery(App!, "Error", "Cantidad debe ser un número entero positivo", "OK");
+            return;
+        }
+        string tipo = tipoList.SelectedItem.HasValue ? tipoList.SelectedItem.Value switch {
+            0 => "Compra",
+            1 => "Venta",
+            _ => "Ajuste",
+        }
+        : "Compra";
+        Movimiento.Tipo = tipo;
+        Movimiento.Cantidad = cantidad;
+        Accepted = true;
+        App!.RequestStop();
+    }
+
 }
