@@ -127,7 +127,7 @@ public class CatalogoRepositorio {
     }
 
     public void Update(int id, Producto input) {
-        var p = db.Productos.Find(id);
+        var p = db.Productos.Find(id)!;
         p.Codigo = input.Codigo;
         p.Nombre = input.Nombre;
         p.Precio = input.Precio;
@@ -136,7 +136,7 @@ public class CatalogoRepositorio {
     }
 
     public void Delete(int id) {
-        var p = db.Productos.Find(id);
+        var p = db.Productos.Find(id)!;
         db.Productos.Remove(p);
         db.SaveChanges();
     }
@@ -144,7 +144,7 @@ public class CatalogoRepositorio {
     public List<MovimientoDeProducto> GetMovimientos(int productoId) => db.Movimientos.Where(m => m.ProductoId == productoId).OrderByDescending(m => m.Fecha).ToList();
 
     public string? RegistrarMovimiento(int productoId, MovimientoDeProducto mov) {
-        var p = db.Productos.Find(productoId);
+        var p = db.Productos.Find(productoId)!;
         mov.ProductoId = productoId;
         mov.Fecha = DateTime.Now;
         switch (mov.Tipo) {
