@@ -52,6 +52,30 @@ public sealed class AgendaWindow : Runnable {
         statusBar.Text = "Contactos exportados a contactos.json";
     }
 
+    private void ImportarJson(){
+        try{
+            List<Contacto> importados = JsonAgendaIO.Importar("contactos.json");
+
+            foreach (Contacto c in importados){
+                c.Id = 0;
+                store.Insert(c);
+            }
+            contacts = store.ObtenerContactos();
+
+            ApplyFilters();
+
+            statusBar.Text = $"{importados.Count} contactos importados";
+        }
+        catch (Exception ex){
+            MessageBox.ErrorQuery(
+            App!,
+            "Error",
+            ex.Message,
+            "OK"
+            );
+        }
+    }
+
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
         Title  = "Agenda - Terminal.Gui";
@@ -72,6 +96,7 @@ public sealed class AgendaWindow : Runnable {
         {
             Menus = [
                 new MenuBarItem("_Archivo", [
+                new MenuItem("_Importar JSON", "", ImportarJson),
                 new MenuItem("_Exportar JSON", "Ctrl+X", ExportarJson),
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ]),
@@ -548,6 +573,12 @@ public class JsonAgendaIO {
         string json = JsonSerializer.Serialize(contactos, options);
         File.WriteAllText(archivo, json);
     }
+
+    public static List<Contacto> Importar(string archivo){
+        string json = File.ReadAllText(archivo);
+
+        return JsonSerializer.Deserialize<List<Contacto>>(json) ?? new List<Contacto>();
+    } 
 }
 
 [Table("Contactos")]
