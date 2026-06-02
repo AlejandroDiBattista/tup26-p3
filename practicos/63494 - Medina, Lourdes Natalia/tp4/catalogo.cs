@@ -14,12 +14,14 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
+
 string serverUrl = args.Length > 0 ? args[0] : "http://localhost:5000";
 
 try {
-    using CatalogoApiClient api = new(serverUrl);
-    using IApplication app = Application.Create().Init();
-    app.Run(new CatalogoWindow(api));
+ using CatalogoApiClient api = new(serverUrl);
+using IApplication app = Application.Create().Init();
+app.Run(new CatalogoWindow(api));
+
 }
 catch (Exception ex) {
     Console.Error.WriteLine($"No se pudo iniciar el catalogo: {ex.Message}");
@@ -60,8 +62,8 @@ public sealed class CatalogoWindow : Window {
                     new MenuItem("_Salir", "Ctrl+Q", RequestExit)
                 ]),
                 new MenuBarItem("_Productos", [
-                    new MenuItem("_Agregar", "F2 / Ctrl+N", AddProduct),
-                    new MenuItem("_Modificar", "F3 / Enter", EditProduct),
+                    new MenuItem("_Agregar", "Ctrl+N", AddProduct),
+                    new MenuItem("_Modificar", "Enter", EditProduct),
                     new MenuItem("_Eliminar", "Del / Ctrl+D", DeleteProduct)
                 ]),
                 new MenuBarItem("_Movimientos", [
@@ -386,52 +388,77 @@ private void RegisterMovement(TipoMovimiento type) {
         }
  }
 
-    protected override bool OnKeyDown(Key key) {
-        if (key == Key.N.WithCtrl || key == Key.F2) {
-            AddProduct ();
-            return true;
-        }
-        
-        if (key == Key.F3 || key == Key.Enter) {
-            EditProduct();
-            return true;
-        }
-       
-       if (key == Key.D.WithCtrl || key == Key.Delete) {
-            DeleteProduct();
-            return true;
-        }
-
-        if (key == Key.F5) {
-            RefreshAll();
-            return true;
-        }
-
-        if (key == Key.F6) {
-            RegisterPurchase();
-            return true;
-        }
-
-        if (key == Key.F7) {
-            RegisterSale();
-            return true;
-        }
-
-        if (key == Key.F8) {
-            RegisterAdjustment();
-            return true;
-        }
-
-        if (key == Key.Q.WithCtrl) {
-            RequestExit();
-            return true;
-        }
-
-        bool handled = base.OnKeyDown(key);
-        selectedIndex = productList?.SelectedItem ?? selectedIndex;
-        LoadSelectedMovements();
-        return handled;
+    protected override bool OnKeyDown(Key key) 
+{
+    // --- ATAJOS CON CTRL ---
+    if (key == Key.N.WithCtrl) 
+    {
+        AddProduct();
+        return true;
     }
+    if (key == Key.D.WithCtrl) 
+    {
+        DeleteProduct();
+        return true;
+    }
+    if (key == Key.Q.WithCtrl) 
+    {
+        RequestExit();
+        return true;
+    }
+
+    // --- ATAJOS SIMPLES (Sin Ctrl) ---
+    if (key == Key.F2) 
+    {
+        AddProduct();
+        return true;
+    }
+
+    if (key == Key.F3 || key == Key.Enter) 
+    {
+        EditProduct();
+        return true;
+    }
+
+    if (key == Key.Delete) 
+    {
+        DeleteProduct();
+        return true;
+    }
+
+    if (key == Key.F5) 
+    {
+        RefreshAll();
+        return true;
+    }
+
+    if (key == Key.F6) 
+    {
+        RegisterPurchase();
+        return true;
+    }
+
+    if (key == Key.F7) 
+    {
+        RegisterSale();
+        return true;
+    }
+
+    if (key == Key.F8) 
+    {
+        RegisterAdjustment();
+        return true;
+    }
+
+    // Si ninguna tecla coincidió, dejamos que Terminal.Gui maneje el comportamiento nativo
+    bool handled = base.OnKeyDown(key);
+    
+    // Esto se ejecuta solo si no saltó ningún atajo arriba
+    selectedIndex = productList?.SelectedItem ?? selectedIndex;
+    LoadSelectedMovements();
+    
+    return handled;
+}
 
     private static string TrimTo(string value, int maxLength) {
         return value.Length <= maxLength ? value : value[..Math.Max(0, maxLength - 1)] + ".";
@@ -455,7 +482,7 @@ public ProductDialog(Producto? product = null) {
         Label codeLabel = LabelAt("Codigo:", 1, 1);
         codeField = FieldAt(Pos.Right(codeLabel) + 1, 1, product?.Codigo ?? "");
 
-        Label nameLabel = LabelAt("Precio:", 1, 3);
+        Label nameLabel = LabelAt("Nombre:", 1, 3);
         nameField = FieldAt(Pos.Right(nameLabel) + 1, 3, product?.Nombre ?? "");
 
         Label priceLabel = LabelAt("Precio:", 1, 5);  
