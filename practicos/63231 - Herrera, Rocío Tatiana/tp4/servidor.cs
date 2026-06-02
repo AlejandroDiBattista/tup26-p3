@@ -140,3 +140,65 @@ static string? ValidarProducto(string codigo, string nombre, decimal precio, int
     if (stock < 0) return "El stock no puede ser negativo.";
     return null;
 }
+class CatalogoDb : DbContext {
+    public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
+
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>()
+            .HasIndex(p => p.Codigo)
+            .IsUnique();
+
+        modelBuilder.Entity<Producto>()
+            .Property(p => p.Precio)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<MovimientoDeProducto>()
+            .HasOne(m => m.Producto)
+            .WithMany(p => p.Movimientos)
+            .HasForeignKey(m => m.ProductoId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+class Producto {
+    public int Id { get; set; }
+    public string Codigo { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+    public List<MovimientoDeProducto> Movimientos { get; set; } = [];
+}
+
+class MovimientoDeProducto {
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    public Producto? Producto { get; set; }
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+}
+
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
+
+record ProductoCrearDto(string Codigo, string Nombre, decimal Precio, int Stock);
+
+record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock) {
+    public static ProductoDto DesdeModelo(Producto producto) =>
+        new(producto.Id, producto.Codigo, producto.Nombre, producto.Precio, producto.Stock);
+}
+
+record MovimientoCrearDto(TipoMovimiento Tipo, int Cantidad);
+
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha) {
+    public static MovimientoDto DesdeModelo(MovimientoDeProducto movimiento) =>
+        new(movimiento.Id, movimiento.ProductoId, movimiento.Tipo, movimiento.Cantidad, movimiento.Fecha);
+}
+
+record MovimientoRegistradoDto(ProductoDto Producto, MovimientoDto Movimiento);
