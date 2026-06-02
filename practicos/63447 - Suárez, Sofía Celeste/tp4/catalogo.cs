@@ -233,6 +233,10 @@ class Ventana : Window
 
 };
 
+
+
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+public enum TipoMovimiento{Compra, Venta}
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
