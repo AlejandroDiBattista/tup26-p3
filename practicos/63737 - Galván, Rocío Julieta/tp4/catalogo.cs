@@ -144,10 +144,18 @@ class CatalogoWindow : Window {
             _filteredProductos.Select(p => $"{p.Codigo,-8} {p.Nombre,-20} ${p.Precio,8:N2} [{p.Stock}]")));
     }
 
-    private void RefreshMovimientos() {
-        _movimientosView.SetSource(new System.Collections.ObjectModel.ObservableCollection<string>(
-            _movimientos.Select(m => $"{m.Tipo,-8} {m.Cantidad,5}  {m.Fecha:dd/MM/yyyy HH:mm}")));
-    }
+   private void RefreshMovimientos() {
+    _movimientosView.SetSource(new System.Collections.ObjectModel.ObservableCollection<string>(
+        _movimientos.Select(m => {
+            string tipo = m.Tipo switch {
+                1 => "Compra",
+                2 => "Venta",
+                3 => "Ajuste",
+                _ => "?"
+            };
+            return $"{tipo,-8} {m.Cantidad,5}  {m.Fecha:dd/MM/yyyy HH:mm}";
+        })));
+}
 
     private void SetStatus(string mensaje) {
         _statusBar.Title = mensaje;
@@ -433,9 +441,9 @@ class MovimientoDialog : Dialog {
                 return;
             }
 
-            string tipo = _chkVenta.Value  == CheckState.Checked ? "Venta"  :
-                          _chkAjuste.Value == CheckState.Checked ? "Ajuste" :
-                          "Compra";
+           int tipo = _chkVenta.Value  == CheckState.Checked ? 2 :
+           _chkAjuste.Value == CheckState.Checked ? 3 :
+           1;
 
             Result = new MovimientoDto(0, producto.Id, tipo, cantidad, DateTime.Now);
             RequestStop();
@@ -464,4 +472,4 @@ class MovimientoDialog : Dialog {
 // ── dtos ────//
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
-record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
+record MovimientoDto(int Id, int ProductoId, int Tipo, int Cantidad, DateTime Fecha);
