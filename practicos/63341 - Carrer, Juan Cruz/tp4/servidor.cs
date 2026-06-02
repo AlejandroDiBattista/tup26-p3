@@ -59,8 +59,22 @@ app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
     return Results.NoContent();
 });
 
-app.Run("http://localhost:5050");
+app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repo) => {
+    return Results.Ok(repo.TraerMovimientos(id));
+});
 
+app.MapPost("/productos/{id}/movimientos",
+(int id, MovimientoProducto mov, CatalogoRepositorio repo) => {
+
+    var ok = repo.AgregarMovimiento(id, mov);
+
+    if (!ok)
+        return Results.NotFound();
+
+    return Results.Ok(mov);
+});
+
+app.Run("http://localhost:5050");
 
 
 // ── Modelo ────────────────────────────────────────────────────────────────
@@ -202,6 +216,47 @@ class CatalogoRepositorio
             return false;
 
         db.Productos.Remove(prod);
+
+        db.SaveChanges();
+
+        return true;
+    }
+
+    public List<MovimientoProducto> TraerMovimientos(int productoId)
+    {
+        return db.Movimientos
+            .Where(x => x.ProductoId == productoId)
+            .OrderByDescending(x => x.Fecha)
+            .ToList();
+    }
+
+    public bool AgregarMovimiento(int productoId, MovimientoProducto mov)
+    {
+        var prod = db.Productos.Find(productoId);
+
+        if (prod is null)
+            return false;
+
+        mov.ProductoId = productoId;
+
+        mov.Fecha = DateTime.Now;
+
+        switch (mov.Tipo)
+        {
+            case TipoMovimiento.Compra:
+                prod.Stock += mov.Cantidad;
+                break;
+
+            case TipoMovimiento.Venta:
+                prod.Stock -= mov.Cantidad;
+                break;
+
+            case TipoMovimiento.Ajuste:
+                prod.Stock = mov.Cantidad;
+                break;
+        }
+
+        db.Movimientos.Add(mov);
 
         db.SaveChanges();
 
