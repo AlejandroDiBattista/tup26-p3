@@ -7,9 +7,6 @@ using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
-
 
 
 const string miserver = "http://localhost:5050"; 
@@ -22,6 +19,8 @@ try {
     return;
 }
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
+using IApplication app = Application.Create().Init();
+using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 var productos = new List<ProductoDto>();
 var productosFiltrados = new List<ProductoDto>();
 var productosVista = new ObservableCollection<string>();
@@ -52,9 +51,25 @@ var botonActualizar = new Button { Text = "_Actualizar", X = Pos.Right(botonAjus
 ventana.Add(
     new Label { Text = "Buscar:", X = 1, Y = 1 }, buscar,
     new Label { Text = "Productos", X = 1, Y = 3 },
-    new Label { Text = "Movimientos", X = Pos.Right(listaProductos) + 1, Y = 3 }, botonagregar, botonModificar, botonEliminar, botonComprar, botonVender, botonAjustar, botonActualizar, estado   
+    new Label { Text = "Movimientos", X = Pos.Right(listaProductos) + 1, Y = 3 }, 
+    botonagregar, botonModificar, botonEliminar,
+     botonComprar, botonVender, botonAjustar, 
+     botonActualizar, estado, listaProductos, listaMovimientos
 );
-
+TextField Campo(Dialog dialogo, string etiqueta, string valor, int y) {
+    dialogo.Add(new Label{ Text = etiqueta, X = 2, Y = y });
+    var campo = new TextField { Text = valor, X = 15, Y = y, Width = 38 };
+    dialogo.Add(campo);
+    return campo;
+}
+void MostrarError(string titulo, string mensaje) =>
+    MessageBox.ErrorQuery(app, titulo, mensaje, "Aceptar");
+string FormatearProducto(ProductoDto p) =>
+    $"{p.Codigo,-8} {Cortar(p.Nombre, 24),-24} ${p.Precio,9:N2}  Stock:{p.Stock,5}";
+string FormatearMovimiento(MovimientoDto m) =>
+    $"{m.Fecha:dd/MM/yyyy HH:mm}  {m.Tipo,-7}  {m.Cantidad,6}";
+string Cortar(string texto, int largo) =>
+    texto.Length <= largo ? texto : texto[..Math.Max(0, largo - 3)] + "";
 
 app.Run(ventana);
 
