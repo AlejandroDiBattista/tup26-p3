@@ -130,3 +130,12 @@ public class Program
         }
     }
 
+    static void FiltrarProductos() 
+    {
+        var filtro = txtBuscar.Text.ToString().ToLower();
+        var filtrados = listaProductos.Where(p => 
+            p.Nombre.ToLower().Contains(filtro) || p.Codigo.ToLower().Contains(filtro)
+        ).ToList();
+
+        listProductosUI.SetSource(new ObservableCollection<Producto>(filtrados));
+    }
