@@ -32,7 +32,15 @@ app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
 {
     return repositorio.TraerProductos();
 });
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.TraerProductoPorId(id);
 
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(producto);
+});
 app.Run("http://localhost:5050");
 // ── Modelo ────────────────────────────────────────────────────────────────
 
@@ -72,7 +80,12 @@ class CatalogoRepositorio {
     private readonly CatalogoDb db;
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
+    public Producto? TraerProductoPorId(int id)
+{
+    return db.Productos.FirstOrDefault(p => p.Id == id);
+}
     public List<Producto> TraerProductos()
+    
 {
     return db.Productos
         .OrderBy(p => p.Nombre)
@@ -84,8 +97,8 @@ class CatalogoRepositorio {
         if (!db.Productos.Any())
 {
     db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-    db.Productos.Add(new Producto(2, "P002", "Azúcar 1kg", 900m, 50));
-    db.Productos.Add(new Producto(3, "P003", "Café 250g", 3200m, 20));
+    db.Productos.Add(new Producto(2, "P002", "Azucar 1kg", 900m, 50));
+    db.Productos.Add(new Producto(3, "P003", "Cafe 250g", 3200m, 20));
 
     db.SaveChanges();
 }
