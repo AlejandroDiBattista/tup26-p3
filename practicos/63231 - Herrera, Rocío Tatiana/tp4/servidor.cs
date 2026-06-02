@@ -97,3 +97,37 @@ app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, Cat
 
     return Results.Ok(movimientos);
 });
+app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, MovimientoCrearDto dto, CatalogoDb db) => {
+    if (dto.Cantidad <= 0) return Results.BadRequest("La cantidad debe ser positiva.");
+
+    var producto = await db.Productos.FindAsync(productoId);
+    if (producto is null) return Results.NotFound($"No existe un producto con id {productoId}.");
+
+    var nuevoStock = dto.Tipo switch {
+        TipoMovimiento.Compra => producto.Stock + dto.Cantidad,
+        TipoMovimiento.Venta => producto.Stock - dto.Cantidad,
+        TipoMovimiento.Ajuste => dto.Cantidad,
+        _ => producto.Stock
+    };
+
+    if (nuevoStock < 0) return Results.BadRequest("No hay stock suficiente para registrar la venta.");
+
+    await using var transaccion = await db.Database.BeginTransactionAsync();
+
+    producto.Stock = nuevoStock;
+    var movimiento = new MovimientoDeProducto {
+        ProductoId = producto.Id,
+        Tipo = dto.Tipo,
+        Cantidad = dto.Cantidad,
+        Fecha = DateTime.Now
+    };
+
+    db.Movimientos.Add(movimiento);
+    await db.SaveChangesAsync();
+    await transaccion.CommitAsync();
+
+    return Results.Created(
+        $"/productos/{producto.Id}/movimientos/{movimiento.Id}",
+        new MovimientoRegistradoDto(ProductoDto.DesdeModelo(producto), MovimientoDto.DesdeModelo(movimiento))
+    );
+});
