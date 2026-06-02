@@ -61,6 +61,32 @@ app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =
         : Results.NotFound();
 });
 
+app.MapGet(
+    "/productos/{productoId:int}/movimientos",
+    (int productoId, CatalogoRepositorio repositorio) =>
+{
+    return Results.Ok(
+        repositorio.TraerMovimientos(productoId));
+});
+
+app.MapPost(
+    "/productos/{productoId:int}/movimientos",
+    (
+        int productoId,
+        MovimientoRequest movimiento,
+        CatalogoRepositorio repositorio
+    ) =>
+{
+    var ok = repositorio.RegistrarMovimiento(
+        productoId,
+        movimiento.Tipo,
+        movimiento.Cantidad);
+
+    return ok
+        ? Results.Ok()
+        : Results.BadRequest("No se pudo registrar el movimiento");
+});
+
 app.Run("http://localhost:5050");
 
 
@@ -80,11 +106,39 @@ class Producto
     public int Stock { get; set; }
 }
 
+enum TipoMovimiento
+{
+    Compra,
+    Venta,
+    Ajuste
+}
+
+class MovimientoDeProducto
+{
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+
+    public Producto? Producto { get; set; }
+}
+
+record MovimientoRequest(
+    TipoMovimiento Tipo,
+    int Cantidad
+);
+
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -174,5 +228,55 @@ class CatalogoRepositorio
         db.SaveChanges();
 
         return true;
+    }
+
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId)
+    {
+    return db.Movimientos
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .ToList();
+    }
+
+    public bool RegistrarMovimiento(
+    int productoId,
+    TipoMovimiento tipo,
+    int cantidad)
+    {
+    var producto = db.Productos.Find(productoId);
+
+    if (producto is null)
+        return false;
+
+    switch (tipo)
+    {
+        case TipoMovimiento.Compra:
+            producto.Stock += cantidad;
+            break;
+
+        case TipoMovimiento.Venta:
+
+            if (producto.Stock < cantidad)
+                return false;
+
+            producto.Stock -= cantidad;
+            break;
+
+        case TipoMovimiento.Ajuste:
+            producto.Stock = cantidad;
+            break;
+    }
+
+    db.Movimientos.Add(new MovimientoDeProducto
+    {
+        ProductoId = productoId,
+        Tipo = tipo,
+        Cantidad = cantidad,
+        Fecha = DateTime.Now
+    });
+
+    db.SaveChanges();
+
+    return true;
     }
 }
