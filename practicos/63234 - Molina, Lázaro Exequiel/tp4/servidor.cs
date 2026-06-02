@@ -214,3 +214,27 @@ class TiendaDb : DbContext {
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+class Producto {
+    public int Id { get; set; }
+    public string Codigo { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+    public List<MovimientoDeStock> Movimientos { get; set; } = [];
+}
+
+class MovimientoDeStock {
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    public Producto? Producto { get; set; }
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+}
+
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
