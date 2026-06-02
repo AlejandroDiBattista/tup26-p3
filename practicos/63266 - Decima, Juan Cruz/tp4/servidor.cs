@@ -24,7 +24,7 @@ using (var scope = app.Services.CreateScope()) {
 
 app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+    if (producto is null) return Results.NotFound();
 
     return Results.Ok(producto);
 });
@@ -35,13 +35,41 @@ app.Run("http://localhost:5050");
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+enum TipoMovimiento { Compra, Venta, Ajuste }
+
+class Producto {
+    public int Id { get; set; }
+    public string Codigo { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+}
+
+class MovimientoDeProducto {
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+}
+
+
+record ProductoNuevoDto (string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoNuevoDto (TipoMovimiento Tipo, int Cantidad);
+
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+
+    public override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>()
+            .HasIndex(p => p.Codigo)
+            .IsUnique();
+    }
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -53,13 +81,18 @@ class CatalogoRepositorio {
 
     public void Iniciar() {
         db.Database.EnsureCreated();
+        db.Database.ExecuteSqlRaw("""
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_Productos_Codigo
+            ON Productos (Codigo)
+            """);
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.AddRange(
+                new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g",  Precio = 1500m, Stock = 100 }
+            );
             db.SaveChanges();
         }
     }
-
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }
