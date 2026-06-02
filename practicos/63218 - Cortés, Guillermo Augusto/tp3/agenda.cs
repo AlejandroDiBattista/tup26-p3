@@ -76,6 +76,15 @@ public sealed class AgendaWindow : Runnable {
         }
     }
 
+    private void MostrarAcercaDe(){
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "AgendaT\nTP3 Programacion III\nSQLite + JSON + Terminal.Gui",
+            "OK"
+        );
+    }
+
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
         Title  = "Agenda - Terminal.Gui";
@@ -107,6 +116,9 @@ public sealed class AgendaWindow : Runnable {
                 ]),
                 new MenuBarItem("_Ver", [
                 new MenuItem("_Solo favoritos", "", ToggleFavoritos)
+                ]),
+                new MenuBarItem("_Ayuda", [
+                new MenuItem("_Acerca de", "", MostrarAcercaDe)
                 ])
             ]
         };
