@@ -42,9 +42,21 @@ app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repo) => {
     return ok ? Results.NoContent() : Results.NotFound();
 });
 
+app.MapGet("/productos/{productoId:int}/movimientos", (int productoId, CatalogoRepositorio repo) => {
+    if (repo.ObtenerProducto(productoId) is null) return Results.NotFound();
+    return Results.Ok(repo.ListarMovimientos(productoId));
+});
+
+app.MapPost("/productos/{productoId:int}/movimientos", (int productoId, MovimientoDto dto, CatalogoRepositorio repo) => {
+    var m = repo.RegistrarMovimiento(productoId, dto);
+    if (m is null) return Results.NotFound();
+    return Results.Created($"/productos/{productoId}/movimientos/{m.Id}", m);
+});
+
 app.Run("http://localhost:5050");
 
 record ProductoDto(string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoDto(TipoMovimiento Tipo, int Cantidad);
 
 enum TipoMovimiento { Compra, Venta, Ajuste }
 
@@ -118,5 +130,31 @@ class CatalogoRepositorio {
         db.Productos.Remove(p);
         db.SaveChanges();
         return true;
+    }
+
+    public List<MovimientoDeProducto> ListarMovimientos(int productoId) =>
+        db.Movimientos
+          .Where(m => m.ProductoId == productoId)
+          .OrderByDescending(m => m.Fecha)
+          .ToList();
+
+    public MovimientoDeProducto? RegistrarMovimiento(int productoId, MovimientoDto dto) {
+        var p = db.Productos.Find(productoId);
+        if (p is null) return null;
+
+        p.Stock = dto.Tipo switch {
+            TipoMovimiento.Compra => p.Stock + dto.Cantidad,
+            TipoMovimiento.Venta  => p.Stock - dto.Cantidad,
+            TipoMovimiento.Ajuste => dto.Cantidad,
+            _ => p.Stock
+        };
+
+        var m = new MovimientoDeProducto {
+            ProductoId = productoId, Tipo = dto.Tipo,
+            Cantidad   = dto.Cantidad, Fecha = DateTime.Now
+        };
+        db.Movimientos.Add(m);
+        db.SaveChanges();
+        return m;
     }
 }
