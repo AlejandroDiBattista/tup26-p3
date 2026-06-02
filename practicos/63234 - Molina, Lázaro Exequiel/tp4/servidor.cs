@@ -137,3 +137,12 @@ class ServicioCatalogo {
         await db.SaveChangesAsync();
         return new(ProductoDto.Desde(producto), null);
     }
+
+    public async Task<bool> BorrarProductoAsync(int id) {
+        var producto = await db.Productos.FindAsync(id);
+        if (producto is null) return false;
+
+        db.Productos.Remove(producto);
+        await db.SaveChangesAsync();
+        return true;
+    }
