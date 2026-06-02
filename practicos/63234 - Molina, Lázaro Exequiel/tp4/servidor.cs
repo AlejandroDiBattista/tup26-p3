@@ -20,3 +20,13 @@ using (var scope = app.Services.CreateScope()) {
     var servicio = scope.ServiceProvider.GetRequiredService<ServicioCatalogo>();
     servicio.PrepararBase();
 }
+
+app.MapGet("/productos", async (ServicioCatalogo servicio) =>
+    Results.Ok(await servicio.ListarProductosAsync()));
+
+app.MapGet("/productos/{id:int}", async (int id, ServicioCatalogo servicio) => {
+    var producto = await servicio.BuscarProductoAsync(id);
+    return producto is null
+        ? Results.NotFound($"No se encontro el producto con id {id}.")
+        : Results.Ok(producto);
+});
