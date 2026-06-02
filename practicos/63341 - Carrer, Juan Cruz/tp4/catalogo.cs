@@ -209,9 +209,7 @@ async Task AbrirAltaProducto()
 
         productos = await CargarProductos();
         CargarLista();
-
         MostrarDetalle();
-        await MostrarMovimientos();
 
         Application.RequestStop(dialogo);
     };
