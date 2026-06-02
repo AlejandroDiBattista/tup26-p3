@@ -16,6 +16,8 @@ using Microsoft.Data.Sqlite;
 using Dapper;
 using System.Data.Common;
 using Dapper.Contrib.Extensions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 /// ==== 
 /// Estes es un archivo de referencia con el esqueleto del proyecto.
@@ -23,17 +25,23 @@ using Dapper.Contrib.Extensions;
 /// ====
 
 // Punto de entrada
+string dbFile = Environment.GetCommandLineArgs().Length > 1 ? Environment.GetCommandLineArgs()[1] : "agenda.db";
+SqliteAgendaStore store = new(dbFile);
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(store));
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable {
 
-    public AgendaWindow() {
+    private readonly SqliteAgendaStore store;
+
+    public AgendaWindow(SqliteAgendaStore store) {
+        this.store = store;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
+        
 
         Menu.DefaultBorderStyle = LineStyle.Single;
         BuildLayout();
@@ -112,7 +120,48 @@ public sealed class EjemploDialog : Dialog {
 }
 
 
-public class SqliteAgendaStore {}
+public sealed class SqliteAgendaStore {
+    private readonly string dbPath;
+    private readonly string connectionString;
+
+    public SqliteAgendaStore(string dbPath) {
+        this.dbPath = dbPath;
+        connectionString = $"Data Source={dbPath}";
+        Iniciar();
+    } 
+    private void Iniciar() {
+        using DbConnection connection = new SqliteConnection(connectionString);
+        connection.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT,
+                Email TEXT,
+                Notas TEXT,
+                Favorito INTEGER NOT NULL DEFAULT 0
+            )
+        """);
+    }
+    private SqliteConnection GetConnection() {
+        return new SqliteConnection(connectionString);
+    }
+    public List<Contacto> ObtenerContactos() {
+        using DbConnection cn = GetConnection();
+        return cn.GetAll<Contacto>().OrderBy(c => c.Nombre).ToList();
+    }
+    public long Insert(Contacto contacto) {
+        using var cn = GetConnection();
+        return cn.Insert(contacto);
+    }
+    public bool Update(Contacto contacto) {
+        using var cn = GetConnection();
+        return cn.Update(contacto);
+    }
+    public bool Delete(Contacto contacto) {
+        using var cn = GetConnection();
+        return cn.Delete(contacto);
+    }
+}
 public class JsonAgendaIO {}
 
 [Table("Contactos")]
@@ -123,4 +172,18 @@ public class Contacto {
           public string Email     { get; set; } = "";
           public string Notas     { get; set; } = "";
           public bool   Favorito  { get; set; }
+
+          public Contacto Clone() {
+            return new Contacto {
+                Id = Id,
+                Nombre = Nombre,
+                Telefonos = Telefonos,
+                Email = Email,
+                Notas = Notas,
+                Favorito = Favorito
+            };
+        }
+        public override string ToString() {
+            return Favorito ? $"{Nombre} (Favorito)" : Nombre;
+        }
 }
