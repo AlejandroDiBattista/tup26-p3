@@ -10,7 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
-
 var app = builder.Build();
 
 // ── Inicialización de la base de datos ────────────────────────────────────
@@ -22,12 +21,47 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+app.MapGet("/productos", (CatalogoRepositorio r) => Results.Ok(r.GetAll()));
 
-    return Results.Ok(producto);
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio r) => {
+    var p = r.GetById(id);
+    return p is null ? Results.NotFound() : Results.Ok(p);
 });
+
+app.MapPost("/productos", (Producto producto, CatalogoRepositorio r) => {
+    if (r.ExisteCodigo(producto.Codigo))
+        return Results.BadRequest("Ya existe un producto con ese código");
+    r.insert(producto);
+    return Results.Created($"/productos/{producto.Id}", producto);
+});
+
+app.MapPut("/productos/{id}", (int id, Producto input, CatalogoRepositorio r) => {
+    var p = r.GetById(id);
+    if (p is null)
+        return Results.NotFound();
+    if (r.GetAll().Any(prod => prod.Id != id && prod.Codigo == input.Codigo)) {
+        return Results.BadRequest("Ya existe otro producto con ese código");
+    }
+    r.Update(id, input);
+    return Results.Ok(input);
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio r)=> {
+    var p = r.GetById(id);
+    if (p is null)
+        return Results.NotFound();
+    r.Delete(id);
+    return Results.NoContent();
+});
+
+app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio r) => {
+    var p = r.GetById(productoId);
+    if (p is null)
+        return Results.NotFound();
+    return Results.Ok(r.GetMovimientos(productoId));
+});
+
+
 
 app.Run("http://localhost:5050");
 
@@ -60,6 +94,5 @@ class CatalogoRepositorio {
         }
     }
 
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+    public Producto? GetById(int id) => db.Productos.Find(id);
 }
