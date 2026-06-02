@@ -139,3 +139,41 @@ public class Program
 
         listProductosUI.SetSource(new ObservableCollection<Producto>(filtrados));
     }
+    static void DialogoNuevoProducto() 
+    {
+        var dialog = new Dialog { Title = "Nuevo Producto", Width = 50, Height = 12 };
+        
+        var txtCodigo = new TextField { Text = "", X = 10, Y = 1, Width = 30 };
+        var txtNombre = new TextField { Text = "", X = 10, Y = 3, Width = 30 };
+        var txtPrecio = new TextField { Text = "", X = 10, Y = 5, Width = 30 };
+
+        dialog.Add(new Label { Text = "Código:", X = 1, Y = 1 }, txtCodigo);
+        dialog.Add(new Label { Text = "Nombre:", X = 1, Y = 3 }, txtNombre);
+        dialog.Add(new Label { Text = "Precio:", X = 1, Y = 5 }, txtPrecio);
+
+        var btnGuardar = new Button { Text = "Guardar", IsDefault = true };
+        btnGuardar.Accepting += (s, e) => {
+            var nuevo = new Producto {
+                Codigo = txtCodigo.Text.ToString(),
+                Nombre = txtNombre.Text.ToString(),
+                Precio = decimal.TryParse(txtPrecio.Text.ToString(), out var p) ? p : 0,
+                Stock = 0
+            };
+
+            var res = http.PostAsJsonAsync("/productos", nuevo).Result;
+            if (res.IsSuccessStatusCode) {
+                Application.RequestStop();
+                CargarProductos();
+            } else {
+                MessageBox.ErrorQuery("Error", "No se pudo guardar el producto", "OK");
+            }
+        };
+
+        var btnCancelar = new Button { Text = "Cancelar" };
+        btnCancelar.Accepting += (s, e) => Application.RequestStop();
+
+        dialog.AddButton(btnGuardar);
+        dialog.AddButton(btnCancelar);
+
+        Application.Run(dialog);
+    }
