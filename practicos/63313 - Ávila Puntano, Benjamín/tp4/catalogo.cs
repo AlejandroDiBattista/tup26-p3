@@ -1,50 +1,28 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
 
-
+using System.Collections.ObjectModel;
 using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
-
-
-// ── Consulta inicial al servidor ──────────────────────────────────────────
-
-ProductoDto producto;
-try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
-} catch (HttpRequestException ex) {
-    Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
-    return;
-}
-
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
-
 using IApplication app = Application.Create().Init();
 using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
-
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
-};
-
-ventana.Add(detalleProducto);
-
-app.Run(ventana);
-
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/productos";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+const string miserver = "http://localhost:5050"; 
+using var http = new HttpClient { BaseAddress = new Uri(miserver) };
+try {
+   var lista = await http.GetFromJsonAsync<List<ProductoDto>>("/productos")
+    ?? throw new HttpRequestException("El servidor no respondió con una lista de productos validos.");
+} catch (HttpRequestException ex) {
+    Console.WriteLine($"No se pudo conectar al servidor: {ex.Message}");
+    return;
 }
+// ── Interfaz TUI ──────────────────────────────────────────────────────────
+var productos = new List<ProductoDto>();
+var productosFiltrados = new List<ProductoDto>();
+var productosVista = new ObservableCollection<string>();
+var movimientosVista = new ObservableCollection<string>();
+app.Run(ventana);
 
 // ── DTO ───────────────────────────────────────────────────────────────────
 
