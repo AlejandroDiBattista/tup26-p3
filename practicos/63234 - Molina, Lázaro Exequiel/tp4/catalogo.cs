@@ -95,3 +95,24 @@ btnAjuste.Accepting += async (_, e) => {
     e.Handled = true;
     await AgregarMovimientoAsync(TipoMovimiento.Ajuste);
 };
+
+try {
+    await RefrescarProductosAsync();
+} catch (Exception ex) {
+    mensaje.Text = $"No pude conectar con {UrlApi}. Ejecuta primero servidor.cs. {ex.Message}";
+}
+
+app.Run(pantalla);
+
+async Task RefrescarProductosAsync() {
+    productos = await cliente.GetFromJsonAsync<List<ProductoDto>>("/productos", opcionesJson) ?? [];
+    AplicarFiltro();
+    mensaje.Text = $"Productos encontrados: {productos.Count}";
+
+    if (productosMostrados.Count > 0) {
+        listado.SelectedItem = 0;
+        await TomarSeleccionAsync();
+    } else {
+        VaciarFormulario();
+    }
+}
