@@ -398,6 +398,7 @@ ProductoEntrada? MostrarDialogoProducto(string titulo, Producto? producto)
     return entrada;
 }
 
+// Dialogo para cargar compra, venta o ajuste de stock.
 int? MostrarDialogoCantidad(TipoMovimiento tipo)
 {
     var titulo = tipo == TipoMovimiento.Ajuste ? "Ajustar stock" : $"Registrar {tipo}";
