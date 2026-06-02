@@ -24,7 +24,6 @@ repo.Iniciar();
 }
 
 
-
 app.MapGet("/productos", (CatalogoRepositorio repo) =>
 {
 return Results.Ok(repo.TraerProductos());
@@ -59,6 +58,8 @@ return repo.EliminarProducto(id)
     ? Results.Ok()
     : Results.NotFound();
 });
+
+
 
 app.MapGet("/productos/{productoId}/movimientos",
 (int productoId, CatalogoRepositorio repo) =>
@@ -106,6 +107,8 @@ class MovimientoDeProducto
     public Producto? Producto { get; set; }
 }
 
+
+
 record ProductoDto(
     string Codigo,
     string Nombre,
@@ -118,6 +121,8 @@ record MovimientoDto(
     int Cantidad
 );
 
+
+
 class CatalogoDb : DbContext
 {
     public CatalogoDb(DbContextOptions<CatalogoDb> options)
@@ -128,8 +133,11 @@ class CatalogoDb : DbContext
     public DbSet<Producto> Productos => Set<Producto>();
 
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+}
 
-    class CatalogoRepositorio
+
+
+class CatalogoRepositorio
 {
     private readonly CatalogoDb db;
 
@@ -211,3 +219,104 @@ class CatalogoDb : DbContext
             db.SaveChanges();
         }
     }
+    public List<Producto> TraerProductos()
+        => db.Productos.OrderBy(x => x.Nombre).ToList();
+
+    public Producto? TraerProducto(int id)
+        => db.Productos.FirstOrDefault(x => x.Id == id);
+
+    public Producto AgregarProducto(ProductoDto dto)
+    {
+        var producto = new Producto
+        {
+            Codigo = dto.Codigo,
+            Nombre = dto.Nombre,
+            Precio = dto.Precio,
+            Stock = dto.Stock
+        };
+
+        db.Productos.Add(producto);
+
+        db.SaveChanges();
+
+        return producto;
+    }
+
+    public bool ModificarProducto(int id, ProductoDto dto)
+    {
+        var producto = TraerProducto(id);
+
+        if (producto is null)
+            return false;
+
+        producto.Codigo = dto.Codigo;
+        producto.Nombre = dto.Nombre;
+        producto.Precio = dto.Precio;
+        producto.Stock = dto.Stock;
+
+        db.SaveChanges();
+
+        return true;
+    }
+
+    public bool EliminarProducto(int id)
+    {
+        var producto = TraerProducto(id);
+
+        if (producto is null)
+            return false;
+
+        var movimientos = db.Movimientos
+            .Where(x => x.ProductoId == id)
+            .ToList();
+
+        db.Movimientos.RemoveRange(movimientos);
+
+        db.Productos.Remove(producto);
+
+        db.SaveChanges();
+
+        return true;
+    }
+
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId)
+        => db.Movimientos
+            .Where(x => x.ProductoId == productoId)
+            .OrderByDescending(x => x.Fecha)
+            .ToList();
+
+    public bool RegistrarMovimiento(int productoId, MovimientoDto dto)
+    {
+        var producto = TraerProducto(productoId);
+
+        if (producto is null)
+            return false;
+
+        var movimiento = new MovimientoDeProducto
+        {
+            ProductoId = productoId,
+            Tipo = dto.Tipo,
+            Cantidad = dto.Cantidad,
+            Fecha = DateTime.Now
+        };
+
+        if (dto.Tipo == "Compra")
+        {
+            producto.Stock += dto.Cantidad;
+        }
+        else if (dto.Tipo == "Venta")
+        {
+            producto.Stock -= dto.Cantidad;
+        }
+        else if (dto.Tipo == "Ajuste")
+        {
+            producto.Stock = dto.Cantidad;
+        }
+
+        db.Movimientos.Add(movimiento);
+
+        db.SaveChanges();
+
+        return true;
+    }
+}
