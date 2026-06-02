@@ -60,3 +60,71 @@ return repo.EliminarProducto(id)
     : Results.NotFound();
 });
 
+app.MapGet("/productos/{productoId}/movimientos",
+(int productoId, CatalogoRepositorio repo) =>
+{
+return Results.Ok(repo.TraerMovimientos(productoId));
+});
+
+app.MapPost("/productos/{productoId}/movimientos",
+(int productoId, MovimientoDto dto, CatalogoRepositorio repo) =>
+{
+return repo.RegistrarMovimiento(productoId, dto)
+    ? Results.Ok()
+    : Results.NotFound();
+});
+
+app.Run("http://localhost:5050");
+
+
+
+class Producto
+{
+    public int Id { get; set; }
+
+    public string Codigo { get; set; } = "";
+
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+}
+
+class MovimientoDeProducto
+{
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public string Tipo { get; set; } = "";
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+
+    public Producto? Producto { get; set; }
+}
+
+record ProductoDto(
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
+);
+
+record MovimientoDto(
+    string Tipo,
+    int Cantidad
+);
+
+class CatalogoDb : DbContext
+{
+    public CatalogoDb(DbContextOptions<CatalogoDb> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<Producto> Productos => Set<Producto>();
+
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
