@@ -41,6 +41,12 @@ app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
 
     return Results.Ok(producto);
 });
+app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) =>
+{
+    var nuevoProducto = repositorio.AgregarProducto(producto);
+    return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
+});
+});
 app.Run("http://localhost:5050");
 // ── Modelo ────────────────────────────────────────────────────────────────
 
@@ -112,4 +118,11 @@ class CatalogoRepositorio {
 
     public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+        public Producto AgregarProducto(Producto producto)
+{
+    db.Productos.Add(producto);
+    db.SaveChanges();
+
+    return producto;
+}
 }
