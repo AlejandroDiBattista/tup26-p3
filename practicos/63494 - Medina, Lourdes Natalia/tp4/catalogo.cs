@@ -539,3 +539,209 @@ private bool TryBuildProduct(out ProductoRequest? product) {
         };
     }
 }
+
+public sealed class MovementDialog : Dialog {
+    private readonly TipoMovimiento type;
+    private readonly TextField quantityField;
+    
+    public new bool Accepted { get; private set; }
+    public MovimientoRequest? Request { get; private set; }
+
+     public MovementDialog(TipoMovimiento type, Producto producto) {
+        this.type = type;
+
+        Title = type == TipoMovimiento.Ajuste ? "Ajustar stock" : $"Registrar {type.ToString().ToLowerInvariant()}";
+        Width = 68;
+        Height = 11;
+
+        Label quantityLabel = new() {
+           Text = $"{product.Codigo} - {product.Nombre} (stock actual: {product.Stock})",
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(1)
+        };
+
+        Label quantityLabbel = new() {
+           Text = type == TipoMovimiento.Ajuste ? "Stock final:" : "Cantidad:",
+            X = 1,
+            Y = 4,
+            Width = 13
+        };
+
+        quantityField = new TextField {
+            Text = "1",
+            X = Pos.Right(quantityLabel) + 1,
+            Y = 4,
+            Width = Dim.Fill(1)
+        };
+
+        Button saveButton = new() {
+            Text = "_Registrar",
+            IsDefault = true
+        };
+        saveButton.Accepting += (_, e) => {
+            if (TryBuildRequest(out MovimientoRequest? request)) {
+                Request = request;
+                Accepted = true;
+                App!.RequestStop();
+            }
+
+            e.Handled = true;
+        };
+
+        Button cancelButton = new() {
+            Text = "_Cancelar"
+        };
+        cancelButton.Accepting += (_, e) => {
+            Accepted = false;
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        Add(productLabel, quantityLabel, quantityField);
+        AddButton(saveButton);
+        AddButton(cancelButton);
+    }
+
+    private bool TryBuildRequest(out MovimientoRequest? request) {
+        request = null;
+
+        if (!int.TryParse(quantityField.Text?.ToString(), NumberStyles.Integer, CultureInfo.CurrentCulture, out int quantity) || quantity < 0) {
+            MessageBox.ErrorQuery(App!, "Validacion", "La cantidad debe ser un entero mayor o igual que cero.", "Aceptar");
+            return false;
+        }
+
+        if (type != TipoMovimiento.Ajuste && quantity == 0) {
+             MessageBox.ErrorQuery(App!, "Validacion", "La cantidad debe ser mayor que cero.", "Aceptar");
+            return false;
+        }
+
+         request = new MovimientoRequest(type, quantity);
+        return true;
+    }
+}
+
+public sealed class CatalogoApiClient : IDisposable {
+    private readonly HttpClient http;
+   private readonly JsonSerializerOptions jsonOptions = new() {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    public string BaseUrl { get;}
+
+    public CatalogoApiClient(string baseUrl) {
+        BaseUrl = baseUrl.TrimEnd('/');
+        http = new HttpClient(); {
+            BaseAddress = new Uri($"{BaseUrl}/");
+    };
+}
+
+public async Task<IReadOnlyList<Producto>> GetProductsAsync() {
+        return await http.GetFromJsonAsync<List<Producto>>("productos", jsonOptions) ?? [];
+    }
+
+    public async Task<IReadOnlyList<MovimientoDeProducto>> GetMovementsAsync(int productId) {
+        return await http.GetFromJsonAsync<List<MovimientoDeProducto>>($"productos/{productId}/movimientos", jsonOptions) ?? [];
+    }
+
+    public async Task<Producto> CreateProductAsync(ProductoRequest request) {
+        using HttpResponseMessage response = await http.PostAsJsonAsync("productos", request, jsonOptions);
+        return await ReadRequiredResponse<Producto>(response);
+    }
+
+    public async Task<Producto> UpdateProductAsync(int id, ProductoRequest request) {
+        using HttpResponseMessage response = await http.PutAsJsonAsync($"productos/{id}", request, jsonOptions);
+        return await ReadRequiredResponse<Producto>(response);
+    }
+
+    public async Task DeleteProductAsync(int id) {
+        using HttpResponseMessage response = await http.DeleteAsync($"productos/{id}");
+        if (!response.IsSuccessStatusCode) {
+            throw new InvalidOperationException(await ReadError(response));
+        }
+    }
+
+    public async Task<MovimientoResponse> CreateMovementAsync(int productId, MovimientoRequest request) {
+        using HttpResponseMessage response = await http.PostAsJsonAsync($"productos/{productId}/movimientos", request, jsonOptions);
+        return await ReadRequiredResponse<MovimientoResponse>(response);
+    }
+
+    public void Dispose() {
+        http.Dispose();
+    }
+
+    private async Task<T> ReadRequiredResponse<T>(HttpResponseMessage response) {
+        if (!response.IsSuccessStatusCode) {
+            throw new InvalidOperationException(await ReadError(response));
+        }
+
+        T? result = await response.Content.ReadFromJsonAsync<T>(jsonOptions);
+        return result ?? throw new InvalidOperationException("La respuesta del servidor esta vacia.");
+    }
+
+    private static async Task<string> ReadError(HttpResponseMessage response) {
+        string body = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(body)) {
+            return $"Error HTTP {(int)response.StatusCode}: {response.ReasonPhrase}";
+        }
+
+        try {
+            using JsonDocument document = JsonDocument.Parse(body);
+            if (document.RootElement.TryGetProperty("error", out JsonElement error)) {
+                return error.GetString() ?? body;
+            }
+
+            if (document.RootElement.TryGetProperty("Error", out JsonElement pascalError)) {
+                return pascalError.GetString() ?? body;
+            }
+        }
+        catch (JsonException) {
+            return body;
+        }
+
+        return body;
+    }
+}
+
+public sealed class Producto {
+    public int Id { get; set; }
+
+    public string Codigo { get; set; } = "";
+
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+}
+
+public sealed class MovimientoDeProducto {
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+}
+
+public enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
+
+public sealed record ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
+
+public sealed record MovimientoRequest(TipoMovimiento Tipo, int Cantidad);
+
+public sealed record MovimientoResponse(
+    int Id,
+    int ProductoId,
+    TipoMovimiento Tipo,
+    int Cantidad,
+    DateTime Fecha,
+    int StockActual);
