@@ -95,6 +95,7 @@ public sealed class AgendaWindow : Runnable {
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
+        contactsList.Accepting += (_, _) => UpdateDetail();
 
         FrameView listaFrame = new()
         {
@@ -216,6 +217,7 @@ public sealed class ContactDialog : Dialog {
     private readonly TextField txtNombre;
     private readonly TextField txtEmail;
     private readonly CheckBox chkFavorito;
+    private readonly TextView txtNotas;
 
     private readonly List<TextField> telefonos = new();
 
@@ -226,7 +228,7 @@ public sealed class ContactDialog : Dialog {
 
     Title = "Nuevo contacto";
     Width = 70;
-    Height = 18;
+    Height = 22;
 
     Add(new Label()
     {
@@ -289,6 +291,23 @@ public sealed class ContactDialog : Dialog {
     };
 
     Add(chkFavorito);
+    
+    Add(new Label()
+    {
+        X = 1,
+        Y = 13,
+        Text = "Notas:"
+    });
+
+    txtNotas = new TextView()
+    {
+        X = 15,
+        Y = 13,
+        Width = 40,
+        Height = 3
+    };
+
+    Add(txtNotas);
 
     Button btnGuardar = new()
     {
@@ -354,7 +373,8 @@ public sealed class ContactDialog : Dialog {
         Nombre = nombre,
         Email = email,
         Telefonos = string.Join(",", numeros),
-        Favorito = chkFavorito.Value == CheckState.Checked
+        Favorito = chkFavorito.Value == CheckState.Checked,
+        Notas = txtNotas.Text?.ToString() ?? ""
     };
     
     Guardado = true;
