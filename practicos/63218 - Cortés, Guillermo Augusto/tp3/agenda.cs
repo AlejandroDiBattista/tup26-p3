@@ -70,7 +70,8 @@ public sealed class AgendaWindow : Runnable {
                 ]),
                 new MenuBarItem("_Contacto", [
                     new MenuItem("_Nuevo", "Ctrl+N", NuevoContacto),
-                    new MenuItem("_Editar", "Ctrl+E", EditarContacto)
+                    new MenuItem("_Editar", "Ctrl+E", EditarContacto),
+                    new MenuItem("_Eliminar", "Ctrl+D", EliminarContacto)
                 ])
             ]
         };
@@ -221,6 +222,35 @@ public sealed class AgendaWindow : Runnable {
         statusBar.Text = $"Contacto '{dialog.Contacto.Nombre}' actualizado";
     }
 
+    private void EliminarContacto()
+    {
+        if (filteredContacts.Count == 0)
+        return;
+
+        int idx = contactsList.SelectedItem ?? 0;
+
+        if (idx < 0 || idx >= filteredContacts.Count)
+        return;
+
+        Contacto contacto = filteredContacts[idx];
+
+         MessageBox.Query(
+            App!,
+            "Confirmar",
+            $"¿Eliminar contacto '{contacto.Nombre}'?",
+            "Sí",
+            "No"
+        );
+
+        store.Delete(contacto);
+
+        contacts = store.ObtenerContactos();
+
+        ApplyFilters();
+
+        statusBar.Text = $"Contacto '{contacto.Nombre}' eliminado";
+    }
+
     private void SolicitarSalir() {
         App!.RequestStop();
     }
@@ -238,6 +268,12 @@ public sealed class AgendaWindow : Runnable {
 
         if (key == Key.E.WithCtrl) {
             EditarContacto();
+            return true;
+        }
+
+        if (key == Key.D.WithCtrl)
+        {
+            EliminarContacto();
             return true;
         }
 
