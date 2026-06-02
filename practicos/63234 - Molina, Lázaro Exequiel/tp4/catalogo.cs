@@ -62,3 +62,36 @@ pantalla.Add(
     btnLimpiar, btnGuardar, btnBorrar, btnCompra, btnVenta, btnAjuste,
     mensaje
 );
+
+textoBuscar.TextChanged += (_, _) => AplicarFiltro();
+listado.ValueChanged += async (_, _) => await TomarSeleccionAsync();
+
+btnLimpiar.Accepting += (_, e) => {
+    e.Handled = true;
+    VaciarFormulario();
+};
+
+btnGuardar.Accepting += async (_, e) => {
+    e.Handled = true;
+    await GuardarAsync();
+};
+
+btnBorrar.Accepting += async (_, e) => {
+    e.Handled = true;
+    await BorrarAsync();
+};
+
+btnCompra.Accepting += async (_, e) => {
+    e.Handled = true;
+    await AgregarMovimientoAsync(TipoMovimiento.Compra);
+};
+
+btnVenta.Accepting += async (_, e) => {
+    e.Handled = true;
+    await AgregarMovimientoAsync(TipoMovimiento.Venta);
+};
+
+btnAjuste.Accepting += async (_, e) => {
+    e.Handled = true;
+    await AgregarMovimientoAsync(TipoMovimiento.Ajuste);
+};
