@@ -157,3 +157,35 @@ class ServicioCatalogo {
             .ToListAsync();
     }
 
+    public async Task<ResultadoMovimiento> RegistrarMovimientoAsync(int productoId, MovimientoEntrada entrada) {
+        if (entrada.Cantidad <= 0) return new(null, null, "La cantidad debe ser positiva.");
+
+        var producto = await db.Productos.FindAsync(productoId);
+        if (producto is null) return new(null, null, $"No se encontro el producto con id {productoId}.");
+
+        var stockActualizado = entrada.Tipo switch {
+            TipoMovimiento.Compra => producto.Stock + entrada.Cantidad,
+            TipoMovimiento.Venta => producto.Stock - entrada.Cantidad,
+            TipoMovimiento.Ajuste => entrada.Cantidad,
+            _ => producto.Stock
+        };
+
+        if (stockActualizado < 0) return new(null, null, "No hay stock suficiente para la venta.");
+
+        await using var tx = await db.Database.BeginTransactionAsync();
+
+        producto.Stock = stockActualizado;
+        var movimiento = new MovimientoDeStock {
+            ProductoId = producto.Id,
+            Tipo = entrada.Tipo,
+            Cantidad = entrada.Cantidad,
+            Fecha = DateTime.Now
+        };
+
+        db.Movimientos.Add(movimiento);
+        await db.SaveChangesAsync();
+        await tx.CommitAsync();
+
+        return new(ProductoDto.Desde(producto), MovimientoDto.Desde(movimiento), null);
+    }
+
