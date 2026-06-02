@@ -128,3 +128,86 @@ class CatalogoDb : DbContext
     public DbSet<Producto> Productos => Set<Producto>();
 
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
+
+    class CatalogoRepositorio
+{
+    private readonly CatalogoDb db;
+
+    public CatalogoRepositorio(CatalogoDb db)
+    {
+        this.db = db;
+    }
+
+    public void Iniciar()
+    {
+        db.Database.EnsureCreated();
+
+        if (!db.Productos.Any())
+        {
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0042",
+                Nombre = "Cookie Oreo",
+                Precio = 4000,
+                Stock = 8
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0043",
+                Nombre = "Cookie Pistacho",
+                Precio = 4500,
+                Stock = 6
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0044",
+                Nombre = "Cookie Chocolate",
+                Precio = 4200,
+                Stock = 10
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0045",
+                Nombre = "Cookie Nutella",
+                Precio = 4800,
+                Stock = 5
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0046",
+                Nombre = "Cookie Kinder",
+                Precio = 5000,
+                Stock = 7
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0047",
+                Nombre = "Cookie Red Velvet",
+                Precio = 4600,
+                Stock = 4
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0048",
+                Nombre = "Cookie Frutos Rojos",
+                Precio = 4700,
+                Stock = 5
+            });
+
+            db.Productos.Add(new Producto
+            {
+                Codigo = "#0049",
+                Nombre = "Cookie Dulce de Leche",
+                Precio = 4300,
+                Stock = 9
+            });
+
+            db.SaveChanges();
+        }
+    }
