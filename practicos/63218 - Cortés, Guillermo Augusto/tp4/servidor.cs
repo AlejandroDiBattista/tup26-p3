@@ -22,11 +22,37 @@ using (var scope = app.Services.CreateScope()) {
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
+    return Results.Ok(repositorio.TraerProductos());
+});
 
-    return Results.Ok(producto);
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProductoPorId(id);
+
+    return producto is null
+        ? Results.NotFound()
+        : Results.Ok(producto);
+});
+
+app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) => {
+    var nuevo = repositorio.AgregarProducto(producto);
+    return Results.Created($"/productos/{nuevo.Id}", nuevo);
+});
+
+app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio repositorio) => {
+    var ok = repositorio.ModificarProducto(id, producto);
+
+    return ok
+        ? Results.NoContent()
+        : Results.NotFound();
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
+    var ok = repositorio.EliminarProducto(id);
+
+    return ok
+        ? Results.NoContent()
+        : Results.NotFound();
 });
 
 app.Run("http://localhost:5050");
@@ -98,6 +124,17 @@ class CatalogoRepositorio {
         db.Productos.Add(producto);
         db.SaveChanges();
         return producto;
+    }
+    public bool ModificarProducto(int id, Producto datos) {
+        var producto = db.Productos.Find(id);
+
+        if (producto is null) return false;
+
+        db.Entry(producto).CurrentValues.SetValues(datos);
+
+        db.SaveChanges();
+
+        return true;
     }
 
     public bool EliminarProducto(int id) {
