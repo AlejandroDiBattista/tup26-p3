@@ -233,6 +233,415 @@ class Ventana : Window
 
 };
 
+class Agregarproducto : Dialog<ProductoDto>
+{
+    private ProductoDto producto = new ProductoDto(0, "", "", 0m, 0);
+    public TextField codigoproducto {get;}
+    public TextField nombreproducto {get;}
+    public TextField precioproducto {get;}
+    public TextField stockproducto {get;}
+    private Label erroragregarproducto;
+    public Agregarproducto(ProductoDto producto) 
+    {
+        Title = "Agregar producto";
+        Width = Dim.Percent(35);
+        Height = Dim.Percent(80);
+
+        Add(new Label() { 
+            Text = "Codigo:",
+            X = 1, Y = 3 
+        });
+        codigoproducto = new TextField() { 
+            X = 15, Y = 3, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(codigoproducto);
+
+        Add(new Label() { 
+            Text = "Nombre:",
+            X = 1, Y = 5 
+        });
+        nombreproducto = new TextField() { 
+            X = 15, Y = 5, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(nombreproducto);
+
+        Add(new Label() { 
+            Text = "Precio:",
+            X = 1, Y = 7 
+        });
+        precioproducto = new TextField() { 
+            X = 15, Y = 7, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(precioproducto);
+
+        Add(new Label() { 
+            Text = "Stock:",
+            X = 1, Y = 9
+        });
+        stockproducto = new TextField() { 
+            X = 15, Y =9, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(stockproducto);
+
+        erroragregarproducto = new Label() { 
+            Text = "",
+            X = 1, Y = 13,
+            Width = Dim.Fill(2), Height = 1,
+        };
+
+        Button cancelar = new Button() { 
+            Text = "Cancelar", 
+            X = Pos.Center(), Y = 11 
+        };
+        cancelar.Accepting += (_,_) => Result = null;
+
+        Button guardar = new Button() { 
+            Text = "Guardar", 
+            X = Pos.Right(cancelar), Y = 11
+        };
+        guardar.Accepting += (_,e) => {
+            if(String.IsNullOrEmpty(codigoproducto.Text))
+            {
+                e.Handled = true;
+                erroragregarproducto.Text = "El código es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(nombreproducto.Text))              
+            {
+                e.Handled = true;
+                erroragregarproducto.Text = "El nombre es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(precioproducto.Text))
+            {
+                e.Handled = true;
+                erroragregarproducto.Text = "El precio es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(stockproducto.Text))
+            {
+                e.Handled = true;
+                erroragregarproducto.Text = "El stock es obligatorio.";
+                return;
+            }
+
+            Result = new ProductoDto(
+                0,
+                codigoproducto.Text.ToString(),
+                nombreproducto.Text.ToString(),
+                decimal.Parse(precioproducto.Text.ToString()),
+                int.Parse(stockproducto.Text.ToString())
+            );
+        };
+
+        Add(cancelar);
+        Add(guardar);
+        Add(erroragregarproducto);
+
+    }
+}
+
+class Editarproducto : Dialog<ProductoDto>
+{
+    public TextField idproducto {get;}
+    public TextField codigoproducto {get;}
+    public TextField nombreproducto {get;}
+    public TextField precioproducto {get;}
+    public TextField stockproducto {get;}
+    private Label erroreditarproducto;
+    public Editarproducto(ProductoDto producto) 
+    {
+        Title = "Editar producto";
+        Width = Dim.Percent(35);
+        Height = Dim.Percent(80);
+
+        Add(new Label() { 
+            Text = "Id:",
+            X = 1, Y = 1 
+        });
+        idproducto = new TextField() { 
+            X = 15, Y = 1, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(idproducto);
+
+        Add(new Label() { 
+            Text = "Codigo:",
+            X = 1, Y = 3 
+        });
+        codigoproducto = new TextField() { 
+            X = 15, Y = 3, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(codigoproducto);
+
+        Add(new Label() { 
+            Text = "Nombre:",
+            X = 1, Y = 5 
+        });
+        nombreproducto = new TextField() { 
+            X = 15, Y = 5, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(nombreproducto);
+
+        Add(new Label() { 
+            Text = "Precio:",
+            X = 1, Y = 7 
+        });
+        precioproducto = new TextField() { 
+            X = 15, Y = 7, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(precioproducto);
+
+        Add(new Label() { 
+            Text = "Stock:",
+            X = 1, Y = 9
+        });
+        stockproducto = new TextField() { 
+            X = 15, Y =9, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(stockproducto);
+
+        erroreditarproducto = new Label() { 
+            Text = "",
+            X = 1, Y = 13,
+            Width = Dim.Fill(), Height = 1,
+        };
+
+        Button cancelar = new Button() { 
+            Text = "Cancelar", 
+            X = Pos.Center(), Y = 11 
+        };
+        cancelar.Accepting += (_,_) => Result = null;
+
+        Button guardar = new Button() { 
+            Text = "Guardar", 
+            X = Pos.Right(cancelar), Y = 11
+        };
+        guardar.Accepting += (_,e) => {
+            if(string.IsNullOrEmpty(idproducto.Text))
+            {
+                e.Handled = true;
+                erroreditarproducto.Text = "El ID es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(codigoproducto.Text))
+            {
+                e.Handled = true;
+                erroreditarproducto.Text = "El código es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(nombreproducto.Text))              
+            {
+                e.Handled = true;
+                erroreditarproducto.Text = "El nombre es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(precioproducto.Text))
+            {
+                e.Handled = true;
+                erroreditarproducto.Text = "El precio es obligatorio.";
+                return;
+            }
+            if(String.IsNullOrEmpty(stockproducto.Text))
+            {
+                e.Handled = true;
+                erroreditarproducto.Text = "El stock es obligatorio.";
+                return;
+            }
+
+            Result = new ProductoDto(
+                int.Parse(idproducto.Text.ToString()),
+                codigoproducto.Text.ToString(),
+                nombreproducto.Text.ToString(),
+                decimal.Parse(precioproducto.Text.ToString()),
+                int.Parse(stockproducto.Text.ToString())
+            );
+        };
+
+        Add(cancelar);
+        Add(guardar);
+        Add(erroreditarproducto);
+
+    }
+}
+
+class Compraproducto : Dialog<MovimientoDto>
+{
+    private TextField cantidadcompra;
+    private Label errorcompraproducto;
+    public Compraproducto(ProductoDto producto) 
+    {
+        Title = "Comprar producto";
+        Width = Dim.Percent(35);
+        Height = Dim.Percent(50);
+
+        Add(new Label() { 
+            Text = "Cantidad:",
+            X = 1, Y = 2 
+        });
+        cantidadcompra = new TextField() { 
+            X = 15, Y = 2, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(cantidadcompra);
+
+        errorcompraproducto = new Label() { 
+            Text = "",
+            X = 1, Y = 6,
+            Width = Dim.Fill(), Height = 1,
+        };
+
+        Button cancelar = new Button() { 
+            Text = "Cancelar", 
+            X = Pos.Center(), Y = 4
+        };
+        cancelar.Accepting += (_,_) => Result = null;
+
+        Button guardar = new Button() { 
+            Text = "Guardar", 
+            X = Pos.Right(cancelar), Y = 4
+        };
+        guardar.Accepting += (_,e) => {
+            if(int.TryParse(cantidadcompra.Text.ToString(), out int cant)&&cant>0)
+            {
+                Result = new MovimientoDto(0, producto.Id, TipoMovimiento.Compra, cant, DateTime.Now);
+            }
+            else
+            {
+                e.Handled = true;
+                errorcompraproducto.Text = "La cantidad es obligatoria";
+                return;
+            }
+    
+        };
+
+        Add(cancelar);
+        Add(guardar);
+        Add(errorcompraproducto);
+
+    }
+}
+
+class Ventaproducto : Dialog<MovimientoDto>
+{
+    private TextField cantidadventa;
+    private Label errorventaproducto;
+    public Ventaproducto(ProductoDto producto) 
+    {
+        Title = "Venta de producto";
+        Width = Dim.Percent(35);
+        Height = Dim.Percent(50);
+
+        Add(new Label() { 
+            Text = "cantidad:",
+            X = 1, Y = 2 
+        });
+        cantidadventa = new TextField() { 
+            X = 15, Y = 2, 
+            Width = Dim.Percent(50),
+            Height = 1,
+            Text=""
+        };
+        Add(cantidadventa);
+
+        errorventaproducto = new Label() { 
+            Text = "",
+            X = 1, Y = 6,
+            Width = Dim.Fill(), Height = 1,
+        };
+
+        Button cancelar = new Button() { 
+            Text = "Cancelar", 
+            X = Pos.Center(), Y = 4 
+        };
+        cancelar.Accepting += (_,_) => Result = null;
+
+        Button guardar = new Button() { 
+            Text = "Guardar", 
+            X = Pos.Right(cancelar), Y = 4
+        };
+        guardar.Accepting += (_,e) => {
+            if(int.TryParse(cantidadventa.Text.ToString(), out int cant)&&cant>0)
+            {
+                Result = new MovimientoDto(0, producto.Id, TipoMovimiento.Venta, cant, DateTime.Now);
+            }
+            else
+            {
+                e.Handled = true;
+                errorventaproducto.Text = "La cantidad es obligatoria";
+                return;
+            }
+    
+        };
+        Add(cancelar);
+        Add(guardar);
+        Add(errorventaproducto);
+
+    }
+}
+
+class Eliminarproducto : Dialog<bool>
+{
+    public Eliminarproducto(ProductoDto producto) 
+    {
+        Title = "Eliminar producto";
+        Width = Dim.Percent(35);
+        Height = Dim.Percent(50);
+
+        Add(new Label() { 
+            Text = "¿esta seguro de que desea eliminar el producto?",
+            X = 1, Y = 2,
+            Width = Dim.Fill(), Height = 1,
+        });
+
+        Button cancelar = new Button() { 
+            Text = "Cancelar", 
+            X = Pos.Center(), Y = 4 
+        };
+        cancelar.Accepting += (_,_) => Result = false;
+
+        Button aceptar = new Button() { 
+            Text = "Aceptar", 
+            X = Pos.Right(cancelar), Y = 4
+        };
+        aceptar.Accepting += (_,e) => {
+            Result = true;
+        };
+
+        Add(cancelar);
+        Add(aceptar);
+
+    }
+}
+
 
 
 // ── DTO ───────────────────────────────────────────────────────────────────
