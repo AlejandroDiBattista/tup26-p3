@@ -146,3 +146,14 @@ class ServicioCatalogo {
         await db.SaveChangesAsync();
         return true;
     }
+
+    public async Task<List<MovimientoDto>?> ListarMovimientosAsync(int productoId) {
+        if (!await db.Productos.AnyAsync(p => p.Id == productoId)) return null;
+
+        return await db.Movimientos
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .Select(m => MovimientoDto.Desde(m))
+            .ToListAsync();
+    }
+
