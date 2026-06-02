@@ -1,9 +1,12 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
+#:package Microsoft.EntityFrameworkCore@10.*
+#:package Microsoft.EntityFrameworkCore.Sqlite@10.*
 
 using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
+
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 

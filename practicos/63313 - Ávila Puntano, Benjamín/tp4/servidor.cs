@@ -20,7 +20,9 @@ app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
 app.MapPost("/productos", (ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
+
     var resultado = repositorio.CrearProducto(entrada);
+    if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
     return Results.Created($"/productos/{resultado.Producto!.Id}", resultado.Producto);
 });
 app.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
@@ -33,11 +35,27 @@ app.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepo
 });
 app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
 static string? ValidarProducto(ProductoEntrada entrada) {
-    if (string.IsNullOrWhiteSpace(entrada.Codigo)) return "El codigo es obligatorio.";
+    if (string.IsNullOrWhiteSpace(entrada.Codigo))
+     return "El codigo es obligatorio.";
+    if (string.IsNullOrWhiteSpace(entrada.Nombre)) 
+    return "El nombre es obligatorio.";
+    if (entrada.Stock < 0) 
+    return "El stock no puede ser negativo.";
+    if (entrada.Precio < 0) 
+    return "El precio no puede ser negativo";
+
     return null;
 }
+app.MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.TraerProducto(id);
 
-app.Run("http://localhost:5000"); // iniciamos el servidor en el puerto 5000
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(producto);
+});
+app.Run("http://localhost:5050"); // iniciamos el servidor en el puerto 5050
 
 enum TipoMovimiento{Compra,Venta,Ajuste} //Tipo de movimientos que se podran realizar
 
@@ -105,7 +123,11 @@ class CatalogoRepositorio {
     public void Iniciar() {
         db.Database.EnsureCreated(); //verifica que exista la bd, si no la crea.
         if (!db.Productos.Any()) {
-            db.Productos.AddRange();
+            db.Productos.AddRange(
+                new Producto { Codigo = "P001", Nombre = "yerba mate 500g", Stock = 10, Precio = 1040 },
+                new Producto { Codigo = "P002", Nombre = "cafe 400g", Stock = 20, Precio = 2020 },
+                new Producto { Codigo = "P003", Nombre = "leche 1l", Stock = 30, Precio = 3000 }
+            ); // estos productos se agregan a la tabla de productos, si la tabla esta vacia, para tener datos de prueba al iniciar la app
             db.SaveChanges();
         //este if lo usamos pa verificar que la tabla este vacia
         }
@@ -123,7 +145,12 @@ class CatalogoRepositorio {
         if (db.Productos.Any(p => p.Codigo == codigo)) {
             return new OperacionProducto(Error: "Ya   hay un producto con el codigo ");
         }
-        var producto = new Producto();
+        var producto = new Producto{
+            Codigo =codigo,
+            Nombre = entrada.Nombre.Trim(),
+            Stock = entrada.Stock,
+            Precio = entrada.Precio};
+
         db.Productos.Add(producto);
         db.SaveChanges();
         return new OperacionProducto(producto);
