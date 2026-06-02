@@ -13,6 +13,11 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Terminal.Gui;
+using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 
 var clienteApi = new HttpClient { BaseAddress = new Uri("http://localhost:5000") };
 
@@ -21,6 +26,34 @@ var win = new CatalogoWindow(clienteApi);
 Application.Run(win);
 Application.Shutdown();
 return;
+
+// --- Carteles para esquivar el bug de la Beta ---
+static class Cartel 
+{
+    public static void Aviso(string titulo, string texto) 
+    {
+        var d = new Dialog { Title = titulo, Width = 50, Height = 6 };
+        d.Add(new Label { Text = texto, X = Pos.Center(), Y = 1 });
+        var btn = new Button { Text = "Aceptar", X = Pos.Center(), Y = 3 };
+        btn.Accepting += (s, e) => Application.RequestStop();
+        d.Add(btn);
+        Application.Run(d);
+    }
+
+    public static bool Confirmar(string titulo, string texto) 
+    {
+        var d = new Dialog { Title = titulo, Width = 50, Height = 6 };
+        d.Add(new Label { Text = texto, X = Pos.Center(), Y = 1 });
+        bool res = false;
+        var btnSi = new Button { Text = "Si", X = 15, Y = 3 };
+        var btnNo = new Button { Text = "No", X = 25, Y = 3 };
+        btnSi.Accepting += (s, e) => { res = true; Application.RequestStop(); };
+        btnNo.Accepting += (s, e) => { res = false; Application.RequestStop(); };
+        d.Add(btnSi, btnNo);
+        Application.Run(d);
+        return res;
+    }
+}
 
 class CatalogoWindow : Window
 {
@@ -85,7 +118,7 @@ class CatalogoWindow : Window
         }
         catch (Exception)
         {
-            MessageBox.ErrorQuery("Error", "Fijate si el servidor esta corriendo", "OK");
+            Cartel.Aviso("Error", "Fijate si el servidor esta corriendo");
         }
     }
 
@@ -151,7 +184,7 @@ class CatalogoWindow : Window
     {
         int idx = _listaProductos.SelectedItem ?? -1;
         if (idx < 0 || idx >= _filtrados.Count) {
-            MessageBox.ErrorQuery("Aviso", "Selecciona un producto primero", "OK");
+            Cartel.Aviso("Aviso", "Selecciona un producto primero");
             return;
         }
         
@@ -168,13 +201,13 @@ class CatalogoWindow : Window
     {
         int idx = _listaProductos.SelectedItem ?? -1;
         if (idx < 0 || idx >= _filtrados.Count) {
-            MessageBox.ErrorQuery("Aviso", "Selecciona un producto primero", "OK");
+            Cartel.Aviso("Aviso", "Selecciona un producto primero");
             return;
         }
         
         var prod = _filtrados[idx];
-        var c = MessageBox.Query("Ojo", $"Seguro que queres borrar {prod.Nombre}?", "Si", "No");
-        if (c == 0) {
+        var confirmado = Cartel.Confirmar("Ojo", $"Seguro que queres borrar {prod.Nombre}?");
+        if (confirmado) {
             _ = _api.DeleteAsync($"/productos/{prod.Id}").ContinueWith(t => CargarDatos());
         }
     }
@@ -183,7 +216,7 @@ class CatalogoWindow : Window
     {
         int idx = _listaProductos.SelectedItem ?? -1;
         if (idx < 0 || idx >= _filtrados.Count) {
-            MessageBox.ErrorQuery("Aviso", "Selecciona un producto primero", "OK");
+            Cartel.Aviso("Aviso", "Selecciona un producto primero");
             return;
         }
         
@@ -261,29 +294,31 @@ class DialogoMovimiento : Dialog
     public string Tipo = "";
     public int Cantidad = 0;
     
-    RadioGroup _rgTipo;
+    TextField _txtTipo;
     TextField _txtCant;
 
     public DialogoMovimiento()
     {
         Title = "Movimiento de Stock";
-        Width = 50; Height = 10;
+        Width = 50; Height = 12;
 
-        _rgTipo = new RadioGroup { RadioLabels = new[] { "Compra", "Venta", "Ajuste" }, X = 1, Y = 1 };
-        Add(_rgTipo);
+        Add(new Label { Text = "Tipo (C=Compra, V=Venta, A=Ajuste):", X = 1, Y = 2 });
+        _txtTipo = new TextField { Text = "C", X = 38, Y = 2, Width = 5 };
+        Add(_txtTipo);
 
-        Add(new Label { Text = "Cant:", X = 15, Y = 2 });
-        _txtCant = new TextField { Text = "0", X = 22, Y = 2, Width = 15 };
+        Add(new Label { Text = "Cantidad:", X = 1, Y = 4 });
+        _txtCant = new TextField { Text = "0", X = 12, Y = 4, Width = 15 };
         Add(_txtCant);
 
-        var btnOk = new Button { Text = "Aceptar", X = 10, Y = 5 };
-        var btnCancelar = new Button { Text = "Cancelar", X = 25, Y = 5 };
+        var btnOk = new Button { Text = "Aceptar", X = 10, Y = 7 };
+        var btnCancelar = new Button { Text = "Cancelar", X = 25, Y = 7 };
 
         btnCancelar.Accepting += (s, e) => Application.RequestStop();
         btnOk.Accepting += (s, e) => {
-            if (_rgTipo.SelectedItem == 0) Tipo = "Compra";
-            if (_rgTipo.SelectedItem == 1) Tipo = "Venta";
-            if (_rgTipo.SelectedItem == 2) Tipo = "Ajuste";
+            var t = _txtTipo.Text?.ToString()?.ToUpper() ?? "C";
+            if (t == "V") Tipo = "Venta";
+            else if (t == "A") Tipo = "Ajuste";
+            else Tipo = "Compra"; // Default por si tipean mal
             
             int.TryParse(_txtCant.Text?.ToString(), out int c);
             Cantidad = c;
@@ -313,4 +348,4 @@ class Movimiento
     public string Tipo { get; set; } = "";
     public int Cantidad { get; set; }
     public DateTime Fecha { get; set; }
-}           
+}
