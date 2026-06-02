@@ -71,7 +71,58 @@ string FormatearMovimiento(MovimientoDto m) =>
 string Cortar(string texto, int largo) =>
     texto.Length <= largo ? texto : texto[..Math.Max(0, largo - 3)] + "";
 
-app.Run(ventana);
+
+async Task RefrescarAsync(int? seleccionarId = null) {
+    try {
+        productos = await http.GetFromJsonAsync<List<ProductoDto>>("/productos") ?? [];
+        FiltrarProductos(seleccionarId);
+        await CargarMovimientosSeleccionadosAsync();
+        estado.Text = $"Productos: {productos.Count} | API: {miserver}";
+    } catch (Exception ex) {
+        MostrarError("Error al cargar productos", ex.Message);
+    }
+}
+
+void FiltrarProductos(int? seleccionarId = null) {
+    var texto = buscar.Text?.ToString()?.Trim() ?? "";
+    productosFiltrados = productos
+        .Where(p => texto.Length == 0 &&  p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
+     p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Codigo)
+        .ToList();
+productosVista.Clear();
+foreach (var producto in productosFiltrados)
+    productosVista.Add(FormatearProducto(producto));
+
+
+if(productosFiltrados.Count == 0) {
+        movimientosVista.Clear(); 
+        return;
+    }
+
+ var indice = seleccionarId is null ? 0 : productosFiltrados.FindIndex(p => p.Id == seleccionarId);
+ listaProductos.SelectedItem = indice >= 0 ? indice : 0;}
+
+ ProductoDto? ProductoSeleccionado() {
+    var indice = listaProductos.SelectedItem;
+    if (indice is null && indice < 0 && indice >= productosFiltrados.Count)
+     return null;
+    return productosFiltrados[indice.Value];
+}
+
+async Task AgregarProductoAsync() {
+    var entrada = DialogoProducto("Agregar Producto", null);
+    if (entrada is null) 
+    return;
+    try {
+        var respuesta = await http.PostAsJsonAsync("/productos", entrada);
+        if (!respuesta.IsSuccessStatusCode) {
+            MostrarError("No se pudo agregar", await respuesta.Content.ReadAsStringAsync());
+            return;
+        }
+    }
+}
+app.Run(ventana)
 
 // ── DTO ──────────────────────────────────────────────────────────────────
 
