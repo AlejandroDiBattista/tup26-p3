@@ -55,14 +55,6 @@ listaProductos = new ListView
 List<ProductoDto> filtrados = [];
 bool actualizandoLista = false;
 
-listaProductos = new ListView
-{
-    X = 1,
-    Y = 1,
-    Width = Dim.Fill(2),
-    Height = Dim.Fill(2),
-};
-
 void AgregarProducto()
 {
     var dialog = new ProductoDialog();
