@@ -96,7 +96,8 @@ async Task MostrarMovimientos()
 
 await MostrarMovimientos();
 
-listaProductos.Accepting += async (_, _) => {
+listaProductos.Accepting += async (_, _) =>
+{
     MostrarDetalle();
     await MostrarMovimientos();
 };
@@ -115,6 +116,7 @@ var menu = new MenuBar([
 ventana.Add(menu);
 ventana.Add(listaProductos);
 ventana.Add(movimientosLabel);
+ventana.Add(detalle);
 
 app.Run(ventana);
 
@@ -208,6 +210,9 @@ async Task AbrirAltaProducto()
         productos = await CargarProductos();
         CargarLista();
 
+        MostrarDetalle();
+        await MostrarMovimientos();
+
         Application.RequestStop(dialogo);
     };
 
@@ -224,7 +229,8 @@ async Task AbrirAltaProducto()
 
 async Task AbrirMovimiento()
 {
-    if (productos.Count == 0) return;
+    if (productos == null || productos.Count == 0)
+    return;
 
     int indice = listaProductos.SelectedItem ?? 0;
     var prod = productos[indice];
