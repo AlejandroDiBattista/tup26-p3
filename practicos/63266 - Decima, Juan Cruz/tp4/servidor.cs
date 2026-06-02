@@ -54,8 +54,8 @@ class MovimientoDeProducto {
 }
 
 
-record ProductoNuevoDto (string Codigo, string Nombre, decimal Precio, int Stock);
-record MovimientoNuevoDto (TipoMovimiento Tipo, int Cantidad);
+record ProductoNuevoDto(string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoNuevoDto(TipoMovimiento Tipo, int Cantidad);
 
 
 // ── DbContext ─────────────────────────────────────────────────────────────
@@ -88,11 +88,54 @@ class CatalogoRepositorio {
 
         if (!db.Productos.Any()) {
             db.Productos.AddRange(
-                new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g",  Precio = 1500m, Stock = 100 }
+                new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 }
             );
             db.SaveChanges();
         }
     }
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+
+    public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Codigo).ToList();
+
+    public Producto? ObtenerProducto(int id) => db.Productos.Find(id);
+
+    public Producto? CrearProducto(ProductoNuevoDto dto) {
+        if (CodigoEnUso(dto.Codigo)) return null;
+
+        var producto = new Producto {
+            Codigo = dto.Codigo.Trim(),
+            Nombre = dto.Nombre.Trim(),
+            Precio = dto.Precio,
+            Stock = dto.Stock,
+        };
+        db.Productos.Add(producto);
+        db.SaveChanges();
+        return producto;
+    }
+
+    public Producto? ModificarProducto(int id, ProductoNuevoDto dto) {
+        var producto = db.Productos.Find(id);
+        if (producto is null) return null;
+        if (CodigoEnUso(dto.Codigo, id)) return null;
+
+        producto.Codigo = dto.Codigo.Trim();
+        producto.Nombre = dto.Nombre.Trim();
+        producto.Precio = dto.Precio;
+        producto.Stock = dto.Stock;
+        db.SaveChanges();
+        return producto;
+    }
+
+    public bool EliminarProducto(int id) {
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
+
+        db.Movimientos.RemoveRange(db.Movimientos.Where(m => m.ProductoId == id));
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
+    }
+
+    public bool CodigoEnUso(string codigo, int? exceptoId = null) =>
+        db.Productos.Any(p => p.Codigo == codigo.Trim() && (!exceptoId.HasValue || p.Id != exceptoId.Value));
+
 }
