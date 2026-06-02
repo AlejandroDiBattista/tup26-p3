@@ -26,3 +26,9 @@ using (var scope = app.Services.CreateScope()) {
         db.SaveChanges();
     }
 }
+app.MapGet("/productos", async (CatalogoDb db) =>
+    await db.Productos
+        .OrderBy(p => p.Codigo)
+        .Select(p => ProductoDto.DesdeModelo(p))
+        .ToListAsync()
+);
