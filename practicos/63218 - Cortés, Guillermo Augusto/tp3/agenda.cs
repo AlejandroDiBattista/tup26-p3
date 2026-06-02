@@ -14,7 +14,9 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
+using System.Linq;
 using System.Data.Common;
+using System.Collections.ObjectModel;
 using Dapper.Contrib.Extensions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -36,42 +38,145 @@ public sealed class AgendaWindow : Runnable {
 
     private readonly SqliteAgendaStore store;
 
+    private List<Contacto> contacts = new List<Contacto>();
+    private List<Contacto> filteredContacts = new List<Contacto>();
+
+    private ListView contactsList = null!;
+    private TextField searchField = null!;
+    private TextView detailView = null!;
+    private Label statusBar = null!;
+
     public AgendaWindow(SqliteAgendaStore store) {
         this.store = store;
         Title  = "Agenda - Terminal.Gui";
         Width  = Dim.Fill();
         Height = Dim.Fill();
         
-
         Menu.DefaultBorderStyle = LineStyle.Single;
+        contacts = store.ObtenerContactos();
+        filteredContacts = contacts.ToList();
+        
         BuildLayout();
+        RefreshList();
     }
 
-    private void BuildLayout() {
-        MenuBar menu = new() {
+    private void BuildLayout()
+    {
+        MenuBar menu = new()
+        {
             Menus = [
                 new MenuBarItem("_Archivo", [
-                    new MenuItem("_Nuevo contacto", null!, AbrirDialogo),
-                    null!, // Separador
-                    new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ])
             ]
         };
 
-        Button openButton = new() {
-            Text = "_Abrir diálogo",
-            X    = Pos.Center(),
-            Y    = Pos.Center()
+        Label lblBuscar = new()
+        {
+            X = 1,
+            Y = 2,
+            Text = "Buscar:"
         };
 
-        openButton.Accepting += (_, e) => {
-            AbrirDialogo();
-            e.Handled = true;
+        searchField = new TextField()
+        {
+            X = 10,
+            Y = 2,
+            Width = 30
         };
 
-        Add(menu, openButton);
+        searchField.TextChanged += (_, _) => ApplyFilters();
+
+        contactsList = new ListView()
+        {
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        FrameView listaFrame = new()
+        {
+            Title = " Contactos ",
+            X = 1,
+            Y = 4,
+            Width = 35,
+            Height = Dim.Fill() - 2
+        };
+
+        listaFrame.Add(contactsList);
+
+        detailView = new TextView()
+        {
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ReadOnly = true
+        };
+
+        FrameView detalleFrame = new()
+        {
+            Title = " Detalle ",
+            X = Pos.Right(listaFrame),
+            Y = 4,
+            Width = Dim.Fill() - 1,
+            Height = Dim.Fill() - 2
+        };
+
+        detalleFrame.Add(detailView);
+
+        statusBar = new Label()
+        {
+            X = 1,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+            Text = "Agenda iniciada correctamente"
+        };
+
+        Add(menu, lblBuscar, searchField, listaFrame, detalleFrame, statusBar);
+}
+    private void RefreshList()
+    {
+        contactsList.SetSource<string>(new ObservableCollection<string>(filteredContacts.Select(c => c.ToString()).ToList()));
+
+        UpdateDetail();
     }
 
+    private void ApplyFilters()
+    {
+        string filtro = searchField.Text?.ToString()?.ToLower() ?? "";
+
+        filteredContacts = contacts.Where(c => c.Nombre.ToLower().Contains(filtro) || c.Telefonos.ToLower().Contains(filtro) || c.Email.ToLower().Contains(filtro)).ToList();
+
+        RefreshList();
+    }
+    private void UpdateDetail()
+    {
+        if (filteredContacts.Count == 0)
+        {
+            detailView.Text = "";
+            return;
+        }
+
+        if (contactsList.SelectedItem == null || contactsList.SelectedItem < 0)
+        {
+            detailView.Text = "";
+            return;
+        }
+
+        int idx = contactsList.SelectedItem!.Value;
+        if (idx < 0 || idx >= filteredContacts.Count) {
+            detailView.Text = "";
+            return;
+        }
+
+        Contacto c = filteredContacts[idx];
+
+        detailView.Text = $"""
+                            Nombre: {c.Nombre},
+                            Teléfonos:{c.Telefonos},
+                            Email:{c.Email},
+                            Favorito:{(c.Favorito ? "Sí" : "No")},
+                            Notas:{c.Notas}
+                            """;
+    }
     private void AbrirDialogo() {
         EjemploDialog dialog = new();
         App!.Run(dialog);
@@ -130,7 +235,8 @@ public sealed class SqliteAgendaStore {
         Iniciar();
     } 
     private void Iniciar() {
-        using DbConnection connection = new SqliteConnection(connectionString);
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
         connection.Execute("""
             CREATE TABLE IF NOT EXISTS Contactos (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,7 +252,8 @@ public sealed class SqliteAgendaStore {
         return new SqliteConnection(connectionString);
     }
     public List<Contacto> ObtenerContactos() {
-        using DbConnection cn = GetConnection();
+        using var cn = GetConnection();
+        cn.Open();
         return cn.GetAll<Contacto>().OrderBy(c => c.Nombre).ToList();
     }
     public long Insert(Contacto contacto) {
@@ -183,7 +290,8 @@ public class Contacto {
                 Favorito = Favorito
             };
         }
-        public override string ToString() {
-            return Favorito ? $"{Nombre} (Favorito)" : Nombre;
-        }
+        public override string ToString()
+        {
+            return Favorito ? $"★ {Nombre}" : $"  {Nombre}";
+        }      
 }
