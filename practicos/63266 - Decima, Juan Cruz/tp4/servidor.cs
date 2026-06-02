@@ -3,6 +3,7 @@
 #:property PublishAot=false
 
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 // ── Configuración ──────────────────────────────────────────────────────────
 
@@ -10,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
+builder.Services.ConfigureHttpJsonOptions(opt =>
+    opt.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
@@ -21,17 +24,78 @@ using (var scope = app.Services.CreateScope()) {
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
+app.MapGet("/productos", (CatalogoRepositorio repo) =>
+    Results.Ok(repo.ListarProductos()));
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if (producto is null) return Results.NotFound();
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repo) => {
+    var producto = repo.ObtenerProducto(id);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
+});
 
+app.MapPost("/productos", (ProductoNuevoDto dto, CatalogoRepositorio repo) => {
+    if (!ProductoValido(dto, out var error)) return Results.BadRequest(error);
+
+    var producto = repo.CrearProducto(dto);
+    if (producto is null) return Results.Conflict("Ya existe un producto con ese codigo.");
+
+    return Results.Created($"/productos/{producto.Id}", producto);
+});
+
+app.MapPut("/productos/{id}", (int id, ProductoNuevoDto dto, CatalogoRepositorio repo) => {
+    if (!ProductoValido(dto, out var error)) return Results.BadRequest(error);
+    if (repo.ObtenerProducto(id) is null) return Results.NotFound();
+    if (repo.CodigoEnUso(dto.Codigo, id)) return Results.Conflict("Ya existe un producto con ese codigo.");
+
+    var producto = repo.ModificarProducto(id, dto);
     return Results.Ok(producto);
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
+    var eliminado = repo.EliminarProducto(id);
+    return eliminado ? Results.NoContent() : Results.NotFound();
+});
+
+
+
+app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio repo) => {
+    if (repo.ObtenerProducto(productoId) is null) return Results.NotFound();
+    return Results.Ok(repo.ListarMovimientos(productoId));
+});
+
+app.MapPost("/productos/{productoId}/movimientos", (int productoId, MovimientoNuevoDto dto, CatalogoRepositorio repo) => {
+    if (dto.Cantidad <= 0) return Results.BadRequest("La cantidad del movimiento debe ser positiva.");
+
+    var resultado = repo.RegistrarMovimiento(productoId, dto);
+    if (resultado is null) return Results.NotFound();
+    return Results.Created($"/productos/{productoId}/movimientos/{resultado.Id}", resultado);
 });
 
 app.Run("http://localhost:5050");
 
+static bool ProductoValido(ProductoNuevoDto dto, out string error) {
+    if (string.IsNullOrWhiteSpace(dto.Codigo)) {
+        error = "El codigo es obligatorio.";
+        return false;
+    }
 
+    if (string.IsNullOrWhiteSpace(dto.Nombre)) {
+        error = "El nombre es obligatorio.";
+        return false;
+    }
+
+    if (dto.Precio < 0) {
+        error = "El precio no puede ser negativo.";
+        return false;
+    }
+
+    if (dto.Stock < 0) {
+        error = "El stock no puede ser negativo.";
+        return false;
+    }
+
+    error = "";
+    return true;
+}
 
 // ── Modelo ────────────────────────────────────────────────────────────────
 
