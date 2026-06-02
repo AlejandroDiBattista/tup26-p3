@@ -47,9 +47,19 @@ app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
     return ok ? Results.NoContent() : Results.NotFound();
 });
 
+app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repo) => {
+    var movimientos = repo.TraerMovimientos(id);
+    return Results.Ok(movimientos);
+});
+
+app.MapPost("/productos/{id}/movimientos", (int id, MovimientoDto dto, CatalogoRepositorio repo) => {
+    var ok = repo.RegistrarMovimiento(id, dto.Tipo, dto.Cantidad);
+    return ok ? Results.Ok() : Results.BadRequest();
+});
+
 app.Run("http://localhost:5050");
 
-
+record MovimientoDto(TipoMovimiento Tipo, int Cantidad);
 enum TipoMovimiento {
     Compra,
     Venta,
@@ -109,7 +119,49 @@ class CatalogoRepositorio {
         db.SaveChanges();
         return true;
     }
-    
+    public bool RegistrarMovimiento(int productoId, TipoMovimiento tipo, int cantidad) {
+        var producto = db.Productos.Find(productoId);
+        if (producto is null) return false;
+
+        int nuevoStock = producto.Stock;
+
+        switch (tipo) {
+            case TipoMovimiento.Compra:
+                nuevoStock += cantidad;
+                break;
+
+            case TipoMovimiento.Venta:
+                nuevoStock -= cantidad;
+                break;
+
+            case TipoMovimiento.Ajuste:
+                nuevoStock = cantidad;
+                break;
+        }
+
+        if (nuevoStock < 0) return false;
+
+        var actualizado = producto with { Stock = nuevoStock };
+        db.Entry(producto).CurrentValues.SetValues(actualizado);
+
+        var movimiento = new MovimientoDeProducto(
+            0,
+            productoId,
+            tipo,
+            cantidad,
+            DateTime.Now
+        );
+
+        db.Movimientos.Add(movimiento);
+
+        db.SaveChanges();
+        return true;
+    }
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId) =>
+    db.Movimientos
+      .Where(m => m.ProductoId == productoId)
+      .OrderByDescending(m => m.Fecha)
+      .ToList();
     public List<Producto> TraerProductos() => db.Productos.OrderBy(p => p.Id).ToList();
     public void Iniciar() {
         db.Database.EnsureCreated();
