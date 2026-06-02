@@ -238,3 +238,18 @@ enum TipoMovimiento {
     Venta,
     Ajuste
 }
+
+record ProductoEntrada(string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoEntrada(TipoMovimiento Tipo, int Cantidad);
+record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock) {
+    public static ProductoDto Desde(Producto producto) =>
+        new(producto.Id, producto.Codigo, producto.Nombre, producto.Precio, producto.Stock);
+}
+
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha) {
+    public static MovimientoDto Desde(MovimientoDeStock movimiento) =>
+        new(movimiento.Id, movimiento.ProductoId, movimiento.Tipo, movimiento.Cantidad, movimiento.Fecha);
+}
+
+record ResultadoProducto(ProductoDto? Producto, string? Error);
+record ResultadoMovimiento(ProductoDto? Producto, MovimientoDto? Movimiento, string? Error);
