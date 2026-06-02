@@ -29,7 +29,24 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
     return Results.Ok(producto);
 });
 
+app.MapPost("/movimiento", (MovimientoDto movimiento, CatalogoRepositorio repositorio) => {
+    repositorio.Registrarmovimiento(movimiento);
+    return Results.Ok(movimiento);
+});
+app.MapPut("/producto", (Producto productoDto, CatalogoRepositorio repositorio) => {
+    repositorio.ActualizarProducto(productoDto);
+    return Results.Ok();
+});
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) => repositorio.ObtenerPorId(id));
+app.MapPost("/productos", (Producto p, CatalogoRepositorio repositorio) => repositorio.AgregarProducto(p));
+app.MapPut("/productos/{id}", (int id, Producto p, CatalogoRepositorio repositorio) => repositorio.ActualizarProducto(p));
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id));
+app.MapGet("/productos/{id}/movimientos", (int id, CatalogoRepositorio repo) => repo.ObtenerMovimientos(id));
 
+app.MapPost("/productos/{productoId}/movimientos", (int productoId, MovimientoDto movimiento, CatalogoRepositorio repositorio) => {
+    repositorio.Registrarmovimiento(movimiento with { ProductoId = productoId });
+    return Results.Ok();
+});
 
 app.Run("http://localhost:5050");
 
