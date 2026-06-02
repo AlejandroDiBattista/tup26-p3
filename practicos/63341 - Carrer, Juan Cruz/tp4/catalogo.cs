@@ -22,7 +22,7 @@ var ventana = new Window()
 var listaProductos = new ListView()
 {
     X = 0,
-    Y = 0,
+    Y = 1,
     Width = 40,
     Height = 20
 };
@@ -31,7 +31,7 @@ var detalle = new Label()
 {
     X = 42,
     Y = 1,
-    Width = 50,
+    Width = 60,
     Height = 8
 };
 
@@ -42,6 +42,8 @@ var movimientosLabel = new Label()
     Width = 60,
     Height = 15
 };
+
+int indiceSeleccionado = 0;
 
 CargarLista();
 MostrarDetalle();
@@ -54,7 +56,7 @@ async Task MostrarMovimientos()
         return;
     }
 
-    int indice = listaProductos.SelectedItem ?? 0;
+    int indice = indiceSeleccionado;
 
     var prod = productos[indice];
 
@@ -98,14 +100,25 @@ await MostrarMovimientos();
 
 listaProductos.Accepting += async (_, _) =>
 {
+    indiceSeleccionado = listaProductos.SelectedItem ?? 0;
+
     MostrarDetalle();
     await MostrarMovimientos();
 };
 
 var menu = new MenuBar([
     new MenuBarItem("_Producto", [
-        new MenuItem("_Agregar", "", async () => {
-            await AbrirAltaProducto();
+        new MenuItem("_Agregar", "", () =>
+        {
+            _ = AbrirAltaProducto();
+        }),
+        new MenuItem("_Editar", "", () =>
+        {
+            _ = AbrirEditarProducto();
+        }),
+        new MenuItem("_Eliminar", "", () =>
+        {
+            _ = EliminarProducto();
         }),
         new MenuItem("_Movimiento (Compra/Venta/Ajuste)", "", async () => {
             await AbrirMovimiento();
@@ -150,7 +163,7 @@ void MostrarDetalle()
         return;
     }
 
-    int indice = listaProductos.SelectedItem ?? 0;
+    int indice = indiceSeleccionado;
 
     var prod = productos[indice];
 
@@ -199,10 +212,10 @@ async Task AbrirAltaProducto()
     {
         var nuevo = new ProductoNuevoDto(
             0,
-            codigoTxt.Text.ToString() ?? "",
-            nombreTxt.Text.ToString() ?? "",
-            decimal.Parse(precioTxt.Text.ToString() ?? "0"),
-            int.Parse(stockTxt.Text.ToString() ?? "0")
+            codigoTxt.Text?.ToString() ?? "",
+            nombreTxt.Text?.ToString() ?? "",
+            decimal.Parse(precioTxt.Text?.ToString() ?? "0"),
+            int.Parse(stockTxt.Text?.ToString() ?? "0")
         );
 
         await http.PostAsJsonAsync("http://localhost:5050/productos", nuevo);
@@ -211,18 +224,15 @@ async Task AbrirAltaProducto()
         CargarLista();
         MostrarDetalle();
 
-        Application.RequestStop(dialogo);
+        dialogo.RequestStop();
     };
 
-    cancelarBtn.Accepting += async (_, _) =>
+    cancelarBtn.Accepting += (_, _) =>
     {
         dialogo.RequestStop();
     };
 
-    dialogo.Add(guardarBtn);
-    dialogo.Add(cancelarBtn);
-
-    Application.Run(dialogo);
+    app.Run(dialogo);
 }
 
 async Task AbrirMovimiento()
@@ -230,7 +240,7 @@ async Task AbrirMovimiento()
     if (productos == null || productos.Count == 0)
     return;
 
-    int indice = listaProductos.SelectedItem ?? 0;
+    int indice = indiceSeleccionado;
     var prod = productos[indice];
 
     var dialogo = new Dialog()
@@ -272,18 +282,101 @@ async Task AbrirMovimiento()
         MostrarDetalle();
         await MostrarMovimientos();
 
-        Application.RequestStop(dialogo);
+        dialogo.RequestStop();
     };
 
     cancelarBtn.Accepting += (_, _) =>
     {
-        Application.RequestStop(dialogo);
+        dialogo.RequestStop();
     };
 
     dialogo.Add(guardarBtn);
     dialogo.Add(cancelarBtn);
 
-    Application.Run(dialogo);
+    app.Run(dialogo);
+}
+
+async Task AbrirEditarProducto()
+{
+    if (productos.Count == 0) return;
+
+    int indice = indiceSeleccionado;
+    var prod = productos[indice];
+
+    var dialogo = new Dialog()
+    {
+        Title = "Editar producto",
+        Width = 60,
+        Height = 20
+    };
+
+    var codigoTxt = new TextField() { X = 15, Y = 2, Width = 30, Text = prod.Codigo };
+    var nombreTxt = new TextField() { X = 15, Y = 4, Width = 30, Text = prod.Nombre };
+    var precioTxt = new TextField() { X = 15, Y = 6, Width = 30, Text = prod.Precio.ToString() };
+    var stockTxt = new TextField() { X = 15, Y = 8, Width = 30, Text = prod.Stock.ToString() };
+
+    dialogo.Add(new Label() { Text = "Codigo:", X = 2, Y = 2 });
+    dialogo.Add(new Label() { Text = "Nombre:", X = 2, Y = 4 });
+    dialogo.Add(new Label() { Text = "Precio:", X = 2, Y = 6 });
+    dialogo.Add(new Label() { Text = "Stock:", X = 2, Y = 8 });
+
+    dialogo.Add(codigoTxt);
+    dialogo.Add(nombreTxt);
+    dialogo.Add(precioTxt);
+    dialogo.Add(stockTxt);
+
+    var guardarBtn = new Button() { Text = "Guardar", X = 10, Y = 12 };
+    var cancelarBtn = new Button() { Text = "Cancelar", X = 25, Y = 12 };
+
+    // ✔ GUARDAR (Accepting)
+    guardarBtn.Accepting += async (_, _) =>
+    {
+        var editado = new ProductoDto(
+            prod.Id,
+            codigoTxt.Text?.ToString() ?? "",
+            nombreTxt.Text?.ToString() ?? "",
+            decimal.Parse(precioTxt.Text?.ToString() ?? "0"),
+            int.Parse(stockTxt.Text?.ToString() ?? "0")
+        );
+
+        await http.PutAsJsonAsync(
+            $"http://localhost:5050/productos/{prod.Id}",
+            editado
+        );
+
+        productos = await CargarProductos();
+        CargarLista();
+        MostrarDetalle();
+
+        dialogo.RequestStop();
+    };
+
+    // ✔ CANCELAR (Accepting también)
+    cancelarBtn.Accepting += (_, _) =>
+    {
+        dialogo.RequestStop();
+    };
+
+    dialogo.Add(guardarBtn);
+    dialogo.Add(cancelarBtn);
+
+    app.Run(dialogo);;
+}
+
+async Task EliminarProducto()
+{
+    if (productos.Count == 0) return;
+
+    int indice = indiceSeleccionado;
+    var prod = productos[indice];
+
+    await http.DeleteAsync(
+        $"http://localhost:5050/productos/{prod.Id}"
+    );
+
+    productos = await CargarProductos();
+    CargarLista();
+    MostrarDetalle();
 }
 
 record ProductoDto(
@@ -317,3 +410,4 @@ record MovimientoNuevoDto(
     int Cantidad,
     DateTime Fecha
 );
+
