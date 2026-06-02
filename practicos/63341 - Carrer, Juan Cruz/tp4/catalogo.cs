@@ -105,6 +105,9 @@ var menu = new MenuBar([
     new MenuBarItem("_Producto", [
         new MenuItem("_Agregar", "", async () => {
             await AbrirAltaProducto();
+        }),
+        new MenuItem("_Movimiento (Compra/Venta/Ajuste)", "", async () => {
+            await AbrirMovimiento();
         })
     ])
 ]);
@@ -177,18 +180,18 @@ async Task AbrirAltaProducto()
     var precioTxt = new TextField() { X = 15, Y = 6, Width = 30 };
     var stockTxt = new TextField() { X = 15, Y = 8, Width = 30 };
 
-    dialogo.Add(new Label("Codigo:") { X = 2, Y = 2 });
-    dialogo.Add(new Label("Nombre:") { X = 2, Y = 4 });
-    dialogo.Add(new Label("Precio:") { X = 2, Y = 6 });
-    dialogo.Add(new Label("Stock:") { X = 2, Y = 8 });
+    dialogo.Add(new Label() { Text = "Codigo:", X = 2, Y = 2 });
+    dialogo.Add(new Label() { Text = "Nombre:", X = 2, Y = 4 });
+    dialogo.Add(new Label() { Text = "Precio:", X = 2, Y = 6 });
+    dialogo.Add(new Label() { Text = "Stock:", X = 2, Y = 8 });
 
     dialogo.Add(codigoTxt);
     dialogo.Add(nombreTxt);
     dialogo.Add(precioTxt);
     dialogo.Add(stockTxt);
 
-    var guardarBtn = new Button("Guardar") { X = 10, Y = 12 };
-    var cancelarBtn = new Button("Cancelar") { X = 25, Y = 12 };
+    var guardarBtn = new Button() { Text = "Guardar", X = 10, Y = 12 };
+    var cancelarBtn = new Button() { Text = "Cancelar", X = 25, Y = 12 };
 
     guardarBtn.Accepting += async (_, _) =>
     {
@@ -204,6 +207,66 @@ async Task AbrirAltaProducto()
 
         productos = await CargarProductos();
         CargarLista();
+
+        Application.RequestStop(dialogo);
+    };
+
+    cancelarBtn.Accepting += async (_, _) =>
+    {
+        dialogo.RequestStop();
+    };
+
+    dialogo.Add(guardarBtn);
+    dialogo.Add(cancelarBtn);
+
+    Application.Run(dialogo);
+}
+
+async Task AbrirMovimiento()
+{
+    if (productos.Count == 0) return;
+
+    int indice = listaProductos.SelectedItem ?? 0;
+    var prod = productos[indice];
+
+    var dialogo = new Dialog()
+    {
+        Title = $"Movimiento - {prod.Nombre}",
+        Width = 60,
+        Height = 18
+    };
+
+    var tipoTxt = new TextField() { X = 15, Y = 2, Width = 30 };
+    var cantidadTxt = new TextField() { X = 15, Y = 4, Width = 30 };
+
+    dialogo.Add(new Label() { Text = "Tipo (Compra/Venta/Ajuste):", X = 2, Y = 2 });
+    dialogo.Add(new Label() { Text = "Cantidad:", X = 2, Y = 4 });
+
+    dialogo.Add(tipoTxt);
+    dialogo.Add(cantidadTxt);
+
+    var guardarBtn = new Button() { Text = "Guardar", X = 10, Y = 10 };
+    var cancelarBtn = new Button() { Text = "Cancelar", X = 25, Y = 10 };
+
+    guardarBtn.Accepting += async (_, _) =>
+    {
+        var mov = new MovimientoNuevoDto(
+            0,
+            prod.Id,
+            tipoTxt.Text.ToString() ?? "",
+            int.Parse(cantidadTxt.Text.ToString() ?? "0"),
+            DateTime.Now
+        );
+
+        await http.PostAsJsonAsync(
+            $"http://localhost:5050/productos/{prod.Id}/movimientos",
+            mov
+        );
+
+        productos = await CargarProductos();
+        CargarLista();
+        MostrarDetalle();
+        await MostrarMovimientos();
 
         Application.RequestStop(dialogo);
     };
@@ -241,4 +304,12 @@ record ProductoNuevoDto(
     string Nombre,
     decimal Precio,
     int Stock
+);
+
+record MovimientoNuevoDto(
+    int Id,
+    int ProductoId,
+    string Tipo,
+    int Cantidad,
+    DateTime Fecha
 );
