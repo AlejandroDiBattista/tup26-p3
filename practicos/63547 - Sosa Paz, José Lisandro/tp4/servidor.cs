@@ -100,6 +100,7 @@ app.MapDelete("/productos/{id:int}", async (int id, CatalogoContexto contexto) =
     return Results.NoContent();
 });
 
+// Endpoints para consultar y registrar movimientos de stock.
 app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoContexto contexto) =>
 {
     var existeProducto = await contexto.Productos.AnyAsync(p => p.Id == productoId);
