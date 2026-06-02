@@ -67,6 +67,9 @@ public sealed class AgendaWindow : Runnable {
             Menus = [
                 new MenuBarItem("_Archivo", [
                 new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ]),
+                new MenuBarItem("_Contacto", [
+                    new MenuItem("_Nuevo", "Ctrl+N", NuevoContacto)
                 ])
             ]
         };
@@ -177,9 +180,16 @@ public sealed class AgendaWindow : Runnable {
                             Notas:{c.Notas}
                             """;
     }
-    private void AbrirDialogo() {
+    private void NuevoContacto() {
         ContactDialog dialog = new();
         App!.Run(dialog);
+        if (!dialog.Guardado) return;
+
+        store.Insert(dialog.Contacto);
+        contacts = store.ObtenerContactos();
+        ApplyFilters();
+
+        statusBar.Text = $"Contacto {dialog.Contacto.Nombre}agregado correctamente";
     }
 
     private void SolicitarSalir() {
@@ -189,6 +199,11 @@ public sealed class AgendaWindow : Runnable {
     protected override bool OnKeyDown(Key key) {
         if (key == Key.Q.WithCtrl) {
             SolicitarSalir();
+            return true;
+        }
+
+        if (key == Key.N.WithCtrl) {
+            NuevoContacto();
             return true;
         }
 
