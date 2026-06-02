@@ -341,15 +341,15 @@ private void RegisterMovement(TipoMovimiento type) {
         App!.Run(dialog);
 
         if (!dialog.Accepted || dialog.Request is null) {
-            SetStatus($"{tipo} cancelado.");
+            SetStatus("Movimiento cancelado.");
             return;
         }
 
         try {
             MovimientoResponse response = api.CreateMovementAsync(selected.Id, dialog.Request).GetAwaiter().GetResult();
             ReloadProducts($"Movimiento registrado. Stock actual: {response.StockActual}.");
-           
-           SelectProduct(selected.Id);
+            SelectProduct(selected.Id);
+        }
         catch (Exception ex) {
             MessageBox.ErrorQuery(App!, $"Error al registrar", ex.Message, "Aceptar");
         }
@@ -547,22 +547,22 @@ public sealed class MovementDialog : Dialog {
     public new bool Accepted { get; private set; }
     public MovimientoRequest? Request { get; private set; }
 
-     public MovementDialog(TipoMovimiento type, Producto producto) {
+     public MovementDialog(TipoMovimiento type, Producto product) {
         this.type = type;
 
         Title = type == TipoMovimiento.Ajuste ? "Ajustar stock" : $"Registrar {type.ToString().ToLowerInvariant()}";
         Width = 68;
         Height = 11;
 
-        Label quantityLabel = new() {
-           Text = $"{product.Codigo} - {product.Nombre} (stock actual: {product.Stock})",
+        Label productLabel = new() {
+            Text = $"{product.Codigo} - {product.Nombre} (stock actual: {product.Stock})",
             X = 1,
             Y = 1,
             Width = Dim.Fill(1)
         };
 
-        Label quantityLabbel = new() {
-           Text = type == TipoMovimiento.Ajuste ? "Stock final:" : "Cantidad:",
+        Label quantityLabel = new() {
+            Text = type == TipoMovimiento.Ajuste ? "Stock final:" : "Cantidad:",
             X = 1,
             Y = 4,
             Width = 13
@@ -623,21 +623,21 @@ public sealed class MovementDialog : Dialog {
 
 public sealed class CatalogoApiClient : IDisposable {
     private readonly HttpClient http;
-   private readonly JsonSerializerOptions jsonOptions = new() {
+    private readonly JsonSerializerOptions jsonOptions = new() {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public string BaseUrl { get;}
+    public string BaseUrl { get; }
 
     public CatalogoApiClient(string baseUrl) {
         BaseUrl = baseUrl.TrimEnd('/');
-        http = new HttpClient(); {
-            BaseAddress = new Uri($"{BaseUrl}/");
-    };
-}
+        http = new HttpClient {
+            BaseAddress = new Uri($"{BaseUrl}/")
+        };
+    }
 
-public async Task<IReadOnlyList<Producto>> GetProductsAsync() {
+    public async Task<IReadOnlyList<Producto>> GetProductsAsync() {
         return await http.GetFromJsonAsync<List<Producto>>("productos", jsonOptions) ?? [];
     }
 
