@@ -101,13 +101,19 @@ public class Program
         Application.Run(miTop);
         Application.Shutdown();
     }
-    return;
-}
+    static void CargarProductos() 
+    {
+        try {
+            var jsonOpciones = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var respuesta = http.GetFromJsonAsync<List<Producto>>("/productos", jsonOpciones).Result;
+            
+            listaProductos = respuesta ?? new List<Producto>();
+            FiltrarProductos(); 
+        } catch {
+            MessageBox.ErrorQuery("Error", "No se pudo conectar al servidor. Asegurate de que esté corriendo.", "OK");
+        }
+    }
 
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
-
-using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
 var detalleProducto = new Label {
     Text = $"""
