@@ -21,6 +21,16 @@ builder.Services.AddDbContext<CatalogoDbContext>(options =>
   using (IServiceScope scope = app.Services.CreateScope()) {
     CatalogoDbContext db = scope.ServiceProvider.GetRequiredService<CatalogoDbContext>();
     db.Database.EnsureCreated();
+    if (!db.Productos.Any()) {
+        db.Productos.Add(new Producto {
+            Codigo = "P001",
+            Nombre = "Yerba Mate 500g",
+            Precio = 1500m,
+            Stock = 100
+        });
+
+        db.SaveChanges();
+    }
 }
     app.MapGet("/", () => Results.Ok(new {
     Aplicacion = "Catalogo de productos",
