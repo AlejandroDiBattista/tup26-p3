@@ -73,8 +73,22 @@ app.Run("http://localhost:5050");
 
 
 // ── Modelo ────────────────────────────────────────────────────────────────
+public enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+
+public class MovimientoDeProducto {
+    public int Id { get; set; }
+    public int ProductoId { get; set;}
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+
+}
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
