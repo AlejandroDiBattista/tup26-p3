@@ -315,8 +315,10 @@ async Task RegistrarMovimiento(string tipo)
     if (listaProductos.SelectedItem < 0)
         return;
 
-    var producto =
-        productosFiltrados[listaProductos.SelectedItem ?? 0];
+    var indice = listaProductos.SelectedItem ?? -1;
+    if(indice < 0)
+        return; 
+    var producto = productosFiltrados[indice];
 
     var txtCantidad = new TextField()
     {
