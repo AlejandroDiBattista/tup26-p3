@@ -275,6 +275,109 @@ async Task EliminarProductoAsync()
     ActualizarLista();
 }
 
+async Task RegistrarMovimientoAsync()
+{
+    int indice = listaProductos.SelectedItem ?? -1;
+
+    if (indice < 0)
+        return;
+
+    ProductoDto producto = productosFiltrados[indice];
+
+    Dialog dialog = new()
+    {
+        Title = "Registrar movimiento",
+        Width = 60,
+        Height = 12
+    };
+
+    TextField txtTipo = new()
+    {
+        X = 15,
+        Y = 1,
+        Width = 20,
+        Text = "0"
+    };
+
+    TextField txtCantidad = new()
+    {
+        X = 15,
+        Y = 3,
+        Width = 20
+    };
+
+    dialog.Add(
+        new Label()
+        {
+            X = 1,
+            Y = 1,
+            Text = "Tipo (0,1,2):"
+        },
+
+        txtTipo,
+
+        new Label()
+        {
+            X = 1,
+            Y = 3,
+            Text = "Cantidad:"
+        },
+
+        txtCantidad,
+
+        new Label()
+        {
+            X = 1,
+            Y = 5,
+            Text = "0=Compra  1=Venta  2=Ajuste"
+        }
+    );
+
+    Button guardar = new() { Text = "Guardar" };
+    Button cancelar = new() { Text = "Cancelar" };
+
+    dialog.AddButton(guardar);
+    dialog.AddButton(cancelar);
+
+    cancelar.Accepting += (_, _) =>
+    {
+        dialog.RequestStop();
+    };
+
+    guardar.Accepting += async (_, _) =>
+    {
+        try
+        {
+            using HttpClient http = new();
+
+            var movimiento = new
+            {
+                Tipo = int.Parse(txtTipo.Text.ToString()!),
+                Cantidad = int.Parse(txtCantidad.Text.ToString()!)
+            };
+
+            await http.PostAsJsonAsync(
+                $"http://localhost:5050/productos/{producto.Id}/movimientos",
+                movimiento);
+
+            productos = await CargarProductosAsync(http);
+
+            ActualizarLista();
+
+            await MostrarMovimientosAsync(
+                listaProductos.SelectedItem ?? 0);
+
+            dialog.RequestStop();
+        }
+        catch (Exception ex)
+        {
+            detalle.Text = ex.Message;
+        }
+    };
+
+    app.Run(dialog);
+}
+
 MenuBar menu = new(
 [
     new MenuBarItem("_Productos",
@@ -285,7 +388,11 @@ MenuBar menu = new(
     ]),
     new MenuBarItem("_Movimientos",
     [
-        new MenuItem("_Registrar", "", () => { })
+        new MenuItem(
+            "_Registrar",
+            "",
+            () => _ = RegistrarMovimientoAsync()
+        )
     ]),
     new MenuBarItem("_Archivo",
     [
