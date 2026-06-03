@@ -3,8 +3,7 @@
 #:property PublishAot=false
 
 using Microsoft.EntityFrameworkCore;
-
-// ── Configuración ──────────────────────────────────────────────────────────
+using System.ComponentModel.DataAnnotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +11,39 @@ builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=cata
 builder.Services.AddScoped<CatalogoRepositorio>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope()) {
+    var db = scope.ServiceProvider.GetRequiredService<CatalogoDb>();
+    db.Database.EnsureCreated();
+    db.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS "Movimientos" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_Movimientos" PRIMARY KEY AUTOINCREMENT,
+            "ProductoId" INTEGER NOT NULL,
+            "Tipo" INTEGER NOT NULL,
+            "Cantidad" INTEGER NOT NULL,
+            "Fecha" TEXT NOT NULL,
+            CONSTRAINT "FK_Movimientos_Productos_ProductoId"
+                FOREIGN KEY ("ProductoId") REFERENCES "Productos" ("Id") ON DELETE CASCADE
+        );
+        """);
+    db.Database.ExecuteSqlRaw("""
+        CREATE INDEX IF NOT EXISTS "IX_Movimientos_ProductoId"
+        ON "Movimientos" ("ProductoId");
+        """);
+    db.Database.ExecuteSqlRaw("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_Productos_Codigo"
+        ON "Productos" ("Codigo");
+        """);
+
+    if (!db.Productos.Any()) {
+        db.Productos.AddRange(
+            new Producto { Codigo = "P001", Nombre = "Yerba Mate CBSÉ 500g", Precio = 1500m, Stock = 100 },
+            new Producto { Codigo = "P002", Nombre = "Azucar 1kg", Precio = 900m, Stock = 75 },
+            new Producto { Codigo = "P003", Nombre = "Cafe la virginia 500g", Precio = 3200m, Stock = 30 }
+        );
+        db.SaveChanges();
+    }
+}
 
 // ── Inicialización de la base de datos ────────────────────────────────────
 
