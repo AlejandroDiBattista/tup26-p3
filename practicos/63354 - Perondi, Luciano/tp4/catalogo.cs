@@ -27,15 +27,80 @@ using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para s
 
 var listaProductos = new ListView {
     X = 0, Y = 0,
-    Width = Dim.Fill(),
+    Width = Dim.Percent(45),
     Height = Dim.Fill(),
 };
-listaProductos.SetSource(new ObservableCollection<string>(
-    productos.Select(p => $"{p.Codigo}  {p.Nombre}  (stock {p.Stock})")
-));
 
-ventana.Add(listaProductos);
+var detalleMovimientos = new Label {
+    X = Pos.Right(listaProductos) + 1,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(),
+    Text = "(seleccioná un producto)",
+};
 
+listaProductos.ValueChanged += (sender, args) => {
+    int? i = listaProductos.SelectedItem;
+    if (i >= 0 && i < productos.Count) {
+        _ = MostrarMovimientos(productos[i.Value]);
+    }
+};
+
+async Task RecargarLista(string filtro = "") {
+    productos = await TraerProductosAsync(http);
+    if (!string.IsNullOrWhiteSpace(filtro)) {
+        productos = productos
+            .Where(p => p.Codigo.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+                     || p.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+    listaProductos.SetSource(new ObservableCollection<string>(
+        productos.Select(p => $"{p.Codigo}  {p.Nombre}  (stock {p.Stock})")
+    ));
+}
+
+async Task MostrarMovimientos(ProductoDto p) {
+    var movimientos = await TraerMovimientosAsync(http, p.Id);
+    if (movimientos.Count == 0) {
+        detalleMovimientos.Text = $"Movimientos de {p.Nombre}:\n\n(sin movimientos)";
+        return;
+    }
+    var lineas = movimientos.Select(m =>
+        $"{m.Fecha:dd/MM HH:mm}  {m.Tipo,-7} {m.Cantidad,5}");
+    detalleMovimientos.Text = $"Movimientos de {p.Nombre}:\n\n" + string.Join("\n", lineas);
+}
+
+async Task EditarProducto(ProductoDto? existente) {
+    var codigo = new TextField { X = 12, Y = 1, Width = 30, Text = existente?.Codigo ?? "" };
+    var nombre = new TextField { X = 12, Y = 3, Width = 30, Text = existente?.Nombre ?? "" };
+    var precio = new TextField { X = 12, Y = 5, Width = 30, Text = existente?.Precio.ToString() ?? "0" };
+
+    var ok = new Button { Text = "Guardar", IsDefault = true };
+    bool guardar = false;
+    ok.Accepting += (s, e) => { guardar = true; Application.RequestStop(); };
+
+    var dlg = new Dialog { Title = existente is null ? "Nuevo producto" : "Editar producto", Width = 50, Height = 10 };
+    dlg.Add(new Label { X = 1, Y = 1, Text = "Código:" });
+    dlg.Add(new Label { X = 1, Y = 3, Text = "Nombre:" });
+    dlg.Add(new Label { X = 1, Y = 5, Text = "Precio:" });
+    dlg.Add(codigo, nombre, precio);
+    dlg.AddButton(ok);
+    Application.Run(dlg);
+
+    if (!guardar) return;
+
+    decimal.TryParse(precio.Text, out decimal precioNum);
+    int stock = existente?.Stock ?? 0;
+    var p = new ProductoDto(existente?.Id ?? 0, codigo.Text, nombre.Text, precioNum, stock);
+
+    if (existente is null) await CrearProductoAsync(http, p);
+    else await ModificarProductoAsync(http, existente.Id, p);
+
+    await RecargarLista();
+}
+
+await RecargarLista();
+ventana.Add(listaProductos, detalleMovimientos);
 app.Run(ventana);
 
 static async Task<List<ProductoDto>> TraerProductosAsync(HttpClient http) {
@@ -43,6 +108,21 @@ static async Task<List<ProductoDto>> TraerProductosAsync(HttpClient http) {
     return await http.GetFromJsonAsync<List<ProductoDto>>(url) ?? [];
 }
 
+static async Task<List<MovimientoDto>> TraerMovimientosAsync(HttpClient http, int productoId) {
+    string url = $"http://localhost:5050/productos/{productoId}/movimientos";
+    return await http.GetFromJsonAsync<List<MovimientoDto>>(url) ?? [];
+}
+
+static async Task CrearProductoAsync(HttpClient http, ProductoDto p) {
+    await http.PostAsJsonAsync("http://localhost:5050/productos", p);
+}
+
+static async Task ModificarProductoAsync(HttpClient http, int id, ProductoDto p) {
+    await http.PutAsJsonAsync($"http://localhost:5050/productos/{id}", p);
+}
+
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+
+record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
