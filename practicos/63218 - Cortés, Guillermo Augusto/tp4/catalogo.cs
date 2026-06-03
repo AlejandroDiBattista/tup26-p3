@@ -30,7 +30,6 @@ catch (Exception ex) {
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
-
 Window ventana = new() {
     Title = " Catálogo REST - Productos "
 };
@@ -38,7 +37,7 @@ Window ventana = new() {
 FrameView panelProductos = new() {
     Title = "Productos",
     X = 0,
-    Y = 0,
+    Y = 1,
     Width = Dim.Percent(45),
     Height = Dim.Fill()
 };
@@ -58,7 +57,7 @@ TextField txtBuscar = new() {
 FrameView panelDetalle = new() {
     Title = "Movimientos",
     X = Pos.Right(panelProductos),
-    Y = 0,
+    Y = 1,
     Width = Dim.Fill(),
     Height = Dim.Fill()
 };
@@ -83,10 +82,98 @@ panelProductos.Add(txtBuscar);
 panelProductos.Add(listaProductos);
 panelDetalle.Add(detalle);
 
-ventana.Add(panelProductos);
-ventana.Add(panelDetalle);
 
 List<ProductoDto> productosFiltrados = productos.ToList();
+async Task AgregarProductoAsync()
+{
+    Dialog dialog = new()
+    {
+        Title = "Nuevo producto",
+        Width = 60,
+        Height = 15
+    };
+
+    TextField txtCodigo = new() { X = 15, Y = 1, Width = 25 };
+    TextField txtNombre = new() { X = 15, Y = 3, Width = 25 };
+    TextField txtPrecio = new() { X = 15, Y = 5, Width = 25 };
+    TextField txtStock = new() { X = 15, Y = 7, Width = 25 };
+
+    dialog.Add(
+        new Label() { Text = "Código:", X = 1, Y = 1 },
+        txtCodigo,
+        new Label() { Text = "Nombre:", X = 1, Y = 3 },
+        txtNombre,
+        new Label() { Text = "Precio:", X = 1, Y = 5 },
+        txtPrecio,
+        new Label() { Text = "Stock:", X = 1, Y = 7 },
+        txtStock
+    );
+
+    Button guardar = new() { Text = "Guardar" };
+    Button cancelar = new() { Text = "Cancelar" };
+
+    dialog.AddButton(guardar);
+    dialog.AddButton(cancelar);
+
+    cancelar.Accepting += (_, _) =>
+    {
+        dialog.RequestStop();
+    };
+
+    guardar.Accepting += async (_, _) =>
+    {
+        try
+        {
+            using HttpClient http = new();
+
+            var nuevo = new
+            {
+                Codigo = txtCodigo.Text.ToString(),
+                Nombre = txtNombre.Text.ToString(),
+                Precio = decimal.Parse(txtPrecio.Text.ToString()!),
+                Stock = int.Parse(txtStock.Text.ToString()!)
+            };
+
+            await http.PostAsJsonAsync(
+                "http://localhost:5050/productos",
+                nuevo);
+
+            productos = await CargarProductosAsync(http);
+
+            ActualizarLista();
+
+            dialog.RequestStop();
+        }
+        catch (Exception ex)
+        {
+            detalle.Text = ex.Message;
+        }
+    };
+
+    app.Run(dialog);
+}
+
+MenuBar menu = new(
+[
+    new MenuBarItem("_Productos",
+    [
+        new MenuItem("_Agregar", "", () => _ = AgregarProductoAsync()),
+        new MenuItem("_Modificar", "", () => { }),
+        new MenuItem("_Eliminar", "", () => { })
+    ]),
+    new MenuBarItem("_Movimientos",
+    [
+        new MenuItem("_Registrar", "", () => { })
+    ]),
+    new MenuBarItem("_Archivo",
+    [
+        new MenuItem("_Salir", "", () => app.RequestStop())
+    ])
+]);
+
+ventana.Add(menu);
+ventana.Add(panelProductos);
+ventana.Add(panelDetalle);
 
 void ActualizarLista()
 {
@@ -142,7 +229,6 @@ $"{m.Fecha:g} | {m.Tipo,-8} | {m.Cantidad,4}"))}
         detalle.Text = $"Error cargando movimientos:\n\n{ex.Message}";
     }
 }
-
 listaProductos.ValueChanged += (_, _) =>
 {
     int indice = listaProductos.SelectedItem ?? 0;
@@ -177,4 +263,4 @@ static async Task<List<MovimientoDto>> CargarMovimientosAsync(
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
-record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
+record MovimientoDto(int Id, int ProductoId, int Tipo, int Cantidad, DateTime Fecha);
