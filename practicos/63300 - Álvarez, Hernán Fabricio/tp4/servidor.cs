@@ -95,6 +95,7 @@ public class MovimientoDeProducto {
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -111,6 +112,54 @@ class CatalogoRepositorio {
             db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
             db.SaveChanges();
         }
+    }
+
+    public List<Producto> ListarProductos() => db.Productos.ToList();
+
+    public Producto CrearProducto(Producto p) {
+        db.Productos.Add(p);
+        db.SaveChanges();
+        return p;
+    }
+
+    public bool ActualizarProducto(int id, Producto pActualizado) {
+        var p = db.Productos.Find(id);
+        if (p is null) return false;
+        p.Codigo = pActualizado.Codigo;
+        p.Nombre = pActualizado.Nombre;
+        p.Precio = pActualizado.Precio;
+        db.SaveChanges();
+        return true;
+    }
+
+    public bool EliminarProducto(int id) {
+        var p = db.Productos.Find(id);
+        if (p is null) return false;
+        db.Productos.Remove(p);
+        db.SaveChanges();
+        return true;
+    }
+
+    public List<MovimientoDeProducto> ListarMovimientos(int productoId) => 
+        db.Movimientos.Where(m => m.ProductoId == productoId).OrderByDescending(m => m.Fecha).ToList(); 
+
+    public MovimientoDeProducto RegistrarMovimiento(int productoId, MovimientoDeProducto mov) {
+        var p = db.Productos.Find(productoId);
+        if (p is null) throw new Exception("Producto no encontrado");
+
+        mov.ProductoId = productoId;
+        mov.Fecha = DateTime.Now;
+
+        if (mov.Tipo == TipoMovimiento.Compra) p.Stock += mov.Cantidad;
+        else if (mov.Tipo == TipoMovimiento.Venta) {
+            if (p.Stock < mov.Cantidad) throw new Exception("Stock Insuficiente");
+            p.Stock -= mov.Cantidad;
+        }
+        else if (mov.Tipo == TipoMovimiento.Ajuste) p.Stock += mov.Cantidad;
+
+        db.Movimientos.Add(mov);
+        db.SaveChanges();
+        return mov;
     }
 
     public Producto? TraerProducto() =>
