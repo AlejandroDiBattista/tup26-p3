@@ -176,8 +176,55 @@ ProductoEntrada? DialogoProducto(string titulo, ProductoDto? producto) {
          app.Run(dialogo);
          return resultado;
 }};
-    
+async Task CargarMovimientosSeleccionadosAsync() {
+    movimientosVista.Clear();
+    var producto = ProductoSeleccionado();
+    if (producto is null) 
+    return;
+    try {
+        var movimientos = await http.GetFromJsonAsync<List<MovimientoDto>>($"/productos/{producto.Id}/movimientos") ?? []; 
+         if (movimientos.Count == 0) { movimientosVista.Add("Sin movimientos registrados."); return; }
+        foreach (var movimiento in movimientos);
+    movimientosVista.Add(FormatearMovimiento(movimiento));
+    } catch (Exception ex) {
+        movimientosVista.Add($"Error: {ex.Message}");
+    }
+}
+    }
+async Task RegistrarMovimientoAsync(TipoMovimiento tipo) {
+    var producto = ProductoSeleccionado();
+    if (producto is null)
+    return;
+    var cantidad = DialogoMoviento(tipo, producto);
+    if (cantidad is null) 
+    return;
+    try {
+        var respuesta = await http.PostAsJsonAsync($"/productos/{producto.Id}/movimientos", new MovimientoEntrada(tipo, cantidad.Value));
+        if (!respuesta.IsSuccessStatusCode) {
+            MostrarError("No se pudo registrar", await respuesta.Content.ReadAsStringAsync());
+            return;
+        }
+        await RefrescarAsync(producto.Id);
+    } catch (Exception ex) {
+        MostrarError("No se pudo registrar", ex.Message);
+    }
+   int? DialogoMovimiento(TipoMovimiento tipo, ProductoDto producto) {
+     using var dialogo = new Dialog { Title = $" Registrar {tipo} ", Width = 66, Height = 11 };
+     dialogo.Add(new Label { Text = $"{producto.Codigo} - {producto.Nombre} | Stock actual: {producto.Stock}", X = 2, Y = 1 });
+     var etiqueta
+     var cantidad
+     var aceptar 
+     var cancelar
+
+
+}
+
+
+
+
 app.Run(ventana);
+
+
 // ── DTO ──────────────────────────────────────────────────────────────────
 enum TipoMovimiento{Compra,Venta,Ajuste} //enum de los movimientos que se podran hacer
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
