@@ -100,20 +100,69 @@ app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, Mo
 
 app.Run("http://localhost:5050");
 
+static string? ValidarProducto(ProductoEntrada entrada) {
+    if (string.IsNullOrWhiteSpace(entrada.Codigo)) return "El codigo es obligatorio.";
+    if (string.IsNullOrWhiteSpace(entrada.Nombre)) return "El nombre es obligatorio.";
+    if (entrada.Precio < 0) return "El precio no puede ser negativo.";
+    if (entrada.Stock < 0) return "El stock no puede ser negativo.";
+    return null;
+}
 
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
 
-// ── Modelo ────────────────────────────────────────────────────────────────
+class Producto {
+    public int Id { get; set; }
+    [MaxLength(40)]
+    public string Codigo { get; set; } = "";
+    [MaxLength(120)]
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+    public List<MovimientoDeProducto> Movimientos { get; set; } = [];
+}
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+class MovimientoDeProducto {
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    public Producto? Producto { get; set; }
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+}
 
-// ── DbContext ─────────────────────────────────────────────────────────────
+record ProductoEntrada(string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoEntrada(TipoMovimiento Tipo, int Cantidad);
+record ProductoSalida(int Id, string Codigo, string Nombre, decimal Precio, int Stock) {
+    public static ProductoSalida Desde(Producto producto) =>
+        new(producto.Id, producto.Codigo, producto.Nombre, producto.Precio, producto.Stock);
+}
+
+record MovimientoSalida(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha) {
+    public static MovimientoSalida Desde(MovimientoDeProducto movimiento) =>
+        new(movimiento.Id, movimiento.ProductoId, movimiento.Tipo, movimiento.Cantidad, movimiento.Fecha);
+}
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
-}
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 
-// ── Repositorio ───────────────────────────────────────────────────────────
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Producto>()
+            .HasIndex(p => p.Codigo)
+            .IsUnique();
+
+        modelBuilder.Entity<MovimientoDeProducto>()
+            .HasOne(m => m.Producto)
+            .WithMany(p => p.Movimientos)
+            .HasForeignKey(m => m.ProductoId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
 
 class CatalogoRepositorio {
     private readonly CatalogoDb db;
