@@ -16,8 +16,8 @@ class NumeroNodo : Nodo{
 }
 
 class VariableNodo : Nodo{
-    public override int Evaluar(int x) 
-}
+    public override int Evaluar(int x) => x;
+};
 
 class NegativoNodo : Nodo{
     private Nodo nodo;
