@@ -35,7 +35,6 @@ Window ventana = new() {
     Title = " Catálogo REST - Productos "
 };
 
-// Panel izquierdo
 FrameView panelProductos = new() {
     Title = "Productos",
     X = 0,
@@ -44,7 +43,18 @@ FrameView panelProductos = new() {
     Height = Dim.Fill()
 };
 
-// Panel derecho
+Label lblBuscar = new() {
+    Text = "Buscar:",
+    X = 0,
+    Y = 0
+};
+
+TextField txtBuscar = new() {
+    X = Pos.Right(lblBuscar) + 1,
+    Y = 0,
+    Width = Dim.Fill()
+};
+
 FrameView panelDetalle = new() {
     Title = "Movimientos",
     X = Pos.Right(panelProductos),
@@ -55,7 +65,7 @@ FrameView panelDetalle = new() {
 
 ListView listaProductos = new() {
     X = 0,
-    Y = 0,
+    Y = 1,
     Width = Dim.Fill(),
     Height = Dim.Fill()
 };
@@ -68,26 +78,42 @@ TextView detalle = new() {
     ReadOnly = true
 };
 
+panelProductos.Add(lblBuscar);
+panelProductos.Add(txtBuscar);
 panelProductos.Add(listaProductos);
 panelDetalle.Add(detalle);
 
 ventana.Add(panelProductos);
 ventana.Add(panelDetalle);
 
-var filas = productos
-    .Select(p =>
-        $"{p.Codigo,-10} {p.Nombre,-20} ${p.Precio,8:N2} Stock:{p.Stock,4}")
-    .ToList();
+List<ProductoDto> productosFiltrados = productos.ToList();
 
-listaProductos.SetSource(
-    new ObservableCollection<string>(filas)
-);
+void ActualizarLista()
+{
+    string texto = txtBuscar.Text?.ToString() ?? "";
+
+    productosFiltrados = productos
+        .Where(p =>
+            p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            ||
+            p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    var filas = productosFiltrados
+        .Select(p =>
+            $"{p.Codigo,-10} {p.Nombre,-20} ${p.Precio,8:N2} Stock:{p.Stock,4}")
+        .ToList();
+
+    listaProductos.SetSource(
+        new ObservableCollection<string>(filas)
+    );
+}
 async Task MostrarMovimientosAsync(int indice)
 {
     if (indice < 0 || indice >= productos.Count)
         return;
 
-    ProductoDto producto = productos[indice];
+    ProductoDto producto = productosFiltrados[indice];
 
     try {
         using HttpClient http = new();
@@ -123,6 +149,11 @@ listaProductos.ValueChanged += (_, _) =>
 
     _ = MostrarMovimientosAsync(indice);
 };
+txtBuscar.TextChanged += (_, _) =>
+{
+    ActualizarLista();
+};
+ActualizarLista();
 await MostrarMovimientosAsync(0);
 
 app.Run(ventana);
