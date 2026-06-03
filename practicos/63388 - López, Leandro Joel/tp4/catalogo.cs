@@ -16,6 +16,7 @@ using Terminal.Gui.ViewBase;
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
 ProductoDto producto;
+
 try {
     using var http = new HttpClient();
     producto = await CargarProductoAsync(http);
@@ -31,7 +32,15 @@ using IApplication app = Application.Create().Init();
 app.Init();
 
 using var Window = new CatalogoWindow("http://localhost:5000");
+
+Window.Add(detalleProducto);
+
 app.Run(Window);
+
+static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
+    const string url = "http://localhost:5000/producto";
+    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+}
 
 public sealed class CatalogoWindow : Window {
     
@@ -550,15 +559,104 @@ public sealed class MovimientoDialog : Dialog<MovimientoRequest>
     }
 }
 
-Window.Add(detalleProducto);
+public sealed class CatalogoApiClient
+{
+    private readonly HttpClient _http;
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
-app.Run(Window);
+    public CatalogoApiClient(string baseUrl)
+    {
+        _http = new HttpClient { BaseAddress = new Uri(baseUrl) };
+    }
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5000/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+    public async Task<List<ProductoDto>> ListarProductosAsync()
+    {
+        return await LeerAsync<List<ProductoDto>>(await _http.GetAsync("/productos")) ?? [];
+    }
+
+    public async Task<ProductoDto> CrearProductoAsync(ProductoRequest request)
+    {
+        return await LeerAsync<ProductoDto>(await _http.PostAsJsonAsync("/productos", request, _jsonOptions))
+            ?? throw new ApiException("El servidor no devolvio el producto creado.");
+    }
+
+    public async Task<ProductoDto> ModificarProductoAsync(int id, ProductoRequest request)
+    {
+        return await LeerAsync<ProductoDto>(await _http.PutAsJsonAsync($"/productos/{id}", request, _jsonOptions))
+            ?? throw new ApiException("El servidor no devolvio el producto modificado.");
+    }
+
+    public async Task EliminarProductoAsync(int id)
+    {
+        await LeerAsync<object>(await _http.DeleteAsync($"/productos/{id}"));
+    }
+
+    public async Task<List<MovimientoDto>> ListarMovimientosAsync(int productoId)
+    {
+        return await LeerAsync<List<MovimientoDto>>(await _http.GetAsync($"/productos/{productoId}/movimientos")) ?? [];
+    }
+
+    public async Task RegistrarMovimientoAsync(int productoId, MovimientoRequest request)
+    {
+        await LeerAsync<MovimientoDto>(await _http.PostAsJsonAsync($"/productos/{productoId}/movimientos", request, _jsonOptions));
+    }
+
+    private async Task<T?> LeerAsync<T>(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return default;
+            }
+
+            return await response.Content.ReadFromJsonAsync<T>(_jsonOptions);
+        }
+
+        var cuerpo = await response.Content.ReadAsStringAsync();
+        var mensaje = ExtraerError(cuerpo);
+        throw new ApiException(string.IsNullOrWhiteSpace(mensaje)
+            ? $"{(int)response.StatusCode} {response.ReasonPhrase}"
+            : mensaje);
+    }
+
+    private string ExtraerError(string cuerpo)
+    {
+        if (string.IsNullOrWhiteSpace(cuerpo))
+        {
+            return "";
+        }
+
+        try
+        {
+            var error = JsonSerializer.Deserialize<ApiError>(cuerpo, _jsonOptions);
+            return error?.Error ?? cuerpo;
+        }
+        catch
+        {
+            return cuerpo;
+        }
+    }
 }
 
-// ── DTO ───────────────────────────────────────────────────────────────────
+public sealed class ApiException(string message) : Exception(message);
 
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum TipoMovimiento
+{
+    Compra,
+    Venta,
+    Ajuste
+}
+
+public sealed record ProductoRequest(string Codigo, string Nombre, decimal Precio, int Stock);
+public sealed record MovimientoRequest(TipoMovimiento Tipo, int Cantidad);
+public sealed record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+public sealed record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+public sealed record ApiError(string Error);
+
+
