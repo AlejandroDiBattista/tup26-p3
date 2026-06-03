@@ -53,6 +53,18 @@ app.MapGet("/productos/{id:int}", async (int id, CatalogoRepositorio repo) => {
     return producto is null ? Results.NotFound() : Results.Ok(ProductoSalida.Desde(producto));
 });
 
+app.MapPost("/productos", async (ProductoEntrada entrada, CatalogoRepositorio repo) => {
+    var error = ValidarProducto(entrada);
+    if (error is not null) return Results.BadRequest(error);
+
+    try {
+        var producto = await repo.CrearProductoAsync(entrada);
+        return Results.Created($"/productos/{producto.Id}", ProductoSalida.Desde(producto));
+    } catch (CodigoDuplicadoException) {
+        return Results.Conflict("Ya existe un producto con ese codigo.");
+    }
+});
+
 
 // ── Inicialización de la base de datos ────────────────────────────────────
 
