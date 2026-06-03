@@ -1,16 +1,25 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
 
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
+using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
 using var http = new HttpClient();
 
 List<ProductoDto> productos;
+List<ProductoDto> productosFiltrados = [];
 
 try
 {
@@ -30,11 +39,24 @@ using Window ventana = new ()
     Title = " Catalogo de Productos ", 
 };
 
+var txtBuscar = new TextField()
+{
+    Text = "",
+};
+
+var lblBuscar = new Label()
+{
+    Text = "Buscar:"
+};
+
+ventana.Add(lblBuscar);
+ventana.Add(txtBuscar);
+
 var frameProductos = new FrameView()
 {
     Title = "Productos",
     X = 0,
-    Y = 0,
+    Y = 1,
     Width = Dim.Percent(40),
     Height = Dim.Fill()
 };
@@ -43,20 +65,24 @@ var frameMovimientos = new FrameView()
 {
     Title = "Movimientos",
     X = Pos.Right(frameProductos),
-    Y = 0,
+    Y = 1,
     Width = Dim.Fill(),
     Height = Dim.Fill()
 };
 
-var listaProductos = new ListView(
-    productos.Select(
-        p => $"{p.Codigo} - {p.Nombre}"
-    ).ToList()
-)
+var listaProductos = new ListView()
 {
     Width = Dim.Fill(),
     Height = Dim.Fill()
 };
+
+listaProductos.SetSource<string>(
+    new ObservableCollection<string>(
+        productos.Select(
+            p => $"{p.Codigo} - {p.Nombre}"
+        )
+    )
+);
 
 var listaMovimientos = new ListView()
 {
@@ -71,12 +97,23 @@ frameMovimientos.Add(listaMovimientos);
 ventana.Add(frameProductos);
 ventana.Add(frameMovimientos);
 
+void ActualizarListaProductos()
+{
+    listaProductos.SetSource<string>(
+        new ObservableCollection<string>(
+            productosFiltrados
+                .Select(p => $"{p.Codigo} - {p.Nombre}")
+                .ToList()
+        )
+    );
+}
+
 async Task CargarMovimientos()
 {
     if (listaProductos.SelectedItem < 0)
         return;
 
-    var producto = productos[listaProductos.SelectedItem];
+    var producto = productos[listaProductos.SelectedItem ?? 0];
 
     try
     {
@@ -85,18 +122,20 @@ async Task CargarMovimientos()
             $"http://localhost:5050/productos/{producto.Id}/movimientos"
         );
 
-        listaMovimientos.SetSource(
-            movimientos?
-            .Select(m =>
-                $"{m.Tipo,-8} {m.Cantidad,5} {m.Fecha:g}")
-            .ToList()
-            ?? []
+        listaMovimientos.SetSource<string>(
+            new ObservableCollection<string>(
+                movimientos?
+                .Select(m =>
+                    $"{m.Tipo,-8} {m.Cantidad,5} {m.Fecha:g}")
+                .ToList()
+                ?? []
+            )
         );
     }
     catch
     {
-        listaMovimientos.SetSource(
-            new List<string>
+        listaMovimientos.SetSource<string>(
+            new ObservableCollection<string>
             {
                 "Error al cargar movimientos"
             }
@@ -104,9 +143,206 @@ async Task CargarMovimientos()
     }
 }
 
-listaProductos.SelectedItemChanged += async _ =>
+async Task RecargarProductos()
+{
+    productos = await CargarProductosAsync(http);
+
+    productosFiltrados = productos;
+
+    ActualizarListaProductos();
+}
+
+async Task AgregarProducto()
+{
+    var codigo = new TextField() { Text = "" };
+    var nombre = new TextField() { Text = "" };
+    var precio = new TextField() { Text = "" };
+
+    var dialog = new Dialog() {
+    Title = "Agregar Producto",
+    Width = 60,
+    Height = 15
+    };
+
+    dialog.Add(
+        new Label()
+        {
+            Text = "Código"
+        },
+
+        new Label()
+        {
+            Text = "Nombre"
+        },
+
+        new Label()
+        {
+            Text = "Precio"
+        }
+    );
+
+    var guardar = new Button()
+    {
+        Text = "Guardar"
+    };
+    var cancelar = new Button()
+    {
+        Text = "Cancelar"
+    };
+
+    guardar.Accepting += async (_, _) =>
+    {
+        await http.PostAsJsonAsync(
+            "http://localhost:5050/productos",
+            new
+            {
+                Codigo = codigo.Text.ToString(),
+                Nombre = nombre.Text.ToString(),
+                Precio = decimal.Parse(precio.Text.ToString() ?? "0"),
+                Stock = 0
+            });
+
+        await RecargarProductos();
+
+        Application.RequestStop();
+    };
+
+    cancelar.Accepting += (_, _) =>
+    {
+        Application.RequestStop();
+    };
+
+    dialog.AddButton(guardar);
+    dialog.AddButton(cancelar);
+
+    Application.Run(dialog);
+}
+
+async Task EditarProducto()
+{
+    if (listaProductos.SelectedItem < 0)
+        return;
+
+        var indice = listaProductos.SelectedItem ?? -1;
+        if(indice < 0)
+            return;
+
+    var producto = productosFiltrados[indice];
+
+    var codigo = new TextField();
+    var nombre = new TextField();
+    var precio = new TextField();
+
+    var dialog = new Dialog()
+    {
+        Title = "Editar Producto",
+        Width = 60,
+        Height = 15
+    };
+
+    dialog.Add(
+        new Label()
+        {
+            Text = "Código",
+            X = 1,
+            Y = 1
+        },
+        codigo,
+
+        new Label()
+        {
+            Text = "Nombre",
+            X = 1,
+            Y = 3
+        },
+        nombre,
+
+        new Label()
+        {
+            Text = "Precio",
+            X = 1,
+            Y = 5
+        },
+        precio
+    );
+
+    var guardar = new Button()
+    {
+        Text = "Guardar"
+    };
+
+    guardar.Accepting += async (_, _) =>
+    {
+        await http.PutAsJsonAsync(
+            $"http://localhost:5050/productos/{producto.Id}",
+            new
+            {
+                producto.Id,
+                Codigo = codigo.Text.ToString(),
+                Nombre = nombre.Text.ToString(),
+                Precio = decimal.Parse(precio.Text.ToString() ?? "0"),
+                producto.Stock
+            });
+
+        await RecargarProductos();
+
+        Application.RequestStop();
+    };
+
+    dialog.AddButton(guardar);
+
+    Application.Run(dialog);
+}
+
+async Task EliminarProducto()
+{
+    if (listaProductos.SelectedItem < 0)
+        return;
+
+        var indice = listaProductos.SelectedItem ?? -1;
+        if(indice < 0)
+            return;
+    var producto = productosFiltrados[indice];
+
+    await http.DeleteAsync(
+        $"http://localhost:5050/productos/{producto.Id}");
+
+    await RecargarProductos();
+}
+
+txtBuscar.TextChanged += (sender, e) =>
+{
+    var texto = txtBuscar.Text.ToString() ?? "";
+
+    productosFiltrados = productos
+        .Where(p =>
+            p.Codigo.Contains(texto,
+                StringComparison.OrdinalIgnoreCase)
+            ||
+            p.Nombre.Contains(texto,
+                StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    ActualizarListaProductos();
+};
+
+listaProductos.SelectedItem = 0;
+
+listaProductos.Accepting += async (sender, e) =>
 {
     await CargarMovimientos();
+};
+
+ventana.KeyDown += async (sender, key) =>
+{
+    if (key == Key.F2)
+        await AgregarProducto();
+
+    if (key == Key.F3)
+        await EditarProducto();
+
+    if (key == Key.F4)
+        await EliminarProducto();
 };
 
 if (productos.Count > 0)
@@ -130,3 +366,5 @@ static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 
 record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
+
+
