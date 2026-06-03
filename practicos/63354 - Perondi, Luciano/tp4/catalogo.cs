@@ -99,6 +99,24 @@ async Task EditarProducto(ProductoDto? existente) {
     await RecargarLista();
 }
 
+async Task EliminarProducto(ProductoDto p) {
+    var si = new Button { Text = "Sí" };
+    var no = new Button { Text = "No", IsDefault = true };
+    bool confirmar = false;
+    si.Accepting += (s, e) => { confirmar = true; app.RequestStop(); };
+    no.Accepting += (s, e) => { app.RequestStop(); };
+
+    var dlg = new Dialog { Title = "Eliminar", Width = 50, Height = 7 };
+    dlg.Add(new Label { X = 1, Y = 1, Text = $"¿Eliminar {p.Nombre}?" });
+    dlg.AddButton(si);
+    dlg.AddButton(no);
+    app.Run(dlg);
+
+    if (!confirmar) return;
+    await EliminarProductoAsync(http, p.Id);
+    await RecargarLista();
+}
+
 var botonNuevo = new Button { X = 0, Y = 0, Text = "Nuevo" };
 botonNuevo.Accepting += (s, e) => { _ = EditarProducto(null); e.Handled = true; };
 
@@ -109,8 +127,15 @@ botonEditar.Accepting += (s, e) => {
     e.Handled = true;
 };
 
+var botonEliminar = new Button { X = Pos.Right(botonEditar) + 1, Y = 0, Text = "Eliminar" };
+botonEliminar.Accepting += (s, e) => {
+    int? i = listaProductos.SelectedItem;
+    if (i >= 0 && i < productos.Count) _ = EliminarProducto(productos[i.Value]);
+    e.Handled = true;
+};
+
 await RecargarLista();
-ventana.Add(botonNuevo, botonEditar, listaProductos, detalleMovimientos);
+ventana.Add(botonNuevo, botonEditar, botonEliminar, listaProductos, detalleMovimientos);
 app.Run(ventana);
 
 static async Task<List<ProductoDto>> TraerProductosAsync(HttpClient http) {
@@ -129,6 +154,10 @@ static async Task CrearProductoAsync(HttpClient http, ProductoDto p) {
 
 static async Task ModificarProductoAsync(HttpClient http, int id, ProductoDto p) {
     await http.PutAsJsonAsync($"http://localhost:5050/productos/{id}", p);
+}
+
+static async Task EliminarProductoAsync(HttpClient http, int id) {
+    await http.DeleteAsync($"http://localhost:5050/productos/{id}");
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
