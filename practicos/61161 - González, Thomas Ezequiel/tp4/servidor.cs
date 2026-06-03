@@ -68,6 +68,21 @@ app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio re
 });
 
     return Results.Ok(actualizado);
+    app.MapPost("/productos/{productoId}/movimientos",
+(int productoId,
+ RegistrarMovimientoDto dto,
+ CatalogoRepositorio repositorio) =>
+{
+    var movimiento = repositorio.RegistrarMovimiento(
+        productoId,
+        dto.Tipo,
+        dto.Cantidad);
+
+    if (movimiento is null)
+        return Results.NotFound();
+
+    return Results.Ok(movimiento);
+});
 });
 app.Run("http://localhost:5050");
 // ── Modelo ────────────────────────────────────────────────────────────────
@@ -96,6 +111,11 @@ record class MovimientoDeProducto(
     TipoMovimiento Tipo,
     int Cantidad,
     DateTime Fecha
+    );
+
+    record RegistrarMovimientoDto(
+    TipoMovimiento Tipo,
+    int Cantidad
 );
 
 
@@ -216,5 +236,43 @@ public bool EliminarProducto(int id)
         .OrderByDescending(m => m.Fecha)
         .ToList();
         }
+public MovimientoDeProducto? RegistrarMovimiento(
+    int productoId,
+    TipoMovimiento tipo,
+    int cantidad)
+{
+    var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);
 
+    if (producto is null)
+        return null;
+
+    switch (tipo)
+    {
+        case TipoMovimiento.Compra:
+            producto.Stock += cantidad;
+            break;
+
+        case TipoMovimiento.Venta:
+            producto.Stock -= cantidad;
+            break;
+
+        case TipoMovimiento.Ajuste:
+            producto.Stock = cantidad;
+            break;
+    }
+
+    var movimiento = new MovimientoDeProducto(
+        0,
+        productoId,
+        tipo,
+        cantidad,
+        DateTime.Now
+    );
+
+    db.Movimientos.Add(movimiento);
+
+    db.SaveChanges();
+
+    return movimiento;
+}
         }
