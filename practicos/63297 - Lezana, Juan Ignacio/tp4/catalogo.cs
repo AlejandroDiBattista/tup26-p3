@@ -62,8 +62,22 @@ var btnVenta = new Button { X = 50, Y = 24, Text = "Venta" };
 var btnAjuste = new Button { X = 61, Y = 24, Text = "Ajuste" };
 var btnRecargar = new Button { X = 73, Y = 24, Text = "Recargar" };
 
-
-ventana.Add(detalleProducto);
+ventana.Add(
+    new Label { X = 1, Y = 1, Text = "Buscar:" },
+    filtro,
+    new Label { X = 1, Y = 2, Text = "Productos" },
+    new Label { X = 61, Y = 2, Text = "Movimientos del producto seleccionado" },
+    listaProductos,
+    listaMovimientos,
+    estado,
+    btnAgregar,
+    btnEditar,
+    btnEliminar,
+    btnCompra,
+    btnVenta,
+    btnAjuste,
+    btnRecargar
+);
 
 app.Run(ventana);
 
