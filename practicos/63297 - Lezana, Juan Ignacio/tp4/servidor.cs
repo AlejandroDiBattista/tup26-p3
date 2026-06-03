@@ -65,15 +65,17 @@ app.MapPost("/productos", async (ProductoEntrada entrada, CatalogoRepositorio re
     }
 });
 
+app.MapPut("/productos/{id:int}", async (int id, ProductoEntrada entrada, CatalogoRepositorio repo) => {
+    var error = ValidarProducto(entrada);
+    if (error is not null) return Results.BadRequest(error);
 
-// ── Inicialización de la base de datos ────────────────────────────────────
-
-using (var scope = app.Services.CreateScope()) {
-    var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
-    repositorio.Iniciar();
-}
-
-// ── Endpoints ─────────────────────────────────────────────────────────────
+    try {
+        var producto = await repo.ModificarProductoAsync(id, entrada);
+        return producto is null ? Results.NotFound() : Results.Ok(ProductoSalida.Desde(producto));
+    } catch (CodigoDuplicadoException) {
+        return Results.Conflict("Ya existe un producto con ese codigo.");
+    }
+});
 
 app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
     var producto = repositorio.TraerProducto();
