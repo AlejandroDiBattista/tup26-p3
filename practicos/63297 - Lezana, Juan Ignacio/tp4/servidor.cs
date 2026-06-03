@@ -68,6 +68,11 @@ app.MapPost("/productos", async (ProductoEntrada entrada, CatalogoRepositorio re
 app.MapDelete("/productos/{id:int}", async (int id, CatalogoRepositorio repo) =>
     await repo.EliminarProductoAsync(id) ? Results.NoContent() : Results.NotFound());
 
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoRepositorio repo) => {
+    if (!await repo.ExisteProductoAsync(productoId)) return Results.NotFound();
+    return Results.Ok((await repo.ListarMovimientosAsync(productoId)).Select(MovimientoSalida.Desde));
+});
+
 app.MapPut("/productos/{id:int}", async (int id, ProductoEntrada entrada, CatalogoRepositorio repo) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
