@@ -55,6 +55,31 @@ app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) => {
         : Results.NotFound();
 });
 
+app.MapGet(
+    "/productos/{productoId}/movimientos",
+    (int productoId, CatalogoRepositorio repositorio) => {
+    return Results.Ok(
+        repositorio.TraerMovimientos(productoId)
+    );
+});
+
+app.MapPost(
+    "/productos/{productoId}/movimientos", (
+        int productoId,
+        MovimientoRequest request,
+        CatalogoRepositorio repositorio
+    ) => {
+    var ok = repositorio.RegistrarMovimiento(
+        productoId,
+        request.Tipo,
+        request.Cantidad
+    );
+
+    return ok
+        ? Results.Ok()
+        : Results.NotFound();
+});
+
 app.Run("http://localhost:5050");
 
 
@@ -82,6 +107,7 @@ record class MovimientoDeProducto(
     int Cantidad, 
     DateTime Fecha
 );
+ record MovimientoRequest(TipoMovimiento Tipo, int Cantidad);
 
 // ── DbContext ─────────────────────────────────────────────────────────────
 
@@ -89,7 +115,7 @@ class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
     public DbSet<Producto> Productos => Set<Producto>();
 
-    public DbSet<MovimientoDeProducto> Moviminetos => Set<MovimientoDeProducto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
 // ── Repositorio ───────────────────────────────────────────────────────────
@@ -145,6 +171,58 @@ class CatalogoRepositorio {
             return false;
 
         db.Productos.Remove(producto);
+        db.SaveChanges();
+
+        return true;
+    }
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId)
+    {
+        return db.Movimientos
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .ToList();
+    }
+    public bool RegistrarMovimiento(
+        int productoId,
+        TipoMovimiento tipo,
+        int cantidad) {
+        var producto = db.Productos.Find(productoId);
+
+        if (producto is null)
+            return false;
+
+        int nuevoStock = producto.Stock;
+
+        switch (tipo) {
+            case TipoMovimiento.Compra:
+                nuevoStock += cantidad;
+                break;
+
+            case TipoMovimiento.Venta:
+                nuevoStock -= cantidad;
+                break;
+
+            case TipoMovimiento.Ajuste:
+                nuevoStock = cantidad;
+                break;
+        }
+
+        db.Productos.Remove(producto);
+
+        db.Productos.Add(
+            producto with { Stock = nuevoStock }
+        );
+
+        db.Movimientos.Add(
+            new MovimientoDeProducto(
+                0,
+                productoId,
+                tipo,
+                cantidad,
+                DateTime.Now
+            )
+        );
+
         db.SaveChanges();
 
         return true;
