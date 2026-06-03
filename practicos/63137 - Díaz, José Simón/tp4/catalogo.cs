@@ -1,4 +1,4 @@
-#:package Terminal.Gui@2.*
+﻿#:package Terminal.Gui@2.*
 #:property PublishAot=false
 
 using System.Net.Http.Json;
