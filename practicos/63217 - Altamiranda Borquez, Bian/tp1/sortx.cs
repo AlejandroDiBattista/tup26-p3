@@ -232,3 +232,32 @@ List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows,
         }
     }
 }
+string Serialize(List<string> headers, List<Dictionary<string, string>> rows, AppConfig config)
+{
+    var lines = new List<string>();
+
+    if (!config.NoHeader)
+    {
+        lines.Add(string.Join(config.Delimiter, headers));
+    }
+
+    foreach (var row in rows)
+    {
+        var values = headers.Select(h => row[h]);
+        lines.Add(string.Join(config.Delimiter, values));
+    }
+
+    return string.Join(Environment.NewLine, lines);
+}
+
+void WriteOutput(string text, AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.OutputFile))
+    {
+        File.WriteAllText(config.OutputFile, text);
+    }
+    else
+    {
+        Console.Write(text);
+    }
+}
