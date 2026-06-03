@@ -52,6 +52,15 @@ app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio re
 
     if (actualizado is null)
         return Results.NotFound();
+        app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
+{
+    var eliminado = repositorio.EliminarProducto(id);
+
+    if (!eliminado)
+        return Results.NotFound();
+
+    return Results.NoContent();
+});
 
     return Results.Ok(actualizado);
 });
@@ -182,5 +191,17 @@ public Producto? ModificarProducto(int id, Producto productoActualizado)
     db.SaveChanges();
 
     return producto;
+}
+public bool EliminarProducto(int id)
+{
+    var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+
+    if (producto is null)
+        return false;
+
+    db.Productos.Remove(producto);
+    db.SaveChanges();
+
+    return true;
 }
 }
