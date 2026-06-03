@@ -23,23 +23,45 @@ try {
     Console.Error.WriteLine("Verifica que servidor.cs este corriendo en http://localhost:5050");
     return;
 }
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
-
 using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
+using Window ventana = new() { Title = " Catalogo REST - ESC para salir " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
-
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+var filtro = new TextField {
+    X = 10,
+    Y = 1,
+    Width = 35,
+    Text = ""
 };
+
+var listaProductos = new ListView {
+    X = 1,
+    Y = 3,
+    Width = 58,
+    Height = 18
+};
+
+var listaMovimientos = new ListView {
+    X = 61,
+    Y = 3,
+    Width = 58,
+    Height = 18
+};
+
+var estado = new Label {
+    X = 1,
+    Y = 22,
+    Width = 118,
+    Text = "Seleccione un producto para ver su historial. Use los botones para administrar el catalogo."
+};
+
+var btnAgregar = new Button { X = 1, Y = 24, Text = "Agregar" };
+var btnEditar = new Button { X = 13, Y = 24, Text = "Editar" };
+var btnEliminar = new Button { X = 24, Y = 24, Text = "Eliminar" };
+var btnCompra = new Button { X = 38, Y = 24, Text = "Compra" };
+var btnVenta = new Button { X = 50, Y = 24, Text = "Venta" };
+var btnAjuste = new Button { X = 61, Y = 24, Text = "Ajuste" };
+var btnRecargar = new Button { X = 73, Y = 24, Text = "Recargar" };
+
 
 ventana.Add(detalleProducto);
 
