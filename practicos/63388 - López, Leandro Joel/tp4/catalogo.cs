@@ -414,6 +414,142 @@ private void AplicarFiltro(int? productoASeleccionar = null) {
     }
 }
 
+public sealed class ProductoDialog : Dialog<ProductoRequest>
+{
+    private readonly TextField _codigo;
+    private readonly TextField _nombre;
+    private readonly TextField _precio;
+    private readonly TextField _stock;
+
+    public ProductoDialog(ProductoDto? producto = null)
+    {
+        Title = producto is null ? "Agregar producto" : "Modificar producto";
+        Width = 64;
+        Height = 14;
+
+        var codigoLabel = new Label { Text = "Codigo:", X = 1, Y = 1 };
+        _codigo = new TextField { Text = producto?.Codigo ?? "", X = 12, Y = 1, Width = Dim.Fill(2) };
+
+        var nombreLabel = new Label { Text = "Nombre:", X = 1, Y = 3 };
+        _nombre = new TextField { Text = producto?.Nombre ?? "", X = 12, Y = 3, Width = Dim.Fill(2) };
+
+        var precioLabel = new Label { Text = "Precio:", X = 1, Y = 5 };
+        _precio = new TextField { Text = (producto?.Precio ?? 0m).ToString("0.00", CultureInfo.InvariantCulture), X = 12, Y = 5, Width = 16 };
+
+        var stockLabel = new Label { Text = "Stock:", X = 1, Y = 7 };
+        _stock = new TextField { Text = (producto?.Stock ?? 0).ToString(CultureInfo.InvariantCulture), X = 12, Y = 7, Width = 16 };
+
+        Add(codigoLabel, _codigo, nombreLabel, _nombre, precioLabel, _precio, stockLabel, _stock);
+
+        AddButton(new Button { Text = "_Cancelar" });
+
+        var guardar = new Button { Text = "_Guardar", IsDefault = true };
+        guardar.Accepting += (_, e) =>
+        {
+            if (!TryCrearRequest(out var request, out var error))
+            {
+                MessageBox.ErrorQuery(App!, "Datos invalidos", error, "Ok");
+                e.Handled = true;
+                return;
+            }
+
+            Result = request;
+            RequestStop();
+            e.Handled = true;
+        };
+        AddButton(guardar);
+    }
+
+    private bool TryCrearRequest(out ProductoRequest request, out string error)
+    {
+        request = new ProductoRequest("", "", 0m, 0);
+        error = "";
+
+        var codigo = (_codigo.Text?.ToString() ?? "").Trim();
+        var nombre = (_nombre.Text?.ToString() ?? "").Trim();
+
+        if (codigo.Length == 0)
+        {
+            error = "El codigo es obligatorio.";
+            return false;
+        }
+
+        if (nombre.Length == 0)
+        {
+            error = "El nombre es obligatorio.";
+            return false;
+        }
+
+        if (!decimal.TryParse((_precio.Text?.ToString() ?? "").Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out var precio) || precio < 0)
+        {
+            error = "El precio debe ser un numero mayor o igual a cero.";
+            return false;
+        }
+
+        if (!int.TryParse(_stock.Text?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var stock) || stock < 0)
+        {
+            error = "El stock debe ser un entero mayor o igual a cero.";
+            return false;
+        }
+
+        request = new ProductoRequest(codigo, nombre, precio, stock);
+        return true;
+    }
+}
+
+public sealed class MovimientoDialog : Dialog<MovimientoRequest>
+{
+    private readonly OptionSelector<TipoMovimiento> _tipo;
+    private readonly TextField _cantidad;
+
+    public MovimientoDialog(ProductoDto producto)
+    {
+        Title = $"Movimiento - {producto.Codigo}";
+        Width = 62;
+        Height = 13;
+
+        Add(new Label
+        {
+            Text = $"{producto.Nombre} | Stock actual: {producto.Stock}",
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(2)
+        });
+
+        Add(new Label { Text = "Tipo:", X = 1, Y = 3 });
+        _tipo = new OptionSelector<TipoMovimiento>
+        {
+            X = 12,
+            Y = 3,
+            Value = TipoMovimiento.Compra
+        };
+
+        Add(new Label { Text = "Cantidad:", X = 1, Y = 7 });
+        _cantidad = new TextField { Text = "1", X = 12, Y = 7, Width = 16 };
+
+        Add(_tipo, _cantidad);
+        AddButton(new Button { Text = "_Cancelar" });
+
+        var aceptar = new Button { Text = "_Registrar", IsDefault = true };
+        aceptar.Accepting += (_, e) =>
+        {
+            if (!int.TryParse(_cantidad.Text?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var cantidad) || cantidad <= 0)
+            {
+                MessageBox.ErrorQuery(App!, "Datos invalidos", "La cantidad debe ser un entero positivo.", "Ok");
+                e.Handled = true;
+                return;
+            }
+
+            var tipo = _tipo.Value ?? TipoMovimiento.Compra;
+
+            Result = new MovimientoRequest(tipo, cantidad);
+            RequestStop();
+            e.Handled = true;
+        };
+        AddButton(aceptar);
+    }
+}
+
 Window.Add(detalleProducto);
 
 app.Run(Window);
