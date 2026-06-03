@@ -12,3 +12,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 const string ApiBase = "http://localhost:5050";
+var json = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+json.Converters.Add(new JsonStringEnumConverter());
+
+using var http = new HttpClient { BaseAddress = new Uri(ApiBase) };
