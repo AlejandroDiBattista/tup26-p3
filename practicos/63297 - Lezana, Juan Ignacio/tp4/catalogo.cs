@@ -91,14 +91,46 @@ btnVenta.Accepted += async (_, _) => await AbrirDialogoMovimientoAsync(TipoMovim
 btnAjuste.Accepted += async (_, _) => await AbrirDialogoMovimientoAsync(TipoMovimiento.Ajuste);
 btnRecargar.Accepted += async (_, _) => await RecargarAsync();
 
-
 app.Run(ventana);
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
-}
+async Task<List<ProductoDto>> CargarProductosAsync() =>
+    await http.GetFromJsonAsync<List<ProductoDto>>("/productos") ?? [];
 
+async Task<List<MovimientoDto>> CargarMovimientosAsync(int productoId) =>
+    await http.GetFromJsonAsync<List<MovimientoDto>>($"/productos/{productoId}/movimientos") ?? [];
+
+void ActualizarListas() {
+    var texto = filtro.Text?.ToString() ?? "";
+    var filtrados = productos
+        .Where(p => string.IsNullOrWhiteSpace(texto)
+            || p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Codigo)
+        .ToList();
+
+    if (seleccionado is not null && !filtrados.Any(p => p.Id == seleccionado.Id)) {
+        seleccionado = filtrados.FirstOrDefault();
+    } else if (seleccionado is null) {
+        seleccionado = filtrados.FirstOrDefault();
+    }
+
+    listaProductos.SetSource<string>(
+    new ObservableCollection<string>(
+        filtrados.Select(FormatearProducto)
+    )
+);
+
+if (filtrados.Count > 0)
+{
+    var indice = seleccionado is null
+        ? 0
+        : filtrados.FindIndex(p => p.Id == seleccionado.Id);
+
+    if (indice >= 0)
+        listaProductos.SelectedItem = indice;
+}
+    listaMovimientos.SetSource<string>(new ObservableCollection<string>(movimientos.Select(FormatearMovimiento)));
+}
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
