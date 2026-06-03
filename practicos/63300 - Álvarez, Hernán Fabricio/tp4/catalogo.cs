@@ -1,7 +1,15 @@
 #:package Terminal.Gui@2.*
 #:property PublishAot=false
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
 
@@ -9,7 +17,7 @@ using Terminal.Gui.Views;
 
 ProductoDto producto;
 try {
-    using var http = new HttpClient();
+    using var http = new HttpClient( );
     producto = await CargarProductoAsync(http);
 } catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
@@ -22,20 +30,66 @@ try {
 using IApplication app = Application.Create().Init();
 using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
+List<ProductoDto> todosLosProductos = new();
+List<ProductoDto> productosFiltrados = new();
+ProductoDto? productoSeleccionado = null;
+List<MovimientoDto> movimientos = new();
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+using Window ventana = new() {
+    Title = " Catálogo REST - Maestro/Detalle (ESC para salir) ",
+    Width = Dim.Fill(), 
+    Height = Dim.Fill()
 };
 
-ventana.Add(detalleProducto);
+var menuPrincipal = new MenuBar(new MenuBarItem[] {
+    new MenuBarItem("_Archivo", new MenuItem[] {
+        new MenuItem("_Salir", "Cierra la aplicación", () => Application.RequestStop())
+    }),
+    new MenuBarItem("_Productos", new MenuItem[] {
+        new MenuItem("_Nuevo", "", () => MostrarDialogoProducto(null)),
+        new MenuItem("_Editar", "", () => MostrarDialogoProducto(productoSeleccionado)),
+        new MenuItem("_Eliminar", "", () => EliminarProductoSeleccionado())
+    }),
+    new MenuBarItem("_Movimientos", new MenuItem[] {
+        new MenuItem("_Registrar Movimiento", "", () => MostrarDialogoMovimiento(productoSeleccionado))
+    })
+});
+
+var panelIzquierdo = new FrameView("Productos") {
+    X = 0, Y = Pos.Bottom(menuPrincipal),
+    Width = Dim.Percent(50), Height = Dim.Fill()
+};
+
+var lblBuscar = new Label("Buscar:") { X = 0, Y = 0 };
+var txtBuscar = new TextField("") {
+    X = Pos.Right(lblBuscar) + 1, Y = 0,
+    Width = Dim.Fill()
+};
+
+var listaProductos = new ListView() {
+    X = 0, Y = Pos.Bottom(lblBuscar) + 1,
+    Width = Dim.Fill(), Height = Dim.Fill(),
+    AllowsMarking = false
+};
+
+panelIzquierdo.Add(lblBuscar, txtBuscar, listaProductos);
+
+var panelDerecho = new FrameView("Movimientos de Stock") {
+    X = Pos.Right(panelIzquierdo), Y = Pos.Bottom(menuPrincipal),
+    Width = Dim.Fill(), Height = Dim.Fill()
+};
+
+var listaMovimientos = new ListView() {
+    X = 0, Y = 0,
+    Width = Dim.Fill(), Height = Dim.Fill(),
+    AllowsMarking = false
+};
+
+panelDerecho.Add(listaMovimientos);
+ventana.Add(menuPrincipal, panelIzquierdo, panelDerecho);
+
+
+
 
 app.Run(ventana);
 
