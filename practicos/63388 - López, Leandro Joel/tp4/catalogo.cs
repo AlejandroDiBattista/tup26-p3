@@ -265,18 +265,154 @@ private void AplicarFiltro(int? productoASeleccionar = null) {
         }
     }
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
+    private void AgregarProducto() {
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
-};
+        using var dialog = new ProductoDialog();
+        App!.Run(dialog);
+
+        if (dialog.Result is null) {
+            return;
+        }
+
+        try {
+            var producto = _api.CrearProductoAsync(dialog.Result).GetAwaiter().GetResult();
+            CargarProductos();
+            AplicarFiltro(producto.Id);
+            Estado($"Producto agregado: {producto.Codigo}");
+
+        } 
+        catch (Exception ex) {
+
+            MostrarError("No se pudo agregar el producto", ex);
+        }
+    }
+    
+    private void ModificarProducto() {
+
+        var seleccionado = ProductoSeleccionado();
+        if (seleccionado is null) {
+            Aviso("Selecciona un producto para modificar");
+            return;
+        }
+
+        using var dialog = new ProductoDialog(seleccionado);
+        App!.Run(dialog);
+
+        if (dialog.Result is null) {
+            return;
+        }
+
+        try {
+            var producto = _api.ModificarProductoAsync(seleccionado.Id, dialog.Result).GetAwaiter().GetResult();
+            CargarProductos();
+            AplicarFiltro(producto.Id);
+            Estado($"Producto modificado: {producto.Codigo}");
+
+        } 
+        catch (Exception ex) {
+
+            MostrarError("No se pudo modificar el producto", ex);
+        }
+    }
+
+    private void EliminarProducto() {
+
+        var seleccionado = ProductoSeleccionado();
+        if (seleccionado is null) {
+            Aviso("Selecciona un producto para eliminar");
+            return;
+        }
+
+        var respuesta = MessageBox.Query(App!, "Eliminar", $"Eliminar {seleccionado.Codigo} - {seleccionado.Nombre}?", "No", "Sí");
+
+        if (respuesta != 1) {
+
+            return;
+        }
+
+        try {
+            _api.EliminarProductoAsync(seleccionado.Id).GetAwaiter().GetResult();
+            CargarProductos();
+            Estado($"Producto eliminado: {seleccionado.Codigo}");
+
+        } 
+        catch (Exception ex) {
+
+            MostrarError("No se pudo eliminar el producto", ex);
+        }
+    }
+
+    private void RegistrarMovimiento() {
+
+        var seleccionado = ProductoSeleccionado();
+        if (seleccionado is null) {
+            Aviso("Selecciona un producto para registrar un movimiento");
+            return;
+        }
+
+        using var dialog = new MovimientoDialog(seleccionado);
+        App!.Run(dialog);
+
+        if (dialog.Result is null) {
+            return;
+        }
+
+        try {
+            _api.RegistrarMovimientoAsync(seleccionado.Id, dialog.Result).GetAwaiter().GetResult();
+            CargarMovimientos();
+            AplicarFiltro(seleccionado.Id);
+            Estado($"Movimiento registrado para {seleccionado.Codigo}");
+
+        } 
+        catch (Exception ex) {
+
+            MostrarError("No se pudo registrar el movimiento", ex);
+        }
+    }
+
+    private void Aviso(string mensaje) {
+
+        MessageBox.Query(App!, "Catalogo", mensaje, "Ok");
+    }
+
+    private void MostrarError(string mensaje, Exception ex) {
+
+        MessageBox.ErrorQuery(App!, "Error", $"{mensaje}\n\n{LimpiarMensaje(ex)}", "Ok");
+        Estado("Error: " + LimpiarMensaje(ex));
+    }
+
+    private void Estado(string mensaje) {
+
+        _estado.Text = mensaje;
+        _estado.SetNeedsDraw();
+    }
+
+    private static string LimpiarMensaje(Exception ex) {
+
+        return ex is ApiException apiException ? apiException.Message : ex.GetBaseException().Message;
+
+    }
+
+    private static string FormatearProducto(ProductoDto producto) {
+
+        return $"{producto.Codigo,-12} {Recortar(producto.Nombre, 32),-32} ${producto.Precio,10:0.00} Stock: {producto.Stock,5}";
+    }
+
+    private static string FormatearMovimiento(MovimientoDto movimiento) {
+
+        var fecha = movimiento.Fecha.ToString("dd/MM/yyyy HH:mm",CultureInfo.InvariantCulture);
+        return $"{fecha} | {movimiento.Tipo,-7} | Cantidad: {movimiento.Cantidad,6}";
+    }
+
+    private static string Recortar(string valor, int ancho) {
+
+        if (valor.Length <= ancho) {
+
+            return valor;
+        }
+        return valor[.. Math.Max(0, ancho - 3)] + "...";
+    }
+}
 
 Window.Add(detalleProducto);
 
