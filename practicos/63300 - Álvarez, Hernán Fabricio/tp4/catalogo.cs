@@ -292,4 +292,10 @@ static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
 
 // ── DTO ───────────────────────────────────────────────────────────────────
 
+public enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
+public record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
