@@ -173,6 +173,75 @@ async Task RecargarAsync()
 
 }
 
+async Task AbrirDialogoProductoAsync(ProductoDto? producto) {
+    var entrada = PedirProducto(producto);
+    if (entrada is null) return;
+
+    var respuesta = producto is null
+        ? await http.PostAsJsonAsync("/productos", entrada)
+        : await http.PutAsJsonAsync($"/productos/{producto.Id}", entrada);
+
+    if (!respuesta.IsSuccessStatusCode) {
+        await MostrarErrorAsync(respuesta);
+    }
+
+    await RecargarAsync();
+}
+
+async Task EliminarSeleccionadoAsync() {
+    if (seleccionado is null) return;
+
+    var opcion = MessageBox.Query(
+        app,
+        "Eliminar producto",
+        $"Eliminar {seleccionado.Codigo} - {seleccionado.Nombre}?",
+        "No",
+        "Si"
+    );
+    if (opcion != 1) return;
+
+    var respuesta = await http.DeleteAsync($"/productos/{seleccionado.Id}");
+    if (!respuesta.IsSuccessStatusCode) await MostrarErrorAsync(respuesta);
+    seleccionado = null;
+    await RecargarAsync();
+}
+
+async Task AbrirDialogoMovimientoAsync(TipoMovimiento tipo)
+{
+    if (seleccionado is null)
+        return;
+
+    var cantidad = PedirCantidad(tipo, seleccionado);
+
+    if (cantidad is null)
+        return;
+
+   var respuesta = await http.PostAsJsonAsync(
+    $"/productos/{seleccionado.Id}/movimientos",
+    new MovimientoEntrada(tipo, cantidad.Value)
+);
+
+    if (!respuesta.IsSuccessStatusCode)
+    {
+        await MostrarErrorAsync(respuesta);
+        return;
+    }
+
+    productos = await CargarProductosAsync();
+
+    seleccionado =
+        productos.FirstOrDefault(
+            p => p.Id == seleccionado.Id
+        );
+
+    movimientos =
+        await CargarMovimientosAsync(
+            seleccionado!.Id
+        );
+
+    ActualizarListas();
+}
+
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
