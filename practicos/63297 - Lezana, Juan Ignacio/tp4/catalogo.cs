@@ -131,6 +131,24 @@ if (filtrados.Count > 0)
 }
     listaMovimientos.SetSource<string>(new ObservableCollection<string>(movimientos.Select(FormatearMovimiento)));
 }
+
+
+async Task SeleccionarProductoAsync() {
+    var texto = filtro.Text?.ToString() ?? "";
+    var filtrados = productos
+        .Where(p => string.IsNullOrWhiteSpace(texto)
+            || p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Codigo)
+        .ToList();
+
+    var indice = listaProductos.SelectedItem ?? -1;
+    if (indice < 0 || indice >= filtrados.Count) return;
+
+    seleccionado = filtrados[indice];
+    movimientos = await CargarMovimientosAsync(seleccionado.Id);
+    ActualizarListas();
+}
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
