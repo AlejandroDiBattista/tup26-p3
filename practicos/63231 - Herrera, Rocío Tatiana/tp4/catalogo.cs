@@ -166,3 +166,26 @@ async Task CargarMovimientosAsync(int productoId) {
     if (movimientos.Count == 0) movimientosVista.Add("Sin movimientos registrados.");
     ventana.SetNeedsDraw();
 }
+
+async Task GuardarProductoAsync() { ... }
+
+async Task EliminarProductoAsync() { ... }
+
+async Task RegistrarMovimientoAsync(TipoMovimiento tipo) { ... }
+
+void LimpiarFormulario() { ... }
+
+static string Recortar(string texto, int largo) { ... }
+
+static async Task<string> LeerErrorAsync(HttpResponseMessage respuesta) { ... }
+
+record ProductoCrearDto(string Codigo, string Nombre, decimal Precio, int Stock);
+record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoCrearDto(TipoMovimiento Tipo, int Cantidad);
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
