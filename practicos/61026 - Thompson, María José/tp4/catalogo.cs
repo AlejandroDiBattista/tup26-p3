@@ -1,49 +1,40 @@
-#:package Terminal.Gui@2.*
-#:property PublishAot=false
+using Terminal.Gui;
 
-using System.Net.Http.Json;
-using Terminal.Gui.App;
-using Terminal.Gui.Views;
+Application.Init();
 
-// ── Consulta inicial al servidor ──────────────────────────────────────────
-
-ProductoDto producto;
-try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
-} catch (HttpRequestException ex) {
-    Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
-    return;
-}
-
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
-
-using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
-
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
-
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+var win = new Window("TP4 - Catalogo REST")
+{
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
 };
 
-ventana.Add(detalleProducto);
+var panelProductos = new FrameView("Productos")
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Percent(50),
+    Height = Dim.Fill()
+};
 
-app.Run(ventana);
+var panelMovimientos = new FrameView("Movimientos")
+{
+    X = Pos.Percent(50),
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
+};
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
-}
+var listaProductos = new ListView()
+{
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
+};
 
-// ── DTO ───────────────────────────────────────────────────────────────────
+panelProductos.Add(listaProductos);
 
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+win.Add(panelProductos);
+win.Add(panelMovimientos);
+
+Application.Run(win);
+
+Application.Shutdown();
