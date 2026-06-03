@@ -95,3 +95,10 @@ btnAjuste.Accepting += async (_, e) => {
     e.Handled = true;
     await RegistrarMovimientoAsync(TipoMovimiento.Ajuste);
 };
+try {
+    await CargarProductosAsync();
+} catch (Exception ex) {
+    estado.Text = "No se pudo conectar con servidor.cs en http://localhost:5050: " + ex.Message;
+}
+
+app.Run(ventana);
