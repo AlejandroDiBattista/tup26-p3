@@ -21,3 +21,7 @@ List<ProductoDto> productosFiltrados = [];
 var productosVista = new ObservableCollection<string>();
 var movimientosVista = new ObservableCollection<string>();
 ProductoDto? productoSeleccionado = null;
+using IApplication app = Application.Create();
+app.Init();
+
+using Window ventana = new() { Title = " Catalogo REST - ESC para salir " };
