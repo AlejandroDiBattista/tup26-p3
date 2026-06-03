@@ -261,3 +261,11 @@ void WriteOutput(string text, AppConfig config)
         Console.Write(text);
     }
 }
+record SortField(string Name, bool Numeric, bool Descending);
+record AppConfig(
+    string?         InputFile,
+    string?         OutputFile,
+    string          Delimiter,
+    bool            NoHeader,
+    List<SortField> SortFields,
+    bool            ShowHelp);
