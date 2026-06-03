@@ -79,6 +79,19 @@ ventana.Add(
     btnRecargar
 );
 
+ActualizarListas();
+
+listaProductos.ValueChanged += async (_, _) => await SeleccionarProductoAsync();
+filtro.TextChanged += (_, _) => ActualizarListas();
+btnAgregar.Accepted += async (_, _) => await AbrirDialogoProductoAsync(null);
+btnEditar.Accepted += async (_, _) => { if (seleccionado is not null) await AbrirDialogoProductoAsync(seleccionado); };
+btnEliminar.Accepted += async (_, _) => await EliminarSeleccionadoAsync();
+btnCompra.Accepted += async (_, _) => await AbrirDialogoMovimientoAsync(TipoMovimiento.Compra);
+btnVenta.Accepted += async (_, _) => await AbrirDialogoMovimientoAsync(TipoMovimiento.Venta);
+btnAjuste.Accepted += async (_, _) => await AbrirDialogoMovimientoAsync(TipoMovimiento.Ajuste);
+btnRecargar.Accepted += async (_, _) => await RecargarAsync();
+
+
 app.Run(ventana);
 
 static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
