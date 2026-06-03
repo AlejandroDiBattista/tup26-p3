@@ -21,9 +21,13 @@ using (var scope = app.Services.CreateScope()) {
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
+
+app.MapGet("/producto", (CatalogoRepositorio repositorio) =>
+{
     var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+
+    if (producto is null)
+        return Results.NotFound();
 
     return Results.Ok(producto);
 });
@@ -32,6 +36,7 @@ app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
 {
     return repositorio.TraerProductos();
 });
+
 app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
 {
     var producto = repositorio.TraerProductoPorId(id);
@@ -41,18 +46,28 @@ app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
 
     return Results.Ok(producto);
 });
+
 app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) =>
 {
     var nuevoProducto = repositorio.AgregarProducto(producto);
-    return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
+
+    return Results.Created(
+        $"/productos/{nuevoProducto.Id}",
+        nuevoProducto
+    );
 });
+
 app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio repositorio) =>
 {
     var actualizado = repositorio.ModificarProducto(id, producto);
 
     if (actualizado is null)
         return Results.NotFound();
-        app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
+
+    return Results.Ok(actualizado);
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
 {
     var eliminado = repositorio.EliminarProducto(id);
 
@@ -60,15 +75,15 @@ app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio re
         return Results.NotFound();
 
     return Results.NoContent();
-    app.MapGet("/productos/{productoId}/movimientos",
+});
+
+app.MapGet("/productos/{productoId}/movimientos",
 (int productoId, CatalogoRepositorio repositorio) =>
 {
     return repositorio.TraerMovimientos(productoId);
 });
-});
 
-    return Results.Ok(actualizado);
-    app.MapPost("/productos/{productoId}/movimientos",
+app.MapPost("/productos/{productoId}/movimientos",
 (int productoId,
  RegistrarMovimientoDto dto,
  CatalogoRepositorio repositorio) =>
@@ -83,7 +98,7 @@ app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio re
 
     return Results.Ok(movimiento);
 });
-});
+
 app.Run("http://localhost:5050");
 // ── Modelo ────────────────────────────────────────────────────────────────
 
