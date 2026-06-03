@@ -157,6 +157,50 @@ ProductoDto? ObtenerProductoSeleccionado() {
     return productosFiltrados[idx.Value];
 }
 
+async void AgregarProducto() {
+    var (codigo, nombre, precio, stock, confirmado) = MostrarDialogoProducto("Agregar Producto");
+    if (!confirmado) return;
+    if (!ProductoIngresadoValido(codigo, nombre, precio, stock)) return;
+
+    try {
+        var dto = new { Codigo = codigo, Nombre = nombre, Precio = precio, Stock = stock };
+        var resp = await http.PostAsJsonAsync($"{BaseUrl}/productos", dto);
+        if (resp.IsSuccessStatusCode)
+            await RecargarProductos();
+        else
+            MessageBox.ErrorQuery(appTui, "Error", await LeerError(resp, "No se pudo agregar el producto."), "OK");
+    } catch {
+        MessageBox.ErrorQuery(appTui, "Error", "Error al conectar con el servidor.", "OK");
+    }
+}
+
+async void EditarProducto() {
+    var producto = ObtenerProductoSeleccionado();
+    if (producto is null) {
+        MessageBox.ErrorQuery(appTui, "Editar", "Selecciona un producto de la lista.", "OK");
+        return;
+    }
+
+    var (codigo, nombre, precio, stock, confirmado) =
+        MostrarDialogoProducto("Editar Producto", producto.Codigo, producto.Nombre, producto.Precio, producto.Stock);
+    if (!confirmado) return;
+    if (!ProductoIngresadoValido(codigo, nombre, precio, stock)) return;
+
+    try {
+        var dto = new { Codigo = codigo, Nombre = nombre, Precio = precio, Stock = stock };
+        var resp = await http.PutAsJsonAsync($"{BaseUrl}/productos/{producto.Id}", dto);
+        if (resp.IsSuccessStatusCode)
+            await RecargarProductos();
+        else
+            MessageBox.ErrorQuery(appTui, "Error", await LeerError(resp, "No se pudo modificar el producto."), "OK");
+    } catch {
+        MessageBox.ErrorQuery(appTui, "Error", "Error al conectar con el servidor.", "OK");
+    }
+}
+
+
+
+
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 static async Task<ProductoDto> CargarProductoAsync(HttpClient http) {
