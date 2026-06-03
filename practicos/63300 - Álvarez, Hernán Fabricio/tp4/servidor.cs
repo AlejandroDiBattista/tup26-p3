@@ -35,6 +35,11 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
     return Results.Ok(producto);
 });
 
+app.MapGet("/productos", (CatalogoRepositorio repositorio) => {
+    var productos = repositorio.ListarProductos();
+    return Results.Ok(productos);
+});
+
 app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) => {
     var nuevo = repositorio.CrearProducto(producto);
     return Results.Created($"/productos/{nuevo.Id} ", nuevo);
