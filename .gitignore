@@ -1,0 +1,40 @@
+# Ignorar todo en la raíz de C:\Users\maxib
+/.cache/
+/.copilot/
+/.dotnet/
+/.gitconfig
+/.lesshst
+/.nuget/
+/.templateengine/
+/.vscode-shared/
+/.vscode/
+/AppData/
+/Contacts/
+/Documents/
+/Downloads/
+/Favorites/
+/Links/
+/Music/
+/Saved Games/
+/Searches/
+/Videos/
+/.bash_history
+/.bashrc
+/*.LOG*
+/NTUSER.DAT*
+/desktop.ini
+/ntuser.*
+
+# Ignorar directorios de compilación y deps
+**/obj/
+**/bin/
+**/.vs/
+**/node_modules/
+**/.vscode/
+
+# Ignorar archivos temporales
+*.pdb
+*.dll
+*.exe
+*.o
+*.so
