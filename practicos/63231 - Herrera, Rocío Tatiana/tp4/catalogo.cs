@@ -35,3 +35,9 @@ listaProductos.SetSource(productosVista);
 
 var listaMovimientos = new ListView { X = 66, Y = 2, Width = 56, Height = 14 };
 listaMovimientos.SetSource(movimientosVista);
+var codigo = new TextField { X = 9, Y = 18, Width = 20, Text = "" };
+var nombre = new TextField { X = 39, Y = 18, Width = 35, Text = "" };
+var precio = new TextField { X = 9, Y = 20, Width = 20, Text = "0" };
+var stock = new TextField { X = 39, Y = 20, Width = 15, Text = "0" };
+var cantidad = new TextField { X = 79, Y = 20, Width = 12, Text = "1" };
+var estado = new Label { X = 1, Y = 24, Width = 120, Text = "Iniciando..." };
