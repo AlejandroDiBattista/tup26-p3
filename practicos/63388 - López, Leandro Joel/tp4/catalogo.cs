@@ -164,6 +164,107 @@ public sealed class CatalogoWindow : Window {
 
 }
 
+protected override void OnIsRunningChanged(bool isRunning) {
+
+    base.OnIsRunningChanged(isRunning);
+    if (isRunning && !_cargoInicial) {
+
+        _cargoInicial = true;
+        CargarProductos();
+    }
+}
+
+private bool? Ejecutar(Action action) {
+
+    action();
+    return true;
+}
+
+private ProductoDto? ProductoSeleccionado() {
+
+    var index = _productosList.SelectedItem;
+    if (index is null || index < 0 || index >= _productosFiltrados.Count) {
+        return null;
+    }
+    return _productosFiltrados[index.Value];
+}
+
+private void CargarProductos() {
+
+    try {
+        var seleccionado = ProductoSeleccionado()?.Id;
+        _productos = _api.ListarProductosAsync().GetAwaiter().GetResult();
+        AplicarFiltro(seleccionado);
+        Estado($"Productos cargados: {_productos.Count}");
+
+    } catch (Exception ex) {
+        MostrarError($"No se pudo conectar con el servidor. Ejecuta el servidor primero.", ex);
+    }
+}
+
+private void AplicarFiltro(int? productoASeleccionar = null) {
+        
+        var texto = (_buscar.Text?.ToString() ?? "").Trim();
+        _productosFiltrados = string.IsNullOrEmpty(texto)
+            ? [.. _productos]
+            : _productos
+                .Where(producto => producto.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) || producto.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        _productosSource.Clear();
+        foreach (var producto in _productosFiltrados) {
+
+            _productosSource.Add(FormatearProducto(producto));
+        }
+
+        if (_productosFiltrados.Count == 0) {
+
+            _movimientosSource.Clear();
+            _productosList.SetNeedsDraw();
+            _movimientosList.SetNeedsDraw();
+            return;
+        }
+
+        var index = productoASeleccionar is null ? 0 : _productosFiltrados.FindIndex(producto => producto.Id == productoASeleccionar.Value);
+
+        _productosList.SelectedItem = Math.Max(0, index);
+        _productosList.EnsureSelectedItemVisible();
+        _productosList.SetNeedsDraw();
+        CargarMovimientos();
+    }
+
+    private void CargarMovimientos() {
+
+        var producto = ProductoSeleccionado();
+        _movimientosSource.Clear();
+
+        if (producto is null) {
+            
+            _movimientosList.SetNeedsDraw();
+            return;
+        }
+
+        try {
+
+            var movimientos = _api.ListarMovimientosAsync(producto.Id).GetAwaiter().GetResult();
+            
+            if (movimientos.Count == 0) {
+
+                _movimientosSource.Add("No hay movimientos para este producto.");
+            }
+            else {
+            foreach (var movimiento in movimientos) {
+
+                _movimientosSource.Add(FormatearMovimiento(movimiento));
+            }
+            }
+            _movimientosList.SetNeedsDraw();
+
+        } catch (Exception ex) {
+
+            MostrarError($"No se pudo cargar el historial", ex);
+        }
+    }
+
 var detalleProducto = new Label {
     Text = $"""
             # PRODUCTO 
