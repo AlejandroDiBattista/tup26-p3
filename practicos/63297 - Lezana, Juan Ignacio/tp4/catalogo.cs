@@ -149,6 +149,30 @@ async Task SeleccionarProductoAsync() {
     movimientos = await CargarMovimientosAsync(seleccionado.Id);
     ActualizarListas();
 }
+
+async Task RecargarAsync()
+{
+    var idActual = seleccionado?.Id;
+
+    productos = await CargarProductosAsync();
+
+    seleccionado = productos
+        .FirstOrDefault(p => p.Id == idActual)
+        ?? productos.FirstOrDefault();
+
+    movimientos = seleccionado is null
+        ? []
+        : await CargarMovimientosAsync(seleccionado.Id);
+
+    ActualizarListas();
+
+    estado.Text =
+        seleccionado is null
+        ? "No hay productos."
+        : $"Producto: {seleccionado.Codigo} - Stock: {seleccionado.Stock}";
+
+}
+
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
