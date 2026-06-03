@@ -25,3 +25,13 @@ using IApplication app = Application.Create();
 app.Init();
 
 using Window ventana = new() { Title = " Catalogo REST - ESC para salir " };
+
+var tituloProductos = new Label { Text = "Productos", X = 1, Y = 0 };
+var tituloMovimientos = new Label { Text = "Movimientos del producto", X = 66, Y = 0 };
+
+var buscar = new TextField { X = 9, Y = 1, Width = 52, Text = "" };
+var listaProductos = new ListView { X = 1, Y = 3, Width = 62, Height = 13 };
+listaProductos.SetSource(productosVista);
+
+var listaMovimientos = new ListView { X = 66, Y = 2, Width = 56, Height = 14 };
+listaMovimientos.SetSource(movimientosVista);
