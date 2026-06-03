@@ -11,11 +11,13 @@ using Terminal.Gui.Views;
 // -- Consulta inicial al servidor ------------------------------------------
 
 List<ProductoDto> productos;
+List<ProductoDto> productosFiltrados;
 List<MovimientoDto> movimientos;
 try {
     using var http = new HttpClient();
     ConfigurarHttp(http);
     productos = await CargarProductosAsync(http);
+    productosFiltrados = productos.ToList();
     movimientos = productos.Count == 0
         ? []
         : await CargarMovimientosAsync(http, productos[0].Id);
@@ -45,11 +47,27 @@ var panelMovimientos = new FrameView {
     Height = Dim.Fill()
 };
 
+var etiquetaBusqueda = new Label {
+    Text = "Buscar:",
+    X = 0, Y = 0
+};
+
+var campoBusqueda = new TextField {
+    X = 8, Y = 0,
+    Width = Dim.Fill(10)
+};
+
+var botonBuscar = new Button {
+    Text = "Aplicar",
+    X = Pos.AnchorEnd(8),
+    Y = 0
+};
+
 var listaProductos = new ListView {
-    X = 0, Y = 0,
+    X = 0, Y = 2,
     Width = Dim.Fill(),
     Height = Dim.Fill(),
-    Source = new ListWrapper<string>(new ObservableCollection<string>(productos.Select(FormatearProducto).ToList()))
+    Source = CrearFuente(productosFiltrados)
 };
 
 var detalleMovimientos = new Label {
@@ -62,18 +80,35 @@ var detalleMovimientos = new Label {
 listaProductos.ValueChanged += async (sender, args) =>
 {
     var indice = listaProductos.SelectedItem;
-    if (!indice.HasValue || indice.Value < 0 || indice.Value >= productos.Count) {
+    if (!indice.HasValue || indice.Value < 0 || indice.Value >= productosFiltrados.Count) {
         return;
     }
 
     using var http = new HttpClient();
     ConfigurarHttp(http);
-    var seleccionado = productos[indice.Value];
+    var seleccionado = productosFiltrados[indice.Value];
     var nuevosMovimientos = await CargarMovimientosAsync(http, seleccionado.Id);
     detalleMovimientos.Text = RenderizarMovimientos(nuevosMovimientos);
 };
 
-panelProductos.Add(listaProductos);
+botonBuscar.Accepted += async (sender, args) =>
+{
+    productosFiltrados = FiltrarProductos(productos, campoBusqueda.Text?.ToString() ?? "");
+    listaProductos.Source = CrearFuente(productosFiltrados);
+    listaProductos.SelectedItem = productosFiltrados.Count == 0 ? null : 0;
+
+    if (productosFiltrados.Count == 0) {
+        detalleMovimientos.Text = "No hay productos para mostrar.";
+        return;
+    }
+
+    using var http = new HttpClient();
+    ConfigurarHttp(http);
+    var nuevosMovimientos = await CargarMovimientosAsync(http, productosFiltrados[0].Id);
+    detalleMovimientos.Text = RenderizarMovimientos(nuevosMovimientos);
+};
+
+panelProductos.Add(etiquetaBusqueda, campoBusqueda, botonBuscar, listaProductos);
 panelMovimientos.Add(detalleMovimientos);
 ventana.Add(panelProductos, panelMovimientos);
 
@@ -92,6 +127,23 @@ static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http) {
 static async Task<List<MovimientoDto>> CargarMovimientosAsync(HttpClient http, int productoId) {
     return await http.GetFromJsonAsync<List<MovimientoDto>>($"/productos/{productoId}/movimientos")
         ?? [];
+}
+
+static ListWrapper<string> CrearFuente(List<ProductoDto> productos) {
+    return new ListWrapper<string>(new ObservableCollection<string>(productos.Select(FormatearProducto).ToList()));
+}
+
+static List<ProductoDto> FiltrarProductos(List<ProductoDto> productos, string texto) {
+    texto = texto.Trim();
+    if (texto.Length == 0) {
+        return productos.ToList();
+    }
+
+    return productos
+        .Where(p =>
+            p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
+            p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase))
+        .ToList();
 }
 
 static string FormatearProducto(ProductoDto producto) {
