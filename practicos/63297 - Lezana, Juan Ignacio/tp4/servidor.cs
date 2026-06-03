@@ -45,6 +45,15 @@ using (var scope = app.Services.CreateScope()) {
     }
 }
 
+app.MapGet("/productos", async (CatalogoRepositorio repo) =>
+    Results.Ok((await repo.ListarProductosAsync()).Select(ProductoSalida.Desde)));
+
+app.MapGet("/productos/{id:int}", async (int id, CatalogoRepositorio repo) => {
+    var producto = await repo.TraerProductoAsync(id);
+    return producto is null ? Results.NotFound() : Results.Ok(ProductoSalida.Desde(producto));
+});
+
+
 // ── Inicialización de la base de datos ────────────────────────────────────
 
 using (var scope = app.Services.CreateScope()) {
