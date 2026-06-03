@@ -26,47 +26,57 @@ using IApplication app = Application.Create().Init();
 using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
 var lista = new ListView() {
-    X = 0,
-    Y = 0,
-    Width = 60,
+    X = 1,
+    Y = 2,
+    Width = 30,
     Height = 20
 };
 var detalle = new Label() {
-    X = 0,
-    Y = 22,
-    Width = 80,
+    X = 42,
+    Y = 2,
+    Width = 30,
     Height = 10,
     Text = "Seleccione un producto"
 };
 
 lista.SetSource(
     new System.Collections.ObjectModel.ObservableCollection<string>
-       ( productos.Select(p => $"{p.Codigo} - {p.Nombre} - Stock: {p.Stock}" ). ToList()
+       ( productos.Select(p => $"{p.Codigo} - {p.Nombre}" ). ToList()
     )
 );
 
 if (productos.Count > 0)
 {
-    var producto = productos[0];
+    using var http = new HttpClient();
+    var movimientos = await CargarMovimientosAsync(http, 2);
 
-    detalle.Text =
-        $"Id: {producto.Id}\n" +
-        $"Código: {producto.Codigo}\n" +
-        $"Nombre: {producto.Nombre}\n" +
-        $"Precio: ${producto.Precio}\n" +
-        $"Stock: {producto.Stock}";
+
+    if (movimientos.Count == 0) {
+        
+        detalle.Text = "Sin movimientos registrados";
+    }
+    else {
+        detalle.Text = string.Join("\n", 
+        movimientos.Select(m => $"{m.Tipo} | Cant: {m.Cantidad} "));
+    }
 }
-
-ventana.Add(lista);
-ventana.Add(detalle);
-
-lista.Acepting += (s,e) =>
-{
-    datalle.Text = "Se presionó Enter";
-
+ 
+var tituloProductos = new Label() {
+    X = 1,
+    Y = 0,
+    Text = "Productos"
 };
 
-Console.WriteLine($"Productos cargados: {productos.Count}");
+var tituloDetalle = new Label() {
+     X = 42,
+     Y = 0,
+     Text = "Movimientos"
+};
+
+ventana.Add(tituloProductos);
+ventana.Add(tituloDetalle);
+ventana.Add(lista);
+ventana.Add(detalle);
 
 app.Run(ventana);
 
@@ -78,8 +88,25 @@ static async Task<List<ProductoDto>> CargarProductoAsync(HttpClient http)
         ?? new List<ProductoDto>();
 }
 
+static async Task<List<MovimientoDto>> CargarMovimientosAsync(HttpClient http, int productoId)
+{
+    string url = $"http://Localhost:5050/productos/{productoId}/movimientos";
+
+    return await http.GetFromJsonAsync<List<MovimientoDto>>(url) 
+        ?? new List<MovimientoDto>();
+}
+
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 
+record MovimientoDto(
+    int Id, int productoId, TipoMovimiento Tipo, int Cantidad
+);
+
+enum TipoMovimiento{
+    Compra,
+    Venta,
+    Ajuste
+}
 
