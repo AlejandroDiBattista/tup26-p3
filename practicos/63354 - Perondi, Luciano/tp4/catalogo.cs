@@ -6,6 +6,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.Views;
 using System.Collections.ObjectModel;
 using Terminal.Gui.ViewBase;
+using Terminal.Gui.Input;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
@@ -26,14 +27,14 @@ using IApplication app = Application.Create().Init();
 using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
 var listaProductos = new ListView {
-    X = 0, Y = 0,
+    X = 0, Y = 2,
     Width = Dim.Percent(45),
     Height = Dim.Fill(),
 };
 
 var detalleMovimientos = new Label {
     X = Pos.Right(listaProductos) + 1,
-    Y = 0,
+    Y = 2,
     Width = Dim.Fill(),
     Height = Dim.Fill(),
     Text = "(seleccioná un producto)",
@@ -77,15 +78,14 @@ async Task EditarProducto(ProductoDto? existente) {
 
     var ok = new Button { Text = "Guardar", IsDefault = true };
     bool guardar = false;
-    ok.Accepting += (s, e) => { guardar = true; Application.RequestStop(); };
-
+    ok.Accepting += (s, e) => { guardar = true; app.RequestStop(); };
     var dlg = new Dialog { Title = existente is null ? "Nuevo producto" : "Editar producto", Width = 50, Height = 10 };
     dlg.Add(new Label { X = 1, Y = 1, Text = "Código:" });
     dlg.Add(new Label { X = 1, Y = 3, Text = "Nombre:" });
     dlg.Add(new Label { X = 1, Y = 5, Text = "Precio:" });
     dlg.Add(codigo, nombre, precio);
     dlg.AddButton(ok);
-    Application.Run(dlg);
+    app.Run(dlg);
 
     if (!guardar) return;
 
@@ -99,8 +99,18 @@ async Task EditarProducto(ProductoDto? existente) {
     await RecargarLista();
 }
 
+var botonNuevo = new Button { X = 0, Y = 0, Text = "Nuevo" };
+botonNuevo.Accepting += (s, e) => { _ = EditarProducto(null); e.Handled = true; };
+
+var botonEditar = new Button { X = Pos.Right(botonNuevo) + 1, Y = 0, Text = "Editar" };
+botonEditar.Accepting += (s, e) => {
+    int? i = listaProductos.SelectedItem;
+    if (i >= 0 && i < productos.Count) _ = EditarProducto(productos[i.Value]);
+    e.Handled = true;
+};
+
 await RecargarLista();
-ventana.Add(listaProductos, detalleMovimientos);
+ventana.Add(botonNuevo, botonEditar, listaProductos, detalleMovimientos);
 app.Run(ventana);
 
 static async Task<List<ProductoDto>> TraerProductosAsync(HttpClient http) {
