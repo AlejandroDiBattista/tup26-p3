@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2048</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      :root {
+        --page-start: #faf8ef;
+        --page-end: #f2e8d5;
+        --panel-bg: rgba(255, 255, 255, 0.75);
+        --panel-shadow: rgba(112, 87, 45, 0.15);
+        --text-main: #5b5348;
+        --text-soft: #7c746b;
+        --header: #776e65;
+        --button: #8f7a66;
+        --button-strong: #6b5d4c;
+        --accent: #bbada0;
+        --accent-soft: rgba(238, 228, 218, 0.35);
+        --board: #bbada0;
+        --cell: rgba(238, 228, 218, 0.35);
+        --tile-text: #776e65;
+        --tile-2: #eee4da;
+        --tile-4: #ede0c8;
+        --tile-8: #f2b179;
+        --tile-16: #f59563;
+        --tile-32: #f67c5f;
+        --tile-64: #f65e3b;
+        --tile-128: #edcf72;
+        --tile-256: #edcc61;
+        --tile-512: #edc850;
+        --tile-1024: #edc53f;
+        --tile-2048: #edc22e;
+        --tile-4096: #3c3a32;
+        --tile-8192: #2f2c27;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--page-start), var(--page-end));
+        color: var(--text-main);
+        padding: 24px;
+        transition: background 240ms ease, color 240ms ease;
+      }
+      .app {
+        width: min(100%, 520px);
+        background: var(--panel-bg);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 24px 60px var(--panel-shadow);
+        transition: background 240ms ease, box-shadow 240ms ease;
+      }
+      .header, .scoreboard {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .header {
+        margin-bottom: 20px;
+        align-items: flex-start;
+      }
+      h1 {
+        margin: 0;
+        font-size: 64px;
+        line-height: 1;
+        color: var(--header);
+        transition: color 240ms ease;
+      }
+      .subtitle, .status, .help p { margin: 0; }
+      .subtitle, .help { color: var(--text-soft); }
+      .restart, .score-card {
+        border: none;
+        border-radius: 16px;
+        color: white;
+        padding: 12px 16px;
+      }
+      .restart {
+        background: var(--button);
+        cursor: pointer;
+        font-weight: 700;
+        height: 48px;
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.24),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+        transition: background 220ms ease, transform 120ms ease, opacity 220ms ease, box-shadow 220ms ease;
+      }
+      .restart:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 9px 16px rgba(0, 0, 0, 0.14),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+      }
+      .restart:active {
+        transform: translateY(0);
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-end;
+        margin-left: auto;
+      }
+      .undo {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--button) 18%, white), var(--button));
+        color: var(--button-strong);
+        border: 1px solid color-mix(in srgb, var(--button) 58%, white);
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.30),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        min-height: 48px;
+        flex: 0 0 48px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        font-size: 1.15rem;
+        line-height: 1;
+      }
+      .undo:hover {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--button) 24%, white), color-mix(in srgb, var(--button) 92%, black));
+        box-shadow:
+          0 9px 16px rgba(0, 0, 0, 0.14),
+          inset 0 1px 0 rgba(255, 255, 255, 0.34),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+      }
+      .undo:active {
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.20),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      }
+      .undo-icon {
+        width: 22px;
+        height: 22px;
+        display: block;
+      }
+      .scoreboard { margin-bottom: 16px; }
+      .score-card {
+        min-width: 110px;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        background: var(--accent);
+        transition: background 240ms ease, color 240ms ease;
+      }
+      .score-card span {
+        font-size: 12px;
+        text-transform: uppercase;
+        opacity: .8;
+      }
+      .score-card strong { font-size: 28px; }
+      .score-card.flash strong {
+        animation: score-bump 180ms ease-out;
+      }
+      .status {
+        margin-bottom: 16px;
+        font-weight: 600;
+      }
+      .board {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 12px;
+        background: linear-gradient(145deg, color-mix(in srgb, var(--board) 96%, white), color-mix(in srgb, var(--board) 96%, black));
+        padding: 12px;
+        border-radius: 18px;
+        aspect-ratio: 1;
+        overflow: hidden;
+        box-shadow:
+          inset 1px 1px 0 rgba(255, 255, 255, 0.18),
+          inset -1px -1px 0 rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        transition: background 240ms ease;
+      }
+      .cell {
+        border-radius: 14px;
+        background: var(--cell);
+        transition: background 240ms ease;
+      }
+      .tile-layer {
+        position: absolute;
+        inset: 12px;
+        pointer-events: none;
+      }
+      .tile {
+        position: absolute;
+        width: calc((100% - 36px) / 4);
+        height: calc((100% - 36px) / 4);
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 2rem;
+        color: var(--tile-text);
+        user-select: none;
+        transition-property: transform, left, top, box-shadow, filter, background-color;
+        transition-duration: 160ms, 160ms, 160ms, 140ms, 140ms, 140ms;
+        transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1), cubic-bezier(0.2, 0.8, 0.2, 1), cubic-bezier(0.2, 0.8, 0.2, 1), ease-out, ease-out, ease-out;
+        transition-delay: var(--move-delay, 0ms), var(--move-delay, 0ms), var(--move-delay, 0ms), 0ms, 0ms, 0ms;
+        box-shadow:
+          0 7px 14px rgba(0, 0, 0, 0.10),
+          0 1px 0 rgba(255, 255, 255, 0.25) inset,
+          inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+        will-change: left, top, transform;
+      }
+      .tile-pop {
+        animation: tile-pop 120ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      @keyframes tile-pop {
+        0% { transform: scale(0.98); opacity: 0; box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+        100% { transform: scale(1); opacity: 1; box-shadow:
+          0 7px 14px rgba(0, 0, 0, 0.10),
+          0 1px 0 rgba(255, 255, 255, 0.25) inset,
+          inset 0 -1px 0 rgba(0, 0, 0, 0.05); }
+      }
+      @keyframes score-bump {
+        0% { transform: scale(1); }
+        45% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+      }
+      .restart:disabled,
+      .undo:disabled {
+        cursor: not-allowed;
+        opacity: .55;
+      }
+      .tile-2 { background: var(--tile-2); }
+      .tile-4 { background: var(--tile-4); }
+      .tile-8 { background: var(--tile-8); color: #fff; }
+      .tile-16 { background: var(--tile-16); color: #fff; }
+      .tile-32 { background: var(--tile-32); color: #fff; }
+      .tile-64 { background: var(--tile-64); color: #fff; }
+      .tile-128 { background: var(--tile-128); color: #fff; font-size: 1.7rem; }
+      .tile-256 { background: var(--tile-256); color: #fff; font-size: 1.7rem; }
+      .tile-512 { background: var(--tile-512); color: #fff; font-size: 1.7rem; }
+      .tile-1024 { background: var(--tile-1024); color: #fff; font-size: 1.4rem; }
+      .tile-2048 { background: var(--tile-2048); color: #fff; font-size: 1.4rem; }
+      .tile-4096, .tile-8192 { background: var(--tile-4096); color: #fff; font-size: 1.2rem; }
+      .help {
+        margin-top: 16px;
+        display: grid;
+        gap: 4px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tile,
+        .score-card.flash strong {
+          transition-duration: 0ms !important;
+          animation: none !important;
+        }
+
+        .tile-pop,
+        .score-card.flash strong {
+          animation: none !important;
+        }
+      }
+      @media (max-width: 560px) {
+        .app { padding: 18px; }
+        .header, .scoreboard { flex-direction: column; align-items: stretch; }
+        h1 { font-size: 52px; }
+        .tile { font-size: 1.6rem; }
+        .controls { flex-wrap: wrap; margin-left: 0; justify-content: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React
+
+      const SIZE = 4
+      const BEST_KEY = 'game-2048-best-score'
+      const MOVE_MS = 180
+      const GRID_GAP = 12
+
+      function createEmptyBoard() {
+        return Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
+      }
+
+      function createIdGenerator(start = 1) {
+        let current = start
+        return () => {
+          const id = current
+          current += 1
+          return id
+        }
+      }
+
+      function getTilePosition(row, col, boardSize = 0) {
+        if (!boardSize) {
+          return { left: '0px', top: '0px', width: '0px', height: '0px' }
+        }
+        const tileSize = (boardSize - GRID_GAP * (SIZE - 1)) / SIZE
+        return {
+          left: `${col * (tileSize + GRID_GAP)}px`,
+          top: `${row * (tileSize + GRID_GAP)}px`,
+          width: `${tileSize}px`,
+          height: `${tileSize}px`,
+        }
+      }
+
+      function createTile(id, value, row, col, isNew = false) {
+        return { id, value, row, col, startRow: row, startCol: col, isNew }
+      }
+
+      function initializeTiles(nextId) {
+        const board = createEmptyBoard()
+        const empties = []
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            empties.push([row, col])
+          }
+        }
+        const tiles = []
+        for (let i = 0; i < 2; i += 1) {
+          const index = Math.floor(Math.random() * empties.length)
+          const [row, col] = empties.splice(index, 1)[0]
+          const value = Math.random() < 0.9 ? 2 : 4
+          const tile = createTile(nextId(), value, row, col, true)
+          board[row][col] = tile.id
+          tiles.push(tile)
+        }
+        return { board, tiles }
+      }
+
+      function cloneBoard(board) {
+        return board.map((row) => [...row])
+      }
+
+      function cloneTiles(tiles) {
+        return tiles.map((tile) => ({ ...tile }))
+      }
+
+      function addRandomTile(board, tiles, nextId, isNew = true) {
+        const empties = []
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            if (board[row][col] === 0) empties.push([row, col])
+          }
+        }
+        if (empties.length === 0) return { board, tiles, newTile: null }
+        const [row, col] = empties[Math.floor(Math.random() * empties.length)]
+        const value = Math.random() < 0.9 ? 2 : 4
+        const tile = createTile(nextId(), value, row, col, isNew)
+        board[row][col] = tile.id
+        return { board, tiles: [...tiles, tile], newTile: tile }
+      }
+
+      function compactLine(items, nextId) {
+        const filtered = items.filter((item) => item)
+        const result = []
+        let score = 0
+
+        for (let i = 0; i < filtered.length; i += 1) {
+          const current = filtered[i]
+          const next = filtered[i + 1]
+
+          if (next && current.value === next.value) {
+            const mergedValue = current.value * 2
+            const target = {
+              id: nextId(),
+              value: mergedValue,
+              originIds: [current.id, next.id],
+            }
+            result.push(target)
+            score += mergedValue
+            i += 1
+          } else {
+            result.push({
+              id: current.id,
+              value: current.value,
+              originIds: [current.id],
+            })
+          }
+        }
+
+        while (result.length < SIZE) result.push(null)
+        return { line: result, score }
+      }
+
+      function moveTiles(board, tiles, direction, nextId) {
+        const tileMap = new Map(tiles.map((tile) => [tile.id, tile]))
+        const nextBoard = createEmptyBoard()
+        const movedTiles = []
+        const removedIds = new Set()
+        let score = 0
+        let changed = false
+
+        const readLine = (index) => {
+          if (direction === 'left') return Array.from({ length: SIZE }, (_, col) => ({ row: index, col }))
+          if (direction === 'right') return Array.from({ length: SIZE }, (_, col) => ({ row: index, col: SIZE - 1 - col }))
+          if (direction === 'up') return Array.from({ length: SIZE }, (_, row) => ({ row, col: index }))
+          return Array.from({ length: SIZE }, (_, row) => ({ row: SIZE - 1 - row, col: index }))
+        }
+
+        for (let index = 0; index < SIZE; index += 1) {
+          const positions = readLine(index)
+          const source = positions.map(({ row, col }) => {
+            const tileId = board[row][col]
+            return tileId ? tileMap.get(tileId) : null
+          })
+          const compacted = compactLine(source, nextId)
+          score += compacted.score
+
+          compacted.line.forEach((item, targetIndex) => {
+            if (!item) return
+            const { row, col } = positions[targetIndex]
+            nextBoard[row][col] = item.id
+
+            if (item.originIds.length === 1) {
+              const original = tileMap.get(item.originIds[0])
+              if (original.row !== row || original.col !== col) changed = true
+              movedTiles.push({
+                ...original,
+                row,
+                col,
+                startRow: original.row,
+                startCol: original.col,
+                isNew: false,
+              })
+            } else {
+              changed = true
+              item.originIds.forEach((originId) => removedIds.add(originId))
+              const [firstId, secondId] = item.originIds
+              const first = tileMap.get(firstId)
+              const second = tileMap.get(secondId)
+              movedTiles.push(
+                {
+                  ...first,
+                  row,
+                  col,
+                  startRow: first.row,
+                  startCol: first.col,
+                  mergeInto: item.id,
+                  isNew: false,
+                },
+                {
+                  ...second,
+                  row,
+                  col,
+                  startRow: second.row,
+                  startCol: second.col,
+                  mergeInto: item.id,
+                  isNew: false,
+                },
+                createTile(item.id, item.value, row, col, false)
+              )
+            }
+          })
+        }
+
+        const uniqueTiles = []
+        const seenIds = new Set()
+        for (const tile of movedTiles) {
+          if (tile.mergeInto) {
+            uniqueTiles.push(tile)
+            continue
+          }
+          if (!seenIds.has(tile.id)) {
+            seenIds.add(tile.id)
+            uniqueTiles.push(tile)
+          }
+        }
+
+        return { board: nextBoard, tiles: uniqueTiles, score, changed, removedIds }
+      }
+
+      function hasWon(tiles) {
+        return tiles.some((tile) => tile.value >= 2048 && !tile.mergeInto)
+      }
+
+      function canMove(board, tiles) {
+        if (tiles.filter((tile) => !tile.mergeInto).length < SIZE * SIZE) return true
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            const tile = tiles.find((item) => item.id === board[row][col] && !item.mergeInto)
+            if (!tile) continue
+            const rightId = col + 1 < SIZE ? board[row][col + 1] : 0
+            const downId = row + 1 < SIZE ? board[row + 1][col] : 0
+            const rightTile = tiles.find((item) => item.id === rightId && !item.mergeInto)
+            const downTile = tiles.find((item) => item.id === downId && !item.mergeInto)
+            if (rightTile && rightTile.value === tile.value) return true
+            if (downTile && downTile.value === tile.value) return true
+          }
+        }
+        return false
+      }
+
+      function getTileClass(value) {
+        return `tile tile-${value}`
+      }
+
+      function evaluateBoard(board, tiles) {
+        const activeTiles = tiles.filter((tile) => !tile.mergeInto)
+        const tileById = new Map(activeTiles.map((tile) => [tile.id, tile]))
+        let emptyCount = 0
+        let maxValue = 0
+        let monotonicity = 0
+        let smoothness = 0
+
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            const id = board[row][col]
+            if (!id) {
+              emptyCount += 1
+              continue
+            }
+            const tile = tileById.get(id)
+            if (!tile) continue
+            maxValue = Math.max(maxValue, tile.value)
+            const value = Math.log2(tile.value)
+
+            if (col + 1 < SIZE && board[row][col + 1]) {
+              const rightTile = tileById.get(board[row][col + 1])
+              if (rightTile) smoothness -= Math.abs(value - Math.log2(rightTile.value))
+            }
+            if (row + 1 < SIZE && board[row + 1][col]) {
+              const downTile = tileById.get(board[row + 1][col])
+              if (downTile) smoothness -= Math.abs(value - Math.log2(downTile.value))
+            }
+          }
+        }
+
+        for (let row = 0; row < SIZE; row += 1) {
+          let inc = 0
+          let dec = 0
+          for (let col = 0; col < SIZE - 1; col += 1) {
+            const current = board[row][col] ? Math.log2(tileById.get(board[row][col]).value) : 0
+            const next = board[row][col + 1] ? Math.log2(tileById.get(board[row][col + 1]).value) : 0
+            if (current > next) dec += current - next
+            else inc += next - current
+          }
+          monotonicity -= Math.min(inc, dec)
+        }
+
+        for (let col = 0; col < SIZE; col += 1) {
+          let inc = 0
+          let dec = 0
+          for (let row = 0; row < SIZE - 1; row += 1) {
+            const current = board[row][col] ? Math.log2(tileById.get(board[row][col]).value) : 0
+            const next = board[row + 1][col] ? Math.log2(tileById.get(board[row + 1][col]).value) : 0
+            if (current > next) dec += current - next
+            else inc += next - current
+          }
+          monotonicity -= Math.min(inc, dec)
+        }
+
+        const corners = [[0, 0], [0, SIZE - 1], [SIZE - 1, 0], [SIZE - 1, SIZE - 1]]
+        const cornerBonus = corners.some(([row, col]) => {
+          const id = board[row][col]
+          return id && tileById.get(id)?.value === maxValue
+        }) ? Math.log2(maxValue || 1) * 6 : 0
+
+        return emptyCount * 24 + smoothness * 3 + monotonicity * 2 + cornerBonus + Math.log2(maxValue || 1) * 2
+      }
+
+      function getEmptyPositions(board) {
+        const empty = []
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            if (board[row][col] === 0) empty.push([row, col])
+          }
+        }
+        return empty
+      }
+
+      function expectimax(board, tiles, depth, isChanceNode) {
+        const activeTiles = tiles.filter((tile) => !tile.mergeInto)
+        if (depth === 0) return evaluateBoard(board, activeTiles)
+
+        if (isChanceNode) {
+          const emptyPositions = getEmptyPositions(board)
+          if (emptyPositions.length === 0) return evaluateBoard(board, activeTiles)
+
+          let total = 0
+          const probabilityPerCell = 1 / emptyPositions.length
+
+          for (const [row, col] of emptyPositions) {
+            for (const [value, probability] of [[2, 0.9], [4, 0.1]]) {
+              const nextBoard = cloneBoard(board)
+              const nextTiles = activeTiles.map((tile) => ({ ...tile }))
+              const tile = createTile(-1, value, row, col, false)
+              nextBoard[row][col] = tile.id
+              nextTiles.push(tile)
+              total += probabilityPerCell * probability * expectimax(nextBoard, nextTiles, depth - 1, false)
+            }
+          }
+
+          return total
+        }
+
+        let best = -Infinity
+        let moved = false
+        for (const direction of ['up', 'left', 'right', 'down']) {
+          const simulator = createIdGenerator(1000000)
+          const result = moveTiles(board, activeTiles, direction, simulator)
+          if (!result.changed) continue
+          moved = true
+          const nextTiles = result.tiles.filter((tile) => !tile.mergeInto)
+          const score = result.score + expectimax(result.board, nextTiles, depth - 1, true)
+          best = Math.max(best, score)
+        }
+
+        return moved ? best : evaluateBoard(board, activeTiles)
+      }
+
+      function getAutoMove(board, tiles) {
+        const activeTiles = tiles.filter((tile) => !tile.mergeInto)
+        const directions = ['up', 'left', 'right', 'down']
+        const emptyCount = getEmptyPositions(board).length
+        const depth = emptyCount >= 8 ? 3 : emptyCount >= 4 ? 4 : 5
+        let bestDirection = null
+        let bestScore = -Infinity
+
+        for (const direction of directions) {
+          const simulator = createIdGenerator(1000000)
+          const result = moveTiles(board, activeTiles, direction, simulator)
+          if (!result.changed) continue
+
+          const nextTiles = result.tiles.filter((tile) => !tile.mergeInto)
+          const score = result.score + expectimax(result.board, nextTiles, depth, true)
+
+          if (score > bestScore) {
+            bestScore = score
+            bestDirection = direction
+          }
+        }
+
+        return bestDirection
+      }
+
+      function playMoveSound(audioContextRef, amount) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext
+        if (!AudioContextClass) return
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContextClass()
+        }
+        const context = audioContextRef.current
+        if (context.state === 'suspended') {
+          context.resume()
+        }
+
+        const now = context.currentTime
+        const oscillator = context.createOscillator()
+        const gain = context.createGain()
+        const filter = context.createBiquadFilter()
+
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(520 + Math.min(amount, 512) * 0.12, now)
+        oscillator.frequency.exponentialRampToValueAtTime(680 + Math.min(amount, 1024) * 0.08, now + 0.08)
+
+        filter.type = 'lowpass'
+        filter.frequency.setValueAtTime(1800, now)
+
+        gain.gain.setValueAtTime(0.0001, now)
+        gain.gain.exponentialRampToValueAtTime(0.045, now + 0.015)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16)
+
+        oscillator.connect(filter)
+        filter.connect(gain)
+        gain.connect(context.destination)
+
+        oscillator.start(now)
+        oscillator.stop(now + 0.17)
+      }
+
+      function playBlockedSound(audioContextRef) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext
+        if (!AudioContextClass) return
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContextClass()
+        }
+        const context = audioContextRef.current
+        if (context.state === 'suspended') {
+          context.resume()
+        }
+
+        const now = context.currentTime
+        const oscillator = context.createOscillator()
+        const gain = context.createGain()
+
+        oscillator.type = 'triangle'
+        oscillator.frequency.setValueAtTime(180, now)
+        oscillator.frequency.exponentialRampToValueAtTime(120, now + 0.08)
+
+        gain.gain.setValueAtTime(0.0001, now)
+        gain.gain.exponentialRampToValueAtTime(0.03, now + 0.01)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12)
+
+        oscillator.connect(gain)
+        gain.connect(context.destination)
+
+        oscillator.start(now)
+        oscillator.stop(now + 0.13)
+      }
+
+      function getMoveDelay(tile) {
+        const deltaRow = tile.row - tile.startRow
+        const deltaCol = tile.col - tile.startCol
+        if (deltaCol < 0) return tile.startCol * 26
+        if (deltaCol > 0) return (SIZE - 1 - tile.startCol) * 26
+        if (deltaRow < 0) return tile.startRow * 26
+        if (deltaRow > 0) return (SIZE - 1 - tile.startRow) * 26
+        return 0
+      }
+
+      function TileView({ tile, boardSize }) {
+        const [style, setStyle] = useState(() => ({ ...getTilePosition(tile.startRow, tile.startCol, boardSize), '--move-delay': `${getMoveDelay(tile)}ms` }))
+
+        useEffect(() => {
+          const from = { ...getTilePosition(tile.startRow, tile.startCol, boardSize), '--move-delay': `${getMoveDelay(tile)}ms` }
+          const to = { ...getTilePosition(tile.row, tile.col, boardSize), '--move-delay': `${getMoveDelay(tile)}ms` }
+          setStyle(from)
+          const frame1 = requestAnimationFrame(() => {
+            const frame2 = requestAnimationFrame(() => setStyle(to))
+            TileView._frame2 = frame2
+          })
+          return () => {
+            cancelAnimationFrame(frame1)
+            if (TileView._frame2) cancelAnimationFrame(TileView._frame2)
+          }
+        }, [tile.id, tile.startRow, tile.startCol, tile.row, tile.col, boardSize])
+
+        return (
+          <div
+            className={`${getTileClass(tile.value)} ${tile.isNew ? 'tile-pop' : ''}`}
+            style={style}
+          >
+            {tile.value}
+          </div>
+        )
+      }
+
+      function App() {
+        const boardRef = useRef(null)
+        const nextTileIdRef = useRef(1)
+        const [undoSnapshot, setUndoSnapshot] = useState(null)
+        const takeNextTileId = React.useCallback(() => {
+          const id = nextTileIdRef.current
+          nextTileIdRef.current += 1
+          return id
+        }, [])
+        const initialRef = useRef(null)
+        if (!initialRef.current) {
+          initialRef.current = initializeTiles(takeNextTileId)
+        }
+
+        const [board, setBoard] = useState(initialRef.current.board)
+        const [tiles, setTiles] = useState(initialRef.current.tiles)
+        const [score, setScore] = useState(0)
+        const [best, setBest] = useState(() => Number(localStorage.getItem(BEST_KEY) || 0))
+        const [gameOver, setGameOver] = useState(false)
+        const [won, setWon] = useState(false)
+        const [scoreFlash, setScoreFlash] = useState(false)
+        const [boardSize, setBoardSize] = useState(0)
+        const animationTimerRef = useRef(null)
+        const spawnTimerRef = useRef(null)
+        const scoreTimerRef = useRef(null)
+        const audioContextRef = useRef(null)
+
+        const visibleTiles = useMemo(() => tiles.filter((tile) => !tile.mergeInto), [tiles])
+        const canUndo = undoSnapshot !== null
+
+        useEffect(() => {
+          const boardElement = boardRef.current
+          if (!boardElement) return undefined
+
+          const updateBoardSize = () => {
+            const rect = boardElement.getBoundingClientRect()
+            setBoardSize(Math.max(0, rect.width - 24))
+          }
+
+          updateBoardSize()
+
+          if (typeof ResizeObserver === 'undefined') {
+            window.addEventListener('resize', updateBoardSize)
+            return () => window.removeEventListener('resize', updateBoardSize)
+          }
+
+          const observer = new ResizeObserver(updateBoardSize)
+          observer.observe(boardElement)
+          return () => observer.disconnect()
+        }, [])
+
+        const status = useMemo(() => {
+          if (gameOver) return 'Perdiste. Probá otra vez.'
+          if (won) return '¡Llegaste a 2048! Podés seguir jugando.'
+          return 'Usá las flechas.'
+        }, [gameOver, won])
+
+        function clearTimers() {
+          if (animationTimerRef.current) clearTimeout(animationTimerRef.current)
+          if (spawnTimerRef.current) clearTimeout(spawnTimerRef.current)
+          if (scoreTimerRef.current) clearTimeout(scoreTimerRef.current)
+        }
+
+        function normalizeTilesForSnapshot(sourceTiles) {
+          return cloneTiles(sourceTiles).map((tile) => ({
+            ...tile,
+            startRow: tile.row,
+            startCol: tile.col,
+            isNew: false,
+          }))
+        }
+
+        function createUndoSnapshot() {
+          return {
+            board: cloneBoard(board),
+            tiles: normalizeTilesForSnapshot(visibleTiles),
+            score,
+            gameOver,
+            won,
+            nextTileId: nextTileIdRef.current,
+          }
+        }
+
+        function restoreSnapshot(snapshot) {
+          clearTimers()
+          nextTileIdRef.current = snapshot.nextTileId
+          setBoard(cloneBoard(snapshot.board))
+          setTiles(cloneTiles(snapshot.tiles))
+          setScore(snapshot.score)
+          setGameOver(snapshot.gameOver)
+          setWon(snapshot.won)
+          setScoreFlash(false)
+        }
+
+        function resetGame() {
+          clearTimers()
+          setUndoSnapshot(null)
+          nextTileIdRef.current = 1
+          const initial = initializeTiles(takeNextTileId)
+          setBoard(initial.board)
+          setTiles(initial.tiles)
+          setScore(0)
+          setGameOver(false)
+          setWon(false)
+          setScoreFlash(false)
+        }
+
+        function undoMove() {
+          const snapshot = undoSnapshot
+          if (!snapshot) return
+          restoreSnapshot(snapshot)
+          setUndoSnapshot(null)
+        }
+
+        const playMove = React.useCallback((direction) => {
+          if (gameOver) {
+            playBlockedSound(audioContextRef)
+            return
+          }
+
+          const snapshot = createUndoSnapshot()
+          const result = moveTiles(board, visibleTiles, direction, takeNextTileId)
+          if (!result.changed) {
+            playBlockedSound(audioContextRef)
+            return
+          }
+
+          setUndoSnapshot(snapshot)
+
+          const movedBoard = cloneBoard(result.board)
+          const movedTiles = result.tiles.filter((tile) => !tile.mergeInto)
+          const scoreDelta = result.score
+          const nextScore = score + scoreDelta
+
+          clearTimers()
+
+          setBoard(movedBoard)
+          setTiles(movedTiles)
+          setScore(nextScore)
+
+          if (scoreDelta > 0) {
+            setScoreFlash(true)
+            scoreTimerRef.current = setTimeout(() => setScoreFlash(false), 140)
+            playMoveSound(audioContextRef, scoreDelta)
+          } else {
+            playMoveSound(audioContextRef, 32)
+          }
+
+          setBest((currentBest) => {
+            const nextBest = Math.max(currentBest, nextScore)
+            localStorage.setItem(BEST_KEY, String(nextBest))
+            return nextBest
+          })
+
+          spawnTimerRef.current = setTimeout(() => {
+            const spawned = addRandomTile(cloneBoard(movedBoard), movedTiles.map((tile) => ({ ...tile, startRow: tile.row, startCol: tile.col, isNew: false })), takeNextTileId, true)
+            const finalTiles = spawned.tiles
+            const nextWon = won || hasWon(finalTiles)
+            const nextGameOver = !canMove(spawned.board, finalTiles)
+            setBoard(spawned.board)
+            setTiles(finalTiles)
+            setWon(nextWon)
+            setGameOver(nextGameOver)
+
+            animationTimerRef.current = setTimeout(() => {
+              setTiles((currentTiles) => currentTiles.map((tile) => ({ ...tile, startRow: tile.row, startCol: tile.col, isNew: false })))
+            }, 240)
+          }, MOVE_MS + 10)
+        }, [board, visibleTiles, score, won, gameOver, takeNextTileId])
+
+        useEffect(() => {
+          return () => {
+            clearTimers()
+            if (audioContextRef.current) audioContextRef.current.close()
+          }
+        }, [])
+
+        useEffect(() => {
+          function handleKeyDown(event) {
+            const map = {
+              ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
+              a: 'left', d: 'right', w: 'up', s: 'down',
+              A: 'left', D: 'right', W: 'up', S: 'down',
+            }
+
+            if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+              event.preventDefault()
+              undoMove()
+              return
+            }
+
+            const direction = map[event.key]
+            if (!direction) return
+            event.preventDefault()
+            playMove(direction)
+          }
+          window.addEventListener('keydown', handleKeyDown)
+          return () => window.removeEventListener('keydown', handleKeyDown)
+        }, [playMove])
+
+        return (
+          <main className="app">
+            <div className="header">
+              <div>
+                <h1>2048</h1>
+                <p className="subtitle">Juego web en un único archivo HTML.</p>
+              </div>
+              <div className="controls">
+                <button className="restart undo" onClick={undoMove} disabled={!canUndo} aria-label="Deshacer" title="Deshacer">
+                  <svg className="undo-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 7H5v4" />
+                    <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M5 11c1.8-2.9 4.3-4.5 7.2-4.5 4.1 0 7.8 3 7.8 7.5s-3.7 7.5-7.8 7.5c-2.4 0-4.5-.9-6.1-2.7" />
+                  </svg>
+                </button>
+                <button className="restart" onClick={resetGame}>Nuevo juego</button>
+              </div>
+            </div>
+
+            <div className="scoreboard">
+              <div className={`score-card ${scoreFlash ? 'flash' : ''}`}><span>Puntaje</span><strong>{score}</strong></div>
+              <div className="score-card"><span>Mejor</span><strong>{best}</strong></div>
+            </div>
+
+            <p className="status">{status}</p>
+
+            <div className="board" ref={boardRef} role="grid" aria-label="Tablero 2048">
+              {Array.from({ length: SIZE * SIZE }, (_, index) => <div key={index} className="cell" aria-hidden="true" />)}
+
+              <div className="tile-layer" aria-hidden="true">
+                {tiles.map((tile) => (
+                  <TileView key={tile.id} tile={tile} boardSize={boardSize} />
+                ))}
+              </div>
+            </div>
+
+            <div className="help">
+              <p>Controles: ↑ ↓ ← →</p>
+              <p>Deshacer: botón o Ctrl/Cmd + Z.</p>
+              <p>Objetivo: combinar fichas hasta llegar a 2048.</p>
+            </div>
+          </main>
+        )
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+    </script>
+  </body>
+</html>

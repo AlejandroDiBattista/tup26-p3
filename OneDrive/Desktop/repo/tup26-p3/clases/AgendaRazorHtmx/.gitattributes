@@ -1,0 +1,11 @@
+* text=auto
+
+*.cs text diff=csharp
+*.cshtml text
+*.css text
+*.md text
+*.json text
+*.csproj text
+
+*.db binary
+*.sqlite binary

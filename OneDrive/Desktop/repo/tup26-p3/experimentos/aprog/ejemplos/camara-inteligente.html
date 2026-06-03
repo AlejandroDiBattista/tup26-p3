@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4efe6" />
+  <title>Camara inteligente</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4efe6;
+      --paper-strong: #fffaf1;
+      --ink: #211c18;
+      --muted: #71665b;
+      --line: #d8cfc2;
+      --coal: #171615;
+      --fern: #1e6f5c;
+      --coral: #df6849;
+      --ochre: #c0922d;
+      --sky: #d7e8f1;
+      --shadow: 0 18px 44px rgba(48, 38, 28, 0.18);
+      --radius: 8px;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        linear-gradient(90deg, rgba(23, 22, 21, 0.05) 1px, transparent 1px) 0 0 / 22px 22px,
+        linear-gradient(0deg, rgba(23, 22, 21, 0.035) 1px, transparent 1px) 0 0 / 22px 22px,
+        var(--paper);
+      color: var(--ink);
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.52;
+    }
+
+    .app {
+      width: min(100%, 1120px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.72fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .studio {
+      min-height: calc(100vh - 32px);
+      min-height: calc(100dvh - 32px);
+      display: grid;
+      grid-template-rows: auto minmax(280px, 1fr) auto;
+      border: 1px solid var(--coal);
+      background: var(--paper-strong);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--coal);
+      background: #ece2d2;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--coal);
+      background: var(--fern);
+      color: #f9f3e9;
+      font-weight: 900;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(22px, 4.8vw, 42px);
+      font-weight: 700;
+      line-height: 0.92;
+      letter-spacing: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--coal);
+      background: var(--sky);
+      color: var(--coal);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--coal);
+      background: var(--paper-strong);
+      color: var(--coal);
+      box-shadow: 2px 2px 0 var(--coal);
+    }
+
+    .icon-btn svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0;
+      min-height: 0;
+      background: #151413;
+    }
+
+    .frame {
+      position: relative;
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #151413;
+      border-right: 1px solid rgba(255, 250, 241, 0.2);
+    }
+
+    .frame:last-child {
+      border-right: 0;
+    }
+
+    .frame img,
+    .frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #151413;
+    }
+
+    .frame video {
+      object-fit: cover;
+    }
+
+    .empty {
+      width: min(76%, 360px);
+      display: grid;
+      gap: 16px;
+      justify-items: center;
+      text-align: center;
+      color: #efe7dc;
+    }
+
+    .empty-icon {
+      width: 106px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 250, 241, 0.65);
+      background:
+        radial-gradient(circle at 32% 32%, rgba(255,255,255,0.38) 0 9%, transparent 10%),
+        conic-gradient(from 25deg, var(--coral), var(--ochre), var(--fern), var(--sky), var(--coral));
+      color: #151413;
+      font-size: 48px;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 12px #151413;
+    }
+
+    .empty strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .empty span {
+      display: block;
+      color: rgba(239, 231, 220, 0.72);
+      line-height: 1.45;
+    }
+
+    .label {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      background: rgba(255, 250, 241, 0.94);
+      border: 1px solid var(--coal);
+      color: var(--coal);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid var(--coal);
+      background: #ece2d2;
+    }
+
+    .btn {
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 0 12px;
+      border: 1px solid var(--coal);
+      background: var(--paper-strong);
+      color: var(--coal);
+      font-weight: 850;
+      box-shadow: 3px 3px 0 var(--coal);
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 var(--coal);
+      outline: none;
+    }
+
+    .btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--coal);
+    }
+
+    .btn.primary {
+      background: var(--coral);
+      color: #fffaf1;
+    }
+
+    .btn.dark {
+      background: var(--coal);
+      color: #fffaf1;
+    }
+
+    .capture-fab {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      z-index: 3;
+      min-width: 168px;
+      transform: translateX(-50%);
+    }
+
+    .capture-fab:hover,
+    .capture-fab:focus-visible {
+      transform: translate(-50%, -1px);
+    }
+
+    .capture-fab:active {
+      transform: translate(calc(-50% + 2px), 2px);
+    }
+
+    .btn svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .panel {
+      min-height: calc(100vh - 32px);
+      min-height: calc(100dvh - 32px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--coal);
+      background: var(--paper-strong);
+      box-shadow: 6px 6px 0 rgba(23, 22, 21, 0.95);
+    }
+
+    .section {
+      padding: 14px;
+    }
+
+    .section + .section {
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--coal);
+      border-radius: 0;
+      background: #fffdf7;
+      color: var(--ink);
+      outline: none;
+    }
+
+    input,
+    select {
+      min-height: 44px;
+      padding: 0 10px;
+    }
+
+    textarea {
+      min-height: 128px;
+      resize: vertical;
+      padding: 10px;
+      line-height: 1.42;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      box-shadow: 0 0 0 3px rgba(30, 111, 92, 0.24);
+      border-color: var(--fern);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 1px 0 4px;
+      scrollbar-width: none;
+    }
+
+    .chips::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--coal);
+      background: #fffdf7;
+      color: var(--coal);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .chip.active {
+      background: var(--fern);
+      color: #fffaf1;
+    }
+
+    .notice {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.42;
+    }
+
+    .status {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--line);
+      border-top-color: var(--fern);
+      border-radius: 50%;
+      animation: spin 800ms linear infinite;
+      display: none;
+      flex: 0 0 auto;
+    }
+
+    .busy .spinner { display: inline-block; }
+
+    .meter {
+      height: 8px;
+      border: 1px solid var(--coal);
+      background: #fffdf7;
+      overflow: hidden;
+    }
+
+    .meter > span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--fern), var(--ochre), var(--coral));
+      transition: width 240ms ease;
+    }
+
+    .history {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .thumb {
+      position: relative;
+      aspect-ratio: 1;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--coal);
+      background: #151413;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .settings-dialog {
+      width: min(92vw, 480px);
+      padding: 0;
+      border: 1px solid var(--coal);
+      background: var(--paper-strong);
+      color: var(--ink);
+      box-shadow: 10px 10px 0 rgba(23, 22, 21, 0.95);
+    }
+
+    .settings-dialog::backdrop {
+      background: rgba(23, 22, 21, 0.58);
+    }
+
+    .settings-dialog.fallback-open {
+      display: block;
+      position: fixed;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+    }
+
+    .settings-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--coal);
+      background: #ece2d2;
+    }
+
+    .settings-head h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .settings-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 840px) {
+      body {
+        padding: 0;
+        background: var(--paper);
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .studio,
+      .panel {
+        min-height: auto;
+      }
+
+      .studio {
+        border: 0;
+        border-bottom: 1px solid var(--coal);
+        box-shadow: none;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        padding-top: max(12px, env(safe-area-inset-top));
+      }
+
+      .pill {
+        display: none;
+      }
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        box-shadow: 1px 1px 0 var(--coal);
+      }
+
+      .stage {
+        grid-template-columns: 1fr;
+      }
+
+      .frame {
+        min-height: 42vh;
+        min-height: 42dvh;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 250, 241, 0.2);
+      }
+
+      .frame.result-frame {
+        min-height: 38vh;
+        min-height: 38dvh;
+      }
+
+      .actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 4;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+      }
+
+      .capture-fab {
+        bottom: max(16px, env(safe-area-inset-bottom));
+      }
+
+      .btn {
+        min-height: 54px;
+        padding: 0 8px;
+        box-shadow: 2px 2px 0 var(--coal);
+      }
+
+      .btn span {
+        font-size: 13px;
+      }
+
+      .panel {
+        padding: 14px;
+      }
+
+      .card {
+        box-shadow: 4px 4px 0 rgba(23, 22, 21, 0.95);
+      }
+    }
+
+    @media (max-width: 430px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .empty {
+        width: min(84%, 320px);
+      }
+
+      .empty strong {
+        font-size: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="studio" aria-label="Camara inteligente">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">AI</div>
+          <h1>Camara inteligente</h1>
+        </div>
+        <div class="top-actions">
+          <div class="pill" id="modelBadge">GPT Image 2</div>
+          <button class="icon-btn" id="settingsButton" type="button" aria-label="Configuracion">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V21a2 2 0 1 1-4 0v-.08A1.8 1.8 0 0 0 8.75 19.3a1.8 1.8 0 0 0-1.98.36l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.8 1.8 0 0 0 4.3 14.85a1.8 1.8 0 0 0-1.65-1.1H2.6a2 2 0 1 1 0-4h.08A1.8 1.8 0 0 0 4.3 8.65a1.8 1.8 0 0 0-.36-1.98l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05a1.8 1.8 0 0 0 1.98.36h.01A1.8 1.8 0 0 0 9.85 2.6V2.5a2 2 0 1 1 4 0v.08a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.8 1.8 0 0 0-.36 1.98v.01a1.8 1.8 0 0 0 1.65 1.1h.08a2 2 0 1 1 0 4h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="stage">
+        <div class="frame">
+          <span class="label">Foto</span>
+          <video id="cameraPreview" autoplay muted playsinline hidden></video>
+          <img id="sourcePreview" alt="Foto capturada" hidden />
+          <div id="sourceEmpty" class="empty">
+            <div class="empty-icon" aria-hidden="true">+</div>
+            <div>
+              <strong id="sourceEmptyTitle">Iniciando camara</strong>
+              <span id="sourceEmptyText">Si el navegador pide permiso, aceptalo para ver el visor.</span>
+            </div>
+          </div>
+          <button class="btn primary capture-fab" id="captureButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span id="captureButtonText">Capturar</span>
+          </button>
+        </div>
+
+        <div class="frame result-frame">
+          <span class="label">Procesada</span>
+          <img id="resultPreview" alt="Imagen procesada" hidden />
+          <div id="resultEmpty" class="empty">
+            <div class="empty-icon" aria-hidden="true">AI</div>
+            <div>
+              <strong>Resultado</strong>
+              <span>Escribi el cambio y procesala con GPT Image.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn dark wide" id="processButton" type="button" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Procesar</span>
+        </button>
+        <button class="btn" id="downloadButton" type="button" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          <span>Guardar</span>
+        </button>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="card">
+        <section class="section">
+          <p class="section-title">Prompt</p>
+          <div class="field">
+            <label for="promptInput">Indicacion</label>
+            <textarea id="promptInput" placeholder="Ej: Converti esta foto en una portada editorial, manteniendo la persona y la composicion principal.">Converti esta foto en una imagen editorial cinematografica, manteniendo la persona, el encuadre y los detalles importantes.</textarea>
+          </div>
+          <div class="chips" aria-label="Prompts rapidos">
+            <button class="chip active" type="button" data-prompt="Converti esta foto en una imagen editorial cinematografica, manteniendo la persona, el encuadre y los detalles importantes.">Editorial</button>
+            <button class="chip" type="button" data-prompt="Mejora esta foto para que parezca tomada con una camara profesional: luz natural, piel realista, colores equilibrados y fondo limpio.">Pro</button>
+            <button class="chip" type="button" data-prompt="Transforma la escena en una fotografia nocturna urbana con luces de neon sutiles, conservando el sujeto principal.">Noche</button>
+            <button class="chip" type="button" data-prompt="Hace una version limpia para perfil profesional, con fondo simple, buena luz y rasgos naturales.">Perfil</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="section-title">Estado</p>
+          <div class="status" id="statusLine">
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="statusText">Lista para capturar.</span>
+          </div>
+          <div class="meter" aria-hidden="true"><span id="meterFill"></span></div>
+        </section>
+      </div>
+
+      <div class="card">
+        <section class="section">
+          <p class="section-title">Historial</p>
+          <div id="history" class="history"></div>
+          <p id="historyEmpty" class="notice">Las ultimas imagenes procesadas aparecen aca.</p>
+        </section>
+      </div>
+    </aside>
+  </main>
+
+  <dialog class="settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+    <form method="dialog" id="settingsForm">
+      <div class="settings-head">
+        <h2 id="settingsTitle">Configuracion</h2>
+        <button class="icon-btn" id="closeSettingsButton" value="cancel" type="submit" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <section class="section">
+        <div class="field">
+          <label for="apiKeyInput">OpenAI API key</label>
+          <input id="apiKeyInput" type="password" autocomplete="off" inputmode="text" placeholder="sk-..." />
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="modelInput">Modelo</label>
+            <input id="modelInput" type="text" value="gpt-image-2" autocapitalize="off" spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="qualityInput">Calidad</label>
+            <select id="qualityInput">
+              <option value="auto">Auto</option>
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="sizeInput">Tamano</label>
+            <select id="sizeInput">
+              <option value="auto" selected>Auto</option>
+              <option value="1024x1024">1024 x 1024</option>
+              <option value="1024x1536">1024 x 1536</option>
+              <option value="1536x1024">1536 x 1024</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="formatInput">Formato</label>
+            <select id="formatInput">
+              <option value="jpeg" selected>JPEG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WEBP</option>
+            </select>
+          </div>
+        </div>
+        <p class="notice">La clave queda en este navegador. En produccion conviene usar un backend propio para no exponer credenciales.</p>
+      </section>
+
+      <div class="settings-actions">
+        <button class="btn" value="cancel" type="submit">Cerrar</button>
+        <button class="btn primary" id="saveSettingsButton" value="save" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <input class="sr-only" id="cameraInput" type="file" accept="image/*" capture="environment" />
+  <canvas id="captureCanvas" hidden></canvas>
+
+  <script>
+    const elements = {
+      cameraInput: document.getElementById("cameraInput"),
+      captureCanvas: document.getElementById("captureCanvas"),
+      captureButton: document.getElementById("captureButton"),
+      captureButtonText: document.getElementById("captureButtonText"),
+      cameraPreview: document.getElementById("cameraPreview"),
+      settingsButton: document.getElementById("settingsButton"),
+      settingsDialog: document.getElementById("settingsDialog"),
+      settingsForm: document.getElementById("settingsForm"),
+      modelBadge: document.getElementById("modelBadge"),
+      processButton: document.getElementById("processButton"),
+      downloadButton: document.getElementById("downloadButton"),
+      sourcePreview: document.getElementById("sourcePreview"),
+      resultPreview: document.getElementById("resultPreview"),
+      sourceEmpty: document.getElementById("sourceEmpty"),
+      sourceEmptyTitle: document.getElementById("sourceEmptyTitle"),
+      sourceEmptyText: document.getElementById("sourceEmptyText"),
+      resultEmpty: document.getElementById("resultEmpty"),
+      promptInput: document.getElementById("promptInput"),
+      apiKeyInput: document.getElementById("apiKeyInput"),
+      modelInput: document.getElementById("modelInput"),
+      qualityInput: document.getElementById("qualityInput"),
+      sizeInput: document.getElementById("sizeInput"),
+      formatInput: document.getElementById("formatInput"),
+      statusLine: document.getElementById("statusLine"),
+      statusText: document.getElementById("statusText"),
+      meterFill: document.getElementById("meterFill"),
+      history: document.getElementById("history"),
+      historyEmpty: document.getElementById("historyEmpty")
+    };
+
+    const state = {
+      sourceFile: null,
+      sourceUrl: "",
+      resultUrl: "",
+      resultMime: "image/jpeg",
+      cameraStream: null,
+      busy: false,
+      progressTimer: 0
+    };
+
+    const storageKeys = {
+      apiKey: "camara-inteligente.openai-key",
+      model: "camara-inteligente.model",
+      quality: "camara-inteligente.quality",
+      size: "camara-inteligente.size",
+      format: "camara-inteligente.format"
+    };
+
+    const savedKey = localStorage.getItem(storageKeys.apiKey);
+    const savedModel = localStorage.getItem(storageKeys.model);
+    const savedQuality = localStorage.getItem(storageKeys.quality);
+    const savedSize = localStorage.getItem(storageKeys.size);
+    const savedFormat = localStorage.getItem(storageKeys.format);
+    if (savedKey) elements.apiKeyInput.value = savedKey;
+    if (savedModel) elements.modelInput.value = savedModel;
+    if (savedQuality) elements.qualityInput.value = savedQuality;
+    if (savedSize) elements.sizeInput.value = savedSize;
+    if (savedFormat) elements.formatInput.value = savedFormat;
+    updateModelBadge();
+
+    requestAnimationFrame(() => {
+      startCamera({ fallbackToFile: false });
+      if (!elements.apiKeyInput.value.trim()) {
+        openSettings("Ingresa tu API key para empezar.");
+      }
+    });
+
+    elements.captureButton.addEventListener("click", async () => {
+      if (state.busy) return;
+      if (state.cameraStream) {
+        await captureCameraFrame();
+        return;
+      }
+      await startCamera({ fallbackToFile: true });
+    });
+
+    elements.cameraInput.addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      stopCamera();
+      setBusy(true, "Preparando foto...", 12);
+      try {
+        const processed = await normalizeImage(file);
+        setSource(processed);
+        setResult(null);
+        setStatus("Foto lista. Escribi la indicacion y procesala.", 0);
+      } catch (error) {
+        setStatus(readableError(error), 0);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    elements.processButton.addEventListener("click", processImage);
+    elements.downloadButton.addEventListener("click", downloadResult);
+    elements.settingsButton.addEventListener("click", () => openSettings());
+    elements.settingsDialog.addEventListener("click", (event) => {
+      if (event.target === elements.settingsDialog) closeSettings();
+    });
+    elements.settingsForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveSettings();
+      closeSettings();
+    });
+
+    elements.apiKeyInput.addEventListener("input", () => {
+      saveSettings();
+      updateProcessState();
+    });
+
+    elements.modelInput.addEventListener("input", () => {
+      saveSettings();
+      updateProcessState();
+    });
+
+    elements.qualityInput.addEventListener("change", saveSettings);
+    elements.sizeInput.addEventListener("change", saveSettings);
+    elements.formatInput.addEventListener("change", saveSettings);
+
+    elements.promptInput.addEventListener("input", updateProcessState);
+
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach((item) => item.classList.remove("active"));
+        chip.classList.add("active");
+        elements.promptInput.value = chip.dataset.prompt || "";
+        updateProcessState();
+      });
+    });
+
+    async function processImage() {
+      if (!state.sourceFile || state.busy) return;
+      stopCamera();
+
+      const apiKey = elements.apiKeyInput.value.trim();
+      const prompt = elements.promptInput.value.trim();
+      const model = elements.modelInput.value.trim() || "gpt-image-2";
+
+      if (!apiKey) {
+        openSettings("Falta la API key.");
+        return;
+      }
+      if (!prompt) {
+        setStatus("Falta el prompt.", 0);
+        return;
+      }
+
+      setBusy(true, "Enviando foto a GPT Image...", 18);
+      try {
+        const response = await callImageEdit({ apiKey, prompt, model, useArrayField: true });
+        const imageData = extractImageData(response);
+        const mime = mimeFromFormat(response.output_format || elements.formatInput.value);
+        const url = `data:${mime};base64,${imageData}`;
+        setResult({ url, mime });
+        addHistory(url);
+        setStatus(tokenSummary(response), 100);
+      } catch (error) {
+        setStatus(readableError(error), 0);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function callImageEdit({ apiKey, prompt, model, useArrayField }) {
+      const form = new FormData();
+      form.append("model", model);
+      form.append(useArrayField ? "image[]" : "image", state.sourceFile, state.sourceFile.name);
+      form.append("prompt", prompt);
+      form.append("quality", elements.qualityInput.value);
+      form.append("size", elements.sizeInput.value);
+      form.append("output_format", elements.formatInput.value);
+
+      const response = await fetch("https://api.openai.com/v1/images/edits", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: form
+      });
+
+      const text = await response.text();
+      const data = parseJson(text);
+
+      if (!response.ok) {
+        const message = data && data.error && data.error.message ? data.error.message : text;
+        if (useArrayField && /image/i.test(message) && /required|missing|unknown/i.test(message)) {
+          return callImageEdit({ apiKey, prompt, model, useArrayField: false });
+        }
+        throw new Error(message || `HTTP ${response.status}`);
+      }
+
+      return data;
+    }
+
+    function extractImageData(response) {
+      if (response && response.data && response.data[0] && response.data[0].b64_json) {
+        return response.data[0].b64_json;
+      }
+      if (response && response.b64_json) {
+        return response.b64_json;
+      }
+      throw new Error("La API no devolvio una imagen base64.");
+    }
+
+    async function normalizeImage(file) {
+      const bitmap = await loadBitmap(file);
+      const maxEdge = 1600;
+      const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+      const width = Math.max(1, Math.round(bitmap.width * scale));
+      const height = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d", { alpha: false });
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      if (typeof bitmap.close === "function") bitmap.close();
+
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo preparar la foto.")), "image/jpeg", 0.9);
+      });
+
+      return new File([blob], "foto-camara.jpg", { type: "image/jpeg" });
+    }
+
+    async function startCamera(options = {}) {
+      const fallbackToFile = options.fallbackToFile !== false;
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (fallbackToFile) {
+          openFileFallback("Este navegador no expone camara directa. Abriendo selector como respaldo.");
+        } else {
+          showCameraFallback("Este navegador no expone camara directa. Toca Capturar para elegir una foto.");
+        }
+        return;
+      }
+
+      setBusy(true, "Abriendo camara...", 8);
+      try {
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 1280 },
+              height: { ideal: 1920 }
+            },
+            audio: false
+          });
+        } catch (firstError) {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+
+        state.cameraStream = stream;
+        clearSourceForCamera();
+        elements.cameraPreview.srcObject = stream;
+        elements.cameraPreview.hidden = false;
+        elements.sourcePreview.hidden = true;
+        elements.sourceEmpty.hidden = true;
+        elements.captureButtonText.textContent = "Capturar";
+        setResult(null);
+        setStatus("Camara lista. Toca Capturar para sacar la foto.", 0);
+      } catch (error) {
+        if (fallbackToFile) {
+          openFileFallback(`No se pudo abrir la camara: ${readableError(error)}. Abriendo selector como respaldo.`);
+        } else {
+          showCameraFallback(`No se pudo abrir la camara: ${readableError(error)}. Toca Capturar para reintentar.`);
+        }
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function captureCameraFrame() {
+      const video = elements.cameraPreview;
+      if (!state.cameraStream || !video.videoWidth || !video.videoHeight) {
+        setStatus("La camara todavia no entrego imagen. Proba otra vez.", 0);
+        return;
+      }
+
+      setBusy(true, "Capturando foto...", 20);
+      try {
+        const canvas = elements.captureCanvas;
+        const maxEdge = 1600;
+        const scale = Math.min(1, maxEdge / Math.max(video.videoWidth, video.videoHeight));
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        const ctx = canvas.getContext("2d", { alpha: false });
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo capturar la foto.")), "image/jpeg", 0.92);
+        });
+
+        const file = new File([blob], "foto-camara.jpg", { type: "image/jpeg" });
+        stopCamera();
+        setSource(file);
+        setResult(null);
+        setStatus("Foto capturada. Ya podes procesarla.", 0);
+      } catch (error) {
+        setStatus(readableError(error), 0);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function stopCamera() {
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach((track) => track.stop());
+      }
+      state.cameraStream = null;
+      elements.cameraPreview.srcObject = null;
+      elements.cameraPreview.hidden = true;
+      elements.captureButtonText.textContent = "Capturar";
+    }
+
+    function clearSourceForCamera() {
+      if (state.sourceUrl) URL.revokeObjectURL(state.sourceUrl);
+      state.sourceFile = null;
+      state.sourceUrl = "";
+      elements.sourcePreview.removeAttribute("src");
+      elements.sourcePreview.hidden = true;
+      updateProcessState();
+    }
+
+    function openFileFallback(message) {
+      stopCamera();
+      setStatus(message, 0);
+      elements.cameraInput.value = "";
+      elements.cameraInput.click();
+    }
+
+    function showCameraFallback(message) {
+      stopCamera();
+      elements.sourceEmpty.hidden = false;
+      elements.sourceEmptyTitle.textContent = "Activar camara";
+      elements.sourceEmptyText.textContent = "Toca el boton superpuesto para abrir el visor.";
+      elements.captureButtonText.textContent = "Activar";
+      setStatus(message, 0);
+    }
+
+    async function loadBitmap(file) {
+      if ("createImageBitmap" in window) {
+        return createImageBitmap(file);
+      }
+
+      const url = URL.createObjectURL(file);
+      try {
+        const image = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("No se pudo leer la foto."));
+          img.src = url;
+        });
+        return image;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function setSource(file) {
+      stopCamera();
+      if (state.sourceUrl) URL.revokeObjectURL(state.sourceUrl);
+      state.sourceFile = file;
+      state.sourceUrl = URL.createObjectURL(file);
+      elements.sourcePreview.src = state.sourceUrl;
+      elements.sourcePreview.hidden = false;
+      elements.sourceEmpty.hidden = true;
+      updateProcessState();
+    }
+
+    function setResult(result) {
+      state.resultUrl = result ? result.url : "";
+      state.resultMime = result ? result.mime : "image/jpeg";
+      elements.resultPreview.src = state.resultUrl;
+      elements.resultPreview.hidden = !state.resultUrl;
+      elements.resultEmpty.hidden = Boolean(state.resultUrl);
+      elements.downloadButton.disabled = !state.resultUrl;
+    }
+
+    function addHistory(url) {
+      elements.historyEmpty.hidden = true;
+      const button = document.createElement("button");
+      button.className = "thumb";
+      button.type = "button";
+      button.title = "Ver imagen";
+      const image = document.createElement("img");
+      image.alt = "Imagen procesada";
+      image.src = url;
+      button.appendChild(image);
+      button.addEventListener("click", () => setResult({ url, mime: state.resultMime }));
+      elements.history.prepend(button);
+      while (elements.history.children.length > 6) {
+        elements.history.lastElementChild.remove();
+      }
+    }
+
+    function downloadResult() {
+      if (!state.resultUrl) return;
+      const extension = extensionFromMime(state.resultMime);
+      const link = document.createElement("a");
+      link.href = state.resultUrl;
+      link.download = `camara-inteligente-${Date.now()}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function openSettings(message) {
+      if (message) setStatus(message, 0);
+      if (!elements.settingsDialog.open) {
+        if (typeof elements.settingsDialog.showModal === "function") {
+          elements.settingsDialog.showModal();
+        } else {
+          elements.settingsDialog.classList.add("fallback-open");
+          elements.settingsDialog.setAttribute("open", "");
+        }
+      }
+      setTimeout(() => elements.apiKeyInput.focus(), 0);
+    }
+
+    function closeSettings() {
+      if (elements.settingsDialog.open) {
+        if (typeof elements.settingsDialog.close === "function") {
+          elements.settingsDialog.close();
+        } else {
+          elements.settingsDialog.classList.remove("fallback-open");
+          elements.settingsDialog.removeAttribute("open");
+        }
+      }
+    }
+
+    function saveSettings() {
+      localStorage.setItem(storageKeys.apiKey, elements.apiKeyInput.value.trim());
+      localStorage.setItem(storageKeys.model, elements.modelInput.value.trim());
+      localStorage.setItem(storageKeys.quality, elements.qualityInput.value);
+      localStorage.setItem(storageKeys.size, elements.sizeInput.value);
+      localStorage.setItem(storageKeys.format, elements.formatInput.value);
+      updateModelBadge();
+    }
+
+    function updateModelBadge() {
+      const model = elements.modelInput.value.trim() || "gpt-image-2";
+      elements.modelBadge.textContent = model;
+    }
+
+    function updateProcessState() {
+      elements.processButton.disabled = state.busy ||
+        !state.sourceFile ||
+        !elements.apiKeyInput.value.trim() ||
+        !elements.promptInput.value.trim() ||
+        !elements.modelInput.value.trim();
+    }
+
+    function setBusy(value, message, progress) {
+      state.busy = value;
+      elements.statusLine.classList.toggle("busy", value);
+      elements.captureButton.disabled = value && !state.cameraStream;
+      updateProcessState();
+      clearInterval(state.progressTimer);
+      if (typeof message === "string") setStatus(message, progress || 0);
+      if (value) {
+        let current = progress || 8;
+        state.progressTimer = setInterval(() => {
+          current = Math.min(92, current + Math.max(1, (92 - current) * 0.05));
+          elements.meterFill.style.width = `${current}%`;
+        }, 900);
+      }
+    }
+
+    function setStatus(message, progress) {
+      elements.statusText.textContent = message;
+      if (typeof progress === "number") {
+        elements.meterFill.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+      }
+    }
+
+    function tokenSummary(response) {
+      const usage = response && response.usage;
+      if (!usage || !usage.total_tokens) return "Imagen procesada.";
+      return `Imagen procesada. Tokens: ${usage.total_tokens}.`;
+    }
+
+    function parseJson(text) {
+      try {
+        return text ? JSON.parse(text) : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function readableError(error) {
+      const message = error && error.message ? error.message : String(error);
+      if (/Failed to fetch|NetworkError/i.test(message)) {
+        return "No se pudo conectar con la API. Revisa internet, CORS o usa un backend proxy si el navegador bloquea la llamada.";
+      }
+      return message;
+    }
+
+    function mimeFromFormat(format) {
+      if (format === "png") return "image/png";
+      if (format === "webp") return "image/webp";
+      return "image/jpeg";
+    }
+
+    function extensionFromMime(mime) {
+      if (mime === "image/png") return "png";
+      if (mime === "image/webp") return "webp";
+      return "jpg";
+    }
+
+    updateProcessState();
+  </script>
+</body>
+</html>

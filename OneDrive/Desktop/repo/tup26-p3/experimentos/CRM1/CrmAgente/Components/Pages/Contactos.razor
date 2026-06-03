@@ -1,0 +1,124 @@
+@page "/"
+@inject CrmService Crm
+@inject NavigationManager Nav
+@inject AgenteFiltroService FiltroService
+@implements IDisposable
+
+<div class="page-head">
+    <h1>Contactos</h1>
+    <p>El centro del CRM: la gente y las empresas con las que trabajamos.</p>
+</div>
+
+@if (FiltroService.ContactoIds != null) {
+    <div class="filtro-agente-banner">
+        <span>El agente filtró @FiltroService.ContactoIds.Count contacto@(FiltroService.ContactoIds.Count == 1 ? "" : "s")</span>
+        <button class="btn btn-ghost" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;"
+                @onclick="FiltroService.LimpiarFiltro">
+            Ver todos
+        </button>
+    </div>
+}
+
+<div class="row" style="margin-bottom: 1.5rem;">
+    <input @bind="filtro" @bind:event="oninput" placeholder="Buscar por nombre o empresa..."
+           style="max-width: 320px;" />
+    <button class="btn @(mostrarAlta ? "btn-ghost" : "")" @onclick="() => mostrarAlta = !mostrarAlta">
+        @(mostrarAlta ? "Cancelar" : "Nuevo contacto")
+    </button>
+</div>
+
+@if (mostrarAlta) {
+    <div class="card" style="margin-bottom: 1.5rem; max-width: 560px;">
+        <div class="row">
+            <div class="field" style="flex:1;">
+                <label>Nombre</label>
+                <input @bind="nuevo.Nombre" />
+            </div>
+            <div class="field" style="flex:1;">
+                <label>Empresa</label>
+                <input @bind="nuevo.Empresa" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="field" style="flex:1;">
+                <label>Email</label>
+                <input @bind="nuevo.Email" />
+            </div>
+            <div class="field" style="flex:1;">
+                <label>Telefono</label>
+                <input @bind="nuevo.Telefono" />
+            </div>
+        </div>
+        <button class="btn" @onclick="GuardarAsync">Guardar contacto</button>
+    </div>
+}
+
+@if (contactos is null) {
+    <p class="empty">Cargando...</p>
+} else if (!Filtrados().Any()) {
+    <p class="empty">No hay contactos que coincidan.</p>
+} else {
+    <div class="list">
+        @foreach (var c in Filtrados()) {
+            <div class="list-item @(EsDestacado(c.Id) ? "list-item-destacado" : "")"
+                 @onclick="() => VerFicha(c.Id)" style="cursor:pointer;">
+                <div>
+                    <div class="who">@c.Nombre</div>
+                    <div class="meta">@c.Empresa</div>
+                </div>
+                <div class="meta">@c.Email · @c.Telefono</div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Contacto>? contactos;
+    private string filtro = "";
+    private bool mostrarAlta;
+    private Contacto nuevo = new();
+
+    protected override async Task OnInitializedAsync() {
+        FiltroService.LimpiarContactoActual();
+        FiltroService.OnChange += OnFiltroChanged;
+        this.contactos = await this.Crm.ListarContactosAsync();
+    }
+
+    // Recarga la lista completa para que aparezcan contactos creados por el agente.
+    private async void OnFiltroChanged() {
+        this.contactos = await this.Crm.ListarContactosAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private IEnumerable<Contacto> Filtrados() {
+        IEnumerable<Contacto> base_ = this.contactos ?? new List<Contacto>();
+
+        if (FiltroService.ContactoIds != null)
+            base_ = base_.Where(c => FiltroService.ContactoIds.Contains(c.Id));
+
+        if (!string.IsNullOrWhiteSpace(this.filtro))
+            base_ = base_.Where(c =>
+                c.Nombre.Contains(this.filtro, StringComparison.OrdinalIgnoreCase) ||
+                c.Empresa.Contains(this.filtro, StringComparison.OrdinalIgnoreCase));
+
+        return base_;
+    }
+
+    private bool EsDestacado(int id) =>
+        FiltroService.ContactoIds != null && FiltroService.ContactoIds.Contains(id);
+
+    private async Task GuardarAsync() {
+        if (string.IsNullOrWhiteSpace(this.nuevo.Nombre)) return;
+
+        await this.Crm.CrearContactoAsync(
+            this.nuevo.Nombre, this.nuevo.Empresa, this.nuevo.Email, this.nuevo.Telefono);
+
+        this.nuevo = new();
+        this.mostrarAlta = false;
+        this.contactos = await this.Crm.ListarContactosAsync();
+    }
+
+    private void VerFicha(int id) => this.Nav.NavigateTo($"/contacto/{id}");
+
+    public void Dispose() => FiltroService.OnChange -= OnFiltroChanged;
+}

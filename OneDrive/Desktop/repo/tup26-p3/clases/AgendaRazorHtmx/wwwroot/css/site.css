@@ -1,0 +1,395 @@
+/* ===================================================================
+   site.css — Estilos propios de la Agenda (sin framework CSS)
+   Organización del archivo:
+     1. Reset mínimo y tokens de diseño (variables)
+     2. Layout general (contenedor + grid maestro-detalle)
+     3. Paneles y scroll
+     4. Lista de contactos (radios + tarjetas)
+     5. Formularios (inputs, labels, textarea)
+     6. Botones y acciones
+     7. Vista de detalle
+     8. Utilidades
+     9. Responsive y preferencias del sistema (media queries)
+   =================================================================== */
+
+/* 1. RESET + TOKENS ------------------------------------------------- */
+
+/* Asegura que la página pueda ocupar toda la altura disponible. */
+html,
+body {
+    min-height: 100%;
+}
+
+/* :root guarda las "variables de diseño" (tokens): colores, radios y
+   espaciados centralizados. Cambiar el tema se hace tocando solo acá. */
+:root {
+    color-scheme: light;                 /* Le dice al navegador que la UI es de tema claro. */
+    /* Fuente del sistema: usa la tipografía nativa de cada SO (rápida, sin descargas). */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    /* Paleta de colores como variables reutilizables. */
+    --color-page: #f5f7f8;               /* Fondo de la página. */
+    --color-surface: #ffffff;            /* Fondo de paneles/tarjetas. */
+    --color-surface-soft: #f8fafb;       /* Superficie suave (tarjetas en reposo). */
+    --color-surface-hover: #eef2f4;      /* Superficie al pasar el mouse. */
+    --color-text: #202426;               /* Texto principal. */
+    --color-muted: #5d666b;              /* Texto secundario/atenuado. */
+    --color-border: #b8c2c9;             /* Bordes normales. */
+    --color-border-soft: #d4dce1;        /* Bordes suaves (paneles). */
+    --color-selected: #dbeafe;           /* Fondo del contacto seleccionado. */
+    --color-focus: #2563eb;              /* Color del anillo de foco (accesibilidad). */
+    --color-danger: #b42318;             /* Acciones destructivas (Eliminar). */
+
+    --radius: 8px;                       /* Radio de borde uniforme. */
+    --shadow-panel: 0 8px 24px rgb(32 36 38 / 0.07);  /* Sombra de los paneles. */
+
+    /* Escala de espaciado: usar estas variables mantiene los márgenes coherentes. */
+    --space-1: .25rem;
+    --space-2: .5rem;
+    --space-3: .75rem;
+    --space-4: 1rem;
+
+    background: var(--color-page);       /* Aplica el fondo de página. */
+    color: var(--color-text);            /* Aplica el color de texto base. */
+}
+
+body {
+    margin: 0;          /* Quita el margen por defecto del navegador. */
+    line-height: 1.4;   /* Interlineado cómodo para lectura. */
+}
+
+/* 2. LAYOUT GENERAL ------------------------------------------------- */
+
+/* Contenedor centrado que ocupa toda la altura de la ventana.
+   Es flex en columna para que la grilla interna pueda estirarse. */
+.container {
+    max-width: 1100px;                       /* Ancho máximo del contenido. */
+    margin: 0 auto;                          /* Centrado horizontal. */
+    padding: clamp(1rem, 3vw, 2rem);         /* Padding que crece con el ancho de pantalla. */
+    min-height: 100vh;
+    height: 100dvh;                          /* Altura real de la ventana (dvh respeta barras móviles). */
+    box-sizing: border-box;                  /* El padding no agranda el alto total. */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;                        /* El scroll vive dentro de cada panel, no en la página. */
+}
+
+/* La grilla maestro-detalle: columna izquierda fija (320px) + resto. */
+.agenda {
+    display: grid;
+    grid-template-columns: 320px 1fr;        /* Maestro fijo | detalle flexible. */
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    flex: 1;                                 /* Ocupa todo el alto sobrante del contenedor. */
+    min-height: 0;                           /* Permite que los hijos con scroll funcionen dentro de flex/grid. */
+}
+
+/* 3. PANELES + SCROLL ----------------------------------------------- */
+
+/* Caja blanca con borde, sombra y padding: base de ambos paneles. */
+.panel {
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-panel);
+    min-height: 0;                           /* Necesario para que el scroll interno funcione. */
+}
+
+/* Panel maestro: columna flex para apilar buscador + lista scrolleable. */
+.master-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Zona que toma el alto restante y delega el scroll a la lista interna. */
+.list-scroll {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 4. LISTA DE CONTACTOS --------------------------------------------- */
+
+/* La lista en sí: es lo único que scrollea verticalmente. */
+.contact-list {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;                        /* Scroll vertical cuando hay muchos contactos. */
+    overscroll-behavior: contain;            /* Evita que el scroll "se escape" a la página. */
+    padding: var(--space-1) var(--space-1) var(--space-1) 0;
+}
+
+/* Agrupa los contactos; es un <fieldset> sin estilo de borde nativo. */
+.contact-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;                               /* Quita el borde por defecto del fieldset. */
+}
+
+/* Cada fila de contacto envuelve un radio (oculto) + su tarjeta. */
+.contact-option {
+    position: relative;                      /* Ancla para el radio posicionado encima. */
+}
+
+/* El radio se estira invisible sobre toda la tarjeta para captar el clic
+   y la navegación por teclado, sin verse. */
+.contact-radio {
+    display: block;
+    position: absolute;
+    inset: 0;                                /* Cubre toda la .contact-option. */
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;                              /* Invisible, pero sigue siendo funcional/accesible. */
+    cursor: pointer;
+}
+
+/* La tarjeta visible del contacto (el <label> asociado al radio). */
+.contact-item {
+    display: block;
+    position: relative;
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    box-sizing: border-box;
+    background: var(--color-surface-soft);
+    cursor: pointer;
+    /* Transición suave de fondo/borde/sombra al interactuar. */
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.contact-item:hover {
+    background: var(--color-surface-hover);  /* Realce al pasar el mouse. */
+}
+
+/* Cuando el radio recibe foco por teclado, marcamos su tarjeta con un anillo. */
+.contact-radio:focus-visible + .contact-item {
+    box-shadow: inset 0 0 0 3px var(--color-focus);
+}
+
+/* Cuando el radio está seleccionado, resaltamos su tarjeta. */
+.contact-radio:checked + .contact-item {
+    border-color: var(--color-text);
+    background: var(--color-selected);
+}
+
+.contact-item .muted {
+    font-weight: 400;                        /* El teléfono va en peso normal dentro de la tarjeta. */
+}
+
+/* Separación bajo el formulario de búsqueda. */
+#search-form {
+    margin-bottom: var(--space-3);
+}
+
+/* 5. FORMULARIOS ---------------------------------------------------- */
+
+/* Inputs y textarea: ancho completo, alto táctil mínimo y borde uniforme. */
+input,
+textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-block-size: 44px;                    /* Altura mínima cómoda para tocar/clicar. */
+    margin-bottom: var(--space-3);
+    padding: .65rem .75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    font: inherit;                           /* Hereda la tipografía de la página. */
+    color: var(--color-text);
+    background: var(--color-surface);
+}
+
+textarea {
+    min-height: 100px;                       /* Altura inicial para las notas. */
+    resize: vertical;                        /* Solo se puede redimensionar en alto. */
+}
+
+label {
+    display: block;
+    margin-bottom: var(--space-1);
+    font-weight: 700;                        /* Etiquetas en negrita. */
+}
+
+/* 6. BOTONES + ACCIONES --------------------------------------------- */
+
+/* Botón base: alto táctil, borde y fondo neutro. */
+button {
+    min-block-size: 44px;
+    padding: .6rem .95rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-text);
+    background: var(--color-surface);
+    cursor: pointer;
+    font: inherit;
+    color: var(--color-text);
+}
+
+button:hover {
+    filter: brightness(0.96);                /* Ligero oscurecimiento al pasar el mouse. */
+}
+
+/* Anillo de foco visible para botones e inputs (accesibilidad por teclado). */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+}
+
+/* Botón principal (Guardar / Editar): alto contraste. */
+.primary {
+    background: var(--color-text);
+    color: white;
+}
+
+/* Botón destructivo (Eliminar): texto y borde rojos. */
+.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+/* Fila de botones de acción, con separación y salto de línea si no entran. */
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+/* 7. VISTA DE DETALLE ----------------------------------------------- */
+
+/* Contenedor del detalle: apila encabezado, datos y acciones. */
+.detail-view {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.detail-header h2 {
+    margin: 0;                               /* Quita el margen del nombre del contacto. */
+}
+
+.detail-header .muted {
+    margin: .35rem 0 0;                      /* Pequeño espacio sobre el teléfono. */
+}
+
+/* Datos del contacto en dos columnas (nombre/apellido/teléfono/email). */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+}
+
+/* Cada dato es una mini-tarjeta con borde y fondo suave. */
+.detail-grid div {
+    padding: .85rem;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius);
+    background: var(--color-surface-soft);
+}
+
+.detail-grid dt {
+    font-weight: 700;                        /* Nombre del campo en negrita. */
+    margin-bottom: .35rem;
+}
+
+.detail-grid dd {
+    margin: 0;                               /* Quita la sangría por defecto de <dd>. */
+}
+
+/* Las notas ocupan el ancho completo (las dos columnas). */
+.detail-notes {
+    grid-column: 1 / -1;
+}
+
+/* 8. UTILIDADES ----------------------------------------------------- */
+
+/* Texto atenuado (teléfonos, mensajes secundarios). */
+.muted {
+    color: var(--color-muted);
+}
+
+/* Marcas de campo obligatorio y etiqueta de peligro en negrita. */
+.required-mark,
+.danger {
+    font-weight: 700;
+}
+
+/* "Visually hidden": oculta visualmente pero deja el contenido accesible
+   a lectores de pantalla. Reaparece si recibe foco (:focus-within/:active),
+   útil para etiquetas y leyendas (legend) que no queremos mostrar. */
+.visually-hidden:where(:not(:focus-within, :active)) {
+    position: absolute !important;
+    clip-path: inset(50%) !important;
+    overflow: hidden !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: nowrap !important;
+}
+
+/* 9. RESPONSIVE + PREFERENCIAS DEL SISTEMA -------------------------- */
+
+/* En pantallas angostas, apilamos los paneles en una sola columna. */
+@media (max-width: 760px) {
+    .container {
+        height: auto;                        /* Deja crecer la página y scrollear normalmente. */
+        overflow: visible;
+    }
+
+    .agenda {
+        grid-template-columns: 1fr;          /* Una sola columna: maestro arriba, detalle abajo. */
+    }
+
+    .master-panel {
+        max-height: min(58dvh, 520px);       /* Limita la altura de la lista en móvil. */
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;          /* Datos del detalle en una columna. */
+    }
+}
+
+/* En dispositivos táctiles, agrandamos los objetivos para tocar mejor. */
+@media (pointer: coarse) {
+    input,
+    textarea,
+    button {
+        min-block-size: 48px;
+    }
+}
+
+/* Respeta a quienes piden menos movimiento: casi anula transiciones/animaciones. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* Modo de "colores forzados" (alto contraste de Windows): usa colores del sistema. */
+@media (forced-colors: active) {
+    .contact-radio:focus-visible + .contact-item {
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+    }
+}

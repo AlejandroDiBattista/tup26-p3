@@ -1,0 +1,166 @@
+@page "/contacto/{Id:int}"
+@inject CrmService Crm
+@inject NavigationManager Nav
+@inject AgenteFiltroService Contexto
+@implements IDisposable
+
+@if (contacto is null) {
+    <p class="empty">Cargando ficha...</p>
+} else {
+    <div class="ficha-head">
+        <div>
+            <h2>@contacto.Nombre</h2>
+            <div class="empresa">@contacto.Empresa</div>
+            <div class="meta" style="margin-top:0.4rem;">@contacto.Email · @contacto.Telefono</div>
+        </div>
+        <button class="btn btn-ghost" @onclick="Volver">Volver</button>
+    </div>
+
+    <div class="ficha-grid">
+        <div>
+            <h3 style="margin-top:0;">Oportunidades</h3>
+            @if (contacto.Oportunidades.Count == 0) {
+                <p class="empty">Sin oportunidades.</p>
+            } else {
+                <div class="list">
+                    @foreach (var o in contacto.Oportunidades.OrderByDescending(o => o.Monto)) {
+                        <div class="list-item">
+                            <div>
+                                <div class="who">@o.Descripcion</div>
+                                <div class="meta">$@o.Monto.ToString("N0")</div>
+                            </div>
+                            <span class="badge badge-@o.Etapa">@o.Etapa</span>
+                        </div>
+                    }
+                </div>
+                <div class="meta" style="margin-top:0.8rem;">
+                    Total en juego: <strong>$@contacto.Oportunidades.Sum(o => o.Monto).ToString("N0")</strong>
+                </div>
+            }
+
+            <div style="margin-top:1.5rem;">
+                <button class="btn @(altaOp ? "btn-ghost" : "")" @onclick="() => altaOp = !altaOp">
+                    @(altaOp ? "Cancelar" : "+ Oportunidad")
+                </button>
+            </div>
+            @if (altaOp) {
+                <div class="card" style="margin-top:0.8rem;">
+                    <div class="field">
+                        <label>Descripcion</label>
+                        <input @bind="opDesc" />
+                    </div>
+                    <div class="field">
+                        <label>Monto</label>
+                        <input type="number" @bind="opMonto" />
+                    </div>
+                    <button class="btn" @onclick="GuardarOpAsync">Crear</button>
+                </div>
+            }
+        </div>
+
+        <div>
+            <h3 style="margin-top:0;">Historial de actividades</h3>
+            @if (contacto.Actividades.Count == 0) {
+                <p class="empty">Sin actividades.</p>
+            } else {
+                @foreach (var a in contacto.Actividades.OrderByDescending(a => a.Fecha)) {
+                    <div class="timeline-item">
+                        <div class="t-tipo">@a.Tipo</div>
+                        <div class="t-fecha">@a.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                        <div class="t-detalle">@a.Detalle</div>
+                    </div>
+                }
+            }
+
+            <div style="margin-top:1rem;">
+                <button class="btn @(altaAct ? "btn-ghost" : "")" @onclick="() => altaAct = !altaAct">
+                    @(altaAct ? "Cancelar" : "+ Actividad")
+                </button>
+            </div>
+            @if (altaAct) {
+                <div class="card" style="margin-top:0.8rem;">
+                    <div class="field">
+                        <label>Tipo</label>
+                        <select @bind="actTipo">
+                            <option>Llamada</option>
+                            <option>Mail</option>
+                            <option>Reunion</option>
+                            <option>Nota</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Detalle</label>
+                        <textarea @bind="actDetalle" rows="2"></textarea>
+                    </div>
+                    <button class="btn" @onclick="GuardarActAsync">Registrar</button>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Contacto? contacto;
+
+    private bool altaOp;
+    private string opDesc = "";
+    private decimal opMonto;
+
+    private bool altaAct;
+    private string actTipo = "Llamada";
+    private string actDetalle = "";
+
+    protected override void OnInitialized() {
+        Contexto.OnChange += OnAgenteActuo;
+    }
+
+    protected override async Task OnParametersSetAsync() {
+        await this.CargarAsync();
+        if (this.contacto is not null)
+            Contexto.SetContactoActual(this.contacto.Id, this.contacto.Nombre, this.contacto.Empresa);
+    }
+
+    // Solo carga datos — no toca el servicio de contexto para no disparar OnChange.
+    private async Task CargarAsync() {
+        this.contacto = await this.Crm.FichaCompletaAsync(this.Id);
+    }
+
+    private async void OnAgenteActuo() {
+        await CargarAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() {
+        Contexto.OnChange -= OnAgenteActuo;
+        Contexto.LimpiarContactoActual();
+    }
+
+    private async Task GuardarOpAsync() {
+        if (string.IsNullOrWhiteSpace(this.opDesc)) {
+            return;
+        }
+
+        await this.Crm.CrearOportunidadAsync(this.Id, this.opDesc, this.opMonto);
+        this.opDesc = "";
+        this.opMonto = 0;
+        this.altaOp = false;
+        await this.CargarAsync();
+    }
+
+    private async Task GuardarActAsync() {
+        if (string.IsNullOrWhiteSpace(this.actDetalle)) {
+            return;
+        }
+
+        await this.Crm.RegistrarActividadAsync(this.Id, this.actTipo, this.actDetalle);
+        this.actDetalle = "";
+        this.altaAct = false;
+        await this.CargarAsync();
+    }
+
+    private void Volver() {
+        this.Nav.NavigateTo("/");
+    }
+}

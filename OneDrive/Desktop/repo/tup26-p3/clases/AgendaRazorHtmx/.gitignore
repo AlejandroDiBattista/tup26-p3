@@ -1,0 +1,37 @@
+# Build results
+bin/
+obj/
+
+# User-specific IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+
+# Test and coverage output
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+packages/
+
+# Logs
+*.log
+
+# Local SQLite database files
+agenda.db
+agenda.db-shm
+agenda.db-wal
+*.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+### Probamos el servidor desde HTTP
+
+GET https://www.google.com
+
+###
+
+GET http://localhost:5001/productos

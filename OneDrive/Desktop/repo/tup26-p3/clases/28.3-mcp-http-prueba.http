@@ -1,0 +1,40 @@
+### Inicializar
+POST http://localhost:5002/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2025-06-18",
+    "capabilities": {},
+    "clientInfo": { "name": "http-client", "version": "1.0" }
+  }
+}
+
+### Listar herramientas
+POST http://localhost:5002/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list"
+}
+
+### Llamar a la herramienta saludar
+POST http://localhost:5002/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "saludar",
+    "arguments": {
+      "nombre": "Ada Lovelace"
+    }
+  }
+}

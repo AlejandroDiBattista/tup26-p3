@@ -1,0 +1,13 @@
+A1	"Producto
+B1	"Precio
+C1	"Cant
+D1	"Total
+F1	iva=
+G1	21
+E2	=cuota(1200, 12, 10)
+A4	"Cafe
+B4	10.5
+C4	3
+D4	=B4 * C4
+E4	=si(B4 > 10, B4 + G3, 0)
+A5	cuota(monto, meses, tasa) = monto * (1 + tasa / 100) / meses

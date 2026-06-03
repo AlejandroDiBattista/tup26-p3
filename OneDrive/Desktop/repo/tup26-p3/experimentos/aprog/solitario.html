@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solitario</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --table: #0b5d3b;
+        --felt: #0f7a4d;
+        --slot: rgba(255, 255, 255, 0.16);
+        --card-w: 94px;
+        --card-h: 132px;
+        --radius: 12px;
+        --shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+        --red: #c53b36;
+        --black: #1b1b1d;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255,255,255,.08), transparent 30%),
+          linear-gradient(180deg, var(--felt), var(--table));
+        color: #f7f2e8;
+      }
+      .app {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3rem);
+        letter-spacing: .04em;
+        text-shadow: 0 2px 8px rgba(0,0,0,.3);
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        background: rgba(255,255,255,.14);
+        color: #fff;
+        backdrop-filter: blur(8px);
+      }
+      button:hover { background: rgba(255,255,255,.22); }
+      .board {
+        display: grid;
+        gap: 20px;
+      }
+      .top-row, .tableau {
+        display: grid;
+        gap: 16px;
+      }
+      .top-row {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        align-items: start;
+      }
+      .left-area {
+        grid-column: span 3;
+        display: flex;
+        gap: 16px;
+      }
+      .foundations {
+        grid-column: span 4;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .tableau {
+        grid-template-columns: repeat(7, minmax(var(--card-w), 1fr));
+        align-items: start;
+      }
+      .pile, .foundation, .tableau-col {
+        position: relative;
+      }
+      .slot {
+        width: var(--card-w);
+        height: var(--card-h);
+        border-radius: var(--radius);
+        border: 2px dashed var(--slot);
+        background: rgba(255,255,255,.05);
+        box-shadow: inset 0 2px 10px rgba(0,0,0,.16);
+      }
+      .waste, .stock, .foundation, .tableau-col {
+        min-height: var(--card-h);
+      }
+      .tableau-col {
+        padding-bottom: 20px;
+      }
+      .card {
+        position: absolute;
+        width: var(--card-w);
+        height: var(--card-h);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.98), rgba(245,240,232,.98));
+        border: 1px solid rgba(0,0,0,.18);
+        box-shadow: var(--shadow);
+        user-select: none;
+        transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+        overflow: hidden;
+      }
+      .card.face-down {
+        background:
+          radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 20%),
+          repeating-linear-gradient(45deg, #1e3f8f 0 8px, #274ca5 8px 16px),
+          linear-gradient(180deg, #183476, #0f2456);
+        border: 1px solid rgba(255,255,255,.14);
+      }
+      .card.face-down::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 8px;
+        border: 2px solid rgba(255,255,255,.45);
+        background:
+          repeating-linear-gradient(-45deg, rgba(255,255,255,.08) 0 6px, rgba(255,255,255,.02) 6px 12px);
+      }
+      .card.face-up { cursor: pointer; }
+      .card.face-up:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 28px rgba(0,0,0,.34);
+      }
+      .card.red { color: var(--red); }
+      .card.black { color: var(--black); }
+      .corner {
+        position: absolute;
+        left: 8px;
+        top: 6px;
+        display: grid;
+        justify-items: center;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .corner.bottom {
+        left: auto;
+        right: 8px;
+        top: auto;
+        bottom: 6px;
+        transform: rotate(180deg);
+      }
+      .rank { font-size: 1.15rem; }
+      .suit { font-size: 1rem; margin-top: 2px; }
+      .center {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 2.7rem;
+        opacity: .95;
+      }
+      .fan-card { pointer-events: auto; }
+      .selected {
+        outline: 3px solid rgba(255, 223, 130, 0.95);
+        transform: translateY(-8px);
+      }
+      .hint {
+        margin-top: 16px;
+        color: rgba(255,255,255,.86);
+      }
+      @media (max-width: 900px) {
+        :root { --card-w: 78px; --card-h: 110px; }
+        .top-row { grid-template-columns: 1fr; }
+        .left-area, .foundations { grid-column: auto; }
+      }
+      @media (max-width: 640px) {
+        :root { --card-w: 64px; --card-h: 92px; }
+        .app { padding: 12px; }
+        .tableau, .foundations, .left-area { gap: 10px; }
+        .center { font-size: 2rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="topbar">
+        <div>
+          <h1>Solitario</h1>
+          <div class="hint">Robá del mazo, mové cartas a fundaciones o armá columnas alternando colores.</div>
+        </div>
+        <div class="actions">
+          <button id="drawBtn">Robar</button>
+          <button id="resetBtn">Nuevo juego</button>
+        </div>
+      </div>
+
+      <div class="board">
+        <div class="top-row">
+          <div class="left-area">
+            <div class="pile stock" id="stock"></div>
+            <div class="pile waste" id="waste"></div>
+          </div>
+          <div class="foundations" id="foundations"></div>
+        </div>
+        <div class="tableau" id="tableau"></div>
+      </div>
+    </div>
+
+    <script>
+      const suits = [
+        { key: 'hearts', symbol: '♥', color: 'red' },
+        { key: 'diamonds', symbol: '♦', color: 'red' },
+        { key: 'clubs', symbol: '♣', color: 'black' },
+        { key: 'spades', symbol: '♠', color: 'black' },
+      ]
+      const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+
+      const state = {
+        stock: [],
+        waste: [],
+        foundations: [[], [], [], []],
+        tableau: [[], [], [], [], [], [], []],
+        selected: null,
+      }
+
+      const stockEl = document.getElementById('stock')
+      const wasteEl = document.getElementById('waste')
+      const foundationsEl = document.getElementById('foundations')
+      const tableauEl = document.getElementById('tableau')
+      const drawBtn = document.getElementById('drawBtn')
+      const resetBtn = document.getElementById('resetBtn')
+
+      function createDeck() {
+        const deck = []
+        let id = 1
+        for (const suit of suits) {
+          for (let value = 1; value <= 13; value += 1) {
+            deck.push({
+              id: id++,
+              suit: suit.key,
+              symbol: suit.symbol,
+              color: suit.color,
+              value,
+              rank: ranks[value - 1],
+              faceUp: false,
+            })
+          }
+        }
+        return deck
+      }
+
+      function shuffle(deck) {
+        const clone = [...deck]
+        for (let i = clone.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[clone[i], clone[j]] = [clone[j], clone[i]]
+        }
+        return clone
+      }
+
+      function startGame() {
+        const deck = shuffle(createDeck())
+        state.stock = []
+        state.waste = []
+        state.foundations = [[], [], [], []]
+        state.tableau = [[], [], [], [], [], [], []]
+        state.selected = null
+
+        for (let col = 0; col < 7; col += 1) {
+          for (let row = 0; row <= col; row += 1) {
+            const card = deck.pop()
+            card.faceUp = row === col
+            state.tableau[col].push(card)
+          }
+        }
+        state.stock = deck
+        render()
+      }
+
+      function cardHtml(card, extraClass = '') {
+        const classes = ['card', card.faceUp ? 'face-up' : 'face-down', card.color, extraClass].filter(Boolean).join(' ')
+        if (!card.faceUp) return `<div class="${classes}" data-id="${card.id}"></div>`
+        return `
+          <div class="${classes}" data-id="${card.id}">
+            <div class="corner"><div class="rank">${card.rank}</div><div class="suit">${card.symbol}</div></div>
+            <div class="center">${card.symbol}</div>
+            <div class="corner bottom"><div class="rank">${card.rank}</div><div class="suit">${card.symbol}</div></div>
+          </div>
+        `
+      }
+
+      function renderStock() {
+        stockEl.innerHTML = state.stock.length
+          ? cardHtml({ id: 'stock', faceUp: false, color: 'black' })
+          : '<div class="slot"></div>'
+      }
+
+      function renderWaste() {
+        if (!state.waste.length) {
+          wasteEl.innerHTML = '<div class="slot"></div>'
+          return
+        }
+        const card = state.waste[state.waste.length - 1]
+        const selected = state.selected?.type === 'waste' ? 'selected' : ''
+        wasteEl.innerHTML = cardHtml(card, selected)
+      }
+
+      function renderFoundations() {
+        foundationsEl.innerHTML = ''
+        state.foundations.forEach((pile, index) => {
+          const wrapper = document.createElement('div')
+          wrapper.className = 'foundation'
+          wrapper.dataset.index = index
+          wrapper.innerHTML = pile.length ? cardHtml(pile[pile.length - 1]) : '<div class="slot"></div>'
+          foundationsEl.appendChild(wrapper)
+        })
+      }
+
+      function renderTableau() {
+        tableauEl.innerHTML = ''
+        state.tableau.forEach((column, colIndex) => {
+          const col = document.createElement('div')
+          col.className = 'tableau-col'
+          col.dataset.index = colIndex
+          if (!column.length) {
+            col.innerHTML = '<div class="slot"></div>'
+          } else {
+            column.forEach((card, cardIndex) => {
+              const selected = state.selected?.type === 'tableau' && state.selected.col === colIndex && state.selected.index === cardIndex ? 'selected' : ''
+              const wrapper = document.createElement('div')
+              wrapper.innerHTML = cardHtml(card, `fan-card ${selected}`)
+              const cardEl = wrapper.firstElementChild
+              cardEl.style.top = `${cardIndex * (card.faceUp ? 30 : 14)}px`
+              cardEl.dataset.col = colIndex
+              cardEl.dataset.index = cardIndex
+              col.appendChild(cardEl)
+            })
+            col.style.minHeight = `${132 + Math.max(0, column.length - 1) * 30}px`
+          }
+          tableauEl.appendChild(col)
+        })
+      }
+
+      function render() {
+        renderStock()
+        renderWaste()
+        renderFoundations()
+        renderTableau()
+      }
+
+      function topCard(pile) {
+        return pile[pile.length - 1]
+      }
+
+      function canMoveToFoundation(card, foundation) {
+        if (!foundation.length) return card.value === 1
+        const top = topCard(foundation)
+        return top.suit === card.suit && card.value === top.value + 1
+      }
+
+      function canMoveToTableau(card, column) {
+        if (!column.length) return card.value === 13
+        const top = topCard(column)
+        if (!top.faceUp) return false
+        return top.color !== card.color && card.value === top.value - 1
+      }
+
+      function clearSelection() {
+        state.selected = null
+      }
+
+      function revealLast(column) {
+        if (column.length && !topCard(column).faceUp) topCard(column).faceUp = true
+      }
+
+      function tryAutoMoveToFoundation(card, from) {
+        for (let i = 0; i < state.foundations.length; i += 1) {
+          if (canMoveToFoundation(card, state.foundations[i])) {
+            removeFromSource(from)
+            state.foundations[i].push(card)
+            postMove(from)
+            return true
+          }
+        }
+        return false
+      }
+
+      function removeFromSource(from) {
+        if (from.type === 'waste') {
+          state.waste.pop()
+          return
+        }
+        if (from.type === 'tableau') {
+          state.tableau[from.col].splice(from.index)
+        }
+      }
+
+      function postMove(from) {
+        if (from.type === 'tableau') revealLast(state.tableau[from.col])
+        clearSelection()
+        render()
+      }
+
+      function drawCard() {
+        clearSelection()
+        if (!state.stock.length) {
+          state.stock = state.waste.reverse().map((card) => ({ ...card, faceUp: false }))
+          state.waste = []
+          render()
+          return
+        }
+        const card = state.stock.pop()
+        card.faceUp = true
+        state.waste.push(card)
+        render()
+      }
+
+      function selectWaste() {
+        if (!state.waste.length) return
+        const card = topCard(state.waste)
+        if (tryAutoMoveToFoundation(card, { type: 'waste' })) return
+        state.selected = state.selected?.type === 'waste' ? null : { type: 'waste' }
+        render()
+      }
+
+      function selectTableauCard(col, index) {
+        const column = state.tableau[col]
+        const card = column[index]
+        if (!card.faceUp) {
+          if (index === column.length - 1) {
+            card.faceUp = true
+            render()
+          }
+          return
+        }
+        if (index === column.length - 1 && tryAutoMoveToFoundation(card, { type: 'tableau', col, index })) return
+        state.selected = state.selected?.type === 'tableau' && state.selected.col === col && state.selected.index === index
+          ? null
+          : { type: 'tableau', col, index }
+        render()
+      }
+
+      function getSelectedCards() {
+        if (!state.selected) return null
+        if (state.selected.type === 'waste') {
+          return { cards: [topCard(state.waste)], from: { type: 'waste' } }
+        }
+        const { col, index } = state.selected
+        return {
+          cards: state.tableau[col].slice(index),
+          from: { type: 'tableau', col, index },
+        }
+      }
+
+      function moveSelectionToTableau(targetCol) {
+        const selection = getSelectedCards()
+        if (!selection) return
+        const target = state.tableau[targetCol]
+        const first = selection.cards[0]
+        if (!canMoveToTableau(first, target)) return
+        removeFromSource(selection.from)
+        target.push(...selection.cards)
+        postMove(selection.from)
+      }
+
+      function moveSelectionToFoundation(targetIndex) {
+        const selection = getSelectedCards()
+        if (!selection || selection.cards.length !== 1) return
+        const [card] = selection.cards
+        if (!canMoveToFoundation(card, state.foundations[targetIndex])) return
+        removeFromSource(selection.from)
+        state.foundations[targetIndex].push(card)
+        postMove(selection.from)
+      }
+
+      stockEl.addEventListener('click', drawCard)
+      drawBtn.addEventListener('click', drawCard)
+      resetBtn.addEventListener('click', startGame)
+      wasteEl.addEventListener('click', selectWaste)
+
+      foundationsEl.addEventListener('click', (event) => {
+        const foundation = event.target.closest('.foundation')
+        if (!foundation) return
+        moveSelectionToFoundation(Number(foundation.dataset.index))
+      })
+
+      tableauEl.addEventListener('click', (event) => {
+        const cardEl = event.target.closest('.card')
+        if (cardEl) {
+          selectTableauCard(Number(cardEl.dataset.col), Number(cardEl.dataset.index))
+          return
+        }
+        const columnEl = event.target.closest('.tableau-col')
+        if (columnEl) moveSelectionToTableau(Number(columnEl.dataset.index))
+      })
+
+      startGame()
+    </script>
+  </body>
+</html>

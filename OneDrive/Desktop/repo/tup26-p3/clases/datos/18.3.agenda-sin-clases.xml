@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Agenda>
+  <Contactos>
+    <Contacto>
+      <Nombre>Ana</Nombre>
+      <Apellido>Martínez</Apellido>
+      <Edad>31</Edad>
+    </Contacto>
+    <Contacto>
+      <Nombre>Luis</Nombre>
+      <Apellido>Rodríguez</Apellido>
+      <Edad>28</Edad>
+    </Contacto>
+  </Contactos>
+</Agenda>
