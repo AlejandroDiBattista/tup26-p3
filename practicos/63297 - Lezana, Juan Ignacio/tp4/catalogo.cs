@@ -242,6 +242,116 @@ async Task AbrirDialogoMovimientoAsync(TipoMovimiento tipo)
     ActualizarListas();
 }
 
-// ── DTO ───────────────────────────────────────────────────────────────────
+ProductoEntrada? PedirProducto(ProductoDto? producto) {
+    using var dialogo = new Dialog {
+        Title = producto is null ? " Agregar producto " : " Editar producto ",
+        Width = 62,
+        Height = 15
+    };
+
+    var codigo = new TextField { X = 12, Y = 1, Width = 42, Text = producto?.Codigo ?? "" };
+    var nombre = new TextField { X = 12, Y = 3, Width = 42, Text = producto?.Nombre ?? "" };
+    var precio = new TextField { X = 12, Y = 5, Width = 16, Text = (producto?.Precio ?? 0m).ToString() };
+    var stock = new TextField { X = 12, Y = 7, Width = 16, Text = (producto?.Stock ?? 0).ToString() };
+    var guardar = new Button { Text = "Guardar", IsDefault = true };
+    var cancelar = new Button { Text = "Cancelar" };
+    var aceptado = false;
+
+    guardar.Accepted += (_, _) => { aceptado = true; dialogo.RequestStop(); };
+    cancelar.Accepted += (_, _) => dialogo.RequestStop();
+
+    dialogo.Add(
+        new Label { X = 2, Y = 1, Text = "Codigo:" },
+        codigo,
+        new Label { X = 2, Y = 3, Text = "Nombre:" },
+        nombre,
+        new Label { X = 2, Y = 5, Text = "Precio:" },
+        precio,
+        new Label { X = 2, Y = 7, Text = "Stock:" },
+        stock
+    );
+    dialogo.AddButton(cancelar);
+    dialogo.AddButton(guardar);
+
+    app.Run(dialogo);
+    if (!aceptado) return null;
+
+    if (!decimal.TryParse(precio.Text?.ToString(), out var precioNumero)
+        || !int.TryParse(stock.Text?.ToString(), out var stockNumero)
+        || string.IsNullOrWhiteSpace(codigo.Text?.ToString())
+        || string.IsNullOrWhiteSpace(nombre.Text?.ToString())
+        || precioNumero < 0
+        || stockNumero < 0) {
+        MessageBox.Query(app, "Datos invalidos", "Complete codigo, nombre, precio y stock con valores validos.", "OK");
+        return null;
+    }
+
+    return new ProductoEntrada(
+        codigo.Text.ToString()!.Trim(),
+        nombre.Text.ToString()!.Trim(),
+        precioNumero,
+        stockNumero
+    );
+}
+
+int? PedirCantidad(TipoMovimiento tipo, ProductoDto producto) {
+    using var dialogo = new Dialog {
+        Title = $" {tipo} ",
+        Width = 62,
+        Height = 10
+    };
+
+    var ayuda = tipo == TipoMovimiento.Ajuste
+        ? "En ajuste, la cantidad es el nuevo stock final."
+        : "La cantidad debe ser positiva.";
+    var cantidad = new TextField { X = 12, Y = 4, Width = 16, Text = "1" };
+    var guardar = new Button { Text = "Registrar", IsDefault = true };
+    var cancelar = new Button { Text = "Cancelar" };
+    var aceptado = false;
+
+    guardar.Accepted += (_, _) => { aceptado = true; dialogo.RequestStop(); };
+    cancelar.Accepted += (_, _) => dialogo.RequestStop();
+
+    dialogo.Add(
+        new Label { X = 2, Y = 1, Text = $"{producto.Codigo} - {producto.Nombre}" },
+        new Label { X = 2, Y = 2, Text = ayuda },
+        new Label { X = 2, Y = 4, Text = "Cantidad:" },
+        cantidad
+    );
+    dialogo.AddButton(cancelar);
+    dialogo.AddButton(guardar);
+
+    app.Run(dialogo);
+    if (!aceptado) return null;
+
+    if (!int.TryParse(cantidad.Text?.ToString(), out var numero) || numero <= 0) {
+        MessageBox.Query(app, "Datos invalidos", "La cantidad debe ser un entero positivo.", "OK");
+        return null;
+    }
+
+    return numero;
+}
+
+async Task MostrarErrorAsync(HttpResponseMessage respuesta) {
+    MessageBox.Query(app, "Error", $"Error {(int)respuesta.StatusCode}: {await respuesta.Content.ReadAsStringAsync()}", "OK");
+}
+
+static string FormatearProducto(ProductoDto p) =>
+    $"{p.Codigo,-8} {Recortar(p.Nombre,24),-24} ${p.Precio,10:N2} Stock:{p.Stock}";
+
+static string FormatearMovimiento(MovimientoDto m) =>
+    $"{m.Tipo,-7} {m.Cantidad,6}  {m.Fecha:dd/MM/yyyy HH:mm}";
+
+static string Recortar(string texto, int largo) =>
+    texto.Length <= largo ? texto : texto[..(largo - 1)] + ".";
+
+enum TipoMovimiento {
+    Compra,
+    Venta,
+    Ajuste
+}
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha);
+record ProductoEntrada(string Codigo, string Nombre, decimal Precio, int Stock);
+record MovimientoEntrada(TipoMovimiento Tipo, int Cantidad);
