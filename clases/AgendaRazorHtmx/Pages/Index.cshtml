@@ -1,0 +1,114 @@
+@page
+@using AgendaRazorHtmx
+@using Microsoft.AspNetCore.Mvc
+@inject ContactStore ContactStore
+
+@{
+    ViewData["Title"] = "Agenda";
+    Layout = "_Layout";
+}
+
+<h1 id="agenda-title">Agenda</h1>
+
+<div class="agenda">
+    <section class="panel master-panel" aria-labelledby="agenda-title">
+        <button
+            class="primary"
+            hx-get="/?handler=New"
+            hx-target="#detail"
+            hx-swap="innerHTML">
+            Nuevo contacto
+        </button>
+
+        <hr />
+
+        <form id="search-form">
+            <label class="visually-hidden" for="search">Buscar contactos</label>
+            <input
+                id="search"
+                name="search"
+                type="search"
+                placeholder="Buscar por nombre, teléfono o email"
+                autocomplete="off"
+                hx-get="/?handler=List"
+                hx-trigger="input changed delay:250ms, search"
+                hx-target="#master"
+                hx-swap="innerHTML" />
+        </form>
+        <div
+            id="master"
+            class="list-scroll"
+            hx-get="/?handler=List"
+            hx-trigger="load, contactsChanged from:body"
+            hx-include="#search-form"
+            hx-swap="innerHTML">
+        </div>
+    </section>
+
+    <section class="panel">
+        <div id="detail" aria-live="polite" aria-atomic="true">
+            <p>Seleccioná un contacto.</p>
+        </div>
+    </section>
+</div>
+
+@functions {
+    public IActionResult OnGetList(string? search, int? selectedId) {
+        return Partial("_ContactList", new ContactListViewModel(ContactStore.GetAll(search), selectedId));
+    }
+
+    public IActionResult OnGetNew() {
+        Response.Headers["HX-Trigger"] = "contactsChanged";
+        return Partial("_ContactForm", new ContactInput(0, "", "", "", "", ""));
+    }
+
+    public IActionResult OnGetEmpty() {
+        return Content("<p>Seleccioná un contacto.</p>", "text/html");
+    }
+
+    public IActionResult OnGetDetail(int id) {
+        Contact? contact = ContactStore.GetById(id);
+
+        if (contact is null) {
+            return NotFound();
+        }
+
+        return Partial("_ContactDetail", contact);
+    }
+
+    public IActionResult OnGetEdit(int id) {
+        Contact? contact = ContactStore.GetById(id);
+
+        if (contact is null) {
+            return NotFound();
+        }
+
+        Response.Headers["HX-Trigger"] = "contactsChanged";
+        return Partial("_ContactForm", ToInput(contact));
+    }
+
+    public IActionResult OnPostSave(ContactInput input) {
+        Contact savedContact = ContactStore.Save(input);
+
+        Response.Headers["HX-Trigger"] = "contactsChanged";
+        return Partial("_ContactDetail", savedContact);
+    }
+
+    public IActionResult OnPostDelete(int id) {
+        ContactStore.Delete(id);
+
+        Response.Headers["HX-Trigger"] = "contactsChanged";
+        return Content("<p>Contacto eliminado.</p>", "text/html");
+    }
+
+    private static ContactInput ToInput(Contact contact) {
+        return new ContactInput(
+            contact.Id,
+            contact.Nombre,
+            contact.Apellido,
+            contact.Telefono,
+            contact.Email,
+            contact.Notas
+        );
+    }
+}

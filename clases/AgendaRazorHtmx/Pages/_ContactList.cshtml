@@ -1,0 +1,36 @@
+@using AgendaRazorHtmx
+@model ContactListViewModel
+
+<form class="contact-list">
+    <fieldset class="contact-group">
+        <legend class="visually-hidden">Contactos</legend>
+
+        @if (Model.Contacts.Count == 0) {
+            <p class="muted">No hay contactos para esa búsqueda.</p>
+        } else {
+            foreach (Contact contact in Model.Contacts) {
+                string inputId = $"contact-{contact.Id}";
+
+                <div class="contact-option">
+                    <input
+                        id="@inputId"
+                        class="contact-radio"
+                        type="radio"
+                        name="selectedContact"
+                        value="@contact.Id"
+                        checked="@(Model.SelectedId == contact.Id)"
+                        hx-get="/?handler=Detail&id=@contact.Id"
+                        hx-trigger="change"
+                        hx-target="#detail"
+                        hx-swap="innerHTML" />
+
+                    <label class="contact-item" for="@inputId">
+                        <strong>@contact.Apellido, @contact.Nombre</strong>
+                        <br />
+                        <span class="muted">@contact.Telefono</span>
+                    </label>
+                </div>
+            }
+        }
+    </fieldset>
+</form>

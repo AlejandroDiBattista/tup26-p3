@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>HIIT Intervalos</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f3eee4;
+      --paper-deep: #dfd2bd;
+      --ink: #17140f;
+      --muted: #6d6252;
+      --line: rgba(23, 20, 15, .14);
+      --effort: #e94b36;
+      --effort-dark: #8f261a;
+      --rest: #157f77;
+      --rest-dark: #07504b;
+      --gold: #d79b27;
+      --shadow: 0 18px 60px rgba(55, 40, 18, .16);
+      --radius: 8px;
+      --phase: var(--rest);
+      --phase-dark: var(--rest-dark);
+      font-family: ui-sans-serif, "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(215, 155, 39, .28), transparent 24rem),
+        radial-gradient(circle at 88% 76%, rgba(21, 127, 119, .18), transparent 24rem),
+        linear-gradient(135deg, #f7f1e6 0%, var(--paper) 43%, #eadbc2 100%);
+      color: var(--ink);
+    }
+
+    body {
+      min-height: 100svh;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+    }
+
+    button {
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: 100%;
+      height: 100svh;
+      position: relative;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+
+    .page {
+      width: 100%;
+      height: 100svh;
+      padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+
+    .main-page,
+    .settings-page {
+      position: absolute;
+      inset: 0;
+      transition: transform .38s cubic-bezier(.22, 1, .36, 1), opacity .28s ease;
+    }
+
+    .main-page {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: clamp(12px, 2.4vh, 22px);
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-page {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 18px;
+      transform: translateY(100%);
+      opacity: .96;
+    }
+
+    body[data-view="settings"] .main-page {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body[data-view="settings"] .settings-page {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .meter-wrap {
+      display: grid;
+      justify-items: center;
+      align-content: start;
+      gap: clamp(10px, 2vh, 20px);
+      min-width: 0;
+    }
+
+    .brand {
+      width: min(100%, 760px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 12px);
+      gap: 5px;
+      align-items: end;
+      height: 28px;
+    }
+
+    .brand-mark span {
+      display: block;
+      width: 12px;
+      background: var(--phase);
+      border-radius: 2px;
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--phase) 30%, transparent);
+      transition: height .35s ease, background .35s ease;
+    }
+
+    .brand-mark span:nth-child(1) { height: 16px; }
+    .brand-mark span:nth-child(2) { height: 28px; }
+    .brand-mark span:nth-child(3) { height: 21px; }
+
+    .dial {
+      width: min(92vw, 58svh, 640px);
+      aspect-ratio: 1;
+      position: relative;
+      display: grid;
+      place-items: center;
+      filter: drop-shadow(var(--shadow));
+    }
+
+    .dial::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        conic-gradient(var(--phase) calc(var(--progress, 0) * 1turn), rgba(23, 20, 15, .09) 0),
+        linear-gradient(145deg, #fff7ec, #e7d7bd);
+      transition: background-color .35s ease;
+    }
+
+    .dial::after {
+      content: "";
+      position: absolute;
+      inset: clamp(18px, 4.4vw, 34px);
+      border-radius: 50%;
+      background:
+        linear-gradient(150deg, rgba(255, 252, 244, .96), rgba(233, 219, 195, .96)),
+        repeating-linear-gradient(90deg, rgba(23, 20, 15, .04) 0 1px, transparent 1px 8px);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .7),
+        inset 0 -20px 50px rgba(88, 63, 29, .08);
+    }
+
+    .dial-core {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: clamp(8px, 2vw, 18px);
+      padding: 28px;
+    }
+
+    .phase {
+      min-width: 9ch;
+      color: var(--phase-dark);
+      font-size: clamp(26px, 8vw, 76px);
+      line-height: .9;
+      font-weight: 950;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      transition: color .35s ease;
+    }
+
+    .time {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(82px, 21vw, 188px);
+      line-height: .82;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .subline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 14px;
+      color: var(--muted);
+      font-size: clamp(14px, 3.2vw, 18px);
+      font-weight: 800;
+    }
+
+    .pill {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 250, 241, .55);
+    }
+
+    .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--phase);
+      box-shadow: 0 0 0 7px color-mix(in srgb, var(--phase) 16%, transparent);
+    }
+
+    .panel {
+      display: grid;
+      align-content: end;
+      gap: clamp(10px, 2vh, 14px);
+      min-width: 0;
+    }
+
+    .settings-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .settings-title {
+      margin: 0;
+      font-size: clamp(34px, 11vw, 52px);
+      line-height: .92;
+      font-weight: 950;
+      letter-spacing: 0;
+      max-width: 9ch;
+    }
+
+    .settings-kicker {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 760;
+      line-height: 1.35;
+      max-width: 28ch;
+    }
+
+    .close-settings {
+      width: 52px;
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 250, 241, .74);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .close-settings svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 2.5;
+    }
+
+    .drag-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .drag-hint::before {
+      content: "";
+      width: 42px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(23, 20, 15, .22);
+    }
+
+    .copy {
+      display: grid;
+      gap: 9px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 64px);
+      line-height: .93;
+      letter-spacing: 0;
+      max-width: 10ch;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 36ch;
+      color: var(--muted);
+      font-size: clamp(16px, 2.1vw, 19px);
+      line-height: 1.35;
+      font-weight: 650;
+    }
+
+    .controls,
+    .settings,
+    .timeline {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 250, 241, .68);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset;
+      backdrop-filter: blur(18px);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 64px;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .start {
+      min-height: 68px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--ink);
+      color: #fff8ed;
+      font-size: 21px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 13px 24px rgba(23, 20, 15, .22);
+      transition: transform .18s ease, background .25s ease, box-shadow .18s ease;
+    }
+
+    .start:active,
+    .icon-button:active,
+    .test:active {
+      transform: translateY(1px) scale(.99);
+    }
+
+    .start[data-running="true"] {
+      background: var(--phase-dark);
+    }
+
+    .icon-button {
+      min-height: 68px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .46);
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-button svg {
+      width: 25px;
+      height: 25px;
+      stroke-width: 2.5;
+    }
+
+    .settings {
+      display: grid;
+      gap: 2px;
+      padding: 8px;
+      align-self: start;
+    }
+
+    .setting-row {
+      min-height: 48px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+
+    .setting-row + .setting-row {
+      border-top: 1px solid rgba(23, 20, 15, .08);
+    }
+
+    .setting-title {
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .setting-note {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .number-control {
+      display: grid;
+      grid-template-columns: 36px 54px 36px;
+      align-items: center;
+      gap: 4px;
+      min-height: 36px;
+    }
+
+    .number-control button,
+    .number-control input {
+      height: 36px;
+      border: 1px solid var(--line);
+      background: #fff8ed;
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .number-control button {
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .number-control input {
+      width: 54px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 15px;
+      -moz-appearance: textfield;
+    }
+
+    .number-control input::-webkit-outer-spin-button,
+    .number-control input::-webkit-inner-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
+    }
+
+    .switch {
+      position: relative;
+      width: 54px;
+      height: 32px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(23, 20, 15, .16);
+      transition: background .2s ease;
+      cursor: pointer;
+    }
+
+    .slider::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      top: 4px;
+      left: 4px;
+      border-radius: 50%;
+      background: #fff9ef;
+      box-shadow: 0 2px 8px rgba(23, 20, 15, .2);
+      transition: transform .2s ease;
+    }
+
+    .switch input:checked + .slider {
+      background: var(--phase);
+    }
+
+    .switch input:checked + .slider::after {
+      transform: translateX(22px);
+    }
+
+    .test {
+      min-height: 36px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff8ed;
+      color: var(--ink);
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(var(--segments, 6), minmax(44px, 1fr));
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+
+    .timeline::-webkit-scrollbar { display: none; }
+
+    .segment {
+      min-height: 58px;
+      display: grid;
+      place-items: center;
+      border-right: 1px solid rgba(23, 20, 15, .08);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      position: relative;
+    }
+
+    .segment:last-child { border-right: 0; }
+
+    .segment::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--phase);
+      opacity: 0;
+      transition: opacity .22s ease;
+    }
+
+    .segment span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .segment.is-active {
+      color: #fff9ef;
+    }
+
+    .segment.is-active::before {
+      opacity: .92;
+    }
+
+    .segment.is-done {
+      color: color-mix(in srgb, var(--ink) 68%, white);
+      background: rgba(23, 20, 15, .06);
+    }
+
+    .hint {
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 650;
+      text-align: center;
+      max-width: 46ch;
+    }
+
+    .done-badge {
+      display: none;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      color: #fff9ef;
+      background: #21443c;
+      font-weight: 850;
+      line-height: 1.3;
+    }
+
+    .done-badge.is-visible { display: block; }
+
+    body[data-phase="effort"] {
+      --phase: var(--effort);
+      --phase-dark: var(--effort-dark);
+    }
+
+    body[data-phase="rest"] {
+      --phase: var(--rest);
+      --phase-dark: var(--rest-dark);
+    }
+
+    body[data-running="true"] .brand-mark span:nth-child(1) {
+      animation: bar 920ms ease-in-out infinite alternate;
+    }
+
+    body[data-running="true"] .brand-mark span:nth-child(2) {
+      animation: bar 720ms ease-in-out infinite alternate;
+    }
+
+    body[data-running="true"] .brand-mark span:nth-child(3) {
+      animation: bar 1040ms ease-in-out infinite alternate;
+    }
+
+    @keyframes bar {
+      to { height: 8px; }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+
+      .app {
+        height: 100svh;
+      }
+
+      .meter-wrap {
+        gap: 12px;
+      }
+
+      .dial {
+        width: min(96vw, 460px);
+      }
+
+      .panel {
+        gap: 12px;
+      }
+
+      .copy {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        max-width: none;
+        font-size: clamp(30px, 10vw, 44px);
+      }
+
+      .lede {
+        max-width: none;
+      }
+
+      .timeline {
+        /* grid-template-columns: repeat(3, 1fr); */
+      }
+
+      .segment {
+        min-height: 46px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-phase="rest" data-running="false" data-view="main">
+  <main class="app">
+    <section class="page main-page" id="mainPage" aria-label="Temporizador">
+      <div class="meter-wrap">
+        <div class="brand">
+          <span id="brandLabel">Intervalo 20/90</span>
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        </div>
+
+        <div class="dial" id="dial" style="--progress: 0">
+          <div class="dial-core">
+            <div class="phase" id="phaseLabel">Listo</div>
+            <div class="time" id="timeLeft">20</div>
+            <div class="subline">
+              <span class="pill"><span class="pulse" aria-hidden="true"></span><span id="cycleLabel">Ciclo 1 de 3</span></span>
+              <span class="pill" id="totalLabel">Total 5:30</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel" aria-label="Controles">
+        <div class="controls">
+          <button class="start" id="startButton" type="button" data-running="false">Iniciar</button>
+          <button class="icon-button" id="resetButton" type="button" aria-label="Reiniciar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+              <path d="M3 4v6h6"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="timeline" id="timeline" aria-label="Secuencia">
+          <div class="segment" data-step="0"><span>E1</span></div>
+          <div class="segment" data-step="1"><span>D1</span></div>
+          <div class="segment" data-step="2"><span>E2</span></div>
+          <div class="segment" data-step="3"><span>D2</span></div>
+          <div class="segment" data-step="4"><span>E3</span></div>
+          <div class="segment" data-step="5"><span>D3</span></div>
+        </div>
+        <div class="drag-hint" id="openSettings">Desliza para ajustes</div>
+        <div class="done-badge" id="doneBadge">Sesion completa. Respira y detene el temporizador cuando estes listo.</div>
+      </section>
+    </section>
+
+    <section class="page settings-page" id="settingsPage" aria-label="Configuracion">
+      <header class="settings-head">
+        <div>
+          <h1 class="settings-title">Ajustes</h1>
+          <p class="settings-kicker">Ciclos, fases y avisos antes de guardar el celular.</p>
+        </div>
+        <button class="close-settings" id="closeSettings" type="button" aria-label="Volver al temporizador">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M18 15l-6-6-6 6"></path>
+          </svg>
+        </button>
+      </header>
+
+      <div class="settings" aria-label="Opciones de entrenamiento y audio">
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Ciclos</div>
+            <div class="setting-note">Cantidad de rondas esfuerzo/descanso.</div>
+          </div>
+          <div class="number-control" aria-label="Configurar ciclos">
+            <button type="button" data-stepper="cycles" data-delta="-1">-</button>
+            <input id="cyclesInput" type="number" min="1" max="12" step="1" value="3" inputmode="numeric">
+            <button type="button" data-stepper="cycles" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Esfuerzo</div>
+            <div class="setting-note">Duracion de cada fase activa.</div>
+          </div>
+          <div class="number-control" aria-label="Configurar esfuerzo">
+            <button type="button" data-stepper="effort" data-delta="-5">-</button>
+            <input id="effortInput" type="number" min="5" max="600" step="5" value="20" inputmode="numeric">
+            <button type="button" data-stepper="effort" data-delta="5">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Descanso</div>
+            <div class="setting-note">Duracion de cada pausa.</div>
+          </div>
+          <div class="number-control" aria-label="Configurar descanso">
+            <button type="button" data-stepper="rest" data-delta="-5">-</button>
+            <input id="restInput" type="number" min="5" max="900" step="5" value="90" inputmode="numeric">
+            <button type="button" data-stepper="rest" data-delta="5">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Voz</div>
+            <div class="setting-note">Anuncia esfuerzo, descanso y final.</div>
+          </div>
+          <label class="switch" aria-label="Activar voz">
+            <input id="voiceToggle" type="checkbox" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Cuenta regresiva</div>
+            <div class="setting-note">Pitidos de 5 a 1 antes del cambio.</div>
+          </div>
+          <label class="switch" aria-label="Activar cuenta regresiva">
+            <input id="countdownToggle" type="checkbox" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Probar audio</div>
+            <div class="setting-note">Conviene hacerlo antes de guardar el celular.</div>
+          </div>
+          <button class="test" id="testAudio" type="button">Probar</button>
+        </div>
+      </div>
+      <p class="hint">El audio empieza solo despues de tocar Iniciar, por restricciones normales del navegador del celular.</p>
+      <div class="drag-hint">Desliza hacia abajo para volver</div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var config = {
+        cycles: 3,
+        effort: 20,
+        rest: 90
+      };
+      var plan = [];
+
+      var requestFrame = window.requestAnimationFrame || function (fn) {
+        return window.setTimeout(function () { fn(now()); }, 250);
+      };
+      var cancelFrame = window.cancelAnimationFrame || window.clearTimeout;
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function now() {
+        return window.performance && performance.now ? performance.now() : Date.now();
+      }
+
+      function toArray(list) {
+        var items = [];
+        for (var i = 0; i < list.length; i += 1) items.push(list[i]);
+        return items;
+      }
+
+      function addClass(el, className) {
+        if (!el) return;
+        if (el.classList) el.classList.add(className);
+        else if ((" " + el.className + " ").indexOf(" " + className + " ") < 0) el.className += " " + className;
+      }
+
+      function removeClass(el, className) {
+        if (!el) return;
+        if (el.classList) {
+          el.classList.remove(className);
+          return;
+        }
+        el.className = (" " + el.className + " ").replace(" " + className + " ", " ").replace(/^\s+|\s+$/g, "");
+      }
+
+      function setClass(el, className, active) {
+        if (active) addClass(el, className);
+        else removeClass(el, className);
+      }
+
+      function setData(el, name, value) {
+        if (!el) return;
+        el.setAttribute("data-" + name, String(value));
+      }
+
+      var els = {
+        body: document.body,
+        dial: byId("dial"),
+        phase: byId("phaseLabel"),
+        time: byId("timeLeft"),
+        cycle: byId("cycleLabel"),
+        brand: byId("brandLabel"),
+        total: byId("totalLabel"),
+        start: byId("startButton"),
+        reset: byId("resetButton"),
+        voice: byId("voiceToggle"),
+        countdown: byId("countdownToggle"),
+        cyclesInput: byId("cyclesInput"),
+        effortInput: byId("effortInput"),
+        restInput: byId("restInput"),
+        test: byId("testAudio"),
+        done: byId("doneBadge"),
+        openSettings: byId("openSettings"),
+        closeSettings: byId("closeSettings"),
+        timeline: byId("timeline"),
+        segments: toArray(document.querySelectorAll ? document.querySelectorAll(".segment") : [])
+      };
+
+      if (!els.start || !els.reset || !els.time || !els.phase) return;
+
+      var audioContext = null;
+      var running = false;
+      var complete = false;
+      var stepIndex = 0;
+      var remaining = 0;
+      var currentEndsAt = 0;
+      var rafId = null;
+      var lastWholeSecond = null;
+      var touchStartY = 0;
+      var touchStartX = 0;
+      var swiping = false;
+      var swipingVertical = false;
+
+      function formatClock(seconds) {
+        var safe = Math.max(0, Math.ceil(seconds));
+        var mins;
+        var secs;
+        if (safe < 60) return String(safe);
+        mins = Math.floor(safe / 60);
+        secs = safe % 60;
+        return String(mins) + ":" + (secs < 10 ? "0" : "") + String(secs);
+      }
+
+      function totalSeconds() {
+        var total = 0;
+        for (var i = 0; i < plan.length; i += 1) total += plan[i].seconds;
+        return total;
+      }
+
+      function clamp(value, min, max) {
+        value = parseInt(value, 10);
+        if (isNaN(value)) value = min;
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+      }
+
+      function buildPlan() {
+        var next = [];
+        for (var cycle = 1; cycle <= config.cycles; cycle += 1) {
+          next.push({ type: "effort", label: "Esfuerzo", seconds: config.effort, cycle: cycle });
+          next.push({ type: "rest", label: "Descanso", seconds: config.rest, cycle: cycle });
+        }
+        plan = next;
+      }
+
+      function rebuildTimeline() {
+        var html = "";
+        var label;
+        var i;
+        if (!els.timeline) return;
+        for (i = 0; i < plan.length; i += 1) {
+          label = (plan[i].type === "effort" ? "E" : "D") + plan[i].cycle;
+          html += '<div class="segment" data-step="' + i + '"><span>' + label + '</span></div>';
+        }
+        els.timeline.innerHTML = html;
+        if (els.timeline.style && els.timeline.style.setProperty) els.timeline.style.setProperty("--segments", String(plan.length));
+        els.segments = toArray(els.timeline.querySelectorAll ? els.timeline.querySelectorAll(".segment") : []);
+      }
+
+      function syncInputs() {
+        if (els.cyclesInput) els.cyclesInput.value = String(config.cycles);
+        if (els.effortInput) els.effortInput.value = String(config.effort);
+        if (els.restInput) els.restInput.value = String(config.rest);
+      }
+
+      function applyConfig() {
+        buildPlan();
+        rebuildTimeline();
+        running = false;
+        complete = false;
+        stepIndex = 0;
+        remaining = plan[0].seconds;
+        lastWholeSecond = null;
+        cancelFrame(rafId);
+        try {
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+        } catch (error) {}
+        if (els.total) els.total.textContent = "Total " + formatClock(totalSeconds());
+        render();
+      }
+
+      function readConfig() {
+        config.cycles = clamp(els.cyclesInput ? els.cyclesInput.value : config.cycles, 1, 12);
+        config.effort = clamp(els.effortInput ? els.effortInput.value : config.effort, 5, 600);
+        config.rest = clamp(els.restInput ? els.restInput.value : config.rest, 5, 900);
+        syncInputs();
+        applyConfig();
+      }
+
+      function addTouchListener(name, handler) {
+        if (!document.addEventListener) return;
+        try {
+          document.addEventListener(name, handler, { passive: false });
+        } catch (error) {
+          document.addEventListener(name, handler, false);
+        }
+      }
+
+      function ensureAudio() {
+        var AudioCtor = window.AudioContext || window.webkitAudioContext;
+        try {
+          if (!audioContext && AudioCtor) audioContext = new AudioCtor();
+          if (audioContext && audioContext.state === "suspended" && audioContext.resume) audioContext.resume();
+        } catch (error) {
+          audioContext = null;
+        }
+      }
+
+      function beep(options) {
+        var frequency;
+        var duration;
+        var delay;
+        var volume;
+        var type;
+        var startAt;
+        var osc;
+        var gain;
+
+        options = options || {};
+        if (!audioContext) return;
+
+        frequency = typeof options.frequency === "number" ? options.frequency : 520;
+        duration = typeof options.duration === "number" ? options.duration : 0.14;
+        delay = typeof options.delay === "number" ? options.delay : 0;
+        volume = typeof options.volume === "number" ? options.volume : 0.24;
+        type = options.type || "sine";
+
+        try {
+          startAt = audioContext.currentTime + delay;
+          osc = audioContext.createOscillator();
+          gain = audioContext.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(frequency, startAt);
+          gain.gain.setValueAtTime(0.0001, startAt);
+          gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.start(startAt);
+          osc.stop(startAt + duration + 0.04);
+        } catch (error) {
+          audioContext = null;
+        }
+      }
+
+      function speak(text) {
+        var utterance;
+        if (!els.voice || !els.voice.checked || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+        try {
+          window.speechSynthesis.cancel();
+          utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = "es-AR";
+          utterance.rate = 0.98;
+          utterance.pitch = 1;
+          utterance.volume = 1;
+          window.speechSynthesis.speak(utterance);
+        } catch (error) {}
+      }
+
+      function vibrate(pattern) {
+        try {
+          if (navigator.vibrate) navigator.vibrate(pattern);
+        } catch (error) {}
+      }
+
+      function signal(type) {
+        ensureAudio();
+        if (type === "effort") {
+          beep({ frequency: 740, duration: 0.12, delay: 0, volume: 0.28, type: "square" });
+          beep({ frequency: 930, duration: 0.12, delay: 0.16, volume: 0.28, type: "square" });
+          beep({ frequency: 1170, duration: 0.22, delay: 0.32, volume: 0.32, type: "square" });
+          vibrate([90, 50, 90, 50, 180]);
+          speak("Esfuerzo");
+          return;
+        }
+        if (type === "rest") {
+          beep({ frequency: 420, duration: 0.2, delay: 0, volume: 0.23, type: "triangle" });
+          beep({ frequency: 300, duration: 0.36, delay: 0.25, volume: 0.24, type: "triangle" });
+          vibrate([180]);
+          speak("Descanso");
+          return;
+        }
+        if (type === "finish") {
+          beep({ frequency: 520, duration: 0.18, delay: 0, volume: 0.25, type: "sine" });
+          beep({ frequency: 660, duration: 0.18, delay: 0.18, volume: 0.25, type: "sine" });
+          beep({ frequency: 820, duration: 0.18, delay: 0.36, volume: 0.25, type: "sine" });
+          beep({ frequency: 1040, duration: 0.18, delay: 0.54, volume: 0.25, type: "sine" });
+          vibrate([100, 70, 100, 70, 280]);
+          speak("Sesion completa");
+          return;
+        }
+        if (type === "count") {
+          beep({ frequency: 980, duration: 0.08, volume: 0.18, type: "sine" });
+        }
+      }
+
+      function render() {
+        var step = plan[stepIndex] || plan[plan.length - 1];
+        var phaseText = complete ? "Listo" : (running || stepIndex > 0 ? step.label : "Listo");
+        var duration = step.seconds;
+        var elapsed = duration - remaining;
+        var progress = complete ? 1 : Math.min(1, Math.max(0, elapsed / duration));
+        var i;
+
+        setData(els.body, "phase", complete ? "rest" : step.type);
+        setData(els.body, "running", running);
+        els.phase.textContent = phaseText;
+        els.time.textContent = complete ? "0" : formatClock(remaining);
+        if (els.cycle) els.cycle.textContent = "Ciclo " + step.cycle + " de " + config.cycles;
+        if (els.brand) els.brand.textContent = "Intervalo " + config.effort + "/" + config.rest;
+        if (els.dial && els.dial.style && els.dial.style.setProperty) els.dial.style.setProperty("--progress", progress.toFixed(4));
+        setData(els.start, "running", running);
+        els.start.textContent = complete ? "Reiniciar" : (running ? "Pausar" : (stepIndex === 0 && remaining === plan[0].seconds ? "Iniciar" : "Continuar"));
+        setClass(els.done, "is-visible", complete);
+
+        for (i = 0; i < els.segments.length; i += 1) {
+          setClass(els.segments[i], "is-active", !complete && i === stepIndex);
+          setClass(els.segments[i], "is-done", complete || i < stepIndex);
+        }
+      }
+
+      function startCurrentStep(announce) {
+        if (announce !== false) announce = true;
+        currentEndsAt = now() + remaining * 1000;
+        lastWholeSecond = Math.ceil(remaining);
+        if (announce) signal(plan[stepIndex].type);
+        render();
+      }
+
+      function tick(timestamp) {
+        var whole;
+        if (!running) return;
+        remaining = Math.max(0, (currentEndsAt - timestamp) / 1000);
+        whole = Math.ceil(remaining);
+
+        if (whole !== lastWholeSecond) {
+          lastWholeSecond = whole;
+          if (els.countdown && els.countdown.checked && whole > 0 && whole <= 5) {
+            signal("count");
+            if (els.voice && els.voice.checked) speak(String(whole));
+          }
+        }
+
+        if (remaining <= 0) {
+          stepIndex += 1;
+          if (stepIndex >= plan.length) {
+            complete = true;
+            running = false;
+            remaining = 0;
+            signal("finish");
+            render();
+            return;
+          }
+          remaining = plan[stepIndex].seconds;
+          startCurrentStep(true);
+        }
+
+        render();
+        rafId = requestFrame(tick);
+      }
+
+      function start() {
+        ensureAudio();
+        if (complete) reset();
+        running = true;
+        complete = false;
+        startCurrentStep(stepIndex === 0 && remaining === plan[0].seconds);
+        cancelFrame(rafId);
+        rafId = requestFrame(tick);
+      }
+
+      function pause() {
+        running = false;
+        cancelFrame(rafId);
+        render();
+      }
+
+      function reset() {
+        running = false;
+        complete = false;
+        stepIndex = 0;
+        remaining = plan[0].seconds;
+        lastWholeSecond = null;
+        cancelFrame(rafId);
+        try {
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+        } catch (error) {}
+        render();
+      }
+
+      function showSettings() {
+        setData(els.body, "view", "settings");
+      }
+
+      function showMain() {
+        setData(els.body, "view", "main");
+      }
+
+      function onTouchStart(event) {
+        var touch;
+        if (!event.touches || !event.touches.length) return;
+        touch = event.touches[0];
+        touchStartY = touch.clientY;
+        touchStartX = touch.clientX;
+        swiping = true;
+        swipingVertical = false;
+      }
+
+      function onTouchMove(event) {
+        var touch;
+        var deltaY;
+        var deltaX;
+        if (!swiping || !event.touches || !event.touches.length) return;
+        touch = event.touches[0];
+        deltaY = touch.clientY - touchStartY;
+        deltaX = touch.clientX - touchStartX;
+        if (Math.abs(deltaY) > Math.abs(deltaX) * 1.15) {
+          swipingVertical = true;
+          if (event.cancelable) event.preventDefault();
+        }
+      }
+
+      function onTouchEnd(event) {
+        var touch;
+        var deltaY;
+        var deltaX;
+        if (!swiping || !event.changedTouches || !event.changedTouches.length) return;
+        touch = event.changedTouches[0];
+        deltaY = touch.clientY - touchStartY;
+        deltaX = touch.clientX - touchStartX;
+        swiping = false;
+        swipingVertical = false;
+
+        if (Math.abs(deltaY) < 58 || Math.abs(deltaY) < Math.abs(deltaX) * 1.25) return;
+        if (deltaY < 0) showSettings();
+        else showMain();
+      }
+
+      function onStepperClick(event) {
+        var button = event.target;
+        var target;
+        var input;
+        var delta;
+        if (!button || !button.getAttribute) return;
+        target = button.getAttribute("data-stepper");
+        if (!target) return;
+        delta = parseInt(button.getAttribute("data-delta"), 10);
+        if (isNaN(delta)) delta = 0;
+        input = target === "cycles" ? els.cyclesInput : (target === "effort" ? els.effortInput : els.restInput);
+        if (!input) return;
+        input.value = String(clamp(parseInt(input.value, 10) + delta, parseInt(input.getAttribute("min"), 10), parseInt(input.getAttribute("max"), 10)));
+        readConfig();
+      }
+
+      els.start.onclick = function () {
+        if (running) pause();
+        else start();
+      };
+
+      els.reset.onclick = reset;
+
+      if (els.test) {
+        els.test.onclick = function () {
+          ensureAudio();
+          speak("Audio listo");
+          beep({ frequency: 740, duration: 0.12, delay: 0, volume: 0.24, type: "square" });
+          beep({ frequency: 300, duration: 0.26, delay: 0.22, volume: 0.24, type: "triangle" });
+        };
+      }
+
+      if (els.openSettings) els.openSettings.onclick = showSettings;
+      if (els.closeSettings) els.closeSettings.onclick = showMain;
+
+      if (els.cyclesInput) els.cyclesInput.onchange = readConfig;
+      if (els.effortInput) els.effortInput.onchange = readConfig;
+      if (els.restInput) els.restInput.onchange = readConfig;
+      if (document.addEventListener) document.addEventListener("click", onStepperClick, false);
+
+      addTouchListener("touchstart", onTouchStart);
+      addTouchListener("touchmove", onTouchMove);
+      addTouchListener("touchend", onTouchEnd);
+
+      syncInputs();
+      applyConfig();
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+### Obtener información del servidor e inicializar el canal (Endpoint SSE)
+GET http://localhost:5003/mcp
+
+### Listar herramientas
+POST http://localhost:5003/mcp/message
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}
+
+### Llamar a la herramienta 'Saludar'
+POST http://localhost:5003/mcp/message
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "Saludar",
+    "arguments": {
+      "nombre": "Ada Lovelace"
+    }
+  }
+}

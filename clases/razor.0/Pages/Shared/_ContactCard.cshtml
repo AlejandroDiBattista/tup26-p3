@@ -1,0 +1,29 @@
+@model RazorHolaMundo.Models.Contacto
+
+<article class="contact-card">
+    <div class="contact-card__header">
+        <h2>@Model.Nombre <span>@Model.Apellido</span></h2>
+
+        <form method="post" action="?handler=ToggleFavorito" class="favorite-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button class="favorite" type="submit" title="Cambiar favorito">
+                @(Model.EsFavorito ? "★" : "☆")
+            </button>
+        </form>
+    </div>
+
+    <div class="contact-card__details">
+        <p>
+            <span class="contact-card__icon">☎</span>
+            <span>@Model.Telefono</span>
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Email)) {
+            <p class="email">
+                <span class="contact-card__icon">✉</span>
+                <span>@Model.Email</span>
+            </p>
+        }
+    </div>
+</article>

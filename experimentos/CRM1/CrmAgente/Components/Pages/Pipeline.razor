@@ -1,0 +1,102 @@
+@page "/pipeline"
+@inject CrmService Crm
+@inject AgenteFiltroService Filtro
+@rendermode InteractiveServer
+@implements IDisposable
+
+<div class="page-head">
+    <h1>Pipeline</h1>
+    <p>El embudo de ventas: todas las oportunidades por etapa, con el total en juego.</p>
+</div>
+
+@if (Filtro.OportunidadIds != null) {
+    <div class="filtro-agente-banner">
+        <span>El agente filtró @Filtro.OportunidadIds.Count oportunidad@(Filtro.OportunidadIds.Count == 1 ? "" : "es")</span>
+        <button class="btn btn-ghost" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;"
+                @onclick="Filtro.LimpiarFiltroOportunidades">
+            Ver todas
+        </button>
+    </div>
+}
+
+<div class="row" style="margin-bottom: 1.2rem;">
+    <input @bind="filtro" @bind:event="oninput"
+           placeholder="Filtrar por descripcion, contacto o empresa..."
+           style="max-width: 360px;" />
+    @if (!string.IsNullOrWhiteSpace(filtro)) {
+        <button class="btn btn-ghost" @onclick="() => filtro = string.Empty">Limpiar</button>
+    }
+</div>
+
+@if (oportunidades is null) {
+    <p class="empty">Cargando...</p>
+} else {
+    <div class="board">
+        @foreach (var etapa in Enum.GetValues<Etapa>()) {
+            var delEtapa = Filtradas().Where(o => o.Etapa == etapa).ToList();
+            <div class="col">
+                <h3>@etapa</h3>
+                <div class="total">$@delEtapa.Sum(o => o.Monto).ToString("N0")</div>
+                @foreach (var o in delEtapa) {
+                    <div class="deal">
+                        <div class="d-who">@(o.Contacto?.Empresa ?? o.Contacto?.Nombre)</div>
+                        <div class="d-amt">@o.Descripcion · $@o.Monto.ToString("N0")</div>
+                        <select class="deal-etapa" @onchange="e => MoverEtapaAsync(o, e)">
+                            @foreach (var et in Enum.GetValues<Etapa>()) {
+                                <option value="@et" selected="@(et == o.Etapa)">@et</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Oportunidad>? oportunidades;
+    private string filtro = "";
+
+    protected override async Task OnInitializedAsync() {
+        // El agente, al crear/eliminar/mover oportunidades, dispara OnChange.
+        // Nos suscribimos para recargar el tablero y reflejar esos cambios.
+        Filtro.OnChange += OnAgenteActuo;
+        this.oportunidades = await this.Crm.ListarOportunidadesAsync();
+    }
+
+    private async void OnAgenteActuo() {
+        this.oportunidades = await this.Crm.ListarOportunidadesAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => Filtro.OnChange -= OnAgenteActuo;
+
+    // Filtra por descripcion de la oportunidad y tambien por los datos del
+    // contacto (nombre o empresa).
+    private IEnumerable<Oportunidad> Filtradas() {
+        IEnumerable<Oportunidad> base_ = this.oportunidades ?? new List<Oportunidad>();
+
+        // Filtro del agente: solo las oportunidades que referencia su respuesta.
+        if (Filtro.OportunidadIds != null)
+            base_ = base_.Where(o => Filtro.OportunidadIds.Contains(o.Id));
+
+        if (!string.IsNullOrWhiteSpace(this.filtro)) {
+            var f = this.filtro;
+            base_ = base_.Where(o =>
+                o.Descripcion.Contains(f, StringComparison.OrdinalIgnoreCase) ||
+                (o.Contacto?.Nombre.Contains(f, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (o.Contacto?.Empresa.Contains(f, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        return base_;
+    }
+
+    // Mueve la oportunidad a la etapa elegida y recarga para que la tarjeta
+    // salte a su nueva columna.
+    private async Task MoverEtapaAsync(Oportunidad o, ChangeEventArgs e) {
+        if (Enum.TryParse<Etapa>(e.Value?.ToString(), out var nueva) && nueva != o.Etapa) {
+            await this.Crm.MoverEtapaAsync(o.Id, nueva);
+            this.oportunidades = await this.Crm.ListarOportunidadesAsync();
+        }
+    }
+}

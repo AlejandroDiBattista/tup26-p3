@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reloj analogico</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f211d;
+      --muted: #5d5b52;
+      --paper: #f7f0dc;
+      --paper-deep: #d9c89f;
+      --brass: #b58435;
+      --brass-dark: #76511f;
+      --red: #c74232;
+      --green: #1f6c5b;
+      --shadow: rgba(33, 29, 20, .28);
+      --clock-size: min(78vw, 560px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-family: "Palatino Linotype", Palatino, Georgia, serif;
+      background:
+        radial-gradient(circle at 22% 20%, rgba(181, 132, 53, .28) 0 12%, transparent 13%),
+        radial-gradient(circle at 82% 76%, rgba(31, 108, 91, .22) 0 14%, transparent 15%),
+        linear-gradient(145deg, #fbf5e2, #d8c79e);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .2;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 22px, rgba(31, 33, 29, .08) 22px 23px),
+        repeating-linear-gradient(0deg, transparent 0 22px, rgba(31, 33, 29, .07) 22px 23px);
+      mask-image: radial-gradient(circle at center, #000 0 66%, transparent 92%);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 28px));
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(260px, .78fr) minmax(320px, var(--clock-size));
+      gap: clamp(28px, 7vw, 96px);
+      align-items: center;
+      padding: clamp(24px, 6vw, 64px) 0;
+      position: relative;
+    }
+
+    .copy {
+      display: grid;
+      align-content: center;
+      gap: 22px;
+    }
+
+    .kicker {
+      width: fit-content;
+      padding: 8px 13px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: #fff9e9;
+      box-shadow: 5px 5px 0 var(--ink);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 7ch;
+      font-size: clamp(58px, 10vw, 126px);
+      line-height: .82;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .lead {
+      max-width: 38ch;
+      margin: 0;
+      color: #312f28;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      font-size: clamp(17px, 2vw, 22px);
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .readout {
+      width: min(100%, 420px);
+      border: 2px solid var(--ink);
+      background: #fff8e4;
+      box-shadow: 7px 7px 0 var(--ink);
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      gap: 8px;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    .digital {
+      font-size: clamp(34px, 5vw, 54px);
+      line-height: 1;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .clock-stage {
+      width: var(--clock-size);
+      height: var(--clock-size);
+      display: grid;
+      place-items: center;
+      justify-self: center;
+      position: relative;
+    }
+
+    .clock-stage::before {
+      content: "";
+      position: absolute;
+      width: 86%;
+      height: 86%;
+      border-radius: 50%;
+      background: rgba(31, 33, 29, .13);
+      transform: translate(24px, 28px);
+      filter: blur(2px);
+    }
+
+    .clock {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border-radius: 50%;
+      border: clamp(10px, 2vw, 18px) solid var(--ink);
+      background:
+        radial-gradient(circle at center, #fffdf2 0 5%, transparent 5.2%),
+        radial-gradient(circle at 50% 50%, transparent 0 63%, rgba(181, 132, 53, .22) 63.3% 69%, transparent 69.4%),
+        radial-gradient(circle at 40% 34%, #fffaf0 0 18%, #f1dfb8 52%, #c7aa68 100%);
+      box-shadow:
+        inset 0 0 0 6px var(--brass),
+        inset 0 0 0 13px rgba(255,255,255,.28),
+        16px 18px 0 var(--ink),
+        24px 28px 32px var(--shadow);
+      overflow: hidden;
+    }
+
+    .clock::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border-radius: 50%;
+      border: 2px dashed rgba(31, 33, 29, .24);
+      pointer-events: none;
+    }
+
+    .tick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 2px;
+      height: 46%;
+      transform: translate(-50%, -100%) rotate(var(--angle));
+      transform-origin: 50% 100%;
+    }
+
+    .tick::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 3px;
+      height: 13px;
+      border-radius: 999px;
+      background: var(--ink);
+      transform: translateX(-50%);
+    }
+
+    .tick.hour::before {
+      width: 7px;
+      height: 28px;
+      background: var(--brass-dark);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.4);
+    }
+
+    .number {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-size: clamp(20px, 4vw, 34px);
+      font-weight: 900;
+      transform:
+        translate(-50%, -50%)
+        rotate(var(--angle))
+        translateY(calc(var(--clock-size) * -.36))
+        rotate(calc(var(--angle) * -1));
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hand {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 999px;
+      transform: translate(-50%, -100%) rotate(var(--angle, 0deg));
+      transform-origin: 50% 100%;
+      will-change: transform;
+    }
+
+    .hand.hour {
+      width: clamp(9px, 1.6vw, 14px);
+      height: 27%;
+      background: linear-gradient(to right, #141512, #3b3324 50%, #141512);
+      box-shadow: 2px 2px 0 rgba(31,33,29,.18);
+    }
+
+    .hand.minute {
+      width: clamp(7px, 1.3vw, 11px);
+      height: 38%;
+      background: linear-gradient(to right, #5c3f19, var(--brass) 50%, #5c3f19);
+      box-shadow: 2px 2px 0 rgba(31,33,29,.16);
+    }
+
+    .hand.second {
+      width: clamp(3px, .7vw, 5px);
+      height: 43%;
+      background: var(--red);
+      box-shadow: 0 0 0 1px rgba(31,33,29,.16);
+    }
+
+    .hand.second::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -18%;
+      width: 100%;
+      height: 20%;
+      border-radius: 999px;
+      background: var(--red);
+      transform: translateX(-50%);
+    }
+
+    .pin {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: clamp(34px, 6vw, 54px);
+      height: clamp(34px, 6vw, 54px);
+      border: 4px solid var(--ink);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 30%, #fff7df 0 16%, transparent 17%),
+        radial-gradient(circle at center, var(--red) 0 25%, var(--brass) 27% 62%, var(--brass-dark) 64%);
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      box-shadow: 4px 4px 0 rgba(31,33,29,.18);
+    }
+
+    .brand {
+      position: absolute;
+      left: 50%;
+      top: 31%;
+      transform: translate(-50%, -50%);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      font-size: clamp(11px, 2vw, 15px);
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+
+    .timezone {
+      position: absolute;
+      left: 50%;
+      top: 68%;
+      min-width: 120px;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(31,33,29,.55);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: rgba(255, 249, 233, .72);
+      color: var(--muted);
+      text-align: center;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      font-size: clamp(10px, 1.8vw, 13px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        align-content: center;
+      }
+
+      .copy {
+        width: min(100%, 560px);
+      }
+
+      h1 {
+        max-width: none;
+        font-size: clamp(54px, 17vw, 96px);
+      }
+    }
+
+    @media (max-width: 440px) {
+      :root {
+        --clock-size: min(91vw, 390px);
+      }
+
+      .clock {
+        box-shadow:
+          inset 0 0 0 5px var(--brass),
+          inset 0 0 0 10px rgba(255,255,255,.28),
+          9px 11px 0 var(--ink),
+          16px 18px 24px var(--shadow);
+      }
+
+      .number {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hand {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="copy" aria-labelledby="title">
+      <div class="kicker">Tiempo real</div>
+      <h1 id="title">Reloj analogico</h1>
+      <p class="lead">Un reloj de esfera mecanica que toma la hora local del navegador y actualiza las agujas en vivo.</p>
+      <div class="readout" aria-live="polite">
+        <div class="digital" id="digital">--:--:--</div>
+        <div class="date" id="date">Cargando fecha</div>
+      </div>
+    </section>
+
+    <section class="clock-stage" aria-label="Reloj analogico en tiempo real">
+      <div class="clock" id="clock">
+        <div class="brand">Reloj 5.5</div>
+        <div class="timezone" id="timezone">Hora local</div>
+        <div class="hand hour" id="hourHand"></div>
+        <div class="hand minute" id="minuteHand"></div>
+        <div class="hand second" id="secondHand"></div>
+        <div class="pin" aria-hidden="true"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const clock = document.getElementById("clock");
+    const hourHand = document.getElementById("hourHand");
+    const minuteHand = document.getElementById("minuteHand");
+    const secondHand = document.getElementById("secondHand");
+    const digital = document.getElementById("digital");
+    const dateEl = document.getElementById("date");
+    const timezoneEl = document.getElementById("timezone");
+
+    const dateFormatter = new Intl.DateTimeFormat("es-AR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
+
+    const timeFormatter = new Intl.DateTimeFormat("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    });
+
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Hora local";
+    timezoneEl.textContent = timeZone.replaceAll("_", " ");
+
+    for (let i = 0; i < 60; i++) {
+      const tick = document.createElement("span");
+      tick.className = i % 5 === 0 ? "tick hour" : "tick";
+      tick.style.setProperty("--angle", `${i * 6}deg`);
+      clock.appendChild(tick);
+    }
+
+    for (let n = 1; n <= 12; n++) {
+      const number = document.createElement("span");
+      number.className = "number";
+      number.textContent = n;
+      number.style.setProperty("--angle", `${n * 30}deg`);
+      clock.appendChild(number);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const milliseconds = now.getMilliseconds();
+      const seconds = now.getSeconds() + milliseconds / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      hourHand.style.setProperty("--angle", `${hours * 30}deg`);
+      minuteHand.style.setProperty("--angle", `${minutes * 6}deg`);
+      secondHand.style.setProperty("--angle", `${seconds * 6}deg`);
+
+      digital.textContent = timeFormatter.format(now);
+      dateEl.textContent = sentenceCase(dateFormatter.format(now));
+
+      requestAnimationFrame(updateClock);
+    }
+
+    function sentenceCase(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    updateClock();
+  </script>
+</body>
+</html>

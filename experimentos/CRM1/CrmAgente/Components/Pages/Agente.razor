@@ -1,0 +1,76 @@
+@page "/agente"
+@inject CrmAgent agente
+@rendermode InteractiveServer
+
+<div class="page-head">
+    <h1>Agente IA</h1>
+    <p>Pregunta en lenguaje natural. El agente usa herramientas para consultar los datos reales del CRM.</p>
+</div>
+
+<div class="agente-box">
+    @if (!agente.Configurado) {
+        <div class="card" style="border-color: var(--gold);">
+            El agente no esta configurado. Defini la variable de entorno
+            <code>OPENAI_API_KEY</code> antes de arrancar la app.
+        </div>
+    }
+
+    <div class="chat-log">
+        @if (log.Count == 0) {
+            <p class="empty">Probá preguntando algo sobre las oportunidades.</p>
+        }
+        @foreach (var m in log) {
+            <div class="msg @(m.EsUsuario ? "msg-user" : "msg-bot")">@m.Texto</div>
+        }
+        @if (pensando) {
+            <div class="msg msg-bot">Consultando...</div>
+        }
+    </div>
+
+    <div class="chat-input">
+        <input @bind="entrada" @bind:event="oninput" @onkeydown="OnKeyAsync"
+               placeholder="Ej: que oportunidades tengo en negociacion por mas de 200 mil?"
+               disabled="@pensando" />
+        <button class="btn" @onclick="EnviarAsync" disabled="@pensando">Enviar</button>
+    </div>
+
+    <div class="hint">
+        Probá:
+        <code @onclick='() => Usar("Que oportunidades hay en negociacion por mas de 200 mil?")'>oportunidades en negociacion > 200k</code>
+        <code @onclick='() => Usar("Cuales oportunidades ya estan ganadas?")'>oportunidades ganadas</code>
+    </div>
+</div>
+
+@code {
+    private record Mensaje(bool EsUsuario, string Texto);
+
+    private readonly List<Mensaje> log = new();
+    private string entrada = "";
+    private bool pensando;
+
+    private void Usar(string texto) {
+        this.entrada = texto;
+    }
+
+    private async Task OnKeyAsync(KeyboardEventArgs e) {
+        if (e.Key == "Enter") {
+            await this.EnviarAsync();
+        }
+    }
+
+    private async Task EnviarAsync() {
+        var pregunta = this.entrada.Trim();
+        if (string.IsNullOrEmpty(pregunta) || this.pensando) {
+            return;
+        }
+
+        this.log.Add(new Mensaje(true, pregunta));
+        this.entrada = "";
+        this.pensando = true;
+
+        var respuesta = await this.agente.PreguntarAsync(pregunta);
+
+        this.pensando = false;
+        this.log.Add(new Mensaje(false, respuesta));
+    }
+}

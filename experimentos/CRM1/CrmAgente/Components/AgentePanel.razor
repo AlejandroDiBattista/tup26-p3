@@ -1,0 +1,155 @@
+@using CrmAgente.Services
+@using CrmAgente.Agent
+@inject CrmAgent Agente
+@inject AgenteFiltroService Filtro
+@inject NavigationManager Nav
+@implements IDisposable
+
+<div class="agente-lateral">
+    <div class="agente-lateral-head">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="agente-lateral-title">Agente IA</div>
+            @if (log.Count > 0) {
+                <button class="btn btn-ghost" style="font-size:0.7rem; padding:0.2rem 0.5rem;"
+                        @onclick="NuevaConversacion">Nueva</button>
+            }
+        </div>
+        @if (Filtro.ContactoActualId.HasValue) {
+            <div class="agente-contexto-activo">
+                Viendo: <strong>@Filtro.ContactoActualNombre</strong>
+                @if (!string.IsNullOrEmpty(Filtro.ContactoActualEmpresa)) {
+                    <span class="agente-contexto-empresa"> · @Filtro.ContactoActualEmpresa</span>
+                }
+            </div>
+        } else if (Filtro.ContactoIds != null) {
+            <button class="btn btn-ghost agente-filtro-badge" @onclick="Filtro.LimpiarFiltro">
+                @Filtro.ContactoIds.Count contacto@(Filtro.ContactoIds.Count == 1 ? "" : "s") filtrado@(Filtro.ContactoIds.Count == 1 ? "" : "s") · Limpiar
+            </button>
+        }
+    </div>
+
+    <div class="agente-lateral-log">
+        @if (log.Count == 0) {
+            <p class="empty agente-empty">Preguntá sobre oportunidades o contactos.</p>
+        }
+        @foreach (var m in log) {
+            <div class="msg @(m.EsUsuario ? "msg-user" : "msg-bot") msg-sm">@m.Texto</div>
+        }
+        @if (pensando) {
+            <div class="msg msg-bot msg-sm">Consultando...</div>
+        }
+        @if (Filtro.Candidatos is { Count: > 0 } candidatos && !pensando) {
+            <div class="agente-candidatos">
+                <div class="agente-candidatos-titulo">Elegí un contacto:</div>
+                @foreach (var c in candidatos) {
+                    <button class="agente-candidato" @onclick="() => ElegirCandidatoAsync(c)">
+                        <span class="who">@c.Nombre</span>
+                        @if (!string.IsNullOrEmpty(c.Empresa)) {
+                            <span class="meta"> · @c.Empresa</span>
+                        }
+                    </button>
+                }
+            </div>
+        }
+        @if (Filtro.OportunidadesMostradas is { Count: > 0 } oportunidades && !pensando) {
+            <div class="agente-oportunidades">
+                @foreach (var o in oportunidades) {
+                    <div class="agente-oportunidad">
+                        <div class="agente-oportunidad-top">
+                            <span class="who">@o.Descripcion</span>
+                            <span class="badge badge-@o.Etapa">@o.Etapa</span>
+                        </div>
+                        <div class="meta">@o.Contacto · $@o.Monto.ToString("N0")</div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="agente-lateral-input">
+        @if (!Agente.Configurado) {
+            <p class="agente-warn">Falta <code>OPENAI_API_KEY</code></p>
+        }
+        <div class="chat-input">
+            <input @bind="entrada" @bind:event="oninput" @onkeydown="OnKeyAsync"
+                   placeholder="Preguntá al agente..."
+                   disabled="@pensando" />
+            <button class="btn" @onclick="EnviarAsync" disabled="@pensando">→</button>
+        </div>
+        <div class="hint agente-hint">
+            <code @onclick='() => Usar("Que oportunidades hay en negociacion por mas de 200 mil?")'>negociacion > 200k</code>
+            <code @onclick='() => Usar("Cuales oportunidades ya estan ganadas?")'>ganadas</code>
+            <code @onclick='() => Usar("Agregar contacto: Ana Lopez, empresa Textil Sur, ana@textilsur.com, 381-555-0001")'>agregar contacto</code>
+            <code @onclick='() => Usar("Registrar llamada con Juan Perez: hablamos del presupuesto, quedamos en reunirnos la semana que viene")'>registrar llamada</code>
+        </div>
+    </div>
+</div>
+
+@code {
+    private record Mensaje(bool EsUsuario, string Texto);
+
+    private readonly List<Mensaje> log = new();
+    private string entrada = "";
+    private bool pensando;
+
+    protected override void OnInitialized() {
+        Filtro.OnChange += OnFiltroChanged;
+        Filtro.NavegarAFicha += OnNavegarAFicha;
+        Filtro.NavegarAPipeline += OnNavegarAPipeline;
+    }
+
+    private void OnFiltroChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnNavegarAFicha(int id) =>
+        InvokeAsync(() => Nav.NavigateTo($"/contacto/{id}"));
+
+    private void OnNavegarAPipeline() =>
+        InvokeAsync(() => Nav.NavigateTo("/pipeline"));
+
+    private void NuevaConversacion() {
+        Agente.LimpiarHistorial();
+        log.Clear();
+        entrada = "";
+    }
+
+    private void Usar(string texto) => this.entrada = texto;
+
+    private async Task OnKeyAsync(KeyboardEventArgs e) {
+        if (e.Key == "Enter") await EnviarAsync();
+    }
+
+    // El usuario eligio uno de los contactos candidatos de la lista. Le mandamos
+    // al agente un mensaje que lo identifica sin ambiguedad para que continue la
+    // accion que habia quedado pendiente (registrar, actualizar, etc.).
+    private async Task ElegirCandidatoAsync(AgenteFiltroService.ContactoResumen c) {
+        Filtro.LimpiarCandidatos();
+        var texto = string.IsNullOrEmpty(c.Empresa)
+            ? $"Me refiero a {c.Nombre}."
+            : $"Me refiero a {c.Nombre} de {c.Empresa}.";
+        await PreguntarAsync(texto);
+    }
+
+    private async Task EnviarAsync() {
+        var pregunta = entrada.Trim();
+        entrada = "";
+        await PreguntarAsync(pregunta);
+    }
+
+    private async Task PreguntarAsync(string pregunta) {
+        if (string.IsNullOrEmpty(pregunta) || pensando) return;
+
+        log.Add(new Mensaje(true, pregunta));
+        pensando = true;
+
+        var respuesta = await Agente.PreguntarAsync(pregunta);
+
+        pensando = false;
+        log.Add(new Mensaje(false, respuesta));
+    }
+
+    public void Dispose() {
+        Filtro.OnChange -= OnFiltroChanged;
+        Filtro.NavegarAFicha -= OnNavegarAFicha;
+        Filtro.NavegarAPipeline -= OnNavegarAPipeline;
+    }
+}

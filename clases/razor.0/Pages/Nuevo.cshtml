@@ -1,0 +1,153 @@
+@page
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Mvc
+@using RazorHolaMundo.Services
+@inject AgendaService Agenda
+
+@{
+    ViewData["Title"] = "Nuevo contacto";
+}
+
+<header class="page-header">
+    <h1>Nuevo contacto</h1>
+    <a class="button button-secondary" href="/">Cancelar</a>
+</header>
+
+<form class="contact-form" method="post" novalidate>
+    <div class="form-field">
+        <label for="Nombre">Nombre <span>*</span></label>
+        <input
+            id="Nombre"
+            name="Nombre"
+            type="text"
+            value="@Nombre"
+            autocomplete="given-name"
+            required
+            aria-invalid="@TieneError(nameof(Nombre)).ToString().ToLower()"
+            aria-describedby="Nombre-error" />
+
+        @if (TieneError(nameof(Nombre))) {
+            <p id="Nombre-error" class="field-error">✕ @Errores[nameof(Nombre)]</p>
+        }
+    </div>
+
+    <div class="form-field">
+        <label for="Apellido">Apellido <span>*</span></label>
+        <input
+            id="Apellido"
+            name="Apellido"
+            type="text"
+            value="@Apellido"
+            autocomplete="family-name"
+            required
+            aria-invalid="@TieneError(nameof(Apellido)).ToString().ToLower()"
+            aria-describedby="Apellido-error" />
+
+        @if (TieneError(nameof(Apellido))) {
+            <p id="Apellido-error" class="field-error">✕ @Errores[nameof(Apellido)]</p>
+        }
+    </div>
+
+    <div class="form-field">
+        <label for="Telefono">Telefono <span>*</span></label>
+        <input
+            id="Telefono"
+            name="Telefono"
+            type="tel"
+            value="@Telefono"
+            autocomplete="tel"
+            required
+            aria-invalid="@TieneError(nameof(Telefono)).ToString().ToLower()"
+            aria-describedby="Telefono-error" />
+
+        @if (TieneError(nameof(Telefono))) {
+            <p id="Telefono-error" class="field-error">✕ @Errores[nameof(Telefono)]</p>
+        }
+    </div>
+
+    <div class="form-field">
+        <label for="Email">Email</label>
+        <input
+            id="Email"
+            name="Email"
+            type="email"
+            value="@Email"
+            autocomplete="email"
+            aria-invalid="@TieneError(nameof(Email)).ToString().ToLower()"
+            aria-describedby="Email-error" />
+
+        @if (TieneError(nameof(Email))) {
+            <p id="Email-error" class="field-error">✕ @Errores[nameof(Email)]</p>
+        }
+    </div>
+
+    <label class="checkbox-field" for="EsFavorito">
+        <input
+            id="EsFavorito"
+            name="EsFavorito"
+            type="checkbox"
+            value="true"
+            checked="@EsFavorito" />
+        <span>Marcar como favorito</span>
+    </label>
+
+    <div class="form-actions">
+        <button class="button button-primary" type="submit">Guardar</button>
+        <a class="button button-secondary" href="/">Cancelar</a>
+    </div>
+</form>
+
+@functions {
+    public string Nombre { get; set; } = "";
+    public string Apellido { get; set; } = "";
+    public string Telefono { get; set; } = "";
+    public string? Email { get; set; }
+    public bool EsFavorito { get; set; }
+    public Dictionary<string, string> Errores { get; set; } = [];
+
+    public IActionResult OnPost(string nombre, string apellido, string telefono, string? email, bool esFavorito) {
+        Nombre = nombre ?? "";
+        Apellido = apellido ?? "";
+        Telefono = telefono ?? "";
+        Email = email;
+        EsFavorito = esFavorito;
+
+        Validar();
+
+        if (Errores.Count > 0) {
+            return Page();
+        }
+
+        Agenda.Crear(new ContactoInput(Nombre, Apellido, Telefono, Email, EsFavorito));
+
+        return RedirectToPage("Index");
+    }
+
+    private void Validar() {
+        Errores.Clear();
+
+        if (string.IsNullOrWhiteSpace(Nombre)) {
+            Errores[nameof(Nombre)] = "El nombre es obligatorio.";
+        }
+
+        if (string.IsNullOrWhiteSpace(Apellido)) {
+            Errores[nameof(Apellido)] = "El apellido es obligatorio.";
+        }
+
+        if (string.IsNullOrWhiteSpace(Telefono)) {
+            Errores[nameof(Telefono)] = "El telefono es obligatorio.";
+        }
+
+        if (!string.IsNullOrWhiteSpace(Email) && !EmailValido(Email)) {
+            Errores[nameof(Email)] = "Ingresá un email válido, por ejemplo nombre@dominio.com.";
+        }
+    }
+
+    private bool TieneError(string campo) {
+        return Errores.ContainsKey(campo);
+    }
+
+    private static bool EmailValido(string email) {
+        return Regex.IsMatch(email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+    }
+}
