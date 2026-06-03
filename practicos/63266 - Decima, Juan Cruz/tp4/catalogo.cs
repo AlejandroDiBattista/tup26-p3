@@ -198,7 +198,101 @@ async void EditarProducto() {
     }
 }
 
+async void EliminarProducto() {
+    var producto = ObtenerProductoSeleccionado();
+    if (producto is null) {
+        MessageBox.ErrorQuery(appTui, "Eliminar", "Selecciona un producto de la lista.", "OK");
+        return;
+    }
 
+    var confirmar = MessageBox.Query(appTui, "Eliminar Producto",
+        $"Eliminar '{producto.Nombre}'?", "Si", "No");
+    if (confirmar != 0) return;
+
+    try {
+        var resp = await http.DeleteAsync($"{BaseUrl}/productos/{producto.Id}");
+        if (resp.IsSuccessStatusCode)
+            await RecargarProductos();
+        else
+            MessageBox.ErrorQuery(appTui, "Error", "No se pudo eliminar el producto.", "OK");
+    } catch {
+        MessageBox.ErrorQuery(appTui, "Error", "Error al conectar con el servidor.", "OK");
+    }
+}
+
+async Task<string> LeerError(HttpResponseMessage resp, string mensajePorDefecto) {
+    var detalle = await resp.Content.ReadAsStringAsync();
+    return string.IsNullOrWhiteSpace(detalle) ? mensajePorDefecto : detalle.Trim('"');
+}
+
+bool ProductoIngresadoValido(string codigo, string nombre, decimal precio, int stock) {
+    if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(nombre)) {
+        MessageBox.ErrorQuery(appTui, "Producto", "Codigo y nombre son obligatorios.", "OK");
+        return false;
+    }
+
+    if (precio < 0 || stock < 0) {
+        MessageBox.ErrorQuery(appTui, "Producto", "Precio y stock no pueden ser negativos.", "OK");
+        return false;
+    }
+
+    return true;
+}
+
+(string Codigo, string Nombre, decimal Precio, int Stock, bool Confirmado)
+MostrarDialogoProducto(string titulo,
+    string codigoInicial = "", string nombreInicial = "",
+    decimal precioInicial = 0m, int stockInicial = 0) {
+
+    var dialogo = new Dialog {
+        Title = titulo,
+        Width = 50,
+        Height = 14,
+    };
+
+    var lblCodigo = new Label { Text = "Codigo:", X = 1, Y = 1 };
+    var lblNombre = new Label { Text = "Nombre:", X = 1, Y = 3 };
+    var lblPrecio = new Label { Text = "Precio:", X = 1, Y = 5 };
+    var lblStock  = new Label { Text = "Stock:",  X = 1, Y = 7 };
+
+    var txtCodigo = new TextField { Text = codigoInicial,               X = 10, Y = 1, Width = 35 };
+    var txtNombre = new TextField { Text = nombreInicial,               X = 10, Y = 3, Width = 35 };
+    var txtPrecio = new TextField { Text = precioInicial.ToString("F2"), X = 10, Y = 5, Width = 15 };
+    var txtStock  = new TextField { Text = stockInicial.ToString(),     X = 10, Y = 7, Width = 10 };
+
+    bool confirmado = false;
+
+    var btnAceptar = new Button {
+        Text = "Aceptar",
+        X = Pos.Center() - 10, Y = 10,
+        IsDefault = true,
+    };
+    btnAceptar.Accepting += (_, _) => {
+        confirmado = true;
+        appTui.RequestStop(dialogo);
+    };
+
+    var btnCancelar = new Button {
+        Text = "Cancelar",
+        X = Pos.Center() + 2, Y = 10,
+    };
+    btnCancelar.Accepting += (_, _) => appTui.RequestStop(dialogo);
+
+    dialogo.Add(lblCodigo, lblNombre, lblPrecio, lblStock,
+                txtCodigo, txtNombre, txtPrecio, txtStock,
+                btnAceptar, btnCancelar);
+
+    appTui.Run(dialogo);
+
+    if (!confirmado) return ("", "", 0m, 0, false);
+
+    decimal.TryParse(txtPrecio.Text?.ToString(), out var precio);
+    int.TryParse(txtStock.Text?.ToString(), out var stock);
+
+    return (txtCodigo.Text?.ToString() ?? "",
+            txtNombre.Text?.ToString() ?? "",
+            precio, stock, true);
+}
 
 
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
