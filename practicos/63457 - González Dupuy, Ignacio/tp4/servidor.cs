@@ -4,7 +4,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
-// ── Configuración ──────────────────────────────────────────────────────────
+// -- Configuracion ----------------------------------------------------------
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,18 +13,24 @@ builder.Services.AddScoped<CatalogoRepositorio>();
 
 var app = builder.Build();
 
-// ── Inicialización de la base de datos ────────────────────────────────────
+// -- Inicializacion de la base de datos ------------------------------------
 
 using (var scope = app.Services.CreateScope()) {
     var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
     repositorio.Iniciar();
 }
 
-// ── Endpoints ─────────────────────────────────────────────────────────────
+// -- Endpoints --------------------------------------------------------------
 
 app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
 {
     return repositorio.ObtenerTodos();
+});
+
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.ObtenerPorId(id);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
 });
 
 app.MapGet("/productos/{id}/movimientos",
@@ -35,16 +41,14 @@ app.MapGet("/productos/{id}/movimientos",
 
 app.Run("http://localhost:5050");
 
-
-
-// ── Modelo ────────────────────────────────────────────────────────────────
+// -- Modelo -----------------------------------------------------------------
 
 record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 
 enum TipoMovimiento
 {
-    Ingreso,
-    Egreso,
+    Compra,
+    Venta,
     Ajuste
 }
 
@@ -56,8 +60,11 @@ record class MovimientoDeProducto(
     DateTime Fecha
 );
 
+record MovimientoDto(
+    TipoMovimiento Tipo,
+    int Cantidad);
 
-// ── DbContext ─────────────────────────────────────────────────────────────
+// -- DbContext --------------------------------------------------------------
 
 class CatalogoDb : DbContext {
     public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
@@ -65,7 +72,7 @@ class CatalogoDb : DbContext {
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
-// ── Repositorio ───────────────────────────────────────────────────────────
+// -- Repositorio ------------------------------------------------------------
 
 class CatalogoRepositorio {
     private readonly CatalogoDb db;
@@ -75,17 +82,20 @@ class CatalogoRepositorio {
     public void Iniciar() {
         db.Database.EnsureCreated();
 
-         if (!db.Productos.Any()) {
+        if (!db.Productos.Any()) {
             db.Productos.AddRange(
                 new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100),
-                new Producto(2, "P002", "Azúcar 1kg", 900m, 50),
+                new Producto(2, "P002", "Azucar 1kg", 900m, 50),
                 new Producto(3, "P003", "Arroz 500g", 1200m, 80)
             );
-                        db.SaveChanges();
+            db.SaveChanges();
         }
     }
 
- public Producto? TraerProducto() =>
+    public Producto? ObtenerPorId(int id) =>
+        db.Productos.Find(id);
+
+    public Producto? TraerProducto() =>
         db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 
     public List<Producto> ObtenerTodos() =>
