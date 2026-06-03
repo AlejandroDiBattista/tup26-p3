@@ -4,13 +4,16 @@
 using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
+using System.Collections.ObjectModel;
+using Terminal.Gui.ViewBase;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-ProductoDto producto;
+using var http = new HttpClient();
+
+List<ProductoDto> productos;
 try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
+    productos = await TraerProductosAsync(http);
 } catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
     Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
@@ -22,26 +25,22 @@ try {
 using IApplication app = Application.Create().Init();
 using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
-
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+var listaProductos = new ListView {
+    X = 0, Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(),
 };
+listaProductos.SetSource(new ObservableCollection<string>(
+    productos.Select(p => $"{p.Codigo}  {p.Nombre}  (stock {p.Stock})")
+));
 
-ventana.Add(detalleProducto);
+ventana.Add(listaProductos);
 
 app.Run(ventana);
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+static async Task<List<ProductoDto>> TraerProductosAsync(HttpClient http) {
+    const string url = "http://localhost:5050/productos";
+    return await http.GetFromJsonAsync<List<ProductoDto>>(url) ?? [];
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
