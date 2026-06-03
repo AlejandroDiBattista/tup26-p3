@@ -141,3 +141,28 @@ void FiltrarProductos() {
 
     ventana.SetNeedsDraw();
 }
+
+async Task SeleccionarProductoAsync() {
+    var indiceSeleccionado = listaProductos.SelectedItem;
+    if (indiceSeleccionado is null || indiceSeleccionado < 0 || indiceSeleccionado >= productosFiltrados.Count) return;
+
+    productoSeleccionado = productosFiltrados[indiceSeleccionado.Value];
+    codigo.Text = productoSeleccionado.Codigo;
+    nombre.Text = productoSeleccionado.Nombre;
+    precio.Text = productoSeleccionado.Precio.ToString(CultureInfo.InvariantCulture);
+    stock.Text = productoSeleccionado.Stock.ToString(CultureInfo.InvariantCulture);
+
+    await CargarMovimientosAsync(productoSeleccionado.Id);
+}
+
+async Task CargarMovimientosAsync(int productoId) {
+    movimientosVista.Clear();
+    var movimientos = await http.GetFromJsonAsync<List<MovimientoDto>>($"/productos/{productoId}/movimientos", json) ?? [];
+
+    foreach (var m in movimientos) {
+        movimientosVista.Add($"{m.Tipo,-7} Cant:{m.Cantidad,5}  {m.Fecha:dd/MM/yyyy HH:mm}");
+    }
+
+    if (movimientos.Count == 0) movimientosVista.Add("Sin movimientos registrados.");
+    ventana.SetNeedsDraw();
+}
