@@ -203,6 +203,8 @@ class CatalogoRepositorio {
             return false;
         }
 
+        var movimientos = db.Movimientos.Where(m => m.ProductoId == id).ToList();
+        db.Movimientos.RemoveRange(movimientos);
         db.Productos.Remove(producto);
         db.SaveChanges();
         return true;
