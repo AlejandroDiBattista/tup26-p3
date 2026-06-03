@@ -65,14 +65,6 @@ app.MapPost("/productos", async (ProductoEntrada entrada, CatalogoRepositorio re
     }
 });
 
-app.MapDelete("/productos/{id:int}", async (int id, CatalogoRepositorio repo) =>
-    await repo.EliminarProductoAsync(id) ? Results.NoContent() : Results.NotFound());
-
-app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoRepositorio repo) => {
-    if (!await repo.ExisteProductoAsync(productoId)) return Results.NotFound();
-    return Results.Ok((await repo.ListarMovimientosAsync(productoId)).Select(MovimientoSalida.Desde));
-});
-
 app.MapPut("/productos/{id:int}", async (int id, ProductoEntrada entrada, CatalogoRepositorio repo) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
@@ -85,11 +77,25 @@ app.MapPut("/productos/{id:int}", async (int id, ProductoEntrada entrada, Catalo
     }
 });
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+app.MapDelete("/productos/{id:int}", async (int id, CatalogoRepositorio repo) =>
+    await repo.EliminarProductoAsync(id) ? Results.NoContent() : Results.NotFound());
 
-    return Results.Ok(producto);
+app.MapGet("/productos/{productoId:int}/movimientos", async (int productoId, CatalogoRepositorio repo) => {
+    if (!await repo.ExisteProductoAsync(productoId)) return Results.NotFound();
+    return Results.Ok((await repo.ListarMovimientosAsync(productoId)).Select(MovimientoSalida.Desde));
+});
+
+app.MapPost("/productos/{productoId:int}/movimientos", async (int productoId, MovimientoEntrada entrada, CatalogoRepositorio repo) => {
+    if (entrada.Cantidad <= 0) return Results.BadRequest("La cantidad debe ser positiva.");
+
+    try {
+        var movimiento = await repo.RegistrarMovimientoAsync(productoId, entrada);
+        return movimiento is null
+            ? Results.NotFound()
+            : Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", MovimientoSalida.Desde(movimiento));
+    } catch (StockInsuficienteException) {
+        return Results.BadRequest("No hay stock suficiente para registrar la venta.");
+    }
 });
 
 app.Run("http://localhost:5050");
