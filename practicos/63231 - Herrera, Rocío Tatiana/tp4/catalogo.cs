@@ -16,3 +16,8 @@ var json = new JsonSerializerOptions(JsonSerializerDefaults.Web);
 json.Converters.Add(new JsonStringEnumConverter());
 
 using var http = new HttpClient { BaseAddress = new Uri(ApiBase) };
+List<ProductoDto> productos = [];
+List<ProductoDto> productosFiltrados = [];
+var productosVista = new ObservableCollection<string>();
+var movimientosVista = new ObservableCollection<string>();
+ProductoDto? productoSeleccionado = null;
