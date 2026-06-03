@@ -25,4 +25,48 @@ class Compilador{
     private static void SaltarEspacios(){
       while(char.IsWhiteSpace(Actual)) Avanzar(); 
     }
+
+    private static Nodo ParseExpresion(){
+        var nodo = ParseTermino();
+
+            while (true) {
+            SaltarEspacios();
+
+            if (Actual == '+') {
+                Avanzar();
+                nodo = new SumaNodo(nodo, ParseTermino());
+            } 
+            else if (Actual == '-') {
+                Avanzar();
+                nodo = new RestaNodo(nodo, ParseTermino());
+            } 
+            else {
+                break;
+            }
+        }
+        return nodo;
+    }
+
+    private static Nodo ParseTermino(){
+        var nodo = ParseFactor();
+
+        while (true) {
+            SaltarEspacios();
+
+            if (Actual == '*') {
+                Avanzar();
+                nodo = new MultiplicacionNodo(nodo, ParseFactor());
+            } 
+            else if (Actual == '/') {
+                Avanzar();
+                nodo = new DivisionNodo(nodo, ParseFactor());
+            } 
+            else {
+                break;
+            }
+        }
+        return nodo;
+    }
 }
+
+
