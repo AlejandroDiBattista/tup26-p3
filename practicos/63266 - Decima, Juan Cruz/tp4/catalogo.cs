@@ -10,7 +10,6 @@ using Terminal.Gui.ViewBase;
 
 using Terminal.Gui.Views;
 
-// ── Consulta inicial al servidor ──────────────────────────────────────────
 
 const string BaseUrl = "http://localhost:5050";
 
@@ -294,15 +293,93 @@ MostrarDialogoProducto(string titulo,
             precio, stock, true);
 }
 
+async void RegistrarMovimiento() {
+    var producto = ObtenerProductoSeleccionado();
+    if (producto is null) {
+        MessageBox.ErrorQuery(appTui, "Movimiento", "Selecciona un producto de la lista.", "OK");
+        return;
+    }
 
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
+    var (tipo, cantidad, confirmado) = MostrarDialogoMovimiento(producto.Nombre);
+    if (!confirmado) return;
+    if (cantidad <= 0) {
+        MessageBox.ErrorQuery(appTui, "Movimiento", "La cantidad debe ser positiva.", "OK");
+        return;
+    }
+
+    try {
+        var dto = new { Tipo = tipo, Cantidad = cantidad };
+        var resp = await http.PostAsJsonAsync($"{BaseUrl}/productos/{producto.Id}/movimientos", dto);
+        if (resp.IsSuccessStatusCode) {
+            await RecargarProductos();
+            await RefrescarMovimientos();
+        } else {
+            MessageBox.ErrorQuery(appTui, "Error", await LeerError(resp, "No se pudo registrar el movimiento."), "OK");
+        }
+    } catch {
+        MessageBox.ErrorQuery(appTui, "Error", "Error al conectar con el servidor.", "OK");
+    }
+}
+
+
+(string Tipo, int Cantidad, bool Confirmado)
+MostrarDialogoMovimiento(string nombreProducto) {
+
+    var dialogo = new Dialog {
+        Title = $"Registrar Movimiento - {nombreProducto}",
+        Width = 50,
+        Height = 12,
+    };
+
+    var lblTipo     = new Label { Text = "Tipo:",     X = 1, Y = 1 };
+    var lblCantidad = new Label { Text = "Cantidad:", X = 1, Y = 5 };
+
+    var tipos = new[] { "Compra", "Venta", "Ajuste" };
+    var listaTipos = new ListView {
+        X = 10, Y = 1,
+        Width = 15,
+        Height = 3,
+    };
+    listaTipos.SetSource(new ObservableCollection<string>(tipos));
+
+    var txtCantidad = new TextField { X = 10, Y = 5, Width = 10 };
+
+    bool confirmado = false;
+
+    var btnAceptar = new Button {
+        Text = "Aceptar",
+        X = Pos.Center() - 10, Y = 8,
+        IsDefault = true,
+    };
+    btnAceptar.Accepting += (_, _) => {
+        confirmado = true;
+        appTui.RequestStop(dialogo);
+    };
+
+    var btnCancelar = new Button {
+        Text = "Cancelar",
+        X = Pos.Center() + 2, Y = 8,
+    };
+    btnCancelar.Accepting += (_, _) => appTui.RequestStop(dialogo);
+
+    dialogo.Add(lblTipo, lblCantidad, listaTipos, txtCantidad, btnAceptar, btnCancelar);
+
+    appTui.Run(dialogo);
+
+    if (!confirmado) return ("", 0, false);
+
+    var tipo = tipos[listaTipos.SelectedItem ?? 0];
+    int.TryParse(txtCantidad.Text?.ToString(), out var cantidad);
+
+    return (tipo, cantidad, true);
+}
+
 
 static async Task<ProductoDto> CargarProductoAsync(HttpClient http) {
     const string url = "http://localhost:5050/producto";
     return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
 }
 
-// ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 record MovimientoDto(int Id, int ProductoId, string Tipo, int Cantidad, DateTime Fecha);
