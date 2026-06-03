@@ -46,16 +46,30 @@ app.MapPost("/productos", (Producto producto, CatalogoRepositorio repositorio) =
     var nuevoProducto = repositorio.AgregarProducto(producto);
     return Results.Created($"/productos/{nuevoProducto.Id}", nuevoProducto);
 });
+app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio repositorio) =>
+{
+    var actualizado = repositorio.ModificarProducto(id, producto);
+
+    if (actualizado is null)
+        return Results.NotFound();
+
+    return Results.Ok(actualizado);
 });
 app.Run("http://localhost:5050");
 // ── Modelo ────────────────────────────────────────────────────────────────
 
-record class Producto(int Id, 
- string Codigo, 
-string Nombre, 
- decimal Precio, 
-int Stock);
-enum TipoMovimiento
+class Producto
+{
+    public int Id { get; set; }
+
+    public string Codigo { get; set; } = "";
+
+    public string Nombre { get; set; } = "";
+
+    public decimal Precio { get; set; }
+
+    public int Stock { get; set; }
+}enum TipoMovimiento
 {
     Compra,
     Venta,
@@ -102,16 +116,44 @@ class CatalogoRepositorio {
 
         if (!db.Productos.Any())
 {
-    db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-    db.Productos.Add(new Producto(2, "P002", "Azucar 1kg", 900m, 50));
-    db.Productos.Add(new Producto(3, "P003", "Cafe 250g", 3200m, 20));
+    db.Productos.Add(new Producto
+{
+    Id = 1,
+    Codigo = "P001",
+    Nombre = "Yerba Mate 500g",
+    Precio = 1500m,
+    Stock = 100
+});
+    db.Productos.Add(new Producto
+{
+    Id = 2,
+    Codigo = "P002",
+    Nombre = "Azucar 1kg",
+    Precio = 900m,
+    Stock = 50
+});
+    db.Productos.Add(new Producto
+{
+    Id = 3,
+    Codigo = "P003",
+    Nombre = "Cafe 250g",
+    Precio = 3200m,
+    Stock = 20
+});
 
     db.SaveChanges();
 }
         
 
         if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
+            db.Productos.Add(new Producto
+{
+    Id = 1,
+    Codigo = "P001",
+    Nombre = "Yerba Mate 500g",
+    Precio = 1500m,
+    Stock = 100
+});
             db.SaveChanges();
         }
     }
@@ -121,6 +163,22 @@ class CatalogoRepositorio {
         public Producto AgregarProducto(Producto producto)
 {
     db.Productos.Add(producto);
+    db.SaveChanges();
+
+    return producto;
+}
+public Producto? ModificarProducto(int id, Producto productoActualizado)
+{
+    var producto = db.Productos.FirstOrDefault(p => p.Id == id);
+
+    if (producto is null)
+        return null;
+
+    producto.Codigo = productoActualizado.Codigo;
+    producto.Nombre = productoActualizado.Nombre;
+    producto.Precio = productoActualizado.Precio;
+    producto.Stock = productoActualizado.Stock;
+
     db.SaveChanges();
 
     return producto;
