@@ -170,3 +170,65 @@ string ReadInput(AppConfig config)
 
     return (headers, rows);
 }
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, List<string> headers, AppConfig config)
+{
+    if (rows.Count == 0) return rows;
+
+    foreach (var field in config.SortFields)
+    {
+        if (!headers.Contains(field.Name))
+        {
+            throw new ArgumentException($"El campo de ordenamiento '{field.Name}' no existe en el origen de datos.");
+        }
+    }
+
+    IOrderedEnumerable<Dictionary<string, string>>? orderedRows = null;
+
+    for (int i = 0; i < config.SortFields.Count; i++)
+    {
+        var field = config.SortFields[i];
+
+        if (i == 0)
+        {
+            orderedRows = ApplyOrdering(rows, field);
+        }
+        else
+        {
+            orderedRows = ApplySubOrdering(orderedRows!, field);
+        }
+    }
+
+    return orderedRows!.ToList();
+
+    IOrderedEnumerable<Dictionary<string, string>> ApplyOrdering(IEnumerable<Dictionary<string, string>> source, SortField field)
+    {
+        if (field.Numeric)
+        {
+            return field.Descending 
+                ? source.OrderByDescending(r => decimal.TryParse(r[field.Name], out decimal v) ? v : 0)
+                : source.OrderBy(r => decimal.TryParse(r[field.Name], out decimal v) ? v : 0);
+        }
+        else
+        {
+            return field.Descending 
+                ? source.OrderByDescending(r => r[field.Name], StringComparer.OrdinalIgnoreCase)
+                : source.OrderBy(r => r[field.Name], StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    IOrderedEnumerable<Dictionary<string, string>> ApplySubOrdering(IOrderedEnumerable<Dictionary<string, string>> source, SortField field)
+    {
+        if (field.Numeric)
+        {
+            return field.Descending 
+                ? source.ThenByDescending(r => decimal.TryParse(r[field.Name], out decimal v) ? v : 0)
+                : source.ThenBy(r => decimal.TryParse(r[field.Name], out decimal v) ? v : 0);
+        }
+        else
+        {
+            return field.Descending 
+                ? source.ThenByDescending(r => r[field.Name], StringComparer.OrdinalIgnoreCase)
+                : source.ThenBy(r => r[field.Name], StringComparer.OrdinalIgnoreCase);
+        }
+    }
+}
