@@ -19,34 +19,46 @@ using (var scope = app.Services.CreateScope())
  var norep = app.MapGroup("/productos"); // grupo de endpoints para productos
 
 
-norep.MapGet("/productos", (CatalogoRepositorio repositorio) =>
-    Results.Ok(repositorio.ListarProductos()));
-    norep .MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =>
+
+norep.MapGet("/", (CatalogoRepositorio repositorio) =>
+    Results.Ok(repositorio.ListarProductos().Select(ProductoDto.From)));
+    norep .MapGet("/{id:int}", (int id, CatalogoRepositorio repositorio) =>
 {
     var producto = repositorio.TraerProducto(id);
 
     if (producto is null)
         return Results.NotFound();
 
-    return Results.Ok(producto);
+    return Results.Ok(ProductoDto.From(producto));
 });
-norep.MapPost("/productos", (ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
+norep.MapPost("/", (ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
 
     var resultado = repositorio.CrearProducto(entrada);
     if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
-    return Results.Created($"/productos/{resultado.Producto!.Id}", resultado.Producto);
+    return Results.Created($"/productos/{resultado.Producto!.Id}", ProductoDto.From(resultado.Producto));
 });
-norep.MapPut("/productos/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
+norep.MapPut("/{id:int}", (int id, ProductoEntrada entrada, CatalogoRepositorio repositorio) => {
     var error = ValidarProducto(entrada);
     if (error is not null) return Results.BadRequest(error);
     var resultado = repositorio.ModificarProducto(id, entrada);
     if (resultado.NoEncontrado) return Results.NotFound();
     if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
-    return Results.Ok(resultado.Producto);
+    return Results.Ok(ProductoDto.From(resultado.Producto!));
 });
-norep.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
+norep.MapDelete("/{id:int}", (int id, CatalogoRepositorio repositorio) => repositorio.EliminarProducto(id) ? Results.NoContent() : Results.NotFound());
+norep.MapGet("/{id:int}/movimientos", (int id, CatalogoRepositorio repositorio) => {
+    var producto = repositorio.TraerProducto(id);
+    if (producto is null) return Results.NotFound();
+    return Results.Ok(repositorio.ListarMovimientos(id).Select(MovimientoDto.From));
+});
+norep.MapPost("/{id:int}/movimientos", (int id, MovimientoEntrada entrada, CatalogoRepositorio repositorio) => {
+    var resultado = repositorio.RegistrarMovimiento(id, entrada);
+    if (resultado.NoEncontrado) return Results.NotFound();
+    if (resultado.Error is not null) return Results.BadRequest(resultado.Error);
+    return Results.Created($"/productos/{id}/movimientos/{resultado.Movimiento!.Id}", MovimientoDto.From(resultado.Movimiento));
+});
 static string? ValidarProducto(ProductoEntrada entrada) {
     if (string.IsNullOrWhiteSpace(entrada.Codigo))
      return "El codigo es obligatorio.";
@@ -57,8 +69,12 @@ static string? ValidarProducto(ProductoEntrada entrada) {
     if (entrada.Precio < 0) 
     return "El precio no puede ser negativo";
 
+
     return null;
+
+    
 }
+
 
 app.Run("http://localhost:5050"); // iniciamos el servidor en el puerto 5050
 
@@ -90,6 +106,14 @@ class MovimientoDeProducto {
 
 record ProductoEntrada(string Codigo, string Nombre, int Stock, decimal Precio); // record para la entrada de producto
 record MovimientoEntrada(TipoMovimiento Tipo, int Cantidad); // record para la entrada de movimiento de producto
+record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock) {
+    public static ProductoDto From(Producto producto) =>
+        new(producto.Id, producto.Codigo, producto.Nombre, producto.Precio, producto.Stock);
+}
+record MovimientoDto(int Id, int ProductoId, TipoMovimiento Tipo, int Cantidad, DateTime Fecha) {
+    public static MovimientoDto From(MovimientoDeProducto movimiento) =>
+        new(movimiento.Id, movimiento.ProductoId, movimiento.Tipo, movimiento.Cantidad, movimiento.Fecha);
+}
 record OperacionProducto(Producto? Producto = null, string? Error = null, bool NoEncontrado = false);
 record OperacionMovimiento(MovimientoDeProducto? Movimiento = null, string? Error = null, bool NoEncontrado = false);
 
@@ -195,6 +219,7 @@ class CatalogoRepositorio {
         //lista recorrible para filtrar movimientos x productos y ordenarlos por fecha desc
 
     public OperacionMovimiento RegistrarMovimiento(int productoId, MovimientoEntrada entrada) {
+        System.Console.WriteLine( $"Producto={productoId} Tipo={entrada.Tipo} Cantidad={entrada.Cantidad}");
         using var transaccion = db.Database.BeginTransaction();
 
         var producto = db.Productos.FirstOrDefault(p => p.Id == productoId);

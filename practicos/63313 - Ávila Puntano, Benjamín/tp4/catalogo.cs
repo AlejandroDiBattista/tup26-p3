@@ -7,7 +7,6 @@ using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-using System.Linq.Expressions;
 
 const string miserver = "http://localhost:5050"; 
 using var http = new HttpClient { BaseAddress = new Uri(miserver) };
@@ -121,85 +120,86 @@ async Task EditarProductoAsync() {
     if (entrada is null) return;
     try {
         var respuesta = await http.PutAsJsonAsync($"/productos/{producto.Id}", entrada);
-    if (!respuesta.IsSuccessStatusCode) {
+        if (!respuesta.IsSuccessStatusCode) {
             MostrarError("No se pudo editar", await respuesta.Content.ReadAsStringAsync());
             return;
         }
         await RefrescarAsync(producto.Id);
     } catch (Exception ex) {
         MostrarError("No se pudo editar", ex.Message);
-
     }
-async Task EliminarProductosAsync() {
-        var producto = ProductoSeleccionado();
+}
+async Task EliminarProductoAsync() {
+    var producto = ProductoSeleccionado();
     if (producto is null) 
         return;
-        var opcion = MessageBox.Query(app, "Eliminar producto", $"Eliminar {producto.Codigo} - {producto.Nombre}?", "No", "Si");
-     if (opcion != 1) 
+    var opcion = MessageBox.Query(app, "Eliminar producto", $"Eliminar {producto.Codigo} - {producto.Nombre}?", "No", "Si");
+    if (opcion != 1) 
         return;
     try {
         var respuesta = await http.DeleteAsync($"/productos/{producto.Id}");
         if (!respuesta.IsSuccessStatusCode) {
-                MostrarError("no se puede elininar", await respuesta.Content.ReadAsStringAsync());
-                return;
-            }
-         await RefrescarAsync();
-         catch(Exception ex) {
-            MostrarError("No se pudo eliminar", ex.Message);
+            MostrarError("no se puede eliminar", await respuesta.Content.ReadAsStringAsync());
+            return;
         }
-           }
+        await RefrescarAsync();
+    } catch (Exception ex) {
+        MostrarError("No se pudo eliminar", ex.Message);
+    }
+}
 ProductoEntrada? DialogoProducto(string titulo, ProductoDto? producto) {
     using var dialogo = new Dialog { Title = $" {titulo} ", Width = 62, Height = 15 };
     var codigo = Campo(dialogo, "Codigo:", producto?.Codigo ?? "", 1);
     var nombre = Campo(dialogo, "Nombre:", producto?.Nombre ?? "", 3);
     var precio = Campo(dialogo, "Precio:", producto?.Precio.ToString(CultureInfo.InvariantCulture) ?? "0", 5);
     var stock = Campo(dialogo, "Stock:", producto?.Stock.ToString(CultureInfo.InvariantCulture) ?? "0", 7);
-
     var aceptar = new Button {Text= "_Guardar", X = 18, Y = 10, IsDefault = true};
     var cancelar = new Button {Text ="_Cancelar",X = Pos.Right(aceptar) + 2, Y = 10};
     ProductoEntrada? resultado = null;
-
     aceptar.Accepted += (_, _) => {
        if (!decimal.TryParse(precio.Text?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var precioValor)) {
             MostrarError("dato invalido", "el precio debe ser numerico");
             return;
-    }
-            if (!int.TryParse(stock.Text?.ToString(), out var stockValor)) {
+        }
+        if (!int.TryParse(stock.Text?.ToString(), out var stockValor)) {
             MostrarError("Dato invalido", "El stock debe ser un numero entero.");
             return;
         }
         resultado = new ProductoEntrada(codigo.Text?.ToString() ?? "", nombre.Text?.ToString() ?? "", precioValor, stockValor);
-        app.RequestStop();
+        app.RequestStop(dialogo);
     };
-        cancelar.Accepted += (_, _) => app.RequestStop();
-        dialogo.Add(aceptar, cancelar);
-         app.Run(dialogo);
-         return resultado;
-}};
+    cancelar.Accepted += (_, _) => app.RequestStop(dialogo);
+    dialogo.Add(aceptar, cancelar);
+    app.Run(dialogo);
+    return resultado;
+}
 async Task CargarMovimientosSeleccionadosAsync() {
     movimientosVista.Clear();
     var producto = ProductoSeleccionado();
     if (producto is null) 
-    return;
+        return;
     try {
         var movimientos = await http.GetFromJsonAsync<List<MovimientoDto>>($"/productos/{producto.Id}/movimientos") ?? []; 
-         if (movimientos.Count == 0) { movimientosVista.Add("Sin movimientos registrados."); return; }
-        foreach (var movimiento in movimientos);
-    movimientosVista.Add(FormatearMovimiento(movimiento));
+        if (movimientos.Count == 0) { movimientosVista.Add("Sin movimientos registrados."); return; }
+        foreach (var movimiento in movimientos)
+            movimientosVista.Add(FormatearMovimiento(movimiento));
     } catch (Exception ex) {
         movimientosVista.Add($"Error: {ex.Message}");
     }
 }
-    }
 async Task RegistrarMovimientoAsync(TipoMovimiento tipo) {
     var producto = ProductoSeleccionado();
-    if (producto is null)
-    return;
-    var cantidad = DialogoMoviento(tipo, producto);
+    if (producto is null) {
+        MostrarError("error","no elegiste ningun producto");
+        return; 
+    }
+    var cantidad = DialogoMovimiento(tipo, producto);
     if (cantidad is null) 
-    return;
+        return;
     try {
-        var respuesta = await http.PostAsJsonAsync($"/productos/{producto.Id}/movimientos", new MovimientoEntrada(tipo, cantidad.Value));
+        var respuesta = await http.PostAsJsonAsync
+        ($"/productos/{producto.Id}/movimientos", new MovimientoEntrada(tipo, cantidad.Value));
+
         if (!respuesta.IsSuccessStatusCode) {
             MostrarError("No se pudo registrar", await respuesta.Content.ReadAsStringAsync());
             return;
@@ -208,23 +208,44 @@ async Task RegistrarMovimientoAsync(TipoMovimiento tipo) {
     } catch (Exception ex) {
         MostrarError("No se pudo registrar", ex.Message);
     }
-   int? DialogoMovimiento(TipoMovimiento tipo, ProductoDto producto) {
-     using var dialogo = new Dialog { Title = $" Registrar {tipo} ", Width = 66, Height = 11 };
-     dialogo.Add(new Label { Text = $"{producto.Codigo} - {producto.Nombre} | Stock actual: {producto.Stock}", X = 2, Y = 1 });
-     var etiqueta
-     var cantidad
-     var aceptar 
-     var cancelar
-
-
 }
-
-
-
-
+int? DialogoMovimiento(TipoMovimiento tipo, ProductoDto producto) {
+    using var dialogo = new Dialog { Title = $" Registrar {tipo} ", Width = 66, Height = 11 };
+    dialogo.Add(new Label { Text = $"{producto.Codigo} - {producto.Nombre} | Stock actual: {producto.Stock}", X = 2, Y = 1 });
+    var etiqueta = tipo == TipoMovimiento.Ajuste ? "Nuevo stock:" : "Cantidad:";
+    var cantidad = Campo(dialogo, etiqueta, "1", 3);
+    var aceptar = new Button { Text = "_Registrar", X = 18, Y = 6, IsDefault = true };
+    var cancelar = new Button { Text = "_Cancelar", X = Pos.Right(aceptar) + 2, Y = 6 };
+    int? resultado = null;
+    aceptar.Accepted += (_, _) => {
+        if (!int.TryParse(cantidad.Text?.ToString(), out var cantidadValor) || cantidadValor < 0 || (tipo != TipoMovimiento.Ajuste && cantidadValor == 0)) {
+            MostrarError("Dato invalido", tipo == TipoMovimiento.Ajuste
+                ? "El nuevo stock debe ser cero o un entero positivo."
+                : "La cantidad debe ser un entero positivo.");
+            return;
+        }
+        resultado = cantidadValor;
+        app.RequestStop(dialogo);
+    };
+    cancelar.Accepted += (_, _) => app.RequestStop(dialogo);
+    dialogo.Add(aceptar, cancelar);
+    app.Run(dialogo);
+    return resultado;
+}
+buscar.TextChanged += async (_, _) => {
+    FiltrarProductos();
+    await CargarMovimientosSeleccionadosAsync();
+};
+listaProductos.ValueChanged += async (_, _) => await CargarMovimientosSeleccionadosAsync();
+botonagregar.Accepted += async (_, _) => await AgregarProductoAsync();
+botonModificar.Accepted += async (_, _) => await EditarProductoAsync();
+botonEliminar.Accepted += async (_, _) => await EliminarProductoAsync();
+botonComprar.Accepted += async (_, _) => await RegistrarMovimientoAsync(TipoMovimiento.Compra);
+botonVender.Accepted += async (_, _) => await RegistrarMovimientoAsync(TipoMovimiento.Venta);
+botonAjustar.Accepted += async (_, _) => await RegistrarMovimientoAsync(TipoMovimiento.Ajuste);
+botonActualizar.Accepted += async (_, _) => await RefrescarAsync();
+await RefrescarAsync();
 app.Run(ventana);
-
-
 // ── DTO ──────────────────────────────────────────────────────────────────
 enum TipoMovimiento{Compra,Venta,Ajuste} //enum de los movimientos que se podran hacer
 record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
