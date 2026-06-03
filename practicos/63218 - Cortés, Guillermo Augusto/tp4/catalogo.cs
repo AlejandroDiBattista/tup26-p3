@@ -153,13 +153,135 @@ async Task AgregarProductoAsync()
     app.Run(dialog);
 }
 
+async Task ModificarProductoAsync()
+{
+    int indice = listaProductos.SelectedItem ?? -1;
+
+    if (indice < 0)
+        return;
+
+    ProductoDto producto = productosFiltrados[indice];
+
+    Dialog dialog = new()
+    {
+        Title = "Modificar producto",
+        Width = 60,
+        Height = 15
+    };
+
+    TextField txtCodigo = new()
+    {
+        X = 15,
+        Y = 1,
+        Width = 25,
+        Text = producto.Codigo
+    };
+
+    TextField txtNombre = new()
+    {
+        X = 15,
+        Y = 3,
+        Width = 25,
+        Text = producto.Nombre
+    };
+
+    TextField txtPrecio = new()
+    {
+        X = 15,
+        Y = 5,
+        Width = 25,
+        Text = producto.Precio.ToString()
+    };
+
+    TextField txtStock = new()
+    {
+        X = 15,
+        Y = 7,
+        Width = 25,
+        Text = producto.Stock.ToString()
+    };
+
+    dialog.Add(
+        new Label() { Text = "Código:", X = 1, Y = 1 },
+        txtCodigo,
+        new Label() { Text = "Nombre:", X = 1, Y = 3 },
+        txtNombre,
+        new Label() { Text = "Precio:", X = 1, Y = 5 },
+        txtPrecio,
+        new Label() { Text = "Stock:", X = 1, Y = 7 },
+        txtStock
+    );
+
+    Button guardar = new() { Text = "Guardar" };
+    Button cancelar = new() { Text = "Cancelar" };
+
+    dialog.AddButton(guardar);
+    dialog.AddButton(cancelar);
+
+    cancelar.Accepting += (_, _) =>
+    {
+        dialog.RequestStop();
+    };
+
+    guardar.Accepting += async (_, _) =>
+    {
+        try
+        {
+            using HttpClient http = new();
+
+            var datos = new
+            {
+                Codigo = txtCodigo.Text.ToString(),
+                Nombre = txtNombre.Text.ToString(),
+                Precio = decimal.Parse(txtPrecio.Text.ToString()!),
+                Stock = int.Parse(txtStock.Text.ToString()!)
+            };
+
+            await http.PutAsJsonAsync(
+                $"http://localhost:5050/productos/{producto.Id}",
+                datos);
+
+            productos = await CargarProductosAsync(http);
+
+            ActualizarLista();
+
+            dialog.RequestStop();
+        }
+        catch (Exception ex)
+        {
+            detalle.Text = ex.Message;
+        }
+    };
+
+    app.Run(dialog);
+}
+
+async Task EliminarProductoAsync()
+{
+    int indice = listaProductos.SelectedItem ?? -1;
+
+    if (indice < 0)
+        return;
+
+    ProductoDto producto = productosFiltrados[indice];
+
+    using HttpClient http = new();
+
+    await http.DeleteAsync(
+        $"http://localhost:5050/productos/{producto.Id}");
+
+    productos = await CargarProductosAsync(http);
+
+    ActualizarLista();
+}
+
 MenuBar menu = new(
 [
     new MenuBarItem("_Productos",
     [
         new MenuItem("_Agregar", "", () => _ = AgregarProductoAsync()),
-        new MenuItem("_Modificar", "", () => { }),
-        new MenuItem("_Eliminar", "", () => { })
+        new MenuItem("_Modificar", "", () => _ = ModificarProductoAsync()),
+        new MenuItem("_Eliminar", "", () => _ = EliminarProductoAsync())
     ]),
     new MenuBarItem("_Movimientos",
     [
