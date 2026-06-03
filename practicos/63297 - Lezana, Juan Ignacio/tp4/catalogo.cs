@@ -6,9 +6,9 @@ using System.Collections.ObjectModel;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
 
-const string ApiUrl = "http://localhost:5050";
+const string apiUrl = "http://localhost:5050";
 
-using var http = new HttpClient { BaseAddress = new Uri(ApiUrl) };
+using var http = new HttpClient { BaseAddress = new Uri(apiUrl) };
 
 List<ProductoDto> productos = [];
 List<MovimientoDto> movimientos = [];
