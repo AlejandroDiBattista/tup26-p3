@@ -63,3 +63,35 @@ ventana.Add(
     new Label { Text = "Atajos: buscar por codigo/nombre, seleccionar con flechas, usar botones con Enter.", X = 1, Y = 26 },
     estado
 );
+buscar.TextChanged += (_, _) => FiltrarProductos();
+listaProductos.ValueChanged += async (_, _) => await SeleccionarProductoAsync();
+
+btnNuevo.Accepting += (_, e) => {
+    e.Handled = true;
+    LimpiarFormulario();
+};
+
+btnGuardar.Accepting += async (_, e) => {
+    e.Handled = true;
+    await GuardarProductoAsync();
+};
+
+btnEliminar.Accepting += async (_, e) => {
+    e.Handled = true;
+    await EliminarProductoAsync();
+};
+
+btnCompra.Accepting += async (_, e) => {
+    e.Handled = true;
+    await RegistrarMovimientoAsync(TipoMovimiento.Compra);
+};
+
+btnVenta.Accepting += async (_, e) => {
+    e.Handled = true;
+    await RegistrarMovimientoAsync(TipoMovimiento.Venta);
+};
+
+btnAjuste.Accepting += async (_, e) => {
+    e.Handled = true;
+    await RegistrarMovimientoAsync(TipoMovimiento.Ajuste);
+};
