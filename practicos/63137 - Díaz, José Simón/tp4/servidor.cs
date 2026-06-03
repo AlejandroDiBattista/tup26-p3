@@ -20,6 +20,31 @@ using (var scope = app.Services.CreateScope()) {
     scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>().Iniciar();
 }
 
+// ── Endpoints de Productos ────────────────────────────────────────────────
+
+app.MapGet("/productos", (CatalogoRepositorio repo) =>
+    Results.Ok(repo.ListarProductos()));
+
+app.MapGet("/productos/{id}", (int id, CatalogoRepositorio repo) => {
+    var producto = repo.ObtenerProducto(id);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
+});
+
+app.MapPost("/productos", (ProductoDatos datos, CatalogoRepositorio repo) => {
+    var producto = repo.CrearProducto(datos);
+    return Results.Created($"/productos/{producto.Id}", producto);
+});
+
+app.MapPut("/productos/{id}", (int id, ProductoDatos datos, CatalogoRepositorio repo) => {
+    var producto = repo.ModificarProducto(id, datos);
+    return producto is null ? Results.NotFound() : Results.Ok(producto);
+});
+
+app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
+    var eliminado = repo.EliminarProducto(id);
+    return eliminado ? Results.NoContent() : Results.NotFound();
+});
+
 app.Run("http://localhost:5050");
 
 // ── Enumeraciones ─────────────────────────────────────────────────────────
@@ -87,5 +112,44 @@ class CatalogoRepositorio {
             new Producto { Codigo = "P003", Nombre = "Harina 000 1kg",   Precio =  750m, Stock =  80 }
         );
         db.SaveChanges();
+    }
+
+    public List<Producto> ListarProductos() =>
+        db.Productos.OrderBy(p => p.Codigo).ToList();
+
+    public Producto? ObtenerProducto(int id) =>
+        db.Productos.Find(id);
+
+    public Producto CrearProducto(ProductoDatos datos) {
+        var producto = new Producto {
+            Codigo = datos.Codigo.Trim(),
+            Nombre = datos.Nombre.Trim(),
+            Precio = datos.Precio,
+            Stock  = datos.Stock
+        };
+        db.Productos.Add(producto);
+        db.SaveChanges();
+        return producto;
+    }
+
+    public Producto? ModificarProducto(int id, ProductoDatos datos) {
+        var producto = db.Productos.Find(id);
+        if (producto is null) return null;
+
+        producto.Codigo = datos.Codigo.Trim();
+        producto.Nombre = datos.Nombre.Trim();
+        producto.Precio = datos.Precio;
+        producto.Stock  = datos.Stock;
+        db.SaveChanges();
+        return producto;
+    }
+
+    public bool EliminarProducto(int id) {
+        var producto = db.Productos.Find(id);
+        if (producto is null) return false;
+
+        db.Productos.Remove(producto);
+        db.SaveChanges();
+        return true;
     }
 }
