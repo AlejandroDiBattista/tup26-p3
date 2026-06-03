@@ -120,3 +120,53 @@ void ShowHelpMessage()
     Console.WriteLine("  -nh, --no-header  Indica que el archivo no tiene encabezado");
     Console.WriteLine("  -h, --help        Muestra esta ayuda");
 }
+string ReadInput(AppConfig config)
+{
+    if (!string.IsNullOrEmpty(config.InputFile))
+    {
+        if (!File.Exists(config.InputFile))
+            throw new FileNotFoundException($"El archivo de entrada no existe: {config.InputFile}");
+        return File.ReadAllText(config.InputFile);
+    }
+    return Console.In.ReadToEnd();
+}
+
+(List<string> Headers, List<Dictionary<string, string>> Rows) ParseDelimited(string text, AppConfig config)
+{
+    List<string> headers = new List<string>();
+    List<Dictionary<string, string>> rows = new List<Dictionary<string, string>>();
+
+    string[] lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+    if (lines.Length == 0) return (headers, rows);
+
+    int startRowIndex = 0;
+
+    if (!config.NoHeader)
+    {
+        headers = lines[0].Split(new[] { config.Delimiter }, StringSplitOptions.None).Select(h => h.Trim()).ToList();
+        startRowIndex = 1;
+    }
+    else
+    {
+        int columnsCount = lines[0].Split(new[] { config.Delimiter }, StringSplitOptions.None).Length;
+        for (int i = 0; i < columnsCount; i++)
+        {
+            headers.Add(i.ToString());
+        }
+    }
+
+    for (int i = startRowIndex; i < lines.Length; i++)
+    {
+        string[] tokens = lines[i].Split(new[] { config.Delimiter }, StringSplitOptions.None);
+        var row = new Dictionary<string, string>();
+
+        for (int j = 0; j < headers.Count; j++)
+        {
+            string val = j < tokens.Length ? tokens[j].Trim() : "";
+            row[headers[j]] = val;
+        }
+        rows.Add(row);
+    }
+
+    return (headers, rows);
+}
