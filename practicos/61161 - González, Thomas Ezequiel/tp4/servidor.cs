@@ -60,6 +60,11 @@ app.MapPut("/productos/{id}", (int id, Producto producto, CatalogoRepositorio re
         return Results.NotFound();
 
     return Results.NoContent();
+    app.MapGet("/productos/{productoId}/movimientos",
+(int productoId, CatalogoRepositorio repositorio) =>
+{
+    return repositorio.TraerMovimientos(productoId);
+});
 });
 
     return Results.Ok(actualizado);
@@ -204,4 +209,12 @@ public bool EliminarProducto(int id)
 
     return true;
 }
-}
+    public List<MovimientoDeProducto> TraerMovimientos(int productoId)
+{
+    return db.Movimientos
+        .Where(m => m.ProductoId == productoId)
+        .OrderByDescending(m => m.Fecha)
+        .ToList();
+        }
+
+        }
