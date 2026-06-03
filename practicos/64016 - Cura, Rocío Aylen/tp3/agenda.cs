@@ -12,6 +12,7 @@ using System.Text.Json.Serialization;
 using Dapper;
 using Dapper.Contrib.Extensions;
 using Microsoft.Data.Sqlite;
+using Terminal.Gui;
 using Terminal.Gui.App;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
@@ -417,9 +418,7 @@ private Contacto? DialogoContacto(Contacto? contacto)
     {
         X = 15,
         Y = 12,
-        CheckedState = contacto.Favorito
-        ? CheckState.Checked
-         : CheckState.UnChecked
+        Checked = contacto.Favorito
     };
 
     Button btnAceptar = new()
@@ -449,8 +448,7 @@ private Contacto? DialogoContacto(Contacto? contacto)
                 Telefonos = txtTelefonos.Text.ToString() ?? "",
                 Email = txtEmail.Text.ToString() ?? "",
                 Notas = txtNotas.Text.ToString() ?? "",
-                Favorito =
-              chkFavorito.CheckedState == CheckState.Checked
+                Favorito = chkFavorito.CheckedState == Terminal.Gui.CheckState.Checked
             };
 
             dialog.RequestStop();
@@ -459,8 +457,12 @@ private Contacto? DialogoContacto(Contacto? contacto)
         {
             MessageBox.ErrorQuery(
                 "Error",
-                ex.Message,
-                "OK");
+                ex.Message ?? "Ocurrió un error inesperado",
+                 
+                  "OK",
+                  ex.Message ?? "Mensaje correcto",
+                  
+                );
         }
 
 
