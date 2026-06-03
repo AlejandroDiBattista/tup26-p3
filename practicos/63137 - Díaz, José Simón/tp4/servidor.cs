@@ -45,6 +45,19 @@ app.MapDelete("/productos/{id}", (int id, CatalogoRepositorio repo) => {
     return eliminado ? Results.NoContent() : Results.NotFound();
 });
 
+// ── Endpoints de Movimientos ──────────────────────────────────────────────
+
+app.MapGet("/productos/{productoId}/movimientos", (int productoId, CatalogoRepositorio repo) => {
+    if (repo.ObtenerProducto(productoId) is null) return Results.NotFound();
+    return Results.Ok(repo.ListarMovimientos(productoId));
+});
+
+app.MapPost("/productos/{productoId}/movimientos", (int productoId, MovimientoDatos datos, CatalogoRepositorio repo) => {
+    var movimiento = repo.RegistrarMovimiento(productoId, datos);
+    if (movimiento is null) return Results.NotFound();
+    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+});
+
 app.Run("http://localhost:5050");
 
 // ── Enumeraciones ─────────────────────────────────────────────────────────
@@ -152,4 +165,36 @@ class CatalogoRepositorio {
         db.SaveChanges();
         return true;
     }
+
+    public List<MovimientoDeProducto> ListarMovimientos(int productoId) =>
+        db.Movimientos
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .ToList();
+
+    public MovimientoDeProducto? RegistrarMovimiento(int productoId, MovimientoDatos datos) {
+        var producto = db.Productos.Find(productoId);
+        if (producto is null) return null;
+
+        producto.Stock = CalcularNuevoStock(producto.Stock, datos.Tipo, datos.Cantidad);
+
+        var movimiento = new MovimientoDeProducto {
+            ProductoId = productoId,
+            Tipo       = datos.Tipo,
+            Cantidad   = datos.Cantidad,
+            Fecha      = DateTime.Now
+        };
+
+        db.Movimientos.Add(movimiento);
+        db.SaveChanges();
+        return movimiento;
+    }
+
+    static int CalcularNuevoStock(int stockActual, TipoMovimiento tipo, int cantidad) =>
+        tipo switch {
+            TipoMovimiento.Compra => stockActual + cantidad,
+            TipoMovimiento.Venta  => stockActual - cantidad,
+            TipoMovimiento.Ajuste => cantidad,
+            _                     => stockActual
+        };
 }
