@@ -2,21 +2,27 @@
 #:property PublishAot=false
 
 using System.Net.Http.Json;
+using System.Collections.ObjectModel;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
 
-// ── Consulta inicial al servidor ──────────────────────────────────────────
+const string ApiUrl = "http://localhost:5050";
 
-ProductoDto producto;
+using var http = new HttpClient { BaseAddress = new Uri(ApiUrl) };
+
+List<ProductoDto> productos = [];
+List<MovimientoDto> movimientos = [];
+ProductoDto? seleccionado = null;
+
 try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
+    productos = await CargarProductosAsync();
+    seleccionado = productos.FirstOrDefault();
+    if (seleccionado is not null) movimientos = await CargarMovimientosAsync(seleccionado.Id);
 } catch (HttpRequestException ex) {
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
+    Console.Error.WriteLine("Verifica que servidor.cs este corriendo en http://localhost:5050");
     return;
 }
-
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
