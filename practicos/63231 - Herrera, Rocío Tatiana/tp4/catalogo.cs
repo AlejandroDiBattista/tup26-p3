@@ -47,3 +47,19 @@ var btnEliminar = new Button { X = 25, Y = 22, Text = "Eliminar" };
 var btnCompra = new Button { X = 66, Y = 22, Text = "Compra" };
 var btnVenta = new Button { X = 78, Y = 22, Text = "Venta" };
 var btnAjuste = new Button { X = 89, Y = 22, Text = "Ajuste" };
+
+ventana.Add(
+    tituloProductos,
+    new Label { Text = "Buscar:", X = 1, Y = 1 }, buscar,
+    listaProductos,
+    tituloMovimientos,
+    listaMovimientos,
+    new Label { Text = "Codigo:", X = 1, Y = 18 }, codigo,
+    new Label { Text = "Nombre:", X = 31, Y = 18 }, nombre,
+    new Label { Text = "Precio:", X = 1, Y = 20 }, precio,
+    new Label { Text = "Stock:", X = 31, Y = 20 }, stock,
+    new Label { Text = "Cantidad:", X = 66, Y = 20 }, cantidad,
+    btnNuevo, btnGuardar, btnEliminar, btnCompra, btnVenta, btnAjuste,
+    new Label { Text = "Atajos: buscar por codigo/nombre, seleccionar con flechas, usar botones con Enter.", X = 1, Y = 26 },
+    estado
+);
