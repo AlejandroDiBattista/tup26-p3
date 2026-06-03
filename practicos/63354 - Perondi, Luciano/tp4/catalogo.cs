@@ -6,7 +6,6 @@ using Terminal.Gui.App;
 using Terminal.Gui.Views;
 using System.Collections.ObjectModel;
 using Terminal.Gui.ViewBase;
-using Terminal.Gui.Input;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
@@ -56,7 +55,7 @@ async Task RecargarLista(string filtro = "") {
             .ToList();
     }
     listaProductos.SetSource(new ObservableCollection<string>(
-        productos.Select(p => $"{p.Codigo}  {p.Nombre}  (stock {p.Stock})")
+        productos.Select(p => $"{p.Codigo}  {p.Nombre}  ${p.Precio}  (stock {p.Stock})")
     ));
 }
 
@@ -117,6 +116,33 @@ async Task EliminarProducto(ProductoDto p) {
     await RecargarLista();
 }
 
+async Task RegistrarMov(ProductoDto p) {
+    var cantidadField = new TextField { X = 12, Y = 1, Width = 20, Text = "0" };
+    string tipoElegido = "";
+
+    var compra = new Button { Text = "Compra" };
+    var venta  = new Button { Text = "Venta" };
+    var ajuste = new Button { Text = "Ajuste" };
+    compra.Accepting += (s, e) => { tipoElegido = "Compra"; app.RequestStop(); };
+    venta.Accepting  += (s, e) => { tipoElegido = "Venta";  app.RequestStop(); };
+    ajuste.Accepting += (s, e) => { tipoElegido = "Ajuste"; app.RequestStop(); };
+
+    var dlg = new Dialog { Title = $"Movimiento — {p.Nombre}", Width = 50, Height = 9 };
+    dlg.Add(new Label { X = 1, Y = 1, Text = "Cantidad:" });
+    dlg.Add(cantidadField);
+    dlg.AddButton(compra);
+    dlg.AddButton(venta);
+    dlg.AddButton(ajuste);
+    app.Run(dlg);
+
+    if (tipoElegido == "") return;
+
+    int.TryParse(cantidadField.Text, out int cantidad);
+    await RegistrarMovimientoAsync(http, p.Id, tipoElegido, cantidad);
+    await RecargarLista();
+    await MostrarMovimientos(p);
+}
+
 var botonNuevo = new Button { X = 0, Y = 0, Text = "Nuevo" };
 botonNuevo.Accepting += (s, e) => { _ = EditarProducto(null); e.Handled = true; };
 
@@ -134,8 +160,20 @@ botonEliminar.Accepting += (s, e) => {
     e.Handled = true;
 };
 
+var botonMovimiento = new Button { X = Pos.Right(botonEliminar) + 1, Y = 0, Text = "Movimiento" };
+botonMovimiento.Accepting += (s, e) => {
+    int? i = listaProductos.SelectedItem;
+    if (i >= 0 && i < productos.Count) _ = RegistrarMov(productos[i.Value]);
+    e.Handled = true;
+};
+
+var buscarField = new TextField { X = Pos.Right(botonMovimiento) + 2, Y = 0, Width = 20 };
+
+var botonBuscar = new Button { X = Pos.Right(buscarField) + 1, Y = 0, Text = "Buscar" };
+botonBuscar.Accepting += (s, e) => { _ = RecargarLista(buscarField.Text); e.Handled = true; };
+
 await RecargarLista();
-ventana.Add(botonNuevo, botonEditar, botonEliminar, listaProductos, detalleMovimientos);
+ventana.Add(botonNuevo, botonEditar, botonEliminar, botonMovimiento, buscarField, botonBuscar, listaProductos, detalleMovimientos);
 app.Run(ventana);
 
 static async Task<List<ProductoDto>> TraerProductosAsync(HttpClient http) {
@@ -158,6 +196,11 @@ static async Task ModificarProductoAsync(HttpClient http, int id, ProductoDto p)
 
 static async Task EliminarProductoAsync(HttpClient http, int id) {
     await http.DeleteAsync($"http://localhost:5050/productos/{id}");
+}
+
+static async Task RegistrarMovimientoAsync(HttpClient http, int productoId, string tipo, int cantidad) {
+    var dto = new { Tipo = tipo, Cantidad = cantidad };
+    await http.PostAsJsonAsync($"http://localhost:5050/productos/{productoId}/movimientos", dto);
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
