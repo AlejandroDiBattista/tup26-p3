@@ -102,3 +102,42 @@ try {
 }
 
 app.Run(ventana);
+
+async Task CargarProductosAsync() {
+    productos = await http.GetFromJsonAsync<List<ProductoDto>>("/productos", json) ?? [];
+    FiltrarProductos();
+    estado.Text = $"Productos cargados: {productos.Count}";
+
+    if (productosFiltrados.Count > 0) {
+        listaProductos.SelectedItem = 0;
+        await SeleccionarProductoAsync();
+    } else {
+        LimpiarFormulario();
+    }
+}
+
+void FiltrarProductos() {
+    var texto = buscar.Text?.ToString()?.Trim() ?? "";
+
+    productosFiltrados = productos
+        .Where(p => texto.Length == 0
+            || p.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || p.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Codigo)
+        .ToList();
+
+    productosVista.Clear();
+    foreach (var p in productosFiltrados) {
+        productosVista.Add($"{p.Codigo,-8} {Recortar(p.Nombre, 28),-28} ${p.Precio,9:N2} Stock:{p.Stock,4}");
+    }
+
+    if (productosFiltrados.Count == 0) {
+        movimientosVista.Clear();
+        productoSeleccionado = null;
+        estado.Text = "No hay productos para mostrar.";
+    } else if (listaProductos.SelectedItem >= productosFiltrados.Count) {
+        listaProductos.SelectedItem = 0;
+    }
+
+    ventana.SetNeedsDraw();
+}
