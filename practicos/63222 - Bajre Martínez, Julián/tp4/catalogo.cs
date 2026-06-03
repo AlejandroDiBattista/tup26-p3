@@ -310,6 +310,68 @@ async Task EliminarProducto()
     await RecargarProductos();
 }
 
+async Task RegistrarMovimiento(string tipo)
+{
+    if (listaProductos.SelectedItem < 0)
+        return;
+
+    var producto =
+        productosFiltrados[listaProductos.SelectedItem ?? 0];
+
+    var txtCantidad = new TextField()
+    {
+        Text = ""
+    };
+
+    var dialog = new Dialog()
+    {
+        Title = "Movimiento",
+        Width = 60,
+        Height = 15
+    };
+
+    dialog.Add(
+        new Label() {
+            Text = "Cantidad"
+        },
+        txtCantidad
+    );
+
+    var aceptar = new Button() {
+        Text = "Aceptar"
+    };
+    var cancelar = new Button() {
+        Text = "Cancelar"
+    };
+
+    aceptar.Accepting += async (_, _) =>
+    {
+        await http.PostAsJsonAsync(
+            $"http://localhost:5050/productos/{producto.Id}/movimientos",
+            new
+            {
+                Tipo = tipo,
+                Cantidad = int.Parse(
+                    txtCantidad.Text.ToString() ?? "0")
+            });
+
+        await RecargarProductos();
+        await CargarMovimientos();
+
+        Application.RequestStop();
+    };
+
+    cancelar.Accepting += (_, _) =>
+    {
+        Application.RequestStop();
+    };
+
+    dialog.AddButton(aceptar);
+    dialog.AddButton(cancelar);
+
+    Application.Run(dialog);
+}
+
 txtBuscar.TextChanged += (sender, e) =>
 {
     var texto = txtBuscar.Text.ToString() ?? "";
@@ -333,16 +395,25 @@ listaProductos.Accepting += async (sender, e) =>
     await CargarMovimientos();
 };
 
-ventana.KeyDown += async (sender, key) =>
+ventana.KeyDown += async (sender, e) =>
 {
-    if (key == Key.F2)
+    if (e.KeyCode == Key.F2)
         await AgregarProducto();
 
-    if (key == Key.F3)
+    else if (e.KeyCode == Key.F3)
         await EditarProducto();
 
-    if (key == Key.F4)
+    else if (e.KeyCode == Key.F4)
         await EliminarProducto();
+
+    else if (e.KeyCode == Key.F5)
+        await RegistrarMovimiento("Compra");
+
+    else if (e.KeyCode == Key.F6)
+        await RegistrarMovimiento("Venta");
+
+    else if (e.KeyCode == Key.F7)
+        await RegistrarMovimiento("Ajuste");
 };
 
 if (productos.Count > 0)
