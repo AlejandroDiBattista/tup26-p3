@@ -169,15 +169,96 @@ class CatalogoRepositorio {
 
     public CatalogoRepositorio(CatalogoDb db) => this.db = db;
 
-    public void Iniciar() {
-        db.Database.EnsureCreated();
+    public async Task<List<Producto>> ListarProductosAsync() =>
+        await db.Productos.AsNoTracking().OrderBy(p => p.Codigo).ToListAsync();
 
-        if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-            db.SaveChanges();
-        }
+    public async Task<Producto?> TraerProductoAsync(int id) =>
+        await db.Productos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+
+    public async Task<bool> ExisteProductoAsync(int id) =>
+        await db.Productos.AnyAsync(p => p.Id == id);
+
+    public async Task<Producto> CrearProductoAsync(ProductoEntrada entrada) {
+        if (await CodigoUsadoAsync(entrada.Codigo, null)) throw new CodigoDuplicadoException();
+
+        var producto = new Producto {
+            Codigo = entrada.Codigo.Trim(),
+            Nombre = entrada.Nombre.Trim(),
+            Precio = entrada.Precio,
+            Stock = entrada.Stock
+        };
+
+        db.Productos.Add(producto);
+        await db.SaveChangesAsync();
+        return producto;
     }
 
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+    public async Task<Producto?> ModificarProductoAsync(int id, ProductoEntrada entrada) {
+        var producto = await db.Productos.FindAsync(id);
+        if (producto is null) return null;
+        if (await CodigoUsadoAsync(entrada.Codigo, id)) throw new CodigoDuplicadoException();
+
+        producto.Codigo = entrada.Codigo.Trim();
+        producto.Nombre = entrada.Nombre.Trim();
+        producto.Precio = entrada.Precio;
+        producto.Stock = entrada.Stock;
+
+        await db.SaveChangesAsync();
+        return producto;
+    }
+
+    public async Task<bool> EliminarProductoAsync(int id) {
+        var producto = await db.Productos.FindAsync(id);
+        if (producto is null) return false;
+
+        db.Productos.Remove(producto);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<MovimientoDeProducto>> ListarMovimientosAsync(int productoId) =>
+        await db.Movimientos
+            .AsNoTracking()
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .ToListAsync();
+
+    public async Task<MovimientoDeProducto?> RegistrarMovimientoAsync(int productoId, MovimientoEntrada entrada) {
+        var producto = await db.Productos.FindAsync(productoId);
+        if (producto is null) return null;
+
+        switch (entrada.Tipo) {
+            case TipoMovimiento.Compra:
+                producto.Stock += entrada.Cantidad;
+                break;
+            case TipoMovimiento.Venta:
+                if (producto.Stock < entrada.Cantidad) throw new StockInsuficienteException();
+                producto.Stock -= entrada.Cantidad;
+                break;
+            case TipoMovimiento.Ajuste:
+                producto.Stock = entrada.Cantidad;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(entrada.Tipo));
+        }
+
+        var movimiento = new MovimientoDeProducto {
+            ProductoId = productoId,
+            Tipo = entrada.Tipo,
+            Cantidad = entrada.Cantidad,
+            Fecha = DateTime.Now
+        };
+
+        db.Movimientos.Add(movimiento);
+        await db.SaveChangesAsync();
+        return movimiento;
+    }
+
+    private async Task<bool> CodigoUsadoAsync(string codigo, int? idIgnorado) {
+        var normalizado = codigo.Trim();
+        return await db.Productos.AnyAsync(p => p.Codigo == normalizado && p.Id != idIgnorado);
+    }
 }
+
+class CodigoDuplicadoException : Exception;
+class StockInsuficienteException : Exception;
