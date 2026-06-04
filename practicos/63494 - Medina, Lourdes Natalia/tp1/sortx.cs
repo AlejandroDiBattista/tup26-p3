@@ -216,3 +216,37 @@ void WriteOutput(string content, AppConfig config)
     else
         Console.Write(content);
 }
+
+SortField ParseSortField(string input)
+{
+    var parts = input.Split(':');
+
+    var name = parts[0];
+    bool numeric = parts.Length > 1 && parts[1] == "num";
+    bool descending = parts.Length > 2 && parts[2] == "desc";
+
+    return new SortField(name, numeric, descending);
+}
+
+void PrintHelp()
+{
+    Console.WriteLine("Uso:");
+    Console.WriteLine("  sortx [input [output]] -b campo[:tipo[:orden]]");
+    Console.WriteLine("Opciones:");
+    Console.WriteLine("  -b, --by           Campo de ordenamiento");
+    Console.WriteLine("  -i, --input        Archivo de entrada");
+    Console.WriteLine("  -o, --output       Archivo de salida");
+    Console.WriteLine("  -d, --delimiter    Delimitador (default ,)");
+    Console.WriteLine("  -nh, --no-header   Sin encabezado");
+    Console.WriteLine("  -h, --help         Mostrar ayuda");
+}
+
+record SortField(string Name, bool Numeric, bool Descending);
+
+record AppConfig(
+    string? InputFile,
+    string? OutputFile,
+    string Delimiter,
+    bool NoHeader,
+    List<SortField> SortFields
+);
