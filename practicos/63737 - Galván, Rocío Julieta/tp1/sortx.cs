@@ -9,7 +9,6 @@ try
 {
     var config = ParseArgs(args);
     var input  = ReadInput(config);
-    Console.WriteLine(input);
     var rows   = ParseDelimited(input, config);
     var sorted = SortRows(rows, config);
     var output = Serialize(sorted, config);
@@ -100,7 +99,43 @@ string ReadInput(AppConfig config)
     return Console.In.ReadToEnd();
 }
 
-List<Dictionary<string, string>> ParseDelimited( string input, AppConfig config) => [];
+
+List<Dictionary<string, string>> ParseDelimited(
+    string input,
+    AppConfig config)
+{
+    List<Dictionary<string, string>> rows = [];
+
+    string[] lines = input.Split(
+        '\n',
+        StringSplitOptions.RemoveEmptyEntries);
+
+    if (lines.Length == 0)
+        return rows;
+
+    string[] headers =
+        lines[0].Trim().Split(config.Delimiter);
+
+    for (int i = 1; i < lines.Length; i++)
+    {
+        string[] values =
+            lines[i].Trim().Split(config.Delimiter);
+
+        Dictionary<string, string> row = [];
+
+        for (int j = 0;
+             j < headers.Length && j < values.Length;
+             j++)
+        {
+            row[headers[j]] = values[j];
+        }
+
+        rows.Add(row);
+    }
+
+    return rows;
+}
+
 
 List<Dictionary<string, string>> SortRows( List<Dictionary<string, string>> rows, AppConfig config) => rows;
 
