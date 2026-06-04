@@ -53,6 +53,31 @@ AppConfig ParseArgs(string[] args)
                 output = args[++i];
                 break;
 
+            case "-d":
+            case "--delimiter":
+                delimiter = args[++i];
+
+                if (delimiter == "\\t")
+                {
+                    delimiter = "\t";
+                }
+
+                break;
+
+            case "-h":
+            case "--help":
+                Console.WriteLine("""
+sortx [input [output]] [-b|--by campo[:tipo[:orden]]]...
+      [-i|--input input]
+      [-o|--output output]
+      [-d|--delimiter delimitador]
+      [-nh|--no-header]
+      [-h|--help]
+""");
+
+                Environment.Exit(0);
+                break;
+
             case "-nh":
             case "--no-header":
                 noHeader = true;
@@ -100,6 +125,8 @@ AppConfig ParseArgs(string[] args)
 }
 
 
+
+
 string ReadInput(AppConfig config)
 {
     if (config.InputFile != null)
@@ -109,7 +136,6 @@ string ReadInput(AppConfig config)
 
     return Console.In.ReadToEnd();
 }
-
 
 List<Dictionary<string, string>> ParseDelimited(
     string input,
@@ -124,10 +150,32 @@ List<Dictionary<string, string>> ParseDelimited(
     if (lines.Length == 0)
         return rows;
 
-    string[] headers =
-        lines[0].Trim().Split(config.Delimiter);
+    string[] headers;
+    int startRow;
 
-    for (int i = 1; i < lines.Length; i++)
+    if (config.NoHeader)
+    {
+        string[] firstValues =
+            lines[0].Trim().Split(config.Delimiter);
+
+        headers = new string[firstValues.Length];
+
+        for (int i = 0; i < firstValues.Length; i++)
+        {
+            headers[i] = i.ToString();
+        }
+
+        startRow = 0;
+    }
+    else
+    {
+        headers =
+            lines[0].Trim().Split(config.Delimiter);
+
+        startRow = 1;
+    }
+
+    for (int i = startRow; i < lines.Length; i++)
     {
         string[] values =
             lines[i].Trim().Split(config.Delimiter);
