@@ -12,6 +12,7 @@ try
     var rows   = ParseDelimited(input, config);
     var sorted = SortRows(rows, config);
     var output = Serialize(sorted, config);
+    Console.WriteLine(output);
 }
  catch (Exception ex)
 {
@@ -150,7 +151,38 @@ List<Dictionary<string, string>> SortRows(
         .ToList();
 }
 
-string Serialize( List<Dictionary<string, string>> rows, AppConfig config) => "";
+string Serialize(
+    List<Dictionary<string, string>> rows,
+    AppConfig config)
+{
+    if (rows.Count == 0)
+        return "";
+
+    List<string> lines = [];
+
+    if (!config.NoHeader)
+    {
+        lines.Add(
+            string.Join(
+                config.Delimiter,
+                rows[0].Keys
+            )
+        );
+    }
+
+    foreach (var row in rows)
+    {
+        lines.Add(
+            string.Join(
+                config.Delimiter,
+                row.Values
+            )
+        );
+    }
+
+    return string.Join("\n", lines);
+}
+
 
 void WriteOutput( string output,AppConfig config)
 {
