@@ -146,6 +146,13 @@ List<Dictionary<string, string>> SortRows(
 
     var field = config.SortFields[0];
 
+    if (field.Numeric)
+    {
+        return rows
+            .OrderBy(r => double.Parse(r[field.Name]))
+            .ToList();
+    }
+
     return rows
         .OrderBy(r => r[field.Name])
         .ToList();
