@@ -130,3 +130,64 @@ Dictionary<string, string> CreateRow(string[] headers, string[] values)
 
     return row;
 }
+
+List<Dictionary<string, string>> SortRows(List<Dictionary<string, string>> rows, AppConfig config)
+{
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
+
+    foreach (var field in config.SortFields)
+    {
+        if (field.Numeric)
+        {
+            if (ordered == null)
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    })
+                    : rows.OrderBy(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    });
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    })
+                    : ordered.ThenBy(r =>
+                    {
+                        if (!double.TryParse(r[field.Name], NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            throw new Exception($"Valor no numérico en campo {field.Name}");
+                        return number;
+                    });
+            }
+        }
+        else
+        {
+            if (ordered == null)
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r => r[field.Name])
+                    : rows.OrderBy(r => r[field.Name]);
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r => r[field.Name])
+                    : ordered.ThenBy(r => r[field.Name]);
+            }
+        }
+    }
+
+    return ordered?.ToList() ?? rows;
+}
