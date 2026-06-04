@@ -10,6 +10,17 @@ try
     var config = ParseArgs(args);
     var input  = ReadInput(config);
     var rows   = ParseDelimited(input, config);
+    if (rows.Count > 0)
+{
+    foreach (var field in config.SortFields)
+    {
+        if (!rows[0].ContainsKey(field.Name))
+        {
+            throw new Exception(
+                $"La columna '{field.Name}' no existe.");
+        }
+    }
+}
     var sorted = SortRows(rows, config);
     var output = Serialize(sorted, config);
     WriteOutput(output, config);
