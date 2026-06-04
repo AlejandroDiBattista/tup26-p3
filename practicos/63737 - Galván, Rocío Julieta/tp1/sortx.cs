@@ -12,7 +12,7 @@ try
     var rows   = ParseDelimited(input, config);
     var sorted = SortRows(rows, config);
     var output = Serialize(sorted, config);
-    Console.WriteLine(output);
+    WriteOutput(output, config);
 }
  catch (Exception ex)
 {
@@ -183,10 +183,16 @@ string Serialize(
     return string.Join("\n", lines);
 }
 
-
-void WriteOutput( string output,AppConfig config)
+void WriteOutput(string output, AppConfig config)
 {
-    
+    if (config.OutputFile != null)
+    {
+        File.WriteAllText(config.OutputFile, output);
+    }
+    else
+    {
+        Console.Write(output);
+    }
 }
 
 
