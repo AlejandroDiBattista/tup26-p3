@@ -136,7 +136,6 @@ List<Dictionary<string, string>> ParseDelimited(
     return rows;
 }
 
-
 List<Dictionary<string, string>> SortRows(
     List<Dictionary<string, string>> rows,
     AppConfig config)
@@ -144,18 +143,43 @@ List<Dictionary<string, string>> SortRows(
     if (config.SortFields.Count == 0)
         return rows;
 
-    var field = config.SortFields[0];
+    IOrderedEnumerable<Dictionary<string, string>>? ordered = null;
 
-    if (field.Numeric)
+    foreach (var field in config.SortFields)
     {
-        return rows
-            .OrderBy(r => double.Parse(r[field.Name]))
-            .ToList();
+        if (ordered == null)
+        {
+            if (field.Numeric)
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r => double.Parse(r[field.Name]))
+                    : rows.OrderBy(r => double.Parse(r[field.Name]));
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? rows.OrderByDescending(r => r[field.Name])
+                    : rows.OrderBy(r => r[field.Name]);
+            }
+        }
+        else
+        {
+            if (field.Numeric)
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r => double.Parse(r[field.Name]))
+                    : ordered.ThenBy(r => double.Parse(r[field.Name]));
+            }
+            else
+            {
+                ordered = field.Descending
+                    ? ordered.ThenByDescending(r => r[field.Name])
+                    : ordered.ThenBy(r => r[field.Name]);
+            }
+        }
     }
 
-    return rows
-        .OrderBy(r => r[field.Name])
-        .ToList();
+    return ordered!.ToList();
 }
 
 string Serialize(
