@@ -74,7 +74,8 @@ AppConfig ParseArgs(string[] args){
     return new AppConfig(input, output, delimiter, noHeader, sortFields);
 }
 
-string ReadInput(AppConfig config){
+string ReadInput(AppConfig config)
+{
     if (!string.IsNullOrEmpty(config.InputFile))
     {
         if (!File.Exists(config.InputFile))
@@ -89,15 +90,43 @@ string ReadInput(AppConfig config){
     return Console.In.ReadToEnd();
 }
 
-List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config){
-      var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-         if (lines.Length == 0)
-        return new();
+List<Dictionary<string, string>> ParseDelimited(string text, AppConfig config)
+{
+    var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-      var table = new List<Dictionary<string, string>>();
-          if (lines.Length == 0)
+    if (lines.Length == 0)
         return new();
 
     var table = new List<Dictionary<string, string>>();
+    string[] headers;
+
+    if (!config.NoHeader)
+    {
+        headers = lines[0].Split(config.Delimiter);
+
+        foreach (var line in lines.Skip(1))
+            table.Add(CreateRow(headers, line.Split(config.Delimiter)));
+    }
+    else
+    {
+        var first = lines[0].Split(config.Delimiter);
+        headers = Enumerable.Range(0, first.Length)
+                            .Select(i => i.ToString())
+                            .ToArray();
+
+        foreach (var line in lines)
+            table.Add(CreateRow(headers, line.Split(config.Delimiter)));
+    }
+
+    return table;
 }
 
+Dictionary<string, string> CreateRow(string[] headers, string[] values)
+{
+    var row = new Dictionary<string, string>();
+
+    for (int i = 0; i < headers.Length; i++)
+        row[headers[i]] = i < values.Length ? values[i] : "";
+
+    return row;
+}
