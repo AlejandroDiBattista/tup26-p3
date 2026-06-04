@@ -10,17 +10,6 @@ try
     var config = ParseArgs(args);
     var input  = ReadInput(config);
     var rows   = ParseDelimited(input, config);
-    if (rows.Count > 0)
-{
-    foreach (var field in config.SortFields)
-    {
-        if (!rows[0].ContainsKey(field.Name))
-        {
-            throw new Exception(
-                $"La columna '{field.Name}' no existe.");
-        }
-    }
-}
     var sorted = SortRows(rows, config);
     var output = Serialize(sorted, config);
     WriteOutput(output, config);
@@ -199,6 +188,18 @@ List<Dictionary<string, string>> SortRows(
     List<Dictionary<string, string>> rows,
     AppConfig config)
 {
+    if (rows.Count > 0)
+    {
+        foreach (var field in config.SortFields)
+        {
+            if (!rows[0].ContainsKey(field.Name))
+            {
+                throw new Exception(
+                    $"La columna '{field.Name}' no existe.");
+            }
+        }
+    }
+
     if (config.SortFields.Count == 0)
         return rows;
 
@@ -240,7 +241,6 @@ List<Dictionary<string, string>> SortRows(
 
     return ordered!.ToList();
 }
-
 string Serialize(
     List<Dictionary<string, string>> rows,
     AppConfig config)
