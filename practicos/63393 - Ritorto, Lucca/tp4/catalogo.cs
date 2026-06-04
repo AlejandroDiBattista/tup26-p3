@@ -34,38 +34,113 @@ var txtBuscar = new TextField()
     Y = 18,
     Width = 40
 };
+var lblBuscar = new Label()
+{
+    X = 1,
+    Y = 17,
+    Text = "Buscar:"
+};
+
+var movimientosProducto = new Label
+{
+    X = 55,
+    Y = 12,
+    Width = 60,
+    Height = 10,
+    Text = "Movimientos:"
+};
+
+
 var menu = new MenuBar
 {
     Menus = new[]
     {
-    new MenuBarItem(
+        new MenuBarItem(
             "_Productos",
             new[]
             {
-                new MenuItem("_Agregar", "", () => { }),
-                new MenuItem("_Editar", "", () => { }),
-                new MenuItem("_Eliminar", "", () => { })
-            }
-        ),
-     new MenuBarItem(
+                new MenuItem(
+                    "_Agregar",
+                    "",
+                    () =>
+                    {
+                        MostrarDialogoAgregarProducto();
+                    }
+                ),
+
+                new MenuItem(
+                    "_Editar",
+                    "",
+                    () => { }
+                ),
+
+                new MenuItem(
+                    "_Eliminar",
+                    "",
+                    () => { }
+                )}
+),
+         
+
+        new MenuBarItem(
             "_Movimientos",
             new[]
             {
-                new MenuItem("_Compra", "", () => { }),
-                new MenuItem("_Venta", "", () => { }),
-                new MenuItem("_Ajuste", "", () => { })
+              new MenuItem("_Compra", "", () =>
+{
+    using var http = new HttpClient();
+
+    var movimiento = new
+    {
+        ProductoId = 2,
+        Tipo = 0,
+        Cantidad = 5
+    };
+
+    http.PostAsJsonAsync(
+        "http://localhost:5050/Productos/2/Movimiento",
+        movimiento
+    ).Wait();
+}),
+
+                new MenuItem("_Venta", "", () =>
+{
+    using var http = new HttpClient();
+
+    var movimiento = new
+    {
+        ProductoId = 2,
+        Tipo = 1,
+        Cantidad = 1
+    };
+
+    http.PostAsJsonAsync(
+        "http://localhost:5050/Productos/2/Movimiento",
+        movimiento
+    ).Wait();
+}),
+
+                new MenuItem("_Ajuste", "", () =>
+{
+    using var http = new HttpClient();
+
+    var movimiento = new
+    {
+        ProductoId = 2,
+        Tipo = 2,
+        Cantidad = 50
+    };
+
+    http.PostAsJsonAsync(
+        "http://localhost:5050/Productos/2/Movimiento",
+        movimiento
+    ).Wait();
+})
             }
         )
     }
 };
 var lineasProductos = new List<string>();
-
-foreach (var p in productos)
-{
-    lineasProductos.Add(
-        $"[{p.Id}] {p.Nombre} - ${p.Precio} - Stock:{p.Stock}"
-    );
-}
 var listaProductos = new ListView()
 {
     X = 1,
@@ -73,11 +148,6 @@ var listaProductos = new ListView()
     Width = 50,
     Height = 15
 };
-listaProductos.SetSource(
-    new System.Collections.ObjectModel.ObservableCollection<string>(
-        lineasProductos
-    )
-);
 var producto = productos[0];
 var detalleProducto = new Label
 {
@@ -91,13 +161,53 @@ var detalleProducto = new Label
             Stock: {producto.Stock}
             """
 };
-var movimientosProducto = new Label
+
+
+foreach (var p in productos)
 {
-    X = 55,
-    Y = 12,
-    Width = 60,
-    Height = 10,
-    Text = "Movimientos:"
+    lineasProductos.Add(
+        $"[{p.Id}] {p.Nombre} - ${p.Precio} - Stock:{p.Stock}"
+    );
+}
+
+listaProductos.SetSource(
+    new System.Collections.ObjectModel.ObservableCollection<string>(
+        lineasProductos
+    )
+);
+
+
+txtBuscar.Accepting += (s, e) =>
+{
+    string texto = txtBuscar.Text?.ToString() ?? "";
+
+    lineasProductos.Clear();
+
+    foreach (var p in productos)
+    {
+        if (
+            p.Nombre.Contains(
+                texto,
+                StringComparison.OrdinalIgnoreCase
+            )
+            ||
+            p.Codigo.Contains(
+                texto,
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            lineasProductos.Add(
+                $"[{p.Id}] {p.Nombre} - ${p.Precio} - Stock:{p.Stock}"
+            );
+        }
+    }
+
+    listaProductos.SetSource(
+        new System.Collections.ObjectModel.ObservableCollection<string>(
+            lineasProductos
+        )
+    );
 };
     listaProductos.Accepting += async (s, e) =>
     {
@@ -125,9 +235,28 @@ var movimientosProducto = new Label
              Stock: {productoSeleccionado.Stock}
             """;
 };
+void MostrarDialogoAgregarProducto()
+{
+    using var http = new HttpClient();
 
+    var nuevoProducto = new
+    {
+        Codigo = "TEST",
+        Nombre = "Producto Nuevo",
+        Precio = 1000,
+        Stock = 10
+    };
+
+    http.PostAsJsonAsync(
+        "http://localhost:5050/productos",
+        nuevoProducto
+    ).Wait();
+    productos = CargarProductosAsync(http).Result;
+}
+
+ventana.Add(menu);
 ventana.Add(listaProductos);
-
+ventana.Add(lblBuscar);
 ventana.Add(detalleProducto);
 ventana.Add(movimientosProducto);
 ventana.Add(txtBuscar);
