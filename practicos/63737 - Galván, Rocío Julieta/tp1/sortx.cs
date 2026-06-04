@@ -12,9 +12,8 @@ try
     var rows   = ParseDelimited(input, config);
     var sorted = SortRows(rows, config);
     var output = Serialize(sorted, config);
-    WriteOutput(output, config);
 }
-catch (Exception ex)
+ catch (Exception ex)
 {
     Console.Error.WriteLine($"Error: {ex.Message}");
     Environment.Exit(1);
@@ -137,7 +136,19 @@ List<Dictionary<string, string>> ParseDelimited(
 }
 
 
-List<Dictionary<string, string>> SortRows( List<Dictionary<string, string>> rows, AppConfig config) => rows;
+List<Dictionary<string, string>> SortRows(
+    List<Dictionary<string, string>> rows,
+    AppConfig config)
+{
+    if (config.SortFields.Count == 0)
+        return rows;
+
+    var field = config.SortFields[0];
+
+    return rows
+        .OrderBy(r => r[field.Name])
+        .ToList();
+}
 
 string Serialize( List<Dictionary<string, string>> rows, AppConfig config) => "";
 
