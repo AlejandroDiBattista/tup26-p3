@@ -23,3 +23,33 @@ class Variable : Nodo
         return x;
     }
 }
+
+class PositivoNodo : Nodo
+{
+    private readonly Nodo expresion;
+
+    public PositivoNodo(Nodo expresion)
+    {
+        this.expresion= expresion;
+    }
+
+    public override int Evaluar(int x = 0)
+    {
+        return expresion.Evaluar(x);
+    }
+}
+
+class NegativoNodo : Nodo
+{
+    private readonly Nodo expresion;
+
+    public NegativoNodo(Nodo expresion)
+    {
+        this.expresion = expresion;
+    }
+
+    public override int Evaluar(int x = 0)
+    {
+        return -expresion.Evaluar(x);
+    }
+}
