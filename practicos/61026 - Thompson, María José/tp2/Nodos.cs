@@ -1,46 +1,101 @@
-namespace Calculadora;
+using System;
 
-public abstract class Nodo {
+public abstract class Nodo
+{
     public abstract int Evaluar(int x = 0);
 }
 
-public class NumeroNodo(int valor) : Nodo {
-    public override int Evaluar(int x = 0) => valor;
+public class NumeroNodo : Nodo
+{
+    private int valor;
+
+    public NumeroNodo(int valor)
+    {
+        this.valor = valor;
+    }
+
+    public override int Evaluar(int x = 0)
+    {
+        return valor;
+    }
 }
 
-public class VariableNodo : Nodo {
-    public override int Evaluar(int x = 0) => x;
+public class VariableNodo : Nodo
+{
+    public override int Evaluar(int x = 0)
+    {
+        return x;
+    }
 }
 
-public class NegativoNodo(Nodo interior) : Nodo {
-    public override int Evaluar(int x = 0) => -interior.Evaluar(x);
+public class NegativoNodo : Nodo
+{
+    private Nodo hijo;
+
+    public NegativoNodo(Nodo hijo)
+    {
+        this.hijo = hijo;
+    }
+
+    public override int Evaluar(int x = 0)
+    {
+        return -hijo.Evaluar(x);
+    }
 }
 
-public class PositivoNodo(Nodo interior) : Nodo {
-    public override int Evaluar(int x = 0) => interior.Evaluar(x);
+public abstract class NodoBinario : Nodo
+{
+    protected Nodo izquierdo;
+    protected Nodo derecho;
+
+    public NodoBinario(Nodo izquierdo, Nodo derecho)
+    {
+        this.izquierdo = izquierdo;
+        this.derecho = derecho;
+    }
 }
 
-public abstract class NodoBinario(Nodo izquierdo, Nodo derecho) : Nodo {
-    protected readonly Nodo izq = izquierdo;
-    protected readonly Nodo der = derecho;
+public class SumaNodo : NodoBinario
+{
+    public SumaNodo(Nodo izq, Nodo der) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierdo.Evaluar(x) + derecho.Evaluar(x);
+    }
 }
 
-public class SumaNodo(Nodo izq, Nodo der) : NodoBinario(izq, der) {
-    public override int Evaluar(int x = 0) => izq.Evaluar(x) + der.Evaluar(x);
+public class RestaNodo : NodoBinario
+{
+    public RestaNodo(Nodo izq, Nodo der) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierdo.Evaluar(x) - derecho.Evaluar(x);
+    }
 }
 
-public class RestaNodo(Nodo izq, Nodo der) : NodoBinario(izq, der) {
-    public override int Evaluar(int x = 0) => izq.Evaluar(x) - der.Evaluar(x);
+public class MultiplicacionNodo : NodoBinario
+{
+    public MultiplicacionNodo(Nodo izq, Nodo der) : base(izq, der) { }
+
+    public override int Evaluar(int x = 0)
+    {
+        return izquierdo.Evaluar(x) * derecho.Evaluar(x);
+    }
 }
 
-public class MultiplicacionNodo(Nodo izq, Nodo der) : NodoBinario(izq, der) {
-    public override int Evaluar(int x = 0) => izq.Evaluar(x) * der.Evaluar(x);
-}
+public class DivisionNodo : NodoBinario
+{
+    public DivisionNodo(Nodo izq, Nodo der) : base(izq, der) { }
 
-public class DivisionNodo(Nodo izq, Nodo der) : NodoBinario(izq, der) {
-    public override int Evaluar(int x = 0) {
-        int divisor = der.Evaluar(x);
-        if (divisor == 0) throw new DivideByZeroException("Error: División por cero.");
-        return izq.Evaluar(x) / divisor;
+    public override int Evaluar(int x = 0)
+    {
+        int divisor = derecho.Evaluar(x);
+        if (divisor == 0)
+        {
+            throw new DivideByZeroException("Error: División por cero.");
+        }
+        return izquierdo.Evaluar(x) / divisor;
     }
 }
