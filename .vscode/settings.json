@@ -57,5 +57,5 @@
     "code-runner.runInTerminal": true,
     "code-runner.clearPreviousOutput": true,
     "code-runner.saveFileBeforeRun": true,
-    "workbench.colorTheme": "Light 2026"
+    "workbench.colorTheme": "Dark 2026"
 }
