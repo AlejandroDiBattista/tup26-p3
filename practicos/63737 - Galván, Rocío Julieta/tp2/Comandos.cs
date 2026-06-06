@@ -28,7 +28,7 @@ Opciones:
 """);
                 return true;
 
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
+             case ["--probar"] or ["--prueba"] or ["-p"] or ["--test"] or ["-t"]:
                 Pruebas.Ejecutar();
                 return true;
 
