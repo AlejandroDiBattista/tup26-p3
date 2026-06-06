@@ -21,7 +21,46 @@ class Compilador {
 
     private Nodo ParsearExpresion()
     {
-        return ParsearFactor();
+        var nodo = ParsearTermino();
+
+        while (true)
+        {
+            if (Coincide('+'))
+            {
+                nodo = new SumaNodo(nodo, ParsearTermino());
+            }
+            else if (Coincide('-'))
+            {
+                nodo = new RestaNodo(nodo, ParsearTermino());
+            }
+            else
+            {
+                break;
+            }
+        }
+        return nodo;
+    }
+
+    private Nodo ParsearTermino()
+    {
+        var nodo = ParsearFactor();
+
+        while (true)
+        {
+            if (Coincide('*'))
+            {
+                nodo = new MultiplicacionNodo(nodo, ParsearFactor());
+            }
+            else if (Coincide('/'))
+            {
+                nodo = new DivisionNodo(nodo, ParsearFactor());
+            }
+            else
+            {
+                break;
+            }
+        }
+        return nodo;
     }
 
     private Nodo ParsearFactor()
@@ -43,7 +82,7 @@ class Compilador {
 
             if (!Coincide(')'))
             {
-                throw new FormatException("Se espera ')'");
+                throw new FormatException("Se esperaba ')'");
             }
 
             return expresion;
