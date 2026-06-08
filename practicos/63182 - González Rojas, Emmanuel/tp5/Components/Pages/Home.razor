@@ -19,7 +19,41 @@
     </div>
 @* ------------------------------------------------ *@
 
+main body
+    <div class="cuerpo-principal">
+        <div class="panel-lista">
+            <div class="caja-busqueda">
+                <i class="bi bi-search icono-busqueda"></i>
+                <input class="input-busqueda" type="text" placeholder="Buscar contacto..." />
+            </div>
 
+            <div class="lista-contactos">
+                @if (contactosFiltrados.Count == 0)
+                {
+                    <div class="mensaje-vacio">
+                        <i class="bi bi-search"></i>
+                        <p>No se encontraron contactos</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var contacto in contactosFiltrados)
+                    {
+                        <div class="item-contacto" @onclick="() => SeleccionarContacto(contacto)">
+                            <div class="avatar">
+                                @contacto.Iniciales
+                            </div>
+                            <div class="info-item">
+                                <span class="nombre-item">@contacto.NombreCompleto</span>
+                                <span class="empresa-item">@(contacto.Empresa ?? "Independiente")</span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
 
+        
+ </div>
 </div>
 
