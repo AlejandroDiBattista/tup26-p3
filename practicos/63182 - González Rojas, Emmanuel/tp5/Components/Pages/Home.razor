@@ -1,4 +1,4 @@
-@page "/"
+Page
 @rendermode InteractiveServer
 @inject IDbContextFactory<AgendaContexto> bdFactory
 
@@ -10,21 +10,31 @@
 
 
 <div class="pagina-agenda">
-    <div class="encabezado">
+  <div class="encabezado">
         <div>
-            <h1 class="titulo-encabezado"><i class="bi bi-book"></i>Agenda</h1>
-            <p class="subtitulo-encabezado">Contactos personales</p>
+            <h1 class="titulo-encabezado">
+                <i class="bi bi-book"></i> Agenda
+            </h1>
+            <p class="subtitulo-encabezado">
+                @(modoEdicion ? "Editar información de contacto" : "Contactos personales y profesionales")
+            </p>
         </div>
-        <button class="btn-nuevo" @onclick="AbrirFormularioNuevo"><i class="bi bi-plus-lg"></i> Agregar Contacto</button>
+        <button class="btn-nuevo" @onclick="AbrirFormularioNuevo">
+            <i class="bi bi-plus-lg"></i> Agregar Contacto
+        </button>
     </div>
-@* ------------------------------------------------ *@
 
-main body
-    <div class="cuerpo-principal">
+@* ---------------------------------------------------------- *@
+
+<div class="cuerpo-principal">
         <div class="panel-lista">
             <div class="caja-busqueda">
                 <i class="bi bi-search icono-busqueda"></i>
-                <input class="input-busqueda" type="text" placeholder="Buscar contacto..." />
+                <input class="input-busqueda"
+                       type="text"
+                       placeholder="Buscar contacto..."
+                       value="@textoBusqueda"
+                       @oninput="e => { textoBusqueda = e.Value?.ToString() ?? string.Empty; FiltrarContactos(); }" />
             </div>
 
             <div class="lista-contactos">
@@ -39,8 +49,10 @@ main body
                 {
                     @foreach (var contacto in contactosFiltrados)
                     {
-                        <div class="item-contacto" @onclick="() => SeleccionarContacto(contacto)">
-                            <div class="avatar">
+                        var estaSeleccionado = contactoSeleccionado?.Id == contacto.Id;
+                        <div class="item-contacto @(estaSeleccionado ? "item-seleccionado" : "")"
+                             @onclick="() => SeleccionarContacto(contacto)">
+                            <div class="avatar avatar-@ObtenerColorAvatar(contacto.Id)">
                                 @contacto.Iniciales
                             </div>
                             <div class="info-item">
@@ -53,7 +65,43 @@ main body
             </div>
         </div>
 
-        
- </div>
-</div>
+    <div class="panel-detalle">
 
+            @if (mostrandoFormulario)
+            {
+                <div class="cabecera-detalle">
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <div class="avatar avatar-azul avatar-grande">
+                            @(contactoEnEdicion.Iniciales != "" ? contactoEnEdicion.Iniciales : "?")
+                        </div>
+                        <div>
+                            <h2 class="nombre-detalle">
+                                @(esNuevoContacto ? "Nuevo contacto" : "Editar contacto")
+                            </h2>
+                            @if (!esNuevoContacto && contactoSeleccionado != null)
+                            {
+                                <p class="empresa-detalle">
+                                    Modificá los datos de
+                                    <span style="color: var(--verde-principal)">@contactoSeleccionado.NombreCompleto</span>
+                                </p>
+                            }
+                        </div>
+                    </div>
+                    <div class="acciones-detalle">
+                        <button class="btn-cancelar" @onclick="CancelarFormulario">Cancelar</button>
+                        <button class="btn-guardar" @onclick="PedirConfirmacionGuardar">
+                            <i class="bi bi-floppy"></i> Guardar cambios
+                        </button>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(mensajeError))
+                {
+                    <div class="alerta-error">
+                        <i class="bi bi-exclamation-triangle"></i> @mensajeError
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
