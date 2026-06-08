@@ -64,7 +64,7 @@ Page
                 }
             </div>
         </div>
-
+@* ------------------------------------------------------------- *@
     <div class="panel-detalle">
 
             @if (mostrandoFormulario)
@@ -101,6 +101,57 @@ Page
                         <i class="bi bi-exclamation-triangle"></i> @mensajeError
                     </div>
                 }
+
+                @* ------------------------------------------------------------- *@
+
+                
+                <div class="formulario">
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Nombre *</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Nombre" placeholder="Nombre" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Apellido *</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Apellido" placeholder="Apellido" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Teléfono *</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Telefono" placeholder="381 555-1234" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Email *</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Email" placeholder="correo@ejemplo.com" type="email" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Empresa</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Empresa" placeholder="Empresa u organización" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Cargo</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Cargo" placeholder="Puesto o función" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Dirección</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Direccion" placeholder="Domicilio postal" />
+                    </div>
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Fecha de nacimiento</label>
+                        <input class="input-campo" type="date"
+                               value="@(contactoEnEdicion.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "")"
+                               @onchange="e => CambiarFecha(e.Value?.ToString())" />
+                    </div>
+                    <div class="campo-formulario campo-ancho-completo">
+                        <label class="etiqueta">Notas</label>
+                        <textarea class="input-campo input-area" @bind="contactoEnEdicion.Notas" placeholder="Comentarios adicionales..."></textarea>
+                    </div>
+                </div>
+
+                <div class="pie-formulario">
+                    <button class="btn-cancelar" @onclick="CancelarFormulario">Cancelar</button>
+                    <button class="btn-guardar" @onclick="PedirConfirmacionGuardar">
+                        <i class="bi bi-floppy"></i> Guardar cambios
+                    </button>
+                </div>
             }
         </div>
     </div>
