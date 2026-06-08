@@ -153,6 +153,58 @@ Page
                     </button>
                 </div>
             }
+            else if (contactoSeleccionado != null)
+            {
+
+                <div class="cabecera-detalle">
+                    <div style="display:flex; align-items:center; gap: 16px;">
+                        <div class="avatar avatar-@ObtenerColorAvatar(contactoSeleccionado.Id) avatar-grande">
+                            @contactoSeleccionado.Iniciales
+                        </div>
+                        <div>
+                            <h2 class="nombre-detalle">@contactoSeleccionado.NombreCompleto</h2>
+                            <p class="empresa-detalle">@(contactoSeleccionado.Empresa ?? "Independiente")</p>
+                            @if (!string.IsNullOrEmpty(contactoSeleccionado.Cargo))
+                            {
+                                <span class="etiqueta-cargo">@contactoSeleccionado.Cargo</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="acciones-detalle">
+                        <button class="btn-editar" @onclick="() => AbrirFormularioEditar(contactoSeleccionado)">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn-eliminar" @onclick="() => ConfirmarEliminar(contactoSeleccionado)">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lista-campos">
+                    <FilaCampo Icono="bi-envelope" Etiqueta="Email" Valor="@contactoSeleccionado.Email" EsEnlace="true" />
+                    <FilaCampo Icono="bi-telephone" Etiqueta="Teléfono" Valor="@contactoSeleccionado.Telefono" />
+                    @if (!string.IsNullOrEmpty(contactoSeleccionado.Empresa))
+                    {
+                        <FilaCampo Icono="bi-building" Etiqueta="Empresa" Valor="@contactoSeleccionado.Empresa" />
+                    }
+                    @if (!string.IsNullOrEmpty(contactoSeleccionado.Cargo))
+                    {
+                        <FilaCampo Icono="bi-briefcase" Etiqueta="Cargo" Valor="@contactoSeleccionado.Cargo" />
+                    }
+                    @if (!string.IsNullOrEmpty(contactoSeleccionado.Direccion))
+                    {
+                        <FilaCampo Icono="bi-geo-alt" Etiqueta="Dirección" Valor="@contactoSeleccionado.Direccion" />
+                    }
+                    @if (contactoSeleccionado.FechaNacimiento.HasValue)
+                    {
+                        <FilaCampo Icono="bi-cake" Etiqueta="Nacimiento" Valor="@contactoSeleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")" />
+                    }
+                    @if (!string.IsNullOrEmpty(contactoSeleccionado.Notas))
+                    {
+                        <FilaCampo Icono="bi-journal-text" Etiqueta="Notas" Valor="@contactoSeleccionado.Notas" />
+                    }
+                </div>
+            }
         </div>
     </div>
 </div>
