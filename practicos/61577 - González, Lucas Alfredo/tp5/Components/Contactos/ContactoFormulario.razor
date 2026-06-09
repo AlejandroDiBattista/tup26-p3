@@ -26,46 +26,50 @@
             <div class="form-grid">
                 <div class="field-group">
                     <label for="nombre">Nombre <span aria-hidden="true">*</span></label>
-                    <InputText id="nombre"
-                               name="nombre"
-                               class="form-control"
-                               autocomplete="given-name"
-                               maxlength="80"
-                               @bind-Value="Modelo.Nombre" />
+                    <input id="nombre"
+                           name="nombre"
+                           class="form-control"
+                           autocomplete="given-name"
+                           maxlength="80"
+                           @bind="Modelo.Nombre"
+                           @bind:event="oninput" />
                     <ValidationMessage For="() => Modelo.Nombre" />
                 </div>
                 <div class="field-group">
                     <label for="apellido">Apellido <span aria-hidden="true">*</span></label>
-                    <InputText id="apellido"
-                               name="apellido"
-                               class="form-control"
-                               autocomplete="family-name"
-                               maxlength="80"
-                               @bind-Value="Modelo.Apellido" />
+                    <input id="apellido"
+                           name="apellido"
+                           class="form-control"
+                           autocomplete="family-name"
+                           maxlength="80"
+                           @bind="Modelo.Apellido"
+                           @bind:event="oninput" />
                     <ValidationMessage For="() => Modelo.Apellido" />
                 </div>
                 <div class="field-group">
                     <label for="telefono">Teléfono <span aria-hidden="true">*</span></label>
-                    <InputText id="telefono"
-                               name="telefono"
-                               type="tel"
-                               inputmode="tel"
-                               class="form-control"
-                               autocomplete="tel"
-                               maxlength="40"
-                               @bind-Value="Modelo.Telefono" />
+                    <input id="telefono"
+                           name="telefono"
+                           type="tel"
+                           inputmode="tel"
+                           class="form-control"
+                           autocomplete="tel"
+                           maxlength="40"
+                           @bind="Modelo.Telefono"
+                           @bind:event="oninput" />
                     <ValidationMessage For="() => Modelo.Telefono" />
                 </div>
                 <div class="field-group">
                     <label for="email">Correo electrónico <span aria-hidden="true">*</span></label>
-                    <InputText id="email"
-                               name="email"
-                               type="email"
-                               inputmode="email"
-                               class="form-control"
-                               autocomplete="email"
-                               maxlength="160"
-                               @bind-Value="Modelo.Email" />
+                    <input id="email"
+                           name="email"
+                           type="email"
+                           inputmode="email"
+                           class="form-control"
+                           autocomplete="email"
+                           maxlength="160"
+                           @bind="Modelo.Email"
+                           @bind:event="oninput" />
                     <ValidationMessage For="() => Modelo.Email" />
                 </div>
                 <div class="field-group">
@@ -84,22 +88,24 @@
             <div class="form-grid">
                 <div class="field-group">
                     <label for="empresa">Empresa</label>
-                    <InputText id="empresa"
-                               name="empresa"
-                               class="form-control"
-                               autocomplete="organization"
-                               maxlength="120"
-                               @bind-Value="Modelo.Empresa" />
+                    <input id="empresa"
+                           name="empresa"
+                           class="form-control"
+                           autocomplete="organization"
+                           maxlength="120"
+                           @bind="Modelo.Empresa"
+                           @bind:event="oninput" />
                     <ValidationMessage For="() => Modelo.Empresa" />
                 </div>
                 <div class="field-group">
                     <label for="cargo">Cargo</label>
-                    <InputText id="cargo"
-                               name="cargo"
-                               class="form-control"
-                               autocomplete="organization-title"
-                               maxlength="120"
-                               @bind-Value="Modelo.Cargo" />
+                    <input id="cargo"
+                           name="cargo"
+                           class="form-control"
+                           autocomplete="organization-title"
+                           maxlength="120"
+                           @bind="Modelo.Cargo"
+                           @bind:event="oninput" />
                     <ValidationMessage For="() => Modelo.Cargo" />
                 </div>
             </div>
@@ -110,23 +116,25 @@
             <div class="form-grid form-grid-single">
                 <div class="field-group">
                     <label for="direccion">Dirección</label>
-                    <InputTextArea id="direccion"
-                                   name="direccion"
-                                   class="form-control"
-                                   autocomplete="street-address"
-                                   maxlength="240"
-                                   rows="2"
-                                   @bind-Value="Modelo.Direccion" />
+                    <textarea id="direccion"
+                              name="direccion"
+                              class="form-control"
+                              autocomplete="street-address"
+                              maxlength="240"
+                              rows="2"
+                              @bind="Modelo.Direccion"
+                              @bind:event="oninput"></textarea>
                     <ValidationMessage For="() => Modelo.Direccion" />
                 </div>
                 <div class="field-group">
                     <label for="notas">Notas</label>
-                    <InputTextArea id="notas"
-                                   name="notas"
-                                   class="form-control"
-                                   maxlength="1000"
-                                   rows="4"
-                                   @bind-Value="Modelo.Notas" />
+                    <textarea id="notas"
+                              name="notas"
+                              class="form-control"
+                              maxlength="1000"
+                              rows="4"
+                              @bind="Modelo.Notas"
+                              @bind:event="oninput"></textarea>
                     <ValidationMessage For="() => Modelo.Notas" />
                 </div>
             </div>

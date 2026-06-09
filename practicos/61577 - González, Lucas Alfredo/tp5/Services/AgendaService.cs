@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using tp5.Data;
 using tp5.Models;
@@ -14,6 +15,9 @@ namespace tp5.Services;
 /// </remarks>
 public sealed class AgendaService(IDbContextFactory<AgendaDbContext> contextFactory)
 {
+    private static readonly StringComparer ComparadorNombres =
+        StringComparer.Create(CultureInfo.GetCultureInfo("es-AR"), ignoreCase: true);
+
     /// <summary>
     /// Obtiene los contactos ordenados alfabéticamente y aplica un filtro
     /// opcional sobre los principales datos visibles.
@@ -42,10 +46,15 @@ public sealed class AgendaService(IDbContextFactory<AgendaDbContext> contextFact
                 || EF.Functions.Like(contacto.Cargo, patron));
         }
 
-        return await consulta
-            .OrderBy(contacto => contacto.Apellido)
-            .ThenBy(contacto => contacto.Nombre)
-            .ToListAsync(cancellationToken);
+        var resultados = await consulta.ToListAsync(cancellationToken);
+
+        // SQLite ordena por código Unicode y ubica, por ejemplo, "Álvarez"
+        // después de "Torres". El orden cultural produce la lista alfabética
+        // que espera una persona hispanohablante.
+        return resultados
+            .OrderBy(contacto => contacto.Apellido, ComparadorNombres)
+            .ThenBy(contacto => contacto.Nombre, ComparadorNombres)
+            .ToList();
     }
 
     /// <summary>Obtiene un contacto por su identificador o <see langword="null"/> si no existe.</summary>

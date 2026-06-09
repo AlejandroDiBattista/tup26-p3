@@ -11,4 +11,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
   </ItemGroup>
 
+  <!--
+    El directorio reglamentario del alumno contiene una coma. .NET SDK 10.0.201
+    no escapa esa coma al calcular MakeRelative para contenido publicable.
+    Declarar TargetPath evita ese cálculo defectuoso sin mover el proyecto ni
+    alterar la ubicación final de los recursos estáticos.
+  -->
+  <ItemGroup>
+    <Content Update="wwwroot/**/*" TargetPath="%(Identity)" />
+  </ItemGroup>
+
 </Project>
