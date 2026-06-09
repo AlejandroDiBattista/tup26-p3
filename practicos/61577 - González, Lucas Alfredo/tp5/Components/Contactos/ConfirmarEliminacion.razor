@@ -1,0 +1,48 @@
+<article class="delete-confirmation" role="alertdialog" aria-labelledby="titulo-eliminar">
+    <span class="danger-icon" aria-hidden="true"><i class="bi bi-trash3"></i></span>
+    <span class="eyebrow">Acción irreversible</span>
+    <h2 id="titulo-eliminar">¿Eliminar a @Contacto.Nombre @Contacto.Apellido?</h2>
+    <p>
+        El contacto desaparecerá de la agenda y no podrá recuperarse desde esta aplicación.
+        Sus datos permanecerán visibles hasta que confirmes la acción.
+    </p>
+    <div class="confirmation-actions">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                disabled="@Eliminando"
+                @onclick="AlCancelar">
+            Conservar contacto
+        </button>
+        <button type="button"
+                class="btn btn-danger"
+                disabled="@Eliminando"
+                @onclick="AlConfirmar">
+            @if (Eliminando)
+            {
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span>Eliminando…</span>
+            }
+            else
+            {
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+                <span>Eliminar definitivamente</span>
+            }
+        </button>
+    </div>
+</article>
+
+@code {
+    /// <summary>Contacto que será eliminado si el usuario confirma.</summary>
+    [Parameter, EditorRequired]
+    public Contacto Contacto { get; set; } = default!;
+
+    /// <summary>Indica que la operación está en curso para impedir dobles clics.</summary>
+    [Parameter]
+    public bool Eliminando { get; set; }
+
+    [Parameter]
+    public EventCallback AlConfirmar { get; set; }
+
+    [Parameter]
+    public EventCallback AlCancelar { get; set; }
+}

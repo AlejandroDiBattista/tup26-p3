@@ -1,0 +1,182 @@
+@* Un único formulario sirve para alta y edición. Los atributos name,
+   autocomplete y los tipos semánticos facilitan teclado móvil y autofill. *@
+<article class="contact-form-panel">
+    <header class="form-header">
+        <span class="detail-avatar" aria-hidden="true">
+            <i class="bi @(EsNuevo ? "bi-person-plus" : "bi-person-gear")"></i>
+        </span>
+        <div>
+            <span class="eyebrow">@(EsNuevo ? "Nuevo registro" : "Actualización")</span>
+            <h2>@(EsNuevo ? "Crear contacto" : "Editar contacto")</h2>
+            <p>@(EsNuevo
+                ? "Completá los datos obligatorios para agregarlo a la agenda."
+                : $"Modificá la información de {Modelo.Nombre} {Modelo.Apellido}.")</p>
+        </div>
+    </header>
+
+    <EditForm Model="Modelo"
+              FormName="contacto"
+              OnValidSubmit="GuardarAsync"
+              class="contact-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary" />
+
+        <fieldset disabled="@Guardando">
+            <legend>Datos personales</legend>
+            <div class="form-grid">
+                <div class="field-group">
+                    <label for="nombre">Nombre <span aria-hidden="true">*</span></label>
+                    <InputText id="nombre"
+                               name="nombre"
+                               class="form-control"
+                               autocomplete="given-name"
+                               maxlength="80"
+                               @bind-Value="Modelo.Nombre" />
+                    <ValidationMessage For="() => Modelo.Nombre" />
+                </div>
+                <div class="field-group">
+                    <label for="apellido">Apellido <span aria-hidden="true">*</span></label>
+                    <InputText id="apellido"
+                               name="apellido"
+                               class="form-control"
+                               autocomplete="family-name"
+                               maxlength="80"
+                               @bind-Value="Modelo.Apellido" />
+                    <ValidationMessage For="() => Modelo.Apellido" />
+                </div>
+                <div class="field-group">
+                    <label for="telefono">Teléfono <span aria-hidden="true">*</span></label>
+                    <InputText id="telefono"
+                               name="telefono"
+                               type="tel"
+                               inputmode="tel"
+                               class="form-control"
+                               autocomplete="tel"
+                               maxlength="40"
+                               @bind-Value="Modelo.Telefono" />
+                    <ValidationMessage For="() => Modelo.Telefono" />
+                </div>
+                <div class="field-group">
+                    <label for="email">Correo electrónico <span aria-hidden="true">*</span></label>
+                    <InputText id="email"
+                               name="email"
+                               type="email"
+                               inputmode="email"
+                               class="form-control"
+                               autocomplete="email"
+                               maxlength="160"
+                               @bind-Value="Modelo.Email" />
+                    <ValidationMessage For="() => Modelo.Email" />
+                </div>
+                <div class="field-group">
+                    <label for="fecha-nacimiento">Fecha de nacimiento</label>
+                    <InputDate id="fecha-nacimiento"
+                               name="fechaNacimiento"
+                               class="form-control"
+                               @bind-Value="Modelo.FechaNacimiento" />
+                    <ValidationMessage For="() => Modelo.FechaNacimiento" />
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset disabled="@Guardando">
+            <legend>Información profesional</legend>
+            <div class="form-grid">
+                <div class="field-group">
+                    <label for="empresa">Empresa</label>
+                    <InputText id="empresa"
+                               name="empresa"
+                               class="form-control"
+                               autocomplete="organization"
+                               maxlength="120"
+                               @bind-Value="Modelo.Empresa" />
+                    <ValidationMessage For="() => Modelo.Empresa" />
+                </div>
+                <div class="field-group">
+                    <label for="cargo">Cargo</label>
+                    <InputText id="cargo"
+                               name="cargo"
+                               class="form-control"
+                               autocomplete="organization-title"
+                               maxlength="120"
+                               @bind-Value="Modelo.Cargo" />
+                    <ValidationMessage For="() => Modelo.Cargo" />
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset disabled="@Guardando">
+            <legend>Información adicional</legend>
+            <div class="form-grid form-grid-single">
+                <div class="field-group">
+                    <label for="direccion">Dirección</label>
+                    <InputTextArea id="direccion"
+                                   name="direccion"
+                                   class="form-control"
+                                   autocomplete="street-address"
+                                   maxlength="240"
+                                   rows="2"
+                                   @bind-Value="Modelo.Direccion" />
+                    <ValidationMessage For="() => Modelo.Direccion" />
+                </div>
+                <div class="field-group">
+                    <label for="notas">Notas</label>
+                    <InputTextArea id="notas"
+                                   name="notas"
+                                   class="form-control"
+                                   maxlength="1000"
+                                   rows="4"
+                                   @bind-Value="Modelo.Notas" />
+                    <ValidationMessage For="() => Modelo.Notas" />
+                </div>
+            </div>
+        </fieldset>
+
+        <p class="required-hint"><span aria-hidden="true">*</span> Campos obligatorios</p>
+
+        <footer class="form-actions">
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    disabled="@Guardando"
+                    @onclick="AlCancelar">
+                Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" disabled="@Guardando">
+                @if (Guardando)
+                {
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span>Guardando…</span>
+                }
+                else
+                {
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                    <span>@(EsNuevo ? "Crear contacto" : "Guardar cambios")</span>
+                }
+            </button>
+        </footer>
+    </EditForm>
+</article>
+
+@code {
+    /// <summary>Copia editable administrada por la página contenedora.</summary>
+    [Parameter, EditorRequired]
+    public Contacto Modelo { get; set; } = default!;
+
+    /// <summary>Distingue el texto y el propósito del alta respecto de la edición.</summary>
+    [Parameter]
+    public bool EsNuevo { get; set; }
+
+    /// <summary>Bloquea el formulario después de un envío válido para evitar duplicados.</summary>
+    [Parameter]
+    public bool Guardando { get; set; }
+
+    /// <summary>Entrega el modelo validado a la página para persistirlo.</summary>
+    [Parameter]
+    public EventCallback<Contacto> AlGuardar { get; set; }
+
+    /// <summary>Descarta la copia editable y vuelve al detalle.</summary>
+    [Parameter]
+    public EventCallback AlCancelar { get; set; }
+
+    private Task GuardarAsync() => AlGuardar.InvokeAsync(Modelo);
+}

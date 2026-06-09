@@ -12,7 +12,19 @@
             <h1>Agenda</h1>
             <p>Contactos personales y profesionales en un solo lugar.</p>
         </div>
+        <button type="button" class="btn btn-primary header-action" @onclick="IniciarCreacion">
+            <i class="bi bi-person-plus" aria-hidden="true"></i>
+            Nuevo contacto
+        </button>
     </header>
+
+    @if (mensajeExito is not null)
+    {
+        <div class="toast-message" role="status">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            @mensajeExito
+        </div>
+    }
 
     <section class="agenda-workspace" aria-label="Agenda de contactos">
         <aside class="master-panel" aria-label="Listado de contactos">
@@ -54,9 +66,26 @@
                     @mensajeError
                 </div>
             }
+            else if (modoPanel == ModoPanel.Formulario && contactoEnEdicion is not null)
+            {
+                <ContactoFormulario Modelo="contactoEnEdicion"
+                                    EsNuevo="@(contactoEnEdicion.Id == 0)"
+                                    Guardando="procesando"
+                                    AlGuardar="GuardarContactoAsync"
+                                    AlCancelar="CancelarEdicion" />
+            }
+            else if (modoPanel == ModoPanel.ConfirmarEliminacion && contactoSeleccionado is not null)
+            {
+                <ConfirmarEliminacion Contacto="contactoSeleccionado"
+                                     Eliminando="procesando"
+                                     AlConfirmar="EliminarContactoAsync"
+                                     AlCancelar="CancelarEdicion" />
+            }
             else if (contactoSeleccionado is not null)
             {
-                <DetalleContacto Contacto="contactoSeleccionado" />
+                <DetalleContacto Contacto="contactoSeleccionado"
+                                 AlEditar="IniciarEdicion"
+                                 AlEliminar="SolicitarEliminacion" />
             }
             else if (!cargando)
             {
@@ -73,9 +102,13 @@
 @code {
     private IReadOnlyList<Contacto> contactos = [];
     private Contacto? contactoSeleccionado;
+    private Contacto? contactoEnEdicion;
     private string textoBusqueda = string.Empty;
     private string? mensajeError;
+    private string? mensajeExito;
     private bool cargando = true;
+    private bool procesando;
+    private ModoPanel modoPanel = ModoPanel.Detalle;
     private CancellationTokenSource? busquedaPendiente;
 
     /// <summary>Carga la agenda y selecciona el primer contacto disponible.</summary>
@@ -135,6 +168,173 @@
     private void SeleccionarContacto(Contacto contacto)
     {
         contactoSeleccionado = contacto;
+        contactoEnEdicion = null;
+        modoPanel = ModoPanel.Detalle;
+        mensajeError = null;
+        mensajeExito = null;
+    }
+
+    /// <summary>Prepara un modelo vacío sin modificar la lista actual.</summary>
+    private void IniciarCreacion()
+    {
+        contactoEnEdicion = new Contacto();
+        modoPanel = ModoPanel.Formulario;
+        mensajeError = null;
+        mensajeExito = null;
+    }
+
+    /// <summary>
+    /// Crea una copia para que Cancelar descarte cambios y no altere el detalle
+    /// antes de que Entity Framework confirme la actualización.
+    /// </summary>
+    private void IniciarEdicion()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        contactoEnEdicion = Clonar(contactoSeleccionado);
+        modoPanel = ModoPanel.Formulario;
+        mensajeError = null;
+        mensajeExito = null;
+    }
+
+    /// <summary>Muestra una segunda decisión antes de ejecutar el borrado.</summary>
+    private void SolicitarEliminacion()
+    {
+        if (contactoSeleccionado is not null)
+        {
+            modoPanel = ModoPanel.ConfirmarEliminacion;
+            mensajeError = null;
+            mensajeExito = null;
+        }
+    }
+
+    /// <summary>Vuelve al detalle sin persistir el modelo de edición.</summary>
+    private void CancelarEdicion()
+    {
+        contactoEnEdicion = null;
+        modoPanel = ModoPanel.Detalle;
+        mensajeError = null;
+    }
+
+    /// <summary>Crea o actualiza según el identificador y refresca el maestro.</summary>
+    private async Task GuardarContactoAsync(Contacto contacto)
+    {
+        procesando = true;
+        mensajeError = null;
+        mensajeExito = null;
+
+        try
+        {
+            if (contacto.Id == 0)
+            {
+                contactoSeleccionado = await Agenda.CrearAsync(contacto);
+                mensajeExito = "El contacto se creó correctamente.";
+            }
+            else
+            {
+                var actualizado = await Agenda.ActualizarAsync(contacto);
+                if (!actualizado)
+                {
+                    mensajeError = "El contacto ya no existe y no pudo actualizarse.";
+                    return;
+                }
+
+                contactoSeleccionado = await Agenda.ObtenerAsync(contacto.Id);
+                mensajeExito = "Los cambios se guardaron correctamente.";
+            }
+
+            contactoEnEdicion = null;
+            modoPanel = ModoPanel.Detalle;
+            await RecargarConSeleccionAsync(contactoSeleccionado?.Id);
+        }
+        catch (Exception)
+        {
+            mensajeError = "No fue posible guardar el contacto. Revisá los datos e intentá nuevamente.";
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    /// <summary>Elimina el contacto seleccionado y elige el siguiente disponible.</summary>
+    private async Task EliminarContactoAsync()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        procesando = true;
+        mensajeError = null;
+        mensajeExito = null;
+
+        try
+        {
+            var nombre = $"{contactoSeleccionado.Nombre} {contactoSeleccionado.Apellido}";
+            var eliminado = await Agenda.EliminarAsync(contactoSeleccionado.Id);
+            if (!eliminado)
+            {
+                mensajeError = "El contacto ya no existe y no pudo eliminarse.";
+                return;
+            }
+
+            contactoSeleccionado = null;
+            modoPanel = ModoPanel.Detalle;
+            await CargarContactosAsync();
+            mensajeExito = $"{nombre} fue eliminado de la agenda.";
+        }
+        catch (Exception)
+        {
+            mensajeError = "No fue posible eliminar el contacto. Intentá nuevamente.";
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    /// <summary>
+    /// Recarga la lista tras una mutación y recupera la fila por identificador,
+    /// incluso cuando el filtro actual dejó de coincidir con sus nuevos datos.
+    /// </summary>
+    private async Task RecargarConSeleccionAsync(int? id)
+    {
+        contactos = await Agenda.BuscarAsync(textoBusqueda);
+        contactoSeleccionado = contactos.FirstOrDefault(item => item.Id == id);
+
+        if (contactoSeleccionado is null && id.HasValue)
+        {
+            contactoSeleccionado = await Agenda.ObtenerAsync(id.Value);
+        }
+
+        contactoSeleccionado ??= contactos.FirstOrDefault();
+    }
+
+    /// <summary>Realiza una copia campo por campo apta para edición cancelable.</summary>
+    private static Contacto Clonar(Contacto origen) => new()
+    {
+        Id = origen.Id,
+        Nombre = origen.Nombre,
+        Apellido = origen.Apellido,
+        Telefono = origen.Telefono,
+        Email = origen.Email,
+        Empresa = origen.Empresa,
+        Cargo = origen.Cargo,
+        Direccion = origen.Direccion,
+        FechaNacimiento = origen.FechaNacimiento,
+        Notas = origen.Notas
+    };
+
+    /// <summary>Estados mutuamente excluyentes del panel derecho.</summary>
+    private enum ModoPanel
+    {
+        Detalle,
+        Formulario,
+        ConfirmarEliminacion
     }
 
     /// <summary>Libera la búsqueda diferida cuando se abandona la página.</summary>

@@ -3,10 +3,20 @@
 <article class="contact-detail">
     <header class="detail-hero">
         <span class="detail-avatar" aria-hidden="true">@ObtenerIniciales()</span>
-        <div>
+        <div class="detail-heading">
             <span class="eyebrow">Contacto seleccionado</span>
             <h2>@Contacto.Nombre @Contacto.Apellido</h2>
             <p>@ObtenerDescripcionProfesional()</p>
+        </div>
+        <div class="detail-actions" aria-label="Acciones del contacto">
+            <button type="button" class="btn btn-outline-primary" @onclick="AlEditar">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                Editar
+            </button>
+            <button type="button" class="btn btn-outline-danger" @onclick="AlEliminar">
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+                Eliminar
+            </button>
         </div>
     </header>
 
@@ -46,6 +56,14 @@
     /// <summary>Contacto completo que se presenta en el panel.</summary>
     [Parameter, EditorRequired]
     public Contacto Contacto { get; set; } = default!;
+
+    /// <summary>Solicita que la página abra el contacto en modo edición.</summary>
+    [Parameter]
+    public EventCallback AlEditar { get; set; }
+
+    /// <summary>Solicita confirmación antes de borrar el contacto.</summary>
+    [Parameter]
+    public EventCallback AlEliminar { get; set; }
 
     private string ObtenerIniciales() =>
         string.Concat(Contacto.Nombre.FirstOrDefault(), Contacto.Apellido.FirstOrDefault())
