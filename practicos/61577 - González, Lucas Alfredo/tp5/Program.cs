@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using tp5.Components;
 using tp5.Data;
+using tp5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ var cadenaConexion = new SqliteConnectionStringBuilder
 // entrega un contexto nuevo por operación y evita problemas de concurrencia.
 builder.Services.AddDbContextFactory<AgendaDbContext>(opciones =>
     opciones.UseSqlite(cadenaConexion));
+builder.Services.AddScoped<AgendaService>();
 
 var app = builder.Build();
 
