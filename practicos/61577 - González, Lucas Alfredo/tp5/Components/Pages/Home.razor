@@ -1,7 +1,147 @@
 @page "/"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@inject AgendaService Agenda
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+<PageTitle>Agenda de contactos</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
-</div>
+<main class="agenda-shell">
+    <header class="agenda-header">
+        <div>
+            <span class="eyebrow">TP5 · Programación III</span>
+            <h1>Agenda</h1>
+            <p>Contactos personales y profesionales en un solo lugar.</p>
+        </div>
+    </header>
+
+    <section class="agenda-workspace" aria-label="Agenda de contactos">
+        <aside class="master-panel" aria-label="Listado de contactos">
+            <div class="search-box">
+                <label for="busqueda">Buscar contactos</label>
+                <div class="search-control">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input id="busqueda"
+                           name="busqueda"
+                           type="search"
+                           autocomplete="off"
+                           placeholder="Nombre, empresa, teléfono…"
+                           @bind="textoBusqueda"
+                           @bind:event="oninput"
+                           @bind:after="ProgramarBusquedaAsync" />
+                </div>
+            </div>
+
+            @if (cargando)
+            {
+                <div class="panel-state" role="status">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span>Cargando contactos…</span>
+                </div>
+            }
+            else
+            {
+                <ListaContactos Contactos="contactos"
+                                SeleccionadoId="contactoSeleccionado?.Id"
+                                AlSeleccionar="SeleccionarContacto" />
+            }
+        </aside>
+
+        <section class="detail-panel" aria-live="polite">
+            @if (mensajeError is not null)
+            {
+                <div class="alert alert-danger m-4" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                    @mensajeError
+                </div>
+            }
+            else if (contactoSeleccionado is not null)
+            {
+                <DetalleContacto Contacto="contactoSeleccionado" />
+            }
+            else if (!cargando)
+            {
+                <div class="empty-detail">
+                    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                    <h2>No hay un contacto para mostrar</h2>
+                    <p>Probá con otra búsqueda para encontrar resultados.</p>
+                </div>
+            }
+        </section>
+    </section>
+</main>
+
+@code {
+    private IReadOnlyList<Contacto> contactos = [];
+    private Contacto? contactoSeleccionado;
+    private string textoBusqueda = string.Empty;
+    private string? mensajeError;
+    private bool cargando = true;
+    private CancellationTokenSource? busquedaPendiente;
+
+    /// <summary>Carga la agenda y selecciona el primer contacto disponible.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactosAsync();
+    }
+
+    /// <summary>
+    /// Espera brevemente antes de consultar. El debounce evita enviar una
+    /// consulta SQLite por cada tecla durante una escritura rápida.
+    /// </summary>
+    private async Task ProgramarBusquedaAsync()
+    {
+        busquedaPendiente?.Cancel();
+        busquedaPendiente?.Dispose();
+        busquedaPendiente = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(250, busquedaPendiente.Token);
+            await CargarContactosAsync(busquedaPendiente.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Una búsqueda más reciente reemplazó a esta; no es un error.
+        }
+    }
+
+    /// <summary>
+    /// Refresca la colección y conserva la selección siempre que continúe
+    /// visible dentro de los resultados filtrados.
+    /// </summary>
+    private async Task CargarContactosAsync(CancellationToken cancellationToken = default)
+    {
+        cargando = true;
+        mensajeError = null;
+
+        try
+        {
+            contactos = await Agenda.BuscarAsync(textoBusqueda, cancellationToken);
+            var idSeleccionado = contactoSeleccionado?.Id;
+            contactoSeleccionado = contactos.FirstOrDefault(item => item.Id == idSeleccionado)
+                ?? contactos.FirstOrDefault();
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            mensajeError = "No fue posible leer la agenda. Intentá nuevamente.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    /// <summary>Actualiza el panel de detalle con la fila elegida.</summary>
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+    }
+
+    /// <summary>Libera la búsqueda diferida cuando se abandona la página.</summary>
+    public ValueTask DisposeAsync()
+    {
+        busquedaPendiente?.Cancel();
+        busquedaPendiente?.Dispose();
+        return ValueTask.CompletedTask;
+    }
+}

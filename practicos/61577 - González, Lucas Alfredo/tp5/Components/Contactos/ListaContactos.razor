@@ -1,0 +1,70 @@
+@* Panel maestro: ofrece selección mediante botones para conservar semántica,
+   foco de teclado y activación con Enter o barra espaciadora. *@
+<div class="contact-list" role="list" aria-label="@DescripcionResultados">
+    @if (Contactos.Count == 0)
+    {
+        <div class="panel-state panel-state-empty" role="status">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <strong>Sin coincidencias</strong>
+            <span>Probá con un nombre, empresa o teléfono diferente.</span>
+        </div>
+    }
+    else
+    {
+        @foreach (var contacto in Contactos)
+        {
+            var seleccionado = contacto.Id == SeleccionadoId;
+            <button @key="contacto.Id"
+                    type="button"
+                    class="contact-row @(seleccionado ? "is-selected" : null)"
+                    role="listitem"
+                    aria-current="@(seleccionado ? "true" : null)"
+                    @onclick="() => AlSeleccionar.InvokeAsync(contacto)">
+                <span class="contact-avatar" aria-hidden="true">@ObtenerIniciales(contacto)</span>
+                <span class="contact-summary">
+                    <strong>@contacto.Nombre @contacto.Apellido</strong>
+                    <small>@ObtenerSubtitulo(contacto)</small>
+                </span>
+                <i class="bi bi-chevron-right contact-chevron" aria-hidden="true"></i>
+            </button>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>Colección ya filtrada y ordenada por la página contenedora.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Contacto> Contactos { get; set; } = [];
+
+    /// <summary>Identificador utilizado para resaltar la fila activa.</summary>
+    [Parameter]
+    public int? SeleccionadoId { get; set; }
+
+    /// <summary>Notifica a la página cuando el usuario elige una fila.</summary>
+    [Parameter]
+    public EventCallback<Contacto> AlSeleccionar { get; set; }
+
+    private string DescripcionResultados =>
+        Contactos.Count == 1 ? "1 contacto encontrado" : $"{Contactos.Count} contactos encontrados";
+
+    /// <summary>Genera un avatar textual sin depender de imágenes externas.</summary>
+    private static string ObtenerIniciales(Contacto contacto)
+    {
+        var nombre = contacto.Nombre.FirstOrDefault();
+        var apellido = contacto.Apellido.FirstOrDefault();
+        return string.Concat(nombre, apellido).ToUpperInvariant();
+    }
+
+    /// <summary>Prioriza la organización y usa el cargo como alternativa.</summary>
+    private static string ObtenerSubtitulo(Contacto contacto)
+    {
+        if (!string.IsNullOrWhiteSpace(contacto.Empresa))
+        {
+            return contacto.Empresa;
+        }
+
+        return !string.IsNullOrWhiteSpace(contacto.Cargo)
+            ? contacto.Cargo
+            : contacto.Email;
+    }
+}

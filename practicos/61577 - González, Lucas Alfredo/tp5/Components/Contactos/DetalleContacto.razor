@@ -1,0 +1,69 @@
+@* Panel de detalle: presenta todos los datos sin ocultar campos opcionales
+   cargados y ofrece enlaces nativos para correo y teléfono. *@
+<article class="contact-detail">
+    <header class="detail-hero">
+        <span class="detail-avatar" aria-hidden="true">@ObtenerIniciales()</span>
+        <div>
+            <span class="eyebrow">Contacto seleccionado</span>
+            <h2>@Contacto.Nombre @Contacto.Apellido</h2>
+            <p>@ObtenerDescripcionProfesional()</p>
+        </div>
+    </header>
+
+    <dl class="detail-list">
+        <div class="detail-item">
+            <dt><i class="bi bi-envelope" aria-hidden="true"></i> Correo electrónico</dt>
+            <dd><a href="mailto:@Contacto.Email">@Contacto.Email</a></dd>
+        </div>
+        <div class="detail-item">
+            <dt><i class="bi bi-telephone" aria-hidden="true"></i> Teléfono</dt>
+            <dd><a href="tel:@Contacto.Telefono">@Contacto.Telefono</a></dd>
+        </div>
+        <div class="detail-item">
+            <dt><i class="bi bi-building" aria-hidden="true"></i> Empresa</dt>
+            <dd>@MostrarOAlternativa(Contacto.Empresa)</dd>
+        </div>
+        <div class="detail-item">
+            <dt><i class="bi bi-briefcase" aria-hidden="true"></i> Cargo</dt>
+            <dd>@MostrarOAlternativa(Contacto.Cargo)</dd>
+        </div>
+        <div class="detail-item">
+            <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Dirección</dt>
+            <dd>@MostrarOAlternativa(Contacto.Direccion)</dd>
+        </div>
+        <div class="detail-item">
+            <dt><i class="bi bi-calendar3" aria-hidden="true"></i> Nacimiento</dt>
+            <dd>@FormatearFechaNacimiento()</dd>
+        </div>
+        <div class="detail-item detail-item-notes">
+            <dt><i class="bi bi-card-text" aria-hidden="true"></i> Notas</dt>
+            <dd>@MostrarOAlternativa(Contacto.Notas)</dd>
+        </div>
+    </dl>
+</article>
+
+@code {
+    /// <summary>Contacto completo que se presenta en el panel.</summary>
+    [Parameter, EditorRequired]
+    public Contacto Contacto { get; set; } = default!;
+
+    private string ObtenerIniciales() =>
+        string.Concat(Contacto.Nombre.FirstOrDefault(), Contacto.Apellido.FirstOrDefault())
+            .ToUpperInvariant();
+
+    private string ObtenerDescripcionProfesional()
+    {
+        var partes = new[] { Contacto.Cargo, Contacto.Empresa }
+            .Where(valor => !string.IsNullOrWhiteSpace(valor));
+        var descripcion = string.Join(" · ", partes);
+        return string.IsNullOrWhiteSpace(descripcion)
+            ? "Contacto personal"
+            : descripcion;
+    }
+
+    private static string MostrarOAlternativa(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? "Sin información" : valor;
+
+    private string FormatearFechaNacimiento() =>
+        Contacto.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "Sin información";
+}
