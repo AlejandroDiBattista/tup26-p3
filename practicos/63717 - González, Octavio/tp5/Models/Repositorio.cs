@@ -4,30 +4,35 @@ using System.Linq;
 
 class Repositorio
 {
-    private readonly ContactoDb db;
-    public Repositorio(ContactoDb db) => this.db = db;
+    private readonly IDbContextFactory<ContactoDb> db;
+    public Repositorio(IDbContextFactory<ContactoDb> db) => this.db = db;
 
-    public void Iniciar() => db.Database.EnsureCreated();
+    public void Iniciar() 
+    { 
+        using var dd =  this.db.CreateDbContext(); 
+        dd.Database.EnsureCreated();
+    } 
 
-    public List<Contacto> TraerContactos() =>
-        db.Contactos
-        .OrderBy(p => p.Id)
-        .ToList();
+    public async Task<List<Contacto>> TraerContactos() {
+        using var dd = await this.db.CreateDbContextAsync(); 
+        return await dd.Contactos.OrderBy(p => p.Id).ToListAsync();
+    }
+    public async Task<Contacto?> TraerContacto(int id) {
+    using var dd = await this.db.CreateDbContextAsync(); 
+    return await dd.Contactos.FirstOrDefaultAsync(p => p.Id == id);
 
-    public Contacto? TraerContacto(int id) =>
-        db.Contactos
-        .FirstOrDefault(p => p.Id == id);
-
-    async public Task<Contacto> AgregarContacto(Contacto contacto)
+    }
+    public async Task<Contacto> AgregarContacto(Contacto contacto)
     {
-
-        db.Contactos.Add(contacto);
-        await db.SaveChangesAsync();
+        using var dd = await this.db.CreateDbContextAsync(); 
+        dd.Contactos.Add(contacto);
+        await dd.SaveChangesAsync();
         return contacto;
     }
-    async public Task<Contacto?> Actualizar(int id, Contacto actualizacion)
+    public async Task<Contacto?> Actualizar(int id, Contacto actualizacion)
     {
-        var cambio = db.Contactos.FirstOrDefault(p => p.Id == id);
+    using var dd = await this.db.CreateDbContextAsync(); 
+    var cambio = dd.Contactos.FirstOrDefault(p => p.Id == id);
 
         if (cambio is null) return null;
         cambio.Nombre = actualizacion.Nombre;
@@ -38,21 +43,18 @@ class Repositorio
         cambio.Cargo = actualizacion.Cargo;
         cambio.Direccion = actualizacion.Direccion;
         cambio.Notas = actualizacion.Notas;
-        await db.SaveChangesAsync();
+        await dd.SaveChangesAsync();
         return cambio;
     }
 
-    async public Task<bool> Eliminar(int id)
+    public async Task<bool> Eliminar(int id)
     {
-        var eliminado = db.Contactos.FirstOrDefault(p => p.Id == id);
-        if (eliminado is null) return false;
-        db.Contactos.Remove(eliminado);
-        await db.SaveChangesAsync();
+    using var dd = await this.db.CreateDbContextAsync(); 
+    var eliminado = dd.Contactos.FirstOrDefault(p => p.Id == id);
+    if (eliminado is null) return false;
+    dd.Contactos.Remove(eliminado);
+    await dd.SaveChangesAsync();
         return true;
     }
-
-
-
-
 }
 
