@@ -261,3 +261,28 @@
         </div>
     </div>
 }
+
+@* C# para el funcionamiento de la agenda *@
+
+    @code {
+
+    private List<Contacto> todosLosContactos = new();
+    private List<Contacto> contactosFiltrados = new();
+    private string textoBusqueda = "";
+    private Contacto? contactoSeleccionado;
+    private Contacto contactoEnEdicion = new();
+    private bool mostrandoFormulario = false;
+    private bool esNuevoContacto = false;
+    private bool modoEdicion = false;
+    private string mensajeError = "";
+    private bool mostrandoConfirmacionGuardar = false;
+    private bool mostrandoConfirmacionEliminar = false;
+    private Contacto? contactoAEliminar;
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+}
