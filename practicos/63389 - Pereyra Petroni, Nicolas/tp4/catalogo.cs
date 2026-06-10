@@ -6,6 +6,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using System.Collections.ObjectModel;
+using Terminal.Gui.Input;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
@@ -119,15 +120,30 @@ listaProductos.ValueChanged += async (_, _) =>
 ventana.Add(detalleProducto);
 ventana.Add(listaProductos);
 
-if (productos.Count > 0)
+listaProductos.KeyDown += (_, e) =>
 {
-    detalleProducto.Text =
-    """
-    Seleccione un producto
-    para ver sus movimientos
-    """;
-}
+    if (e.KeyCode == Key.A)
+    {
+        detalleProducto.Text =
+        """
+        AGREGAR PRODUCTO
 
+        Próximamente se abrirá
+        el formulario de alta.
+        """;
+    }
+
+    if (e.KeyCode == Key.M)
+    {
+        detalleProducto.Text =
+        """
+        REGISTRAR MOVIMIENTO
+
+        Próximamente se abrirá
+        el formulario de stock.
+        """;
+    }
+};
 app.Run(ventana);
 
 // ── API ───────────────────────────────────────────────────────────────────
