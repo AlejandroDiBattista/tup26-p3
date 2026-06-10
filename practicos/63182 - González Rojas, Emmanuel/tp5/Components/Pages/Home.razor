@@ -246,4 +246,18 @@
     </div>
 }
 
-
+@* VENTANA DE ELIMINACIÓN *@
+@if (mostrandoConfirmacionEliminar)
+{
+    <div class="fondo-modal" @onclick="CancelarEliminar"></div>
+    <div class="dialogo-confirmacion">
+        <h5><i class="bi bi-exclamation-triangle text-warning"></i> ¿Eliminar contacto?</h5>
+        <p>¿Seguro que querés eliminar a <strong>@contactoAEliminar?.NombreCompleto</strong>? Esta acción no se puede deshacer.</p>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px;">
+            <button class="btn-cancelar" @onclick="CancelarEliminar">Cancelar</button>
+            <button class="btn-eliminar" @onclick="EliminarContactoConfirmado">
+                <i class="bi bi-trash"></i> Sí, eliminar
+            </button>
+        </div>
+    </div>
+}
