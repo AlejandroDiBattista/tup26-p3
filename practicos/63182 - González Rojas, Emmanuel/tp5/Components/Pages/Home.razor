@@ -1,5 +1,7 @@
-Page
+@page "/"
+
 @rendermode InteractiveServer
+
 @inject IDbContextFactory<AgendaContexto> bdFactory
 
 @using Microsoft.EntityFrameworkCore
@@ -8,9 +10,9 @@ Page
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-
 <div class="pagina-agenda">
-  <div class="encabezado">
+    @* -----------------------ENCABEZADO---------------------------------- *@
+    <div class="encabezado">
         <div>
             <h1 class="titulo-encabezado">
                 <i class="bi bi-book"></i> Agenda
@@ -24,9 +26,10 @@ Page
         </button>
     </div>
 
-@* ---------------------------------------------------------- *@
-
-<div class="cuerpo-principal">
+    @* ------------------------CUERPO PRINCIPAL--------------------------------- *@
+    <div class="cuerpo-principal">
+        
+        @* PANEL MAESTRO *@
         <div class="panel-lista">
             <div class="caja-busqueda">
                 <i class="bi bi-search icono-busqueda"></i>
@@ -64,11 +67,13 @@ Page
                 }
             </div>
         </div>
-@* ------------------------------------------------------------- *@
-    <div class="panel-detalle">
+
+        @* PANEL DETALLE *@
+        <div class="panel-detalle">
 
             @if (mostrandoFormulario)
             {
+                @* CABECERA DEL FORMULARIO *@
                 <div class="cabecera-detalle">
                     <div style="display:flex; align-items:center; gap: 16px;">
                         <div class="avatar avatar-azul avatar-grande">
@@ -102,9 +107,6 @@ Page
                     </div>
                 }
 
-                @* ------------------------------------------------------------- *@
-
-                
                 <div class="formulario">
                     <div class="campo-formulario">
                         <label class="etiqueta">Nombre *</label>
@@ -141,7 +143,7 @@ Page
                                @onchange="e => CambiarFecha(e.Value?.ToString())" />
                     </div>
                     <div class="campo-formulario campo-ancho-completo">
-                        <label class="etiqueta">Notas</label>
+                        <label class="etiqueta">Notes</label>
                         <textarea class="input-campo input-area" @bind="contactoEnEdicion.Notas" placeholder="Comentarios adicionales..."></textarea>
                     </div>
                 </div>
@@ -155,7 +157,7 @@ Page
             }
             else if (contactoSeleccionado != null)
             {
-
+                @* CABECERA DEL DETALLE *@
                 <div class="cabecera-detalle">
                     <div style="display:flex; align-items:center; gap: 16px;">
                         <div class="avatar avatar-@ObtenerColorAvatar(contactoSeleccionado.Id) avatar-grande">
@@ -205,6 +207,43 @@ Page
                     }
                 </div>
             }
+            else
+            {
+                <div class="panel-vacio">
+                    <i class="bi bi-person-lines-fill icono-vacio"></i>
+                    <p>Seleccioná un contacto para ver su información</p>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+@* VENTANA DE GUARDAR *@
+@if (mostrandoConfirmacionGuardar)
+{
+    <div class="fondo-modal" @onclick="CancelarConfirmacionGuardar"></div>
+    <div class="dialogo-confirmacion">
+        <h5>
+            <i class="bi bi-floppy text-success"></i>
+            @(esNuevoContacto ? "¿Crear contacto?" : "¿Guardar cambios?")
+        </h5>
+        <p>
+            @if (esNuevoContacto)
+            {
+                <span>¿Querés agregar a <strong>@contactoEnEdicion.NombreCompleto</strong> a la agenda?</span>
+            }
+            else
+            {
+                <span>¿Guardar los cambios en el contacto <strong>@contactoEnEdicion.NombreCompleto</strong>?</span>
+            }
+        </p>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:20px;">
+            <button class="btn-cancelar" @onclick="CancelarConfirmacionGuardar">Cancelar</button>
+            <button class="btn-guardar" @onclick="GuardarContactoConfirmado">
+                <i class="bi bi-floppy"></i> @(esNuevoContacto ? "Sí, crear" : "Sí, guardar")
+            </button>
+        </div>
+    </div>
+}
+
+
