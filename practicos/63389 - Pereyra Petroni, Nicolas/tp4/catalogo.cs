@@ -3,15 +3,21 @@
 
 using System.Net.Http.Json;
 using Terminal.Gui.App;
+using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using System.Collections.ObjectModel;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-ProductoDto producto;
-try {
+List<ProductoDto> productos;
+
+try
+{
     using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
-} catch (HttpRequestException ex) {
+    productos = await CargarProductosAsync(http);
+}
+catch (HttpRequestException ex)
+{
     Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
     Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
     return;
@@ -20,30 +26,99 @@ try {
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
+using Window ventana = new()
+{
+    Title = " Catalogo REST — Producto (ESC para salir) "
+};
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+var items = new ObservableCollection<string>(
+    productos.Select(p => $"{p.Codigo} - {p.Nombre}")
+);
+
+var listaProductos = new ListView()
+{
+    X = 1,
+    Y = 1,
+    Width = 40,
+    Height = Dim.Fill()
+};
+
+listaProductos.SetSource(items);
+
+var detalleProducto = new Label()
+{
+    Text = """
+           DETALLE PRODUCTO
+
+           Seleccione un producto
+           """,
+    X = 45,
+    Y = 2,
+    Width = 40,
+    Height = 10
+};
+
+listaProductos.ValueChanged += (_, _) =>
+{
+    int indice = listaProductos.SelectedItem ?? 0;
+
+    if (indice < 0 || indice >= productos.Count)
+        return;
+
+    var producto = productos[indice];
+
+    detalleProducto.Text =
+    $"""
+    Id: {producto.Id}
+
+    Código: {producto.Codigo}
+
+    Nombre: {producto.Nombre}
+
+    Precio: ${producto.Precio}
+
+    Stock: {producto.Stock}
+    """;
 };
 
 ventana.Add(detalleProducto);
+ventana.Add(listaProductos);
+
+if (productos.Count > 0)
+{
+    detalleProducto.Text =
+    $"""
+    Id: {productos[0].Id}
+
+    Código: {productos[0].Codigo}
+
+    Nombre: {productos[0].Nombre}
+
+    Precio: ${productos[0].Precio}
+
+    Stock: {productos[0].Stock}
+    """;
+}
 
 app.Run(ventana);
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+// ── API ───────────────────────────────────────────────────────────────────
+
+static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
+{
+    const string url = "http://localhost:5050/productos";
+
+    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
+           ?? new List<ProductoDto>();
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
 
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+record ProductoDto(
+    int Id,
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
+);
