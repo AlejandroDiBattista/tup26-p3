@@ -22,7 +22,37 @@ catch (HttpRequestException ex)
     Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
     return;
 }
+static async Task<List<MovimientoDto>> CargarMovimientosAsync(
+    HttpClient http,
+    int productoId)
+{
+    string url = $"http://localhost:5050/productos/{productoId}/movimientos";
 
+    return await http.GetFromJsonAsync<List<MovimientoDto>>(url)
+           ?? new List<MovimientoDto>();
+}
+static string FormatearMovimientos(List<MovimientoDto> movimientos)
+{
+    if (movimientos.Count == 0)
+        return "Sin movimientos";
+
+    return string.Join(
+        "\n",
+        movimientos.Select(m =>
+            $"{TipoTexto(m.Tipo)} | {m.Cantidad} | {m.Fecha:dd/MM HH:mm}")
+    );
+}
+
+static string TipoTexto(int tipo)
+{
+    return tipo switch
+    {
+        0 => "Compra",
+        1 => "Venta",
+        2 => "Ajuste",
+        _ => "?"
+    };
+}
 // ── Interfaz TUI ──────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
@@ -56,10 +86,10 @@ var detalleProducto = new Label()
     X = 45,
     Y = 2,
     Width = 40,
-    Height = 10
+    Height = Dim.Fill()
 };
 
-listaProductos.ValueChanged += (_, _) =>
+listaProductos.ValueChanged += async (_, _) =>
 {
     int indice = listaProductos.SelectedItem ?? 0;
 
@@ -68,17 +98,21 @@ listaProductos.ValueChanged += (_, _) =>
 
     var producto = productos[indice];
 
+    using var http = new HttpClient();
+
+    var movimientos = await CargarMovimientosAsync(http, producto.Id);
+
     detalleProducto.Text =
     $"""
-    Id: {producto.Id}
+    PRODUCTO
 
-    Código: {producto.Codigo}
-
-    Nombre: {producto.Nombre}
-
-    Precio: ${producto.Precio}
+    {producto.Nombre}
 
     Stock: {producto.Stock}
+
+    MOVIMIENTOS
+
+    {FormatearMovimientos(movimientos)}
     """;
 };
 
@@ -88,16 +122,9 @@ ventana.Add(listaProductos);
 if (productos.Count > 0)
 {
     detalleProducto.Text =
-    $"""
-    Id: {productos[0].Id}
-
-    Código: {productos[0].Codigo}
-
-    Nombre: {productos[0].Nombre}
-
-    Precio: ${productos[0].Precio}
-
-    Stock: {productos[0].Stock}
+    """
+    Seleccione un producto
+    para ver sus movimientos
     """;
 }
 
@@ -113,6 +140,7 @@ static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
            ?? new List<ProductoDto>();
 }
 
+
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(
@@ -121,4 +149,11 @@ record ProductoDto(
     string Nombre,
     decimal Precio,
     int Stock
+);
+record MovimientoDto(
+    int Id,
+    int ProductoId,
+    int Tipo,
+    int Cantidad,
+    DateTime Fecha
 );
