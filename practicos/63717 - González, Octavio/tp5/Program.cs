@@ -1,17 +1,12 @@
 using tp5.Components;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
-using SQLitePCL;
 using tp5.Models;
 //pasos: configuracion --inicilizacion bd - endpoints - modelo - dbcontext -- repositorio.
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddDbContext<ContactoDb>(opciones => opciones.UseSqlite("Data Source=contactos.db"));
+builder.Services.AddDbContextFactory<ContactoDb>(opciones => opciones.UseSqlite("Data Source=contactos.db"));
 builder.Services.AddScoped<Repositorio>();
 
 var app = builder.Build();
