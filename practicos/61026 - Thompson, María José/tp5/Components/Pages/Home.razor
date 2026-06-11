@@ -89,7 +89,7 @@
     private Contacto? contactoSeleccionado;
     private string TextoBusqueda { get; set; } = "";
 
-    // Propiedad calculada que filtra la lista automáticamente según lo que se escriba
+    // Propiedad calculada que filtra la lista automáticamente en memoria según lo que escribas
     private IEnumerable<Contacto> ContactosFiltrados =>
         contactos == null 
             ? Enumerable.Empty<Contacto>() 
