@@ -300,4 +300,23 @@ private async Task CargarContactos()
         FiltrarContactos();
     }
 
+    private void FiltrarContactos()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            contactosFiltrados = todosLosContactos.ToList();
+        }
+        else
+        {
+            var busqueda = textoBusqueda.ToLower();
+
+            contactosFiltrados = todosLosContactos
+                .Where(c =>
+                    c.NombreCompleto.ToLower().Contains(busqueda) ||
+                    c.Email.ToLower().Contains(busqueda) ||
+                    (c.Empresa ?? "").ToLower().Contains(busqueda))
+                .ToList();
+        }
+    }
+
 }
