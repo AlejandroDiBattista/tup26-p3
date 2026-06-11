@@ -465,10 +465,23 @@ private void CancelarConfirmacionGuardar()
     }
 @* Eliminacion de un contacto *@
 
+private void ConfirmarEliminar(Contacto contacto)
+    {
+        contactoAEliminar = contacto;
+        mostrandoConfirmacionEliminar = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        contactoAEliminar = null;
+        mostrandoConfirmacionEliminar = false;
+    }
+
 private async Task EliminarContactoConfirmado()
     {
         if (contactoAEliminar != null)
         {
+
             using var bd = bdFactory.CreateDbContext();
 
             var existente = await bd.Contactos.FindAsync(contactoAEliminar.Id);
