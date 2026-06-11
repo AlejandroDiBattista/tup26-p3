@@ -332,4 +332,14 @@ private string ObtenerColorAvatar(int id)
         return colores[id % colores.Length];
     }
 
+    private static string NormalizarTexto(string texto)
+    {
+        var textoNormalizado = texto.Normalize(NormalizationForm.FormD);
+        var caracteres = textoNormalizado
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            .ToArray();
+
+        return new string(caracteres).Normalize(NormalizationForm.FormC).ToLowerInvariant();
+    }
+
 }
