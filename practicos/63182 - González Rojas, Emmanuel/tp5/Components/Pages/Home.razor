@@ -326,5 +326,10 @@ private async Task CargarContactos()
         modoEdicion = false;
         mensajeError = "";
     }
+private string ObtenerColorAvatar(int id)
+    {
+        var colores = new[] { "verde", "azul", "violeta", "naranja", "rojo", "turquesa" };
+        return colores[id % colores.Length];
+    }
 
 }
