@@ -337,7 +337,32 @@ private async Task CargarContactos()
         contactoEnEdicion = new Contacto(); 
     }
 
+private void AbrirFormularioEditar(Contacto contacto)
+    {
+        esNuevoContacto = false;
+        mostrandoFormulario = true;
+        modoEdicion = true;
+        mensajeError = "";
 
+        contactoEnEdicion = new Contacto
+        {
+            Id          = contacto.Id,
+            Nombre      = contacto.Nombre,
+            Apellido    = contacto.Apellido,
+            Telefono    = contacto.Telefono,
+            Email       = contacto.Email,
+            Empresa     = contacto.Empresa,
+            Cargo       = contacto.Cargo,
+            Direccion   = contacto.Direccion,
+            FechaNacimiento = contacto.FechaNacimiento,
+            Notas       = contacto.Notas
+        };
+    }
+
+
+
+
+    
     @* ----------------------------------------- *@
 private string ObtenerColorAvatar(int id)
     {
