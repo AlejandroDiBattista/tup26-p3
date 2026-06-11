@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using tp5.Modelos;
+using tp5.Models;
 
 namespace tp5.Datos;
 public class AgendaContexto : DbContext
