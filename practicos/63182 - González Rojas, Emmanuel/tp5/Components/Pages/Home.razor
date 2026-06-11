@@ -448,6 +448,19 @@ private void CancelarConfirmacionGuardar()
     }
 
 
+    private void CambiarFecha(string? valor)
+    {
+        if (string.IsNullOrEmpty(valor))
+        {
+            contactoEnEdicion.FechaNacimiento = null;
+            return;
+        }
+
+        if (DateOnly.TryParse(valor, out var fecha))
+        {
+            contactoEnEdicion.FechaNacimiento = fecha;
+        }
+    }
 
 
     
