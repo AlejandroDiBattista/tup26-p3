@@ -1,7 +1,60 @@
 @page "/"
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+<h1 class="text-center">Agenda de Contactos</h1>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container mt-4">
+
+    <input class="form-control mb-3"
+           placeholder="Buscar contacto" />
+
+    <button class="btn btn-primary me-2">
+        Buscar
+    </button>
+
+    <button class="btn btn-success me-2">
+        Agregar Contacto
+    </button>
+
+    <button class="btn btn-danger">
+        Eliminar Contacto
+    </button>
+
+    <hr />
+
+    <div class="card mt-3">
+        <div class="card-header">
+            Contactos
+        </div>
+
+        <div class="card-body">
+
+            @foreach (var contacto in contactos)
+            {
+                <p>
+                    <strong>@contacto.Nombre</strong>
+                    -
+                    @contacto.Telefono
+                </p>
+            }
+
+        </div>
+    </div>
+
 </div>
+
+@code {
+
+    private List<Contacto> contactos = new()
+    {
+        new Contacto { Nombre = "Juan Perez", Telefono = "381111111" },
+        new Contacto { Nombre = "Ana Gomez", Telefono = "381222222" },
+        new Contacto { Nombre = "Carlos Diaz", Telefono = "381333333" }
+    };
+
+    public class Contacto
+    {
+        public string Nombre { get; set; } = "";
+        public string Telefono { get; set; } = "";
+    }
+
+}
