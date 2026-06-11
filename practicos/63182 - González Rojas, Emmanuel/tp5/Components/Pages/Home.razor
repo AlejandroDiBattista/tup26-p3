@@ -285,4 +285,19 @@
         await CargarContactos();
     }
 
+@* --------------------------------- *@
+private async Task CargarContactos()
+    {
+
+        using var bd = bdFactory.CreateDbContext();
+
+        var contactos = await bd.Contactos.ToListAsync();
+        todosLosContactos = contactos
+            .OrderBy(c => NormalizarTexto(c.Nombre))
+            .ThenBy(c => NormalizarTexto(c.Apellido))
+            .ToList();
+
+        FiltrarContactos();
+    }
+
 }
