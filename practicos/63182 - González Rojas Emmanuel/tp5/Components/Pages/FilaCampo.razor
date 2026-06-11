@@ -1,0 +1,24 @@
+<div class="fila-campo">
+    <i class="bi @Icono icono-campo"></i>
+
+    <div class="contenido-fila">
+        <span class="etiqueta-fila">@Etiqueta</span>
+
+        @if (EsEnlace)
+        {
+            <a class="valor-enlace" href="mailto:@Valor">@Valor</a>
+        }
+        else
+        {
+            <span class="valor-fila">@Valor</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Icono { get; set; } = "bi-circle";
+    [Parameter] public string Etiqueta { get; set; } = "";
+    [Parameter] public string? Valor { get; set; }
+
+    [Parameter] public bool EsEnlace { get; set; } = false;
+}
