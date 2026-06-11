@@ -385,6 +385,69 @@ private void CancelarConfirmacionGuardar()
     {
         mostrandoConfirmacionGuardar = false;
     }
+ private async Task GuardarContactoConfirmado()
+    {
+        using var bd = bdFactory.CreateDbContext();
+
+        try
+        {
+            if (esNuevoContacto)
+            {
+                var nuevo = new Contacto
+                {
+                    Nombre          = contactoEnEdicion.Nombre,
+                    Apellido        = contactoEnEdicion.Apellido,
+                    Telefono        = contactoEnEdicion.Telefono,
+                    Email           = contactoEnEdicion.Email,
+                    Empresa         = contactoEnEdicion.Empresa   ?? "",
+                    Cargo           = contactoEnEdicion.Cargo     ?? "",
+                    Direccion       = contactoEnEdicion.Direccion ?? "",
+                    FechaNacimiento = contactoEnEdicion.FechaNacimiento,
+                    Notas           = contactoEnEdicion.Notas ?? ""
+                };
+                bd.Contactos.Add(nuevo);
+
+                contactoEnEdicion = nuevo;
+            }
+            else
+            {
+
+                var existente = await bd.Contactos.FindAsync(contactoEnEdicion.Id);
+
+                if (existente != null)
+                {
+                    existente.Nombre          = contactoEnEdicion.Nombre;
+                    existente.Apellido        = contactoEnEdicion.Apellido;
+                    existente.Telefono        = contactoEnEdicion.Telefono;
+                    existente.Email           = contactoEnEdicion.Email;
+                    existente.Empresa         = contactoEnEdicion.Empresa   ?? "";
+                    existente.Cargo           = contactoEnEdicion.Cargo     ?? "";
+                    existente.Direccion       = contactoEnEdicion.Direccion ?? "";
+                    existente.FechaNacimiento = contactoEnEdicion.FechaNacimiento;
+                    existente.Notas           = contactoEnEdicion.Notas ?? "";
+                }
+            }
+
+            await bd.SaveChangesAsync();
+
+            var idGuardado = contactoEnEdicion.Id;
+
+            await CargarContactos();
+
+            contactoSeleccionado = todosLosContactos.FirstOrDefault(c => c.Id == idGuardado);
+
+            mostrandoConfirmacionGuardar = false;
+            mostrandoFormulario = false;
+            modoEdicion = false;
+        }
+        catch (Exception ex)
+        {
+            mostrandoConfirmacionGuardar = false;
+            mensajeError = $"Error al guardar: {ex.InnerException?.Message ?? ex.Message}";
+        }
+    }
+
+
 
 
     
