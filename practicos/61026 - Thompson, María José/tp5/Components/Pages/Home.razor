@@ -91,13 +91,20 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">📝 Notas</label>
-                                <InputTextArea class="form-control" @bind-Value="modeloFormulario.Notas" rows="3" />
+                                <InputTextArea class="form-control" @bind-Value="modeloFormulario.Notes" rows="3" />
                             </div>
                         </div>
 
-                        <div class="mt-4 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">💾 Guardar</button>
-                            <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">❌ Cancelar</button>
+                        <div class="mt-4 d-flex justify-content-between">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">💾 Guardar</button>
+                                <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">❌ Cancelar</button>
+                            </div>
+                            
+                            @if (modeloFormulario.Id != 0)
+                            {
+                                <button type="button" class="btn btn-danger" @onclick="EliminarContacto">🗑️ Eliminar Contacto</button>
+                            }
                         </div>
                     </EditForm>
                 </div>
@@ -147,7 +154,6 @@
     private Contacto? contactoSeleccionado;
     private string TextoBusqueda { get; set; } = "";
 
-    // Variables de control para el formulario
     private bool editando = false;
     private Contacto? modeloFormulario;
 
@@ -177,7 +183,7 @@
     private void MostrarFormularioNuevo()
     {
         contactoSeleccionado = null;
-        modeloFormulario = new Contacto(); // Objeto vacío para el alta
+        modeloFormulario = new Contacto();
         editando = true;
     }
 
@@ -185,7 +191,6 @@
     {
         if (contactoSeleccionado != null)
         {
-            // Clonamos el contacto para no modificar el listado original antes de guardar
             modeloFormulario = new Contacto
             {
                 Id = contactoSeleccionado.Id,
@@ -209,12 +214,10 @@
 
         if (modeloFormulario.Id == 0)
         {
-            // Es un alta nueva
             DbContext.Contactos.Add(modeloFormulario);
         }
         else
         {
-            // Es una modificación, buscamos el original en la BD
             var original = await DbContext.Contactos.FindAsync(modeloFormulario.Id);
             if (original != null)
             {
@@ -223,11 +226,28 @@
         }
 
         await DbContext.SaveChangesAsync();
-        await CargarContactosAsync(); // Recargamos la lista ordenada de la BD
+        await CargarContactosAsync();
 
-        // Seleccionamos el contacto guardado
         contactoSeleccionado = contactos?.FirstOrDefault(c => c.Telefono == modeloFormulario.Telefono);
         editando = false;
+    }
+
+    // 👇 MÉTODO PARA ELIMINAR EL CONTACTO
+    private async Task EliminarContacto()
+    {
+        if (modeloFormulario != null && modeloFormulario.Id != 0)
+        {
+            var contactoABorrar = await DbContext.Contactos.FindAsync(modeloFormulario.Id);
+            if (contactoABorrar != null)
+            {
+                DbContext.Contactos.Remove(contactoABorrar);
+                await DbContext.SaveChangesAsync();
+                await CargarContactosAsync(); // Recargar lista
+                
+                contactoSeleccionado = null; // Limpiar selección
+                editando = false;
+            }
+        }
     }
 
     private void CancelarEdicion()
