@@ -326,6 +326,19 @@ private async Task CargarContactos()
         modoEdicion = false;
         mensajeError = "";
     }
+
+@* Formulario *@
+ private void AbrirFormularioNuevo()
+    {
+        esNuevoContacto = true;
+        mostrandoFormulario = true;
+        modoEdicion = true;
+        mensajeError = "";
+        contactoEnEdicion = new Contacto(); 
+    }
+
+
+    @* ----------------------------------------- *@
 private string ObtenerColorAvatar(int id)
     {
         var colores = new[] { "verde", "azul", "violeta", "naranja", "rojo", "turquesa" };
