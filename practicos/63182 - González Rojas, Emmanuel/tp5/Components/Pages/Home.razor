@@ -367,7 +367,20 @@ private void CancelarFormulario()
         mensajeError = "";
     }
 
-    
+private void PedirConfirmacionGuardar()
+    {
+        if (string.IsNullOrWhiteSpace(contactoEnEdicion.Nombre)   ||
+            string.IsNullOrWhiteSpace(contactoEnEdicion.Apellido) ||
+            string.IsNullOrWhiteSpace(contactoEnEdicion.Telefono) ||
+            string.IsNullOrWhiteSpace(contactoEnEdicion.Email))
+        {
+            mensajeError = "Los campos Nombre, Apellido, Teléfono y Email son obligatorios.";
+            return;
+        }
+
+        mensajeError = "";
+        mostrandoConfirmacionGuardar = true;
+    }    
     @* ----------------------------------------- *@
 private string ObtenerColorAvatar(int id)
     {
