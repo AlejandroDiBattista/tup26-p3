@@ -1,7 +1,92 @@
 @page "/"
+@inject AgendaDbContext DbContext
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">TP5: AgendaWeb</h1>
+
+    <div class="row">
+        <div class="col-md-4" style="max-height: 70vh; overflow-y: auto;">
+            <div class="list-group">
+                @if (contactos == null)
+                {
+                    <p class="text-muted p-3">Cargando contactos de la agenda...</p>
+                }
+                else if (!contactos.Any())
+                {
+                    <p class="text-warning p-3">No hay contactos cargados.</p>
+                }
+                else
+                {
+                    @foreach (var c in contactos)
+                    {
+                        <button type="button" 
+                                class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
+                                @onclick="() => SeleccionarContacto(c)">
+                            <strong>@c.Apellido, @c.Nombre</strong>
+                            @if (!string.IsNullOrWhiteSpace(c.Empresa))
+                            {
+                                <br/><small class="@(contactoSeleccionado?.Id == c.Id ? "text-light" : "text-muted")">@c.Empresa</small>
+                            }
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            @if (contactoSeleccionado != null)
+            {
+                <div class="card shadow-sm p-4">
+                    <h2 class="text-primary mb-3">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+                    <hr />
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <p><strong>📞 Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                            <p><strong>📧 Correo electrónico:</strong> @contactoSeleccionado.Email</p>
+                            <p><strong>🏢 Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "-" : contactoSeleccionado.Empresa)</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <p><strong>💼 Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "-" : contactoSeleccionado.Cargo)</p>
+                            <p><strong>📍 Dirección:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Direccion) ? "-" : contactoSeleccionado.Direccion)</p>
+                            <p><strong>📅 Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")</p>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(contactoSeleccionado.Notas))
+                    {
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <strong>📝 Notas adicionales:</strong>
+                            <p class="mb-0 mt-1">@contactoSeleccionado.Notas</p>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center shadow-sm py-5">
+                    <h4 class="alert-heading">🔍 Vista de Detalle</h4>
+                    <p class="mb-0">Seleccioná un contacto de la lista de la izquierda para ver su información completa.</p>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@code {
+    private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Traemos los contactos ordenados por Apellido de la base de datos SQLite
+        contactos = await DbContext.Contactos.OrderBy(c => c.Apellido).ToListAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+    }
+}
