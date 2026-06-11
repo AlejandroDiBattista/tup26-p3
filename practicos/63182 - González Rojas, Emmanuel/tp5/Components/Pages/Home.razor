@@ -319,4 +319,12 @@ private async Task CargarContactos()
         }
     }
 
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        mostrandoFormulario = false;
+        modoEdicion = false;
+        mensajeError = "";
+    }
+
 }
