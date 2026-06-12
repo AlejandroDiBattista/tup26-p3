@@ -57,3 +57,23 @@ body {
     opacity: 0.8;
     margin-top: 2px;
 }
+
+/* BOTON NUEVO */
+.btn-nuevo {
+    background: var(--verde-principal);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.btn-nuevo:hover {
+    background: #1ebe58;
+}
