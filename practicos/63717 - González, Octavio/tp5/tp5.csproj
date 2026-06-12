@@ -20,13 +20,4 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-  
-  <Target Name="BuildTailwindCSS" BeforeTargets="BeforeBuild">
-    <Message Text="Building Tailwind CSS..." Importance="high" />
-    <Exec Command="tailwindcss.exe -i wwwroot/css/app-input.css -o wwwroot/css/app.css" />
-  </Target>
-  <Target Name="BuildTailwindCSSWatch" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="tailwindcss.exe -i wwwroot/css/app-input.css -o wwwroot/css/app.css --watch" />
-  </Target>
-
 </Project>

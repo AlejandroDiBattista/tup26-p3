@@ -37,19 +37,7 @@ public class Contacto
     public DateOnly? FechaNacimiento { get; set; }
     public string Notas { get; set; } = "";
 
-    public Contacto(int id, string nombre, string apellido, string telefono, string email, string empresa, string cargo, string direccion, DateOnly? fechaNacimiento, string notas)
-    {
-        Id = id;
-        Nombre = nombre;
-        Apellido = apellido;
-        Telefono = telefono;
-        Email = email;
-        Empresa = empresa;
-        Cargo = cargo;
-        Direccion = direccion;
-        FechaNacimiento = fechaNacimiento;
-        Notas = notas;
-    }
+    public Contacto() { }
 }
 
 //DB CONTEXT. 

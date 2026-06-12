@@ -1,31 +1,106 @@
 @page "/"
+@using Microsoft.VisualBasic
+@rendermode InteractiveServer
 @inject Repositorio Repositorio
 
 <div class="d-flex flex-column vh-100">
     <!-- Cabecera -->
-    <nav class="bg-dark d-flex justify-content-between align-items-center py-2 px-3">
+    <nav class="bg-dark d-flex justify-content-between align-items-center py-2 px-3 border-bottom  border-secondary">
         <div class="d-flex align-items-center">
             <i class="bi bi-journal-bookmark-fill me-2 text-white"></i>
             <h3 class="text-white mb-0">AgendaBlazor</h3>
         </div>
-        <button class="btn btn-outline-primary text-white" type="button">
+        <button class="btn btn-outline-primary text-white" type="button" @onclick="Mostrar">
             <i class="bi bi-plus-circle"></i> Nuevo
         </button>
+
+
     </nav>
 
     <!-- Cuerpo Principal (Maestro-Detalle) -->
-    <div class="d-flex flex-grow-1 w-100">
+    <div class="d-flex flex-grow-1 w-100 bg-dark gap-3 p-2 overflow-hidden">
         <!-- Maestro (Sidebar) -->
-        <div class="col-4 bg-secondary p-3">
+        <div class="col-3 bg-secondary p-3 rounded-5 overflow-y-auto overflow-x-hidden">
             <input class="form-control mb-2" type="search" placeholder="Buscar contacto...">
+            <div class="container w-100">
+                @foreach (var contacto in contactos)
+                {
+                    <button class="card mb-2" style="cursor:pointer;" @onclick="(() => MostrarDetalle(contacto))">
+
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h5 class="card-title">@contacto.Nombre @contacto.Apellido</h5>
+                                <p class="card-text">@contacto.Telefono</p>
+                            </div>
+                        </div>
+                    </button>
+                }
+            </div>
         </div>
 
         <!-- Detalle -->
-        <main class="col-8 bg-primary p-3">
+        <main class="flex-grow-1 bg-primary p-3 rounded-5 overflow-y-auto">
+            @if (agregar)
+{
+    <EditForm Model="nuevoContacto" OnValidSubmit="() => CrearContacto(nuevoContacto)">
+        <DataAnnotationsValidator />
+
+        <h5 class="modal-title">Agregar nuevo contacto</h5>
+                <button type="button" class="btn-close" @onclick="Ocultar"></button>
+
+                <div class="mb-2 ">
+                    <label class="form-label">Nombre:</label>
+                    <input type="text" class="form-control" @bind="nuevoContacto.Nombre" placeholder="Ej: Juan" />
+                    <ValidationMessage For="() => nuevoContacto.Nombre" class="text-danger" />
+                </div>
+                <div class="mb-2 ">
+                    <label class="form-label">Apellido:</label>
+                    <input type="text" class="form-control" @bind="nuevoContacto.Apellido" placeholder="Ej: Perez" />
+                    <ValidationMessage For="() => nuevoContacto.Apellido" class="text-danger" />
+                </div>
+                <div class="mb-2 ">
+                    <label class="form-label">Teléfono:</label>
+                    <input type="text" class="form-control" @bind="nuevoContacto.Telefono" placeholder="Ej: 264-155-1234" />
+                    <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger" />
+                </div>
+                <div class="mb-2 ">
+                    <label class="form-label">Email:</label>
+                    <input type="email" class="form-control" @bind="nuevoContacto.Email" placeholder="Ej: juan@gmail.com" />
+                    <ValidationMessage For="() => nuevoContacto.Email" class="text-danger" />
+                </div>
+                <div class="mb-2 ">
+                    <label class="form-label">Empresa:</label>
+                    <input type="text" class="form-control" @bind="nuevoContacto.Empresa" placeholder="Ej: YPF" />
+                </div>
+                <div class="mb-2 ">
+                    <label class="form-label">Cargo:</label>
+                    <input type="text" class="form-control" @bind="nuevoContacto.Cargo" placeholder="Ej: Ingeniero" />
+                </div>
+                <div class="mb-2 ">
+                    <label class="form-label">Dirección:</label>
+                    <input type="text" class="form-control" @bind="nuevoContacto.Direccion"
+                           placeholder="Ej: Calle Falsa 123" />
+                </div>
+
+                <div class="mb-2 ">
+                    <label class="form-label">Notas:</label>
+                    <input class="form-control" @bind="nuevoContacto.Notas" />
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                    <button class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
+                </div>
+
+            </EditForm>
+        }
 
         </main>
     </div>
 </div>
+
+
+
 
 @code {
 
@@ -43,10 +118,18 @@
             Console.Error.WriteLine($"{ex.Message}");
         }
     }
+    Contacto nuevoContacto = new Contacto();
+
+    async Task MostrarDetalle(Contacto c)
+    {
+
+    }
     async Task CrearContacto(Contacto c)
     {
         await Repositorio.AgregarContacto(c);
         contactos = await Repositorio.TraerContactos(); // Refresca la lista
+        nuevoContacto = new Contacto(); // Resetea el formulario
+        Ocultar();
     }
 
     async Task EditarContacto(Contacto c, int id)
@@ -59,6 +142,17 @@
     {
         await Repositorio.Eliminar(id);
         contactos = await Repositorio.TraerContactos(); // Refresca la lista
+    }
+
+
+    bool agregar = false;
+    void Mostrar()
+    {
+        agregar = true;
+    }
+    void Ocultar()
+    {
+        agregar = false;
     }
 
     public record class UIContacto(int id,

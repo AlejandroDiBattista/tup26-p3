@@ -162,6 +162,12 @@
   .static {
     position: static;
   }
+  .col-4 {
+    grid-column: 4;
+  }
+  .col-8 {
+    grid-column: 8;
+  }
   .me-2 {
     margin-inline-end: calc(var(--spacing) * 2);
   }
@@ -171,11 +177,14 @@
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
   }
-  .flex {
-    display: flex;
+  .w-100 {
+    width: calc(var(--spacing) * 100);
   }
   .flex-grow-1 {
     flex-grow: 1;
+  }
+  .gap-2 {
+    gap: calc(var(--spacing) * 2);
   }
   .bg-primary {
     background-color: var(--primary);
@@ -186,8 +195,8 @@
   .p-3 {
     padding: calc(var(--spacing) * 3);
   }
-  .px-0 {
-    padding-inline: calc(var(--spacing) * 0);
+  .px-3 {
+    padding-inline: calc(var(--spacing) * 3);
   }
   .py-2 {
     padding-block: calc(var(--spacing) * 2);
