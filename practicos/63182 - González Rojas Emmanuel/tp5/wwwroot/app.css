@@ -183,5 +183,34 @@ body {
     display: block;
     margin-bottom: 8px;
 }
+/* ---------------------------------------- */
+/* AVATAR */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;      
+}
+
+.avatar-grande {
+    width: 58px;
+    height: 58px;
+    font-size: 1.2rem;
+}
+
+/* COLORES PARA LOS AVATARES */
+.avatar-verde   { background: #25D366; }
+.avatar-azul    { background: #3B82F6; }
+.avatar-violeta { background: #8B5CF6; }
+.avatar-naranja { background: #F97316; }
+.avatar-rojo    { background: #EF4444; }
+.avatar-turquesa{ background: #06B6D4; }
+/* ----------------------------------------------- */
 
 
