@@ -51,31 +51,86 @@ else
             <h2 class="h4">Detalle</h2>
             
             @if (modoNuevo)
-            {
-                <div class="border rounded p-3">
-                   <h3 class= "h5"> Nuevo contactos</h3>
-                   
-                   <div classs="mb-3">
-                        <label class="form-label">Nombre</label>
-                        <input class="form-control" @bind="nuevoContacto.Nombre"/>
+           {
+               <div class="border rounded p-3">
+                    <h3 class="h5">Nuevo contacto</h3>
+
+                    <div class="mb-3">
+                          <label class="form-label">Nombre</label>
+                          <input class="form-control"
+                                 @bind="nuevoContacto.Nombre" />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Apellido</label>
-                        <input class="form-control" @bind="nuevoContacto.Apellido" />
-                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Teléfono</label>
-                         <input class="form-control" @bind="nuevoContacto.Telefono" />
+                         <label class="form-label">Apellido</label>
+                         <input class="form-control"
+                                @bind="nuevoContacto.Apellido" />
                     </div>
+
+                    <div class="mb-3">
+                         <label class="form-label">Teléfono</label>
+                         <input class="form-control"
+                                @bind="nuevoContacto.Telefono" />
+                    </div>
+
+                    <div class="mb-3">
+                         <label class="form-label">Email</label>
+                        <input type="email"
+                               class="form-control"
+                                @bind="nuevoContacto.Email" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(mensajeError))
+                       {
+                          <div class="alert alert-danger">
+                               @mensajeError
+                         </div>
+                        }
+
+                        <button type="button"
+                                class="btn btn-success"
+                                @onclick="GuardarContacto">
+                          Guardar
+                        </button>
+
+                        <button type="button"
+                                class="btn btn-secondary ms-2"
+                                @onclick="CancelarNuevo">
+                          Cancelar
+                        </button>
+              </div>
+            }
+            else if (modoEditar)
+           {
+              <div class="border rounded p-3">
+                    <h3 class="h5">Editar contacto</h3>
+
+                    <div class="mb-3">
+                         <label class="form-label">Nombre</label>
+                         <input class="form-control"
+                                @bind="contactoEditado.Nombre" />
+                   </div>
+
+                   <div class="mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input class="form-control"
+                               @bind="contactoEditado.Apellido" />
+                    </div>
+
+                    <div class="mb-3">
+                         <label class="form-label">Teléfono</label>
+                         <input class="form-control"
+                                @bind="contactoEditado.Telefono" />
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email"
-                        class="form-control"
-                        @bind="nuevoContacto.Email" />
-                     </div>
+                               class="form-control"
+                               @bind="contactoEditado.Email" />
+                    </div>
                 </div>
-            }
+           }
             @if (contactoSeleccionado is null)
             {
                 <p>Seleccioná un contacto para ver sus datos.</p>
@@ -93,6 +148,13 @@ else
                     <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
                     <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
                     <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+
+                    <button type ="button"
+                            class="btn btn-primary"
+                            @onclick="EditarContacto">
+                        Editar
+                    </button> 
+
                 </div>
             }
         </div>    
@@ -134,7 +196,66 @@ else
    {
         nuevoContacto = new Contacto();
         contactoSeleccionado = null;
+        mensajeError = "";
         modoNuevo = true;
+    }
+
+    private string mensajeError = "";
+
+    private async Task GuardarContacto()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoContacto.Nombre) ||
+            string.IsNullOrWhiteSpace(nuevoContacto.Apellido) ||
+            string.IsNullOrWhiteSpace(nuevoContacto.Telefono) ||
+            string.IsNullOrWhiteSpace(nuevoContacto.Email))
+        {
+            mensajeError = "Nombre, Apellido, Telefono e Email son obligatorios.";
+            return;
+        }
+
+        Db.Contactos.Add(nuevoContacto);
+        await Db.SaveChangesAsync();
+
+        contactos = await Db.Contactos
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync();
+        
+        contactoSeleccionado= nuevoContacto;
+        modoNuevo = false;
+        mensajeError = "";
+
+    }
+
+    private void CancelarNuevo()
+    {
+        modoNuevo = false;
+        mensajeError = "";
+    }
+
+    private bool modoEditar;
+    private Contacto contactoEditado = new();
+
+    private void EditarContacto()
+    {
+        if(contactoSeleccionado is null)
+           return;
+        
+        contactoEditado = new Contacto
+        {
+            Id = contactoSeleccionado.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas  
+        };
+        
+        modoEditar = true;
     }
 }
 
