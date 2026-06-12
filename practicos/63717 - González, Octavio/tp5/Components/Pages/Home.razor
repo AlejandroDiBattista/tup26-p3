@@ -21,16 +21,16 @@
     <div class="d-flex flex-grow-1 w-100 bg-dark gap-3 p-2 overflow-hidden">
         <!-- Maestro (Sidebar) -->
         <div class="col-3 bg-secondary p-3 rounded-5 overflow-y-auto overflow-x-hidden">
-            <input class="form-control mb-2" type="search" placeholder="Buscar contacto...">
-            <div class="container w-100">
-                @foreach (var contacto in contactos)
+            <input class="form-control mb-2" type="search" placeholder="Buscar contacto..." @bind="textoBusqueda" @bind:event="oninput">
+            <div class="container w-100 ">
+                @foreach (var contacto in contactosFiltrados)
                 {
-                    <button class="card mb-2" style="cursor:pointer;" @onclick="(() => MostrarDetalle(contacto))">
+                    <button class="card mb-2 w-100 " style="cursor:pointer;" @onclick="(() => MostrarDetalle(contacto))">
 
-                        <div class="card mb-2">
-                            <div class="card-body">
-                                <h5 class="card-title">@contacto.Nombre @contacto.Apellido</h5>
-                                <p class="card-text">@contacto.Telefono</p>
+                        <div class="card  mb-2 bg-dark">
+                            <div class="card-body d-flex gap-2">
+                                <h5 class="card-title text-white">@contacto.Nombre @contacto.Apellido</h5>
+                                <p class="card-text text-white">@contacto.Telefono</p>
                             </div>
                         </div>
                     </button>
@@ -39,7 +39,7 @@
         </div>
 
         <!-- Detalle -->
-        <main class="flex-grow-1 bg-primary p-3 rounded-5 overflow-y-auto">
+        <main class="flex-grow-1 bg-secondary p-3 rounded-5 overflow-y-auto">
          
             @if (agregar)
             {
@@ -255,6 +255,12 @@
     //Metodos
     List<Contacto> contactos = new List<Contacto>();
     Contacto? Contactoseleccionado = null;
+    string textoBusqueda = "";
+
+    IEnumerable<Contacto> contactosFiltrados => string.IsNullOrWhiteSpace(textoBusqueda) 
+        ? contactos 
+        : contactos.Where(c => c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) 
+                            || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
