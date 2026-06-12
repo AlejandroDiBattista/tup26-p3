@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using tp5.Models;
 
 public class AgendaContext : DbContext
 {

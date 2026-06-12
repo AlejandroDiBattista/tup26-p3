@@ -1,6 +1,8 @@
 @page "/"
-@inject AgendaContext Db
+@rendermode InteractiveServer
+@using tp5.Models
 @using Microsoft.EntityFrameworkCore
+@inject AgendaContext Db
 
 <div class="container-fluid mt-4">
     <h2 class="text-center mb-4">TP5: AgendaWeb</h2>
@@ -66,7 +68,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label>Correo Electrónico *</label>
-                                    <InputText class="form-control" @bind-Value="contactoEdicion.CorreoElectronico" required type="email" />
+                                    <InputText class="form-control" @bind-Value="contactoEdicion.Email" required type="email" />
                                 </div>
                             </div>
 
@@ -121,7 +123,7 @@
                                 <strong>Teléfono:</strong> <p>@contactoSeleccionado.Telefono</p>
                             </div>
                             <div class="col-sm-6">
-                                <strong>Correo Electrónico:</strong> <p>@contactoSeleccionado.CorreoElectronico</p>
+                                <strong>Correo Electrónico:</strong> <p>@contactoSeleccionado.Email</p>
                             </div>
                             <div class="col-sm-6">
                                 <strong>Empresa:</strong> <p>@(string.IsNullOrEmpty(contactoSeleccionado.Empresa) ? "---" : contactoSeleccionado.Empresa)</p>
@@ -199,7 +201,7 @@
 
     private void NuevoContacto()
     {
-        contactoEdicion = new Contacto(); // Limpiamos el form
+        contactoEdicion = new Contacto(); // Limpio el form
         mostrandoFormulario = true;
         contactoSeleccionado = null;
     }
@@ -208,14 +210,14 @@
     {
         if (contactoSeleccionado != null)
         {
-            // Clono el objeto para no ensuciar la lista si el usuario cancela
+            // Clono el objeto
             contactoEdicion = new Contacto
             {
                 Id = contactoSeleccionado.Id,
                 Nombre = contactoSeleccionado.Nombre,
                 Apellido = contactoSeleccionado.Apellido,
                 Telefono = contactoSeleccionado.Telefono,
-                CorreoElectronico = contactoSeleccionado.CorreoElectronico,
+                Email = contactoSeleccionado.Email,
                 Empresa = contactoSeleccionado.Empresa,
                 Cargo = contactoSeleccionado.Cargo,
                 Direccion = contactoSeleccionado.Direccion,
@@ -245,7 +247,7 @@
                 contactoOriginal.Nombre = contactoEdicion.Nombre;
                 contactoOriginal.Apellido = contactoEdicion.Apellido;
                 contactoOriginal.Telefono = contactoEdicion.Telefono;
-                contactoOriginal.CorreoElectronico = contactoEdicion.CorreoElectronico;
+                contactoOriginal.Email = contactoEdicion.Email;
                 contactoOriginal.Empresa = contactoEdicion.Empresa;
                 contactoOriginal.Cargo = contactoEdicion.Cargo;
                 contactoOriginal.Direccion = contactoEdicion.Direccion;
@@ -257,7 +259,7 @@
         await Db.SaveChangesAsync();
         await CargarLista();
         mostrandoFormulario = false;
-        contactoSeleccionado = null;
+        contactoSeleccionado = null; // Vuelve a la pantalla por defecto
     }
 
     private async Task EliminarContacto()
