@@ -478,3 +478,43 @@ body {
     margin-top: 12px;
 }
 
+
+/* ---------------------------------------- */
+/* DIALOGO DE CONFIRMACION DE ELIMINACION */
+
+.fondo-modal {
+    position: fixed;
+    inset: 0;               
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 100;
+}
+
+
+.dialogo-confirmacion {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    z-index: 101;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.dialogo-confirmacion h5 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dialogo-confirmacion p {
+    color: var(--gris-texto);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
