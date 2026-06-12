@@ -7,9 +7,9 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<header class="border-bottom border-warning bg-warning-subtle mb-4">
+<header class="border-bottom border-success-subtle bg-success-subtle mb-4">
     <div class="container-fluid px-4 py-3 d-flex align-items-center gap-3">
-        <i class="bi bi-person-vcard fs-1 text-danger"></i>
+        <i class="bi bi-person-vcard fs-1 text-success"></i>
         <div>
             <h1 class="h3 fw-bold mb-0">AgendaWeb</h1>
             <p class="text-secondary mb-0">Administración de contactos</p>
@@ -34,13 +34,13 @@ else
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="h4 mb-0">
                             Contactos
-                            <span class="badge text-bg-warning">
+                            <span class="badge text-bg-success">
                                 @ContactosFiltrados.Count()
                             </span>
                         </h2>
 
                         <button type="button"
-                                class="btn btn-warning"
+                                class="btn btn-success"
                                 disabled="@Ocupado"
                                 @onclick="NuevoContacto">
                             <i class="bi bi-person-plus me-1"></i>
@@ -180,7 +180,7 @@ else
                             </div>
                         </div>
 
-                        <button class="btn btn-warning"
+                        <button class="btn btn-outline-success"
                                 @onclick="EditarContacto">
                         
                             Editar
@@ -201,7 +201,7 @@ else
                                         @onclick="EliminarContacto">
                                     Sí, eliminar
                                 </button>
-                                <button class="btn btn-secondary ms-2"
+                                <button class="border border-success-subtle rounded bg-white p-4 shadow-sm"
                                         @onclick="CancelarEliminacion">
                                     Cancelar
                                 </button>
