@@ -341,4 +341,21 @@ body {
     background: #0d7369;
 }
 
+/* CANCELAR */
+
+.btn-cancelar {
+    background: white;
+    border: 1.5px solid var(--gris-borde);
+    color: var(--gris-texto);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-cancelar:hover {
+    border-color: var(--gris-texto);
+    color: var(--texto-principal);
+}
 
