@@ -1,4 +1,4 @@
-/* VARIABLES DE COLORES */
+/* COLOR VARIABLES */
 :root {
     --verde-principal: #25D366;      
     --verde-oscuro: #086258;         
@@ -34,4 +34,14 @@ body {
     min-height: 100vh;
 }
 
-
+/* ENCABEZADO */
+.encabezado {
+    background: var(--verde-oscuro);
+    color: white;
+    padding: 20px 28px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--sombra);
+}
