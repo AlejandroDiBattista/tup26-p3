@@ -11,20 +11,11 @@
     <div class="row">
         <div class="col-md-4 border-end">
             <h3 class="mb-3">Contactos</h3>
-            
             <input type="text" class="form-control mb-3" placeholder="Buscar por nombre o apellido..." 
                    @bind="textoBusqueda" @bind:event="oninput" @onkeyup="FiltrarContactos" />
 
             <div class="list-group" style="max-height: 70vh; overflow-y: auto;">
-                @if (contactosFiltrados == null)
-                {
-                    <p><em>Cargando contactos...</em></p>
-                }
-                else if (!contactosFiltrados.Any())
-                {
-                    <p>No se encontraron contactos.</p>
-                }
-                else
+                @if (contactosFiltrados != null)
                 {
                     @foreach (var c in contactosFiltrados)
                     {
@@ -36,18 +27,39 @@
                     }
                 }
             </div>
-            <button class="btn btn-success mt-3 w-100" disabled>Nuevo Contacto</button>
+            <button class="btn btn-success mt-3 w-100" @onclick="PrepararNuevoContacto">Nuevo Contacto</button>
         </div>
 
         <div class="col-md-8">
-            @if (contactoSeleccionado == null)
+            @if (contactoFormulario == null && contactoSeleccionado == null)
             {
                 <div class="text-center mt-5 text-muted">
                     <h3>Detalle del Contacto</h3>
-                    <p>Selecciona un contacto de la lista para ver sus datos.</p>
+                    <p>Selecciona un contacto de la lista para ver, editar o eliminar sus datos.</p>
                 </div>
             }
-            else
+            else if (esModoEdicion && contactoFormulario != null)
+            {
+                <h3>@(contactoFormulario.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h3>
+                <EditForm Model="contactoFormulario" OnValidSubmit="GuardarContacto" class="mt-4">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label>Nombre *</label><input type="text" class="form-control" @bind-value="contactoFormulario.Nombre" required /></div>
+                        <div class="col-md-6"><label>Apellido *</label><input type="text" class="form-control" @bind-value="contactoFormulario.Apellido" required /></div>
+                        <div class="col-md-6"><label>Teléfono *</label><input type="text" class="form-control" @bind-value="contactoFormulario.Telefono" required /></div>
+                        <div class="col-md-6"><label>Correo electrónico *</label><input type="email" class="form-control" @bind-value="contactoFormulario.Email" required /></div>
+                        <div class="col-md-6"><label>Empresa</label><input type="text" class="form-control" @bind-value="contactoFormulario.Empresa" /></div>
+                        <div class="col-md-6"><label>Cargo</label><input type="text" class="form-control" @bind-value="contactoFormulario.Cargo" /></div>
+                        <div class="col-md-6"><label>Dirección</label><input type="text" class="form-control" @bind-value="contactoFormulario.Direccion" /></div>
+                        <div class="col-md-6"><label>Fecha de Nacimiento</label><input type="date" class="form-control" @bind-value="contactoFormulario.FechaNacimiento" /></div>
+                        <div class="col-12"><label>Notas</label><textarea class="form-control" rows="3" @bind="contactoFormulario.Notas"></textarea></div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary me-2">Guardar</button>
+                        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                    </div>
+                </EditForm>
+            }
+            else if (contactoSeleccionado != null)
             {
                 <div class="card mt-3">
                     <div class="card-body">
@@ -56,9 +68,17 @@
                             <tbody>
                                 <tr><th scope="row" style="width: 200px;">Teléfono:</th><td>@contactoSeleccionado.Telefono</td></tr>
                                 <tr><th scope="row">Correo:</th><td>@contactoSeleccionado.Email</td></tr>
+                                <tr><th scope="row">Empresa:</th><td>@contactoSeleccionado.Empresa</td></tr>
+                                <tr><th scope="row">Cargo:</th><td>@contactoSeleccionado.Cargo</td></tr>
+                                <tr><th scope="row">Dirección:</th><td>@contactoSeleccionado.Direccion</td></tr>
+                                <tr><th scope="row">Nacimiento:</th><td>@contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy")</td></tr>
+                                <tr><th scope="row">Notas:</th><td>@contactoSeleccionado.Notas</td></tr>
                             </tbody>
                         </table>
-                        <p class="text-muted mt-3"><em>(Edición y eliminación en desarrollo...)</em></p>
+                        <div class="mt-4 border-top pt-3">
+                            <button class="btn btn-warning me-2" @onclick="ActivarEdicion">Editar</button>
+                            <button class="btn btn-danger" @onclick="EliminarContacto">Eliminar</button>
+                        </div>
                     </div>
                 </div>
             }
@@ -70,9 +90,13 @@
     private List<Contacto> todosLosContactos = new();
     private List<Contacto> contactosFiltrados = new();
     private Contacto? contactoSeleccionado;
+    private Contacto? contactoFormulario;
+    private bool esModoEdicion = false;
     private string textoBusqueda = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await CargarContactosDesdeBase();
+
+    private async Task CargarContactosDesdeBase()
     {
         todosLosContactos = await Db.Contactos.ToListAsync();
         FiltrarContactos();
@@ -81,20 +105,73 @@
     private void FiltrarContactos()
     {
         if (string.IsNullOrWhiteSpace(textoBusqueda))
-        {
             contactosFiltrados = todosLosContactos.OrderBy(c => c.Apellido).ToList();
-        }
         else
-        {
             contactosFiltrados = todosLosContactos
                 .Where(c => c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) || 
                             c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(c => c.Apellido).ToList();
-        }
     }
 
     private void SeleccionarContacto(Contacto c)
     {
         contactoSeleccionado = c;
+        esModoEdicion = false;
+        contactoFormulario = EncontrarCopia(c);
     }
+
+    private void PrepararNuevoContacto()
+    {
+        contactoSeleccionado = null;
+        contactoFormulario = new Contacto();
+        esModoEdicion = true;
+    }
+
+    private void ActivarEdicion() => esModoEdicion = true;
+
+    private void CancelarEdicion()
+    {
+        esModoEdicion = false;
+        if (contactoSeleccionado != null) contactoFormulario = EncontrarCopia(contactoSeleccionado);
+        else contactoFormulario = null;
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (contactoFormulario == null) return;
+
+        if (contactoFormulario.Id == 0) Db.Contactos.Add(contactoFormulario);
+        else
+        {
+            var original = await Db.Contactos.FindAsync(contactoFormulario.Id);
+            if (original != null) Db.Entry(original).CurrentValues.SetValues(contactoFormulario);
+        }
+
+        await Db.SaveChangesAsync();
+        await CargarContactosDesdeBase();
+        
+        if (contactoFormulario.Id != 0)
+        {
+            contactoSeleccionado = todosLosContactos.FirstOrDefault(c => c.Id == contactoFormulario.Id);
+            esModoEdicion = false;
+        }
+        else contactoFormulario = null;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado == null) return;
+        Db.Contactos.Remove(contactoSeleccionado);
+        await Db.SaveChangesAsync();
+        contactoSeleccionado = null;
+        contactoFormulario = null;
+        esModoEdicion = false;
+        await CargarContactosDesdeBase();
+    }
+
+    private Contacto EncontrarCopia(Contacto c) => new Contacto
+    {
+        Id = c.Id, Nombre = c.Nombre, Apellido = c.Apellido, Telefono = c.Telefono, Email = c.Email,
+        Empresa = c.Empresa, Cargo = c.Cargo, Direccion = c.Direccion, FechaNacimiento = c.FechaNacimiento, Notas = c.Notas
+    };
 }
