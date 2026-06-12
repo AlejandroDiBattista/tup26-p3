@@ -120,7 +120,7 @@ body {
     width: 100%;
     padding: 8px 12px 8px 34px; 
     border: 1px solid var(--gris-borde);
-    border-radius: 20px;      
+    border-radius: 20px;
     background: white;
     font-size: 0.88rem;
     outline: none;
@@ -131,6 +131,13 @@ body {
     border-color: var(--verde-principal);
     box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.2);
 }
+
+/* SCROLL */
+.lista-contactos {
+    flex: 1;
+    overflow-y: auto;
+}
+
 
 .item-contacto {
     display: flex;
@@ -176,3 +183,5 @@ body {
     display: block;
     margin-bottom: 8px;
 }
+
+
