@@ -1,3 +1,4 @@
+/* VARIABLES DE COLORES */
 :root {
     --verde-principal: #25D366;      
     --verde-oscuro: #086258;         
@@ -12,7 +13,7 @@
     --sombra: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-
+/* ESTILOS GENERALES */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -24,3 +25,13 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--texto-principal);
 }
+
+/* CONTENEDOR PRINCIPAL */
+.pagina-agenda {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+
