@@ -8,6 +8,7 @@
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 <div class="container-fluid py-4" style="max-width: 1300px; height: 100vh; display: flex; flex-direction: column;">
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">TP5: AgendaWeb</h2>
@@ -16,6 +17,7 @@
     </div>
 
     <div class="row flex-grow-1 overflow-hidden" style="min-height: 0;">
+        
         <div class="col-4 d-flex flex-column pe-0" style="height: 100%;">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="p-3 border-bottom">
@@ -54,16 +56,97 @@
         <div class="col-8 h-100 ps-4">
             <div class="card h-100 border-0 shadow-sm overflow-auto">
                 <div class="card-body p-5">
-                    <div class="h-100 d-flex flex-column justify-content-center align-items-center text-secondary">
-                        <i class="bi bi-person-lines-fill mb-3" style="font-size: 4rem; opacity: 0.5;"></i>
-                        <h4>Seleccioná un contacto</h4>
-                        <p>Hacé clic en un contacto de la lista para ver sus detalles</p>
-                    </div>
+                    
+                    @if (contactoSeleccionado != null)
+                    {
+                        <div class="d-flex justify-content-between align-items-start mb-5 pb-4 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center me-4" 
+                                     style="width: 80px; height: 80px; background-color: #e0f0ff; color: #0d6efd; font-weight: 500; font-size: 2rem;">
+                                    @ObtenerIniciales(contactoSeleccionado.Nombre, contactoSeleccionado.Apellido)
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-1">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h3>
+                                    <p class="text-primary fw-semibold mb-2">@contactoSeleccionado.Empresa</p>
+                                    <span class="badge rounded-pill text-primary" style="background-color: #e0f0ff; font-weight: 500;">Cliente</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-danger" @onclick="EliminarContacto">
+                                    <i class="bi bi-trash3"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="px-2">
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-envelope fs-5"></i> Email
+                                </div>
+                                <div class="col-8 text-primary">@contactoSeleccionado.Email</div>
+                            </div>
+                            
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-telephone fs-5"></i> Teléfono
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Telefono</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-building fs-5"></i> Empresa
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Empresa</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-briefcase fs-5"></i> Cargo
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Cargo</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-geo-alt fs-5"></i> Dirección
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Direccion</div>
+                            </div>
+                            
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-calendar-event fs-5"></i> Nacimiento
+                                </div>
+                                <div class="col-8 text-secondary">@(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "No especificada")</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-start gap-2 mt-1">
+                                    <i class="bi bi-card-text fs-5"></i> Notas
+                                </div>
+                                <div class="col-8 text-secondary" style="white-space: pre-wrap;">@contactoSeleccionado.Notas</div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h-100 d-flex flex-column justify-content-center align-items-center text-secondary">
+                            <i class="bi bi-person-lines-fill mb-3" style="font-size: 4rem; opacity: 0.5;"></i>
+                            <h4>Seleccioná un contacto</h4>
+                            <p>Hacé clic en un contacto de la lista para ver sus detalles</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    body { background-color: #f4f6f8; }
+    .form-control:focus { box-shadow: none; border-color: #0d6efd; }
+</style>
 
 @code {
     private List<Contacto> contactos = new();
@@ -96,6 +179,17 @@
     private void SeleccionarContacto(Contacto c)
     {
         contactoSeleccionado = c;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado != null)
+        {
+            DbContext.Contactos.Remove(contactoSeleccionado);
+            await DbContext.SaveChangesAsync();
+            contactoSeleccionado = null;
+            await CargarDatos();
+        }
     }
 
     private string ObtenerIniciales(string nombre, string apellido)
