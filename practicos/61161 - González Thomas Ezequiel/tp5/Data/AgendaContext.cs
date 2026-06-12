@@ -9,6 +9,6 @@ namespace tp5.Data
         {
         }
 
-        public DbSet<Contacto> Contacts { get; set; }
+        public DbSet<Contacto> Contactos { get; set; }
     }
 }
