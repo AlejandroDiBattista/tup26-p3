@@ -88,3 +88,46 @@ body {
     border: 1px solid var(--gris-borde);
     border-top: none;
 }
+
+
+/* PANEL IZQUIERDO */
+.panel-lista {
+    width: 320px;
+    min-width: 320px;
+    border-right: 1px solid var(--gris-borde);
+    display: flex;
+    flex-direction: column;
+    background: var(--gris-panel);
+}
+
+.caja-busqueda {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gris-borde);
+    position: relative;
+    background: var(--gris-fondo);
+}
+
+.icono-busqueda {
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gris-texto);
+    font-size: 0.9rem;
+}
+
+.input-busqueda {
+    width: 100%;
+    padding: 8px 12px 8px 34px; 
+    border: 1px solid var(--gris-borde);
+    border-radius: 20px;
+    background: white;
+    font-size: 0.88rem;
+    outline: none;
+    color: var(--texto-principal);
+}
+
+.input-busqueda:focus {
+    border-color: var(--verde-principal);
+    box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.2);
+}
