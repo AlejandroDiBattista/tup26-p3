@@ -407,4 +407,74 @@ body {
     text-decoration: underline;
 }
 
+/* ------------------------------------ */
+/* FORMULARIO CREAR/EDITAR */
+
+.formulario {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+    padding: 20px 0;
+}
+
+.campo-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.campo-ancho-completo {
+    grid-column: 1 / -1;
+}
+
+.etiqueta {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gris-texto);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+ */
+.input-campo {
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.9rem;
+    color: var(--texto-principal);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+    background: white;
+}
+
+.input-campo:focus {
+    border-color: var(--verde-principal);
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15);
+}
+
+.input-area {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.pie-formulario {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid var(--gris-borde);
+    margin-top: 8px;
+}
+
+/* MENSAJE DE ERROR */
+.alerta-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    margin-top: 12px;
+}
 
