@@ -215,7 +215,7 @@ body {
 
 /* PANEL DERECHO */
 
-.detail-panel {
+.panel-detalle {
     flex: 1;  
     padding: 28px;
     overflow-y: auto;
@@ -435,7 +435,6 @@ body {
     letter-spacing: 0.4px;
 }
 
- */
 .input-campo {
     border: 1.5px solid var(--gris-borde);
     border-radius: 8px;
