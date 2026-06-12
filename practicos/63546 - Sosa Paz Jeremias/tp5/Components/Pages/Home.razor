@@ -5,14 +5,14 @@
 @inject AgendaContext Db
 
 <div class="container-fluid mt-4">
-    <h2 class="text-center mb-4">TP5: AgendaWeb</h2>
+    <h2 class="text-center mb-4"><i class="bi bi-journal-bookmark-fill text-primary me-2"></i>TP5: AgendaWeb</h2>
 
     <div class="row">
         <div class="col-md-5 border-end">
             <div class="d-flex mb-3 gap-2">
                 <input type="text" class="form-control" placeholder="Buscar por nombre o apellido..." 
                        @bind="textoBuscar" @bind:event="oninput" @onkeyup="Filtrar" />
-                <button class="btn btn-success" @onclick="NuevoContacto">Nuevo</button>
+                <button class="btn btn-success fw-bold" @onclick="NuevoContacto">+ Nuevo Contacto</button>
             </div>
 
             <div class="list-group" style="max-height: 500px; overflow-y: auto;">
