@@ -1,7 +1,100 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Data
+@using Microsoft.EntityFrameworkCore
+@inject AgendaContext Db
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-4 border-end">
+            <h3 class="mb-3">Contactos</h3>
+            
+            <input type="text" class="form-control mb-3" placeholder="Buscar por nombre o apellido..." 
+                   @bind="textoBusqueda" @bind:event="oninput" @onkeyup="FiltrarContactos" />
+
+            <div class="list-group" style="max-height: 70vh; overflow-y: auto;">
+                @if (contactosFiltrados == null)
+                {
+                    <p><em>Cargando contactos...</em></p>
+                }
+                else if (!contactosFiltrados.Any())
+                {
+                    <p>No se encontraron contactos.</p>
+                }
+                else
+                {
+                    @foreach (var c in contactosFiltrados)
+                    {
+                        <button type="button" class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
+                                @onclick="() => SeleccionarContacto(c)">
+                            <strong>@c.Nombre @c.Apellido</strong><br />
+                            <small>@c.Telefono</small>
+                        </button>
+                    }
+                }
+            </div>
+            <button class="btn btn-success mt-3 w-100" disabled>Nuevo Contacto</button>
+        </div>
+
+        <div class="col-md-8">
+            @if (contactoSeleccionado == null)
+            {
+                <div class="text-center mt-5 text-muted">
+                    <h3>Detalle del Contacto</h3>
+                    <p>Selecciona un contacto de la lista para ver sus datos.</p>
+                </div>
+            }
+            else
+            {
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr><th scope="row" style="width: 200px;">Teléfono:</th><td>@contactoSeleccionado.Telefono</td></tr>
+                                <tr><th scope="row">Correo:</th><td>@contactoSeleccionado.Email</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-muted mt-3"><em>(Edición y eliminación en desarrollo...)</em></p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@code {
+    private List<Contacto> todosLosContactos = new();
+    private List<Contacto> contactosFiltrados = new();
+    private Contacto? contactoSeleccionado;
+    private string textoBusqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        todosLosContactos = await Db.Contactos.ToListAsync();
+        FiltrarContactos();
+    }
+
+    private void FiltrarContactos()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            contactosFiltrados = todosLosContactos.OrderBy(c => c.Apellido).ToList();
+        }
+        else
+        {
+            contactosFiltrados = todosLosContactos
+                .Where(c => c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) || 
+                            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(c => c.Apellido).ToList();
+        }
+    }
+
+    private void SeleccionarContacto(Contacto c)
+    {
+        contactoSeleccionado = c;
+    }
+}
