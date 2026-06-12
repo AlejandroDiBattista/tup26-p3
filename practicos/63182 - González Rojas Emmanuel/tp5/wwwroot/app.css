@@ -320,3 +320,25 @@ body {
     background: var(--rojo-eliminar);
     color: white;
 }
+/* GUARDAR */
+
+.btn-guardar {
+    background: var(--verde-oscuro);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+}
+
+.btn-guardar:hover {
+    background: #0d7369;
+}
+
+
