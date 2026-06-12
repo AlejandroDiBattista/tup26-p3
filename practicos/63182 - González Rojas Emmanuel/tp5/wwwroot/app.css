@@ -279,3 +279,24 @@ body {
     align-items: center;
 }
 
+
+/* BOTONES */
+
+.btn-editar {
+    background: white;
+    border: 1.5px solid var(--gris-borde);
+    color: var(--texto-principal);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+
+.btn-editar:hover {
+    border-color: var(--verde-oscuro);
+    color: var(--verde-oscuro);
+}
