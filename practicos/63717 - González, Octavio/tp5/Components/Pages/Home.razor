@@ -40,72 +40,138 @@
 
         <!-- Detalle -->
         <main class="flex-grow-1 bg-primary p-3 rounded-5 overflow-y-auto">
+         
             @if (agregar)
-{
-    <EditForm Model="nuevoContacto" OnValidSubmit="() => CrearContacto(nuevoContacto)">
-        <DataAnnotationsValidator />
+            {
+                //agregar contacto
+                <EditForm Model="nuevoContacto" OnValidSubmit="() => CrearContacto(nuevoContacto)">
+                    <DataAnnotationsValidator />
 
-        <h5 class="modal-title">Agregar nuevo contacto</h5>
-                <button type="button" class="btn-close" @onclick="Ocultar"></button>
+                    <h5 class="modal-title">Agregar nuevo contacto</h5>
+                    <button type="button" class="btn-close" @onclick="Ocultar"></button>
 
-                <div class="mb-2 ">
-                    <label class="form-label">Nombre:</label>
-                    <input type="text" class="form-control" @bind="nuevoContacto.Nombre" placeholder="Ej: Juan" />
-                    <ValidationMessage For="() => nuevoContacto.Nombre" class="text-danger" />
-                </div>
-                <div class="mb-2 ">
-                    <label class="form-label">Apellido:</label>
-                    <input type="text" class="form-control" @bind="nuevoContacto.Apellido" placeholder="Ej: Perez" />
-                    <ValidationMessage For="() => nuevoContacto.Apellido" class="text-danger" />
-                </div>
-                <div class="mb-2 ">
-                    <label class="form-label">Teléfono:</label>
-                    <input type="text" class="form-control" @bind="nuevoContacto.Telefono" placeholder="Ej: 264-155-1234" />
-                    <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger" />
-                </div>
-                <div class="mb-2 ">
-                    <label class="form-label">Email:</label>
-                    <input type="email" class="form-control" @bind="nuevoContacto.Email" placeholder="Ej: juan@gmail.com" />
-                    <ValidationMessage For="() => nuevoContacto.Email" class="text-danger" />
-                </div>
-                <div class="mb-2 ">
-                    <label class="form-label">Empresa:</label>
-                    <input type="text" class="form-control" @bind="nuevoContacto.Empresa" placeholder="Ej: YPF" />
-                </div>
-                <div class="mb-2 ">
-                    <label class="form-label">Cargo:</label>
-                    <input type="text" class="form-control" @bind="nuevoContacto.Cargo" placeholder="Ej: Ingeniero" />
-                </div>
-                <div class="mb-2 ">
-                    <label class="form-label">Dirección:</label>
-                    <input type="text" class="form-control" @bind="nuevoContacto.Direccion"
-                           placeholder="Ej: Calle Falsa 123" />
-                </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Nombre:</label>
+                        <input type="text" class="form-control" @bind="nuevoContacto.Nombre" placeholder="Ej: Juan" />
+                        <ValidationMessage For="() => nuevoContacto.Nombre" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Apellido:</label>
+                        <input type="text" class="form-control" @bind="nuevoContacto.Apellido" placeholder="Ej: Perez" />
+                        <ValidationMessage For="() => nuevoContacto.Apellido" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Teléfono:</label>
+                        <input type="text" class="form-control" @bind="nuevoContacto.Telefono"
+                               placeholder="Ej: 264-155-1234" />
+                        <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Email:</label>
+                        <input type="email" class="form-control" @bind="nuevoContacto.Email"
+                               placeholder="Ej: juan@gmail.com" />
+                        <ValidationMessage For="() => nuevoContacto.Email" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Empresa:</label>
+                        <input type="text" class="form-control" @bind="nuevoContacto.Empresa" placeholder="Ej: YPF" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Cargo:</label>
+                        <input type="text" class="form-control" @bind="nuevoContacto.Cargo" placeholder="Ej: Ingeniero" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Dirección:</label>
+                        <input type="text" class="form-control" @bind="nuevoContacto.Direccion"
+                               placeholder="Ej: Calle Falsa 123" />
+                    </div>
 
-                <div class="mb-2 ">
-                    <label class="form-label">Notas:</label>
-                    <input class="form-control" @bind="nuevoContacto.Notas" />
+                    <div class="mb-2 ">
+                        <label class="form-label">Notas:</label>
+                        <input class="form-control" @bind="nuevoContacto.Notas" />
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Agregar</button>
+                        <button class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
+                    </div>
+
+                </EditForm>
+            }
+            else if (editar != false)
+            {
+
+                //editar contacto
+                <EditForm Model="Contactoseleccionado" OnValidSubmit="() => EditarContacto(Contactoseleccionado)">
+                    <DataAnnotationsValidator />
+
+                    <h5 class="modal-title">Editar contacto</h5>
+                    <button type="button" class="btn-close" @onclick="Ocultar"></button>
+
+                    <div class="mb-2 ">
+                        <label class="form-label">Nombre:</label>
+                        <input type="text" class="form-control" @bind="Contactoseleccionado.Nombre" />
+                        <ValidationMessage For="() => Contactoseleccionado.Nombre" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Apellido:</label>
+                        <input type="text" class="form-control" @bind="Contactoseleccionado.Apellido" />
+                        <ValidationMessage For="() => Contactoseleccionado.Apellido" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Teléfono:</label>
+                        <input type="text" class="form-control" @bind="Contactoseleccionado.Telefono" />
+                        <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Email:</label>
+                        <input type="email" class="form-control" @bind="Contactoseleccionado.Email" />
+                        <ValidationMessage For="() => Contactoseleccionado.Email" class="text-danger" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Empresa:</label>
+                        <input type="text" class="form-control" @bind="Contactoseleccionado.Empresa" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Cargo:</label>
+                        <input type="text" class="form-control" @bind="Contactoseleccionado.Cargo" />
+                    </div>
+                    <div class="mb-2 ">
+                        <label class="form-label">Dirección:</label>
+                        <input type="text" class="form-control" @bind="Contactoseleccionado.Direccion" />
+                    </div>
+
+                    <div class="mb-2 ">
+                        <label class="form-label">Notas:</label>
+                        <input class="form-control" @bind="Contactoseleccionado.Notas" />
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
+                    </div>
+
+                </EditForm>
+            }
+            else
+            {
+                //No muestra nada.
+                <div class =" d-flex justify-content-center align-items-center h-100">
+                <h1> Seleccione un contacto para ver el detalle.</h1>
                 </div>
-
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Agregar</button>
-                    <button class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
-                </div>
-
-            </EditForm>
-        }
-
+            }
         </main>
     </div>
 </div>
 
 
 
-
 @code {
+
 
     //Metodos
     List<Contacto> contactos = new List<Contacto>();
+    Contacto? Contactoseleccionado = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,10 +198,12 @@
         Ocultar();
     }
 
-    async Task EditarContacto(Contacto c, int id)
+    bool editar = false; 
+    async Task EditarContacto(Contacto c)
     {
-        await Repositorio.Actualizar(id, c);
+        await Repositorio.Actualizar(c);
         contactos = await Repositorio.TraerContactos();
+        editar = false;  
     }
 
     async Task EliminarContacto(int id)

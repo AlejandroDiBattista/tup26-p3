@@ -29,10 +29,10 @@ class Repositorio
         await dd.SaveChangesAsync();
         return contacto;
     }
-    public async Task<Contacto?> Actualizar(int id, Contacto actualizacion)
+    public async Task<Contacto?> Actualizar(Contacto actualizacion)
     {
     using var dd = await this.db.CreateDbContextAsync(); 
-    var cambio = dd.Contactos.FirstOrDefault(p => p.Id == id);
+    var cambio = dd.Contactos.FirstOrDefault(p => p.Id == actualizacion.Id);
 
         if (cambio is null) return null;
         cambio.Nombre = actualizacion.Nombre;
