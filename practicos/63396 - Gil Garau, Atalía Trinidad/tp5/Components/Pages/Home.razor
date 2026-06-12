@@ -71,7 +71,16 @@
                         Detalles
                     </div>
                     <div class="card-body">
-                        @if (seleccionado is null)
+                        @if (mostrarFormulario)
+                        {
+                            <FormularioContacto
+                                Visible="true"
+                                EsNuevo="esNuevo"
+                                Modelo="contactoEditando"
+                                OnGuardar="GuardarContacto"
+                                OnCancelar="CerrarFormulario" />
+                        }
+                        else if (seleccionado is null)
                         {
                             <p class="text-muted mb-0">Seleccione un contacto para ver sus detalles.</p>
                         }
@@ -108,13 +117,6 @@
                                 <dd class="col-sm-8">@seleccionado.Notas</dd>
                             </dl>
                         }
-
-                        <FormularioContacto
-                            Visible="mostrarFormulario"
-                            EsNuevo="esNuevo"
-                            Modelo="contactoEditando"
-                            OnGuardar="GuardarContacto"
-                            OnCancelar="CerrarFormulario" />
                     </div>
                 </div>
             </div>
@@ -185,6 +187,11 @@
 
     private void Seleccionar(Contacto contacto)
     {
+        if (mostrarFormulario)
+        {
+            CerrarFormulario();
+        }
+
         seleccionado = contacto;
     }
 
