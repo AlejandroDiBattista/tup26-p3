@@ -43,121 +43,204 @@
          
             @if (agregar)
             {
-                //agregar contacto
                 <EditForm Model="nuevoContacto" OnValidSubmit="() => CrearContacto(nuevoContacto)">
                     <DataAnnotationsValidator />
 
-                    <h5 class="modal-title">Agregar nuevo contacto</h5>
-                    <button type="button" class="btn-close" @onclick="Ocultar"></button>
-
-                    <div class="mb-2 ">
-                        <label class="form-label">Nombre:</label>
-                        <input type="text" class="form-control" @bind="nuevoContacto.Nombre" placeholder="Ej: Juan" />
-                        <ValidationMessage For="() => nuevoContacto.Nombre" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Apellido:</label>
-                        <input type="text" class="form-control" @bind="nuevoContacto.Apellido" placeholder="Ej: Perez" />
-                        <ValidationMessage For="() => nuevoContacto.Apellido" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Teléfono:</label>
-                        <input type="text" class="form-control" @bind="nuevoContacto.Telefono"
-                               placeholder="Ej: 264-155-1234" />
-                        <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Email:</label>
-                        <input type="email" class="form-control" @bind="nuevoContacto.Email"
-                               placeholder="Ej: juan@gmail.com" />
-                        <ValidationMessage For="() => nuevoContacto.Email" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Empresa:</label>
-                        <input type="text" class="form-control" @bind="nuevoContacto.Empresa" placeholder="Ej: YPF" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Cargo:</label>
-                        <input type="text" class="form-control" @bind="nuevoContacto.Cargo" placeholder="Ej: Ingeniero" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Dirección:</label>
-                        <input type="text" class="form-control" @bind="nuevoContacto.Direccion"
-                               placeholder="Ej: Calle Falsa 123" />
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="text-white mb-0">Agregar nuevo contacto</h2>
+                        <button type="button" class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
                     </div>
 
-                    <div class="mb-2 ">
-                        <label class="form-label">Notas:</label>
-                        <input class="form-control" @bind="nuevoContacto.Notas" />
+                    <div class="row g-3 text-white">
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Nombre:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Nombre" placeholder="Ej: Juan" />
+                                <ValidationMessage For="() => nuevoContacto.Nombre" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Apellido:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Apellido" placeholder="Ej: Perez" />
+                                <ValidationMessage For="() => nuevoContacto.Apellido" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Teléfono:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Telefono" placeholder="Ej: 264-155-1234" />
+                                <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Email:</label>
+                                <input type="email" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Email" placeholder="Ej: juan@gmail.com" />
+                                <ValidationMessage For="() => nuevoContacto.Email" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Empresa:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Empresa" placeholder="Ej: YPF" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Cargo:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Cargo" placeholder="Ej: Ingeniero" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Dirección:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Direccion" placeholder="Ej: Calle Falsa 123" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Notas:</label>
+                                <input class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Notas" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Agregar</button>
-                        <button class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-success px-4">Agregar</button>
                     </div>
-
                 </EditForm>
             }
-            else if (editar != false)
+            else if (editar != false  && Contactoseleccionado != null)
             {
-
-                //editar contacto
                 <EditForm Model="Contactoseleccionado" OnValidSubmit="() => EditarContacto(Contactoseleccionado)">
                     <DataAnnotationsValidator />
 
-                    <h5 class="modal-title">Editar contacto</h5>
-                    <button type="button" class="btn-close" @onclick="Ocultar"></button>
-
-                    <div class="mb-2 ">
-                        <label class="form-label">Nombre:</label>
-                        <input type="text" class="form-control" @bind="Contactoseleccionado.Nombre" />
-                        <ValidationMessage For="() => Contactoseleccionado.Nombre" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Apellido:</label>
-                        <input type="text" class="form-control" @bind="Contactoseleccionado.Apellido" />
-                        <ValidationMessage For="() => Contactoseleccionado.Apellido" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Teléfono:</label>
-                        <input type="text" class="form-control" @bind="Contactoseleccionado.Telefono" />
-                        <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Email:</label>
-                        <input type="email" class="form-control" @bind="Contactoseleccionado.Email" />
-                        <ValidationMessage For="() => Contactoseleccionado.Email" class="text-danger" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Empresa:</label>
-                        <input type="text" class="form-control" @bind="Contactoseleccionado.Empresa" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Cargo:</label>
-                        <input type="text" class="form-control" @bind="Contactoseleccionado.Cargo" />
-                    </div>
-                    <div class="mb-2 ">
-                        <label class="form-label">Dirección:</label>
-                        <input type="text" class="form-control" @bind="Contactoseleccionado.Direccion" />
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="text-white mb-0">Editar contacto</h2>
+                        <button type="button" class="btn btn-secondary" @onclick="() => editar = false">Cancelar</button>
                     </div>
 
-                    <div class="mb-2 ">
-                        <label class="form-label">Notas:</label>
-                        <input class="form-control" @bind="Contactoseleccionado.Notas" />
+                    <div class="row g-3 text-white">
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Nombre:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Nombre" />
+                                <ValidationMessage For="() => Contactoseleccionado.Nombre" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Apellido:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Apellido" />
+                                <ValidationMessage For="() => Contactoseleccionado.Apellido" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Teléfono:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Telefono" />
+                                <ValidationMessage For="() => Contactoseleccionado.Telefono" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Email:</label>
+                                <input type="email" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Email" />
+                                <ValidationMessage For="() => Contactoseleccionado.Email" class="text-danger small mt-1" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Empresa:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Empresa" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Cargo:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Cargo" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Dirección:</label>
+                                <input type="text" class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Direccion" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Notas:</label>
+                                <input class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Notas" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                        <button class="btn btn-secondary" @onclick="Ocultar">Cancelar</button>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-success px-4">Guardar</button>
                     </div>
-
                 </EditForm>
+            }
+            else if (Contactoseleccionado != null)
+            {
+                <div class="card border-0 bg-transparent text-white">
+                    <div class="card-body p-0">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>@Contactoseleccionado.Nombre @Contactoseleccionado.Apellido</h2>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning text-white" @onclick="() => editar = true">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </button>
+                                <button class="btn btn-danger" @onclick="() => EliminarContacto(Contactoseleccionado.Id)">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Teléfono</span>
+                                    <strong>@Contactoseleccionado.Telefono</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Email</span>
+                                    <strong>@Contactoseleccionado.Email</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Empresa</span>
+                                    <strong>@Contactoseleccionado.Empresa</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Cargo</span>
+                                    <strong>@Contactoseleccionado.Cargo</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Dirección</span>
+                                    <strong>@Contactoseleccionado.Direccion</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Notas</span>
+                                    <p class="mb-0">@Contactoseleccionado.Notas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
             else
             {
-                //No muestra nada.
-                <div class =" d-flex justify-content-center align-items-center h-100">
-                <h1> Seleccione un contacto para ver el detalle.</h1>
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <h1>Seleccione un contacto para ver el detalle.</h1>
                 </div>
             }
         </main>
@@ -188,7 +271,9 @@
 
     async Task MostrarDetalle(Contacto c)
     {
-
+        Contactoseleccionado = c;
+        agregar = false;
+        editar = false;
     }
     async Task CrearContacto(Contacto c)
     {

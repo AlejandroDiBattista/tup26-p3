@@ -26,7 +26,8 @@ public static class Endpoints
 
         app.MapPut("/contactos/{id:int}", async (int id, Contacto actualizacion, Repositorio repositorio) =>
         {
-            await repositorio.Actualizar(id, actualizacion);
+            actualizacion.Id = id;
+            await repositorio.Actualizar(actualizacion);
             return Results.Ok(actualizacion);
         });
 
