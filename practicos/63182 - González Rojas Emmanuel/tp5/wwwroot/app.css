@@ -77,3 +77,14 @@ body {
 .btn-nuevo:hover {
     background: #1ebe58;
 }
+/* CUERPO PRINCIPAL */
+.cuerpo-principal {
+    display: flex;
+    background: var(--gris-panel);
+    border-radius: 0 0 12px 12px;
+    box-shadow: var(--sombra);
+    min-height: 75vh;
+    overflow: hidden;
+    border: 1px solid var(--gris-borde);
+    border-top: none;
+}
