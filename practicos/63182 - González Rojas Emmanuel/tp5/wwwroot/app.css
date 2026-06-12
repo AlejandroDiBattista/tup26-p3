@@ -518,3 +518,26 @@ body {
     font-size: 0.9rem;
     line-height: 1.5;
 }
+
+/* --------------------------------- */
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+    .cuerpo-principal {
+        flex-direction: column;
+    }
+
+    .panel-lista {
+        width: 100%;
+        min-width: unset;
+        max-height: 40vh;
+    }
+    .formulario {
+        grid-template-columns: 1fr;
+    }
+
+    .campo-ancho-completo {
+        grid-column: 1;
+    }
+}
