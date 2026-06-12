@@ -282,6 +282,7 @@ body {
 
 /* BOTONES */
 
+/* EDITAR */
 .btn-editar {
     background: white;
     border: 1.5px solid var(--gris-borde);
@@ -299,4 +300,23 @@ body {
 .btn-editar:hover {
     border-color: var(--verde-oscuro);
     color: var(--verde-oscuro);
+}
+/* ELIMINAR */
+.btn-eliminar {
+    background: white;
+    border: 1.5px solid var(--rojo-eliminar);
+    color: var(--rojo-eliminar);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+
+.btn-eliminar:hover {
+    background: var(--rojo-eliminar);
+    color: white;
 }
