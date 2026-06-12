@@ -1,6 +1,8 @@
 @page "/"
+@rendermode InteractiveServer 
 @using Microsoft.EntityFrameworkCore
 @using tp5.Data
+@using tp5.Models
 @inject AgendaContext Db
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
@@ -14,22 +16,100 @@
 else 
 {
      <p>Total de  contactos : @contactos.Count </p>
-     
-    <ul class="list-group">
-      @foreach (var contacto in contactos) 
-     {
-       <li class="list-group-item">
-       <strong>@contacto.Nombre @contacto.Apellido</strong><br/>
-      @contacto.Telefono - @contacto.Email
-       </li>
-     }
-    </ul>
+    
+    <div class="row">
+      <div class="col-md-5">
+        <div class="d-flex justicy-content-between align-items-center mb-3">
+         <h2 class="h4 mb-0">Contactos</h2> 
 
+         <button class="btn btn-primary" @onclick="NuevoContacto">
+          Nuevo
+          </button>
+        </div>
+
+         <input type="search"
+                class"form-control mb-3
+                placeholder="Buscar por nombre o apellido.."
+                @bind="textoBusqueda"
+                @bind:event="oninput" />
+         
+          <div class="list-group">
+               @foreach (var contacto in ContactosFiltrados) 
+               {
+                   <button type ="button"
+                           class="list-group-item list-group-item-action"
+                           @onclick="() => SeleccionarContacto(contacto)">
+                         <strong>@contacto.Nombre @contacto.Apellido</strong>
+                         <br/>
+                         <small>@contacto.Telefono @contacto.Email</small>
+                    </button>
+                } 
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <h2 class="h4">Detalle</h2>
+            
+            @if (modoNuevo)
+            {
+                <div class="border rounded p-3">
+                   <h3 class= "h5"> Nuevo contactos</h3>
+                   
+                   <div classs="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input class="form-control" @bind="nuevoContacto.Nombre"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input class="form-control" @bind="nuevoContacto.Apellido" />
+                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono</label>
+                         <input class="form-control" @bind="nuevoContacto.Telefono" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email"
+                        class="form-control"
+                        @bind="nuevoContacto.Email" />
+                     </div>
+                </div>
+            }
+            @if (contactoSeleccionado is null)
+            {
+                <p>Seleccioná un contacto para ver sus datos.</p>
+            }
+            else
+            {
+                <div class="border rounded p-3">
+                    <h3>
+                        @contactoSeleccionado.Nombre
+                        @contactoSeleccionado.Apellido
+                    </h3>
+                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+                    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+                    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+                    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+                    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+                </div>
+            }
+        </div>    
+    </div>    
 }
 
 @code 
 {
     private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        modoNuevo = false;
+
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -38,4 +118,23 @@ else
             .ThenBy(c => c.Nombre)
             .ToListAsync();
     }
+    private string textoBusqueda = "";
+
+    private IEnumerable<Contacto> ContactosFiltrados =>
+      contactos?.Where(c =>
+      string.IsNullOrWhiteSpace(textoBusqueda) ||
+      c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) || 
+      c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+      ?? Enumerable.Empty<Contacto>();
+
+    private bool modoNuevo;
+    private Contacto nuevoContacto = new();
+
+    private void NuevoContacto()
+   {
+        nuevoContacto = new Contacto();
+        contactoSeleccionado = null;
+        modoNuevo = true;
+    }
 }
+
