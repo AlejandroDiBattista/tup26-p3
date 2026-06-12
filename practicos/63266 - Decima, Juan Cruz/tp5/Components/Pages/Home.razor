@@ -1,7 +1,77 @@
 @page "/"
+@using Microsoft.EntityFrameworkCore
+@using tp5.Data
+@using tp5.Models
+@inject AgendaDbContext DbContext
+@rendermode InteractiveServer
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+<PageTitle>AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container-fluid mt-4">
+    <h1 class="text-center mb-4">AgendaWeb</h1>
+
+    <div class="row">
+        <div class="col-md-4 border-end">
+            <h3>Contactos</h3>
+            <div class="list-group">
+                @if (contactos == null)
+                {
+                    <p><em>Cargando contactos...</em></p>
+                }
+                else if (!contactos.Any())
+                {
+                    <p>No hay contactos en la agenda.</p>
+                }
+                else
+                {
+                    @foreach (var con in contactos)
+                    {
+                        <button class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == con.Id ? "active" : "")" 
+                                @onclick="() => SeleccionarContacto(con)">
+                            <strong>@con.Apellido, @con.Nombre</strong>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="col-md-8 ps-4">
+            @if (contactoSeleccionado != null)
+            {
+                <h3>Detalle del Contacto</h3>
+                <div class="card p-3 shadow-sm">
+                    <p><strong>Nombre completo:</strong> @contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</p>
+                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                    <p><strong>Correo electrónico:</strong> @contactoSeleccionado.Email</p>
+                    <p><strong>Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "No especificada" : contactoSeleccionado.Empresa)</p>
+                    <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" : contactoSeleccionado.Cargo)</p>
+                    <p><strong>Dirección:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Direccion) ? "No especificada" : contactoSeleccionado.Direccion)</p>
+                    <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString() ?? "No especificada")</p>
+                    <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" : contactoSeleccionado.Notas)</p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center mt-5">
+                    Seleccioná un contacto de la lista para ver su detalle.
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+@code {
+    private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        contactos = await DbContext.Contactos.OrderBy(c => c.Apellido).ToListAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+    }
+}
