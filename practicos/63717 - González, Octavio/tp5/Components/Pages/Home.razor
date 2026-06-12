@@ -1,5 +1,5 @@
 @page "/"
-@inject Repositorio Repo
+@inject Repositorio Repositorio
 
 <div class="d-flex flex-column vh-100">
     <!-- Cabecera -->
@@ -22,21 +22,53 @@
 
         <!-- Detalle -->
         <main class="col-8 bg-primary p-3">
-            
+
         </main>
     </div>
 </div>
 
 @code {
-public record class UIContacto(int id, 
-string nombre, 
-string apellido, 
-string telefono, 
-string email, 
-string empresa, 
-string cargo, 
-string direccion, 
-DateOnly? fechaNacimiento, 
-string notas);
 
+    //Metodos
+    List<Contacto> contactos = new List<Contacto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            contactos = await Repositorio.TraerContactos();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"{ex.Message}");
+        }
+    }
+    async Task CrearContacto(Contacto c)
+    {
+        await Repositorio.AgregarContacto(c);
+        contactos = await Repositorio.TraerContactos(); // Refresca la lista
+    }
+
+    async Task EditarContacto(Contacto c, int id)
+    {
+        await Repositorio.Actualizar(id, c);
+        contactos = await Repositorio.TraerContactos();
+    }
+
+    async Task EliminarContacto(int id)
+    {
+        await Repositorio.Eliminar(id);
+        contactos = await Repositorio.TraerContactos(); // Refresca la lista
+    }
+
+    public record class UIContacto(int id,
+    string nombre,
+    string apellido,
+    string telefono,
+    string email,
+    string empresa,
+    string cargo,
+    string direccion,
+    DateOnly? fechaNacimiento,
+    string notas);
 }
