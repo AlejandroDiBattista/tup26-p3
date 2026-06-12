@@ -26,3 +26,17 @@
         </main>
     </div>
 </div>
+
+@code {
+public record class UIContacto(int id, 
+string nombre, 
+string apellido, 
+string telefono, 
+string email, 
+string empresa, 
+string cargo, 
+string direccion, 
+DateOnly? fechaNacimiento, 
+string notas);
+
+}

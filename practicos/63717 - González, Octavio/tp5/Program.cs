@@ -8,8 +8,8 @@ using BlazorBlueprint.Components;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddDbContextFactory<ContactoDb>(opciones => opciones.UseSqlite("Data Source=contactos.db"));
 builder.Services.AddBlazorBlueprintComponents();
+builder.Services.AddDbContextFactory<ContactoDb>(opciones => opciones.UseSqlite("Data Source=contactos.db"));
 builder.Services.AddScoped<Repositorio>();
 
 var app = builder.Build();
