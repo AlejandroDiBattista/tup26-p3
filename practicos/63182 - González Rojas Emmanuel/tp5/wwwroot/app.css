@@ -358,4 +358,53 @@ body {
     border-color: var(--gris-texto);
     color: var(--texto-principal);
 }
+/* --------------------------------------- */
+/* FILA-CAMPO (DETALLE DE LA INFORMACION DEL CONTACTO) */
+
+.lista-campos {
+    margin-top: 4px;
+}
+
+.fila-campo {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gris-borde);
+}
+
+.icono-campo {
+    font-size: 1.1rem;
+    color: var(--gris-texto);
+    margin-top: 2px;
+    width: 20px;
+    text-align: center;
+}
+
+.etiqueta-fila {
+    font-size: 0.78rem;
+    color: var(--gris-texto);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.valor-fila {
+    font-size: 0.92rem;
+    color: var(--texto-principal);
+    white-space: pre-wrap; 
+}
+
+.valor-enlace {
+    font-size: 0.92rem;
+    color: var(--azul-link);
+    text-decoration: none;
+}
+
+.valor-enlace:hover {
+    text-decoration: underline;
+}
+
 
