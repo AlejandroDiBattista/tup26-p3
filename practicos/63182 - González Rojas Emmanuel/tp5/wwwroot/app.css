@@ -45,3 +45,15 @@ body {
     align-items: center;
     box-shadow: var(--sombra);
 }
+
+.titulo-encabezado {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.subtitulo-encabezado {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
