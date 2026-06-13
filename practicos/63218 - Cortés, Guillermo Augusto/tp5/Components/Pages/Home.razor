@@ -138,10 +138,28 @@
                                 @contactoSeleccionado.Apellido
                             </h3>
 
-                            <button type="button" class="btn btn-outline-primary btn-sm" @onclick="EditarContacto">
-                                Editar
-                            </button>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" @onclick="EditarContacto">
+                                    Editar
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm ms-2" @onclick="MostrarConfirmacionEliminar">
+                                    Eliminar
+                                </button>
+                            </div>
                         </div>
+
+                        @if (confirmandoEliminacion)
+                        {
+                            <div class="alert alert-danger">
+                                <p class="mb-2">Seguro que desea eliminar este contacto?</p>
+                                <button type="button" class="btn btn-danger btn-sm" @onclick="EliminarContacto">
+                                    Confirmar
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm ms-2" @onclick="CancelarEliminacion">
+                                    Cancelar
+                                </button>
+                            </div>
+                        }
 
                         <dl class="row mb-0">
                             <dt class="col-sm-4">Telefono</dt>
@@ -180,6 +198,7 @@
     private string busqueda = "";
     private bool mostrandoFormulario;
     private bool editandoContacto;
+    private bool confirmandoEliminacion;
 
     private IEnumerable<Contacto> ContactosFiltrados => contactos.Where(CoincideBusqueda);
 
@@ -201,6 +220,7 @@
         contactoSeleccionado = contacto;
         mostrandoFormulario = false;
         editandoContacto = false;
+        confirmandoEliminacion = false;
     }
 
     private void NuevoContacto()
@@ -209,6 +229,7 @@
         contactoSeleccionado = null;
         mostrandoFormulario = true;
         editandoContacto = false;
+        confirmandoEliminacion = false;
     }
 
     private void EditarContacto()
@@ -221,6 +242,37 @@
         contactoFormulario = CopiarContacto(contactoSeleccionado);
         mostrandoFormulario = true;
         editandoContacto = true;
+        confirmandoEliminacion = false;
+    }
+
+    private void MostrarConfirmacionEliminar()
+    {
+        confirmandoEliminacion = true;
+    }
+
+    private void CancelarEliminacion()
+    {
+        confirmandoEliminacion = false;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        var contactoGuardado = await Db.Contactos.FindAsync(contactoSeleccionado.Id);
+
+        if (contactoGuardado is not null)
+        {
+            Db.Contactos.Remove(contactoGuardado);
+            await Db.SaveChangesAsync();
+        }
+
+        await CargarContactos();
+        contactoSeleccionado = null;
+        confirmandoEliminacion = false;
     }
 
     private void CancelarFormulario()
