@@ -93,5 +93,33 @@
     private ContactoFormModel FormModel = new ContactoFormModel();
     protected override async Task OnInitializedAsync() => await CargarContactos();
 
-    
+    private async Task CargarContactos(){
+        contactos = await ContactosService.ObtenerTodosAsync();
+        contactosFiltrados = contactos;
+    }
+
+    private void BuscarContactos(string texto){
+        if(string.IsNullOrWhiteSpace(texto)) contactosFiltrados = contactos;
+        else contactosFiltrados = contactos?.Where(Contacto c => 
+        c.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) || 
+        c.Apellido.Contains(texto, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+     private void SeleccionarContacto(Contacto c) { ContactoSeleccionado = c; ModoEdicion = false; }
+
+     private void AbrirFormularioNuevo() { FormModel = new(); ModoEdicion = true; ContactoSeleccionado = null; }
+
+     private void AbrirEdicion(){
+        if (ContactoSeleccionado == null) return;
+        FormModel = new ContactoFormModel{
+            Id = ContactoSeleccionado.Id, Nombre = ContactoSeleccionado.Nombre, Apellido = ContactoSeleccionado.Apellido,
+            Email = ContactoSeleccionado.Email, Telefono = ContactoSeleccionado.Telefono ?? "",
+            Empresa = ContactoSeleccionado.Empresa ?? "", Cargo = ContactoSeleccionado.Cargo ?? "",
+            Direccion = ContactoSeleccionado.Direccion ?? "", Notas = ContactoSeleccionado.Notas ?? ""
+        };
+        ModoEdicion= true;
+     }
+
+     
+
 }
