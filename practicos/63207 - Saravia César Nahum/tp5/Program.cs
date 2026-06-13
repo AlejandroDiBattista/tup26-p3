@@ -1,23 +1,22 @@
 using tp5.Components;
 using tp5.Data;
 using tp5.Services;
-using Microsoft.EntityFrameWorkCore;
-using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddDbContext<ContactosContext>(FileOptions => options.UseSqlite("Data Source=contactos.db"));
+builder.Services.AddDbContext<ContactosContext>(options => options.UseSqlite("Data Source=contactos.db"));
 
-builder.Services.AddScoped<ContactoService>();
+builder.Services.AddScoped<ContactosService>();
 
 var app = builder.Build();
 
-if(!app.Enviroment.IsDevelopment())
+if(!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrores: true);
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
 

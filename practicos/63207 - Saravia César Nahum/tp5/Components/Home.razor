@@ -100,7 +100,7 @@
 
     private void BuscarContactos(string texto){
         if(string.IsNullOrWhiteSpace(texto)) contactosFiltrados = contactos;
-        else contactosFiltrados = contactos?.Where(Contacto c => 
+        else contactosFiltrados = contactos?.Where(c => 
         c.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) || 
         c.Apellido.Contains(texto, StringComparison.OrdinalIgnoreCase)).ToList();
     }
@@ -120,6 +120,43 @@
         ModoEdicion= true;
      }
 
-     
+     private async Task EliminarContacto(int id){
+        if (await ContactosService.EliminarAsync(id)){
+            ContactoSeleccionado = null;
+            await CargarContactos();
+        }
+     }
 
+     private string GetIniciales(string n, string a){
+        string res = "";
+        if (!string.IsNullOrEmpty(n)) res += n[0];
+        if (!string.IsNullOrEmpty(a)) res += a[0];
+        return res.ToUpper();
+     }
+
+     private async Task ManejarGuardar() {
+        var c = new Contacto{
+            Id = FormModel.Id, Nombre = FormModel.Nombre, Apellido = FormModel.Apellido,
+            Email = FormModel.Email, Telefono = FormModel.Telefono, Empresa = FormModel.Empresa,
+            Cargo = FormModel.Cargo, Direccion = FormModel.Direccion, Notas = FormModel.Notas
+        };
+        if(FormModel.Id == 0) await ContactosService.CrearAsync(c);
+        else await ContactosService.ActualizarAsync(c);
+        await CargarContactos();
+        ModoEdicion = false;
+     }
+
+     private void CancelarEdicion() => ModoEdicion = false;
+
+    private class ContactoFormModel {
+        public int Id { get; set; }
+        [Required] public string Nombre { get; set; } = "";
+        [Required] public string Apellido { get; set; } = "";
+        [Required, EmailAddress] public string Email { get; set; } = "";
+        public string Telefono { get; set; } = "";
+        public string Empresa { get; set; } = "";
+        public string Cargo { get; set; } = "";
+        public string Direccion { get; set; } = "";
+        public string Notas { get; set; } = "";
+    }
 }
