@@ -1,7 +1,7 @@
 @using System.ComponentModel.DataAnnotations
 @using tp5.Models
 
-<EditForm Model="Contacto" OnValidSubmit="OnGuardar">
+<EditForm Model="Contacto" OnValidSubmit="GuardarAsync">
     <DataAnnotationsValidator />
     <ValidationSummary class="text-danger mb-3" />
 
@@ -76,4 +76,9 @@
 
     [Parameter]
     public EventCallback OnCancelar { get; set; }
+
+    private async Task GuardarAsync()
+    {
+        await OnGuardar.InvokeAsync(Contacto);
+    }
 }
