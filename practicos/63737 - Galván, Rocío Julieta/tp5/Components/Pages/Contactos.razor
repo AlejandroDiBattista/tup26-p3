@@ -81,6 +81,9 @@ else
                 <button @onclick="() => Editar(contacto)">
                     Editar
                 </button>
+                <button @onclick="() => Eliminar(contacto)">
+                Eliminar
+                </button>
             </li>
         }
     </ul>
@@ -113,4 +116,13 @@ else
     {
         nuevoContacto = contacto;
     }
+
+    private void Eliminar(Contacto contacto)
+{
+    Db.Contactos.Remove(contacto);
+
+    Db.SaveChanges();
+
+    contactos = Db.Contactos.ToList();
+}
 }
