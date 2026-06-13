@@ -1,0 +1,49 @@
+EditarContacto.razor
+@page "/editar/{Id:int}"
+@page "/nuevo"
+@rendermode InteractiveServer
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+
+<h3 class="mb-4">@(Id.HasValue ? "Editar el contacto" : "Nuevo contacto")</h3>
+
+<EditForm Model="contacto" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+<div class="row">
+        <div class="col-md-6 mb-2">
+        <label>Nombre</label>
+        <InputText class="form-control" @bind-Value="contacto.Nombre" />
+        </div>
+        <div class="col-md-6 mb-2">
+        <label>Apellido</label>
+     <InputText class="form-control" @bind-Value="contacto.Apellido" />
+</div>
+</div>
+
+
+<div class="row">
+        <div class="col-md-6 mb-2">
+        <label>Telefono</label>
+         <InputText class="form-control" @bind-Value="contacto.Telefono" />
+        </div>
+        <div class="col-md-6 mb-2">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="contacto.Email" />
+        </div>
+</div>
+
+
+<div class="row">
+        <div class="col-md-6 mb-2">
+         <label>Empresa</label>
+         <InputText class="form-control" @bind-Value="contacto.Empresa" />
+        </div>
+        <div class="col-md-6 mb-2">
+         <label>Cargo</label>
+         <InputText class="form-control" @bind-Value="contacto.Cargo" />
+        </div>
+</div>
