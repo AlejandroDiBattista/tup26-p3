@@ -78,8 +78,7 @@ else
 
                 @foreach (var contacto in contactos)
                 {
-                    <button
-                        class="list-group-item list-group-item-action @(contacto == seleccionado ? "active" : "")"
+                    <button class="list-group-item list-group-item-action @(contacto == seleccionado ? "active" : "")"
                         @onclick="() => Seleccionar(contacto)">
 
                         @contacto.Apellido, @contacto.Nombre
@@ -94,52 +93,113 @@ else
             @if (seleccionado != null)
             {
                 <div class="card">
-                    <div class="card-header">
-                        Detalle del contacto
+
+                    <div class="card-header d-flex justify-content-between">
+
+                        <span>Detalle del contacto</span>
+
+                        <button class="btn btn-warning btn-sm"
+                                @onclick="EditarContacto">
+                            <i class="bi bi-pencil"></i>
+                            Editar
+                        </button>
+
                     </div>
 
                     <div class="card-body">
 
-                        <h4>
-                            @seleccionado.Nombre @seleccionado.Apellido
-                        </h4>
+                        @if (editando)
+                        {
+                            <EditForm Model="contactoEditado"
+                                      OnValidSubmit="GuardarEdicion">
 
-                        <p>
-                            <strong>Teléfono:</strong>
-                            @seleccionado.Telefono
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Nombre" />
+                                </div>
 
-                        <p>
-                            <strong>Email:</strong>
-                            @seleccionado.Email
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Apellido" />
+                                </div>
 
-                        <p>
-                            <strong>Empresa:</strong>
-                            @seleccionado.Empresa
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Telefono" />
+                                </div>
 
-                        <p>
-                            <strong>Cargo:</strong>
-                            @seleccionado.Cargo
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Email" />
+                                </div>
 
-                        <p>
-                            <strong>Dirección:</strong>
-                            @seleccionado.Direccion
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Empresa" />
+                                </div>
 
-                        <p>
-                            <strong>Fecha Nacimiento:</strong>
-                            @seleccionado.FechaNacimiento
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Cargo" />
+                                </div>
 
-                        <p>
-                            <strong>Notas:</strong>
-                            @seleccionado.Notas
-                        </p>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Direccion" />
+                                </div>
+
+                                <button type="submit"
+                                        class="btn btn-success">
+                                    Guardar cambios
+                                </button>
+
+                            </EditForm>
+                        }
+                        else
+                        {
+                            <h4>
+                                @seleccionado.Nombre
+                                @seleccionado.Apellido
+                            </h4>
+
+                            <p>
+                                <strong>Teléfono:</strong>
+                                @seleccionado.Telefono
+                            </p>
+
+                            <p>
+                                <strong>Email:</strong>
+                                @seleccionado.Email
+                            </p>
+
+                            <p>
+                                <strong>Empresa:</strong>
+                                @seleccionado.Empresa
+                            </p>
+
+                            <p>
+                                <strong>Cargo:</strong>
+                                @seleccionado.Cargo
+                            </p>
+
+                            <p>
+                                <strong>Dirección:</strong>
+                                @seleccionado.Direccion
+                            </p>
+
+                            <p>
+                                <strong>Fecha Nacimiento:</strong>
+                                @seleccionado.FechaNacimiento
+                            </p>
+
+                            <p>
+                                <strong>Notas:</strong>
+                                @seleccionado.Notas
+                            </p>
+                        }
 
                     </div>
+
                 </div>
             }
             else
@@ -159,8 +219,10 @@ else
     private Contacto? seleccionado;
 
     private bool mostrandoFormulario = false;
+    private bool editando = false;
 
     private Contacto nuevoContacto = new();
+    private Contacto contactoEditado = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,6 +254,41 @@ else
         nuevoContacto = new Contacto();
 
         mostrandoFormulario = false;
+    }
+
+    private void EditarContacto()
+    {
+        if (seleccionado == null)
+            return;
+
+        contactoEditado = new Contacto
+        {
+            Id = seleccionado.Id,
+            Nombre = seleccionado.Nombre,
+            Apellido = seleccionado.Apellido,
+            Telefono = seleccionado.Telefono,
+            Email = seleccionado.Email,
+            Empresa = seleccionado.Empresa,
+            Cargo = seleccionado.Cargo,
+            Direccion = seleccionado.Direccion,
+            FechaNacimiento = seleccionado.FechaNacimiento,
+            Notas = seleccionado.Notas
+        };
+
+        editando = true;
+    }
+
+    private async Task GuardarEdicion()
+    {
+        Db.Contactos.Update(contactoEditado);
+
+        await Db.SaveChangesAsync();
+
+        contactos = await Db.Contactos.ToListAsync();
+
+        seleccionado = contactoEditado;
+
+        editando = false;
     }
 }
 
