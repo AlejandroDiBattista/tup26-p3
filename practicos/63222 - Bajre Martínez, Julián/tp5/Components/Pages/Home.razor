@@ -98,11 +98,21 @@ else
 
                         <span>Detalle del contacto</span>
 
-                        <button class="btn btn-warning btn-sm"
-                                @onclick="EditarContacto">
+                        <div>
+
+                            <button class="btn btn-warning btn-sm me-2"
+                            @onclick="EditarContacto">
                             <i class="bi bi-pencil"></i>
                             Editar
+                            </button>
+
+                        <button class="btn btn-warning btn-sm"
+                                @onclick="EliminarContacto">
+                            <i class="bi bi-trash"></i>
+                            Eliminar
                         </button>
+
+                        </div>
 
                     </div>
 
@@ -289,6 +299,22 @@ else
         seleccionado = contactoEditado;
 
         editando = false;
+    }
+
+    private async Task EliminarContacto()
+    {
+    if (seleccionado == null)
+        return;
+
+    Db.Contactos.Remove(seleccionado);
+
+    await Db.SaveChangesAsync();
+
+    contactos = await Db.Contactos.ToListAsync();
+
+    seleccionado = contactos.FirstOrDefault();
+
+    editando = false;
     }
 }
 
