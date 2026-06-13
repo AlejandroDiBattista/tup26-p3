@@ -1,13 +1,13 @@
 using tp5.Components;
-using Microsoft.entityframeworkcore;
-using tp5.models;
+using Microsoft.EntityFrameworkcore;
+using tp5.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddDbContext<AgendaDbContext>(FileOptions => FileOptions.UseSqLite("DataSource=contactos.db"));
+builder.Services.AddDbContext<AgendaDbContext>(FileOptions => FileOptions.UseSqlite("DataSource=contactos.db"));
 
 var app = builder.Build();
 
