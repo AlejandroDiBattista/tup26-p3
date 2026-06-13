@@ -1,0 +1,38 @@
+@page "/"
+@using Microsoft.EntityFrameworkCore
+@using tp5.Data
+@using tp5.Models
+@inject AgendaDbContext Db
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+<h1>TP5: AgendaWeb</h1>
+
+@if (contactos == null)
+{
+    <p>Cargando contactos...</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var contacto in contactos)
+        {
+            <li class="list-group-item">
+                @contacto.Nombre @contacto.Apellido
+            </li>
+        }
+        
+    </ul>
+}
+
+@code {
+    private List<Contacto>? contactos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync();
+    }
+}
