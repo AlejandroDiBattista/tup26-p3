@@ -1,0 +1,52 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using System.ComponentModel.DataAnnotations
+@using tp5.Models
+@using tp5.Services
+@rendermode InteractiveServer
+@inject ContactosService ContactosService
+
+<PageTitle>Agenda de Contactos</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class= "mb-0">Contactos</h5>
+                    <button  class="btn btn-sm btn-light" @onclick="AbrirFormularioNuevo">+ Nuevo</button>
+                </div> 
+                <div class="card-body p-0" style="max-height: 75vh; overflow-y: auto;">
+                    <input type="text" class="form-control m-2 w-auto" placeholder="Buscar contacto..." @oninput="@((ChangeEventArgs e) => BuscarContactos(e.Value?.ToString() ?? ""))" />
+                    <div class="list-group list-group-flush">
+                        @if (contactosFiltrados != null)
+                        {
+                             @foreach (var c in contactosFiltrados)
+                             {
+                                <button class="list-group-item list-group-item-action d-flex align-items-center" @onclick="() => SeleccionarContacto(c)">
+                                <div class="me-3 fw-bold bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px; flex-shrink: 0;">
+                                    @GetIniciales(c.Nombre, c.Apellido)
+                                </div>
+                                <div>
+                                        <div class="fw-bold">@c.Nombre @c.Apellido</div>
+                                        <small class="text-muted">@c.Empresa</small>
+                                    </div>
+                                </button>
+                             }
+                        }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-7">
+    @if (ModoEdicion)
+    {
+        <div class="card shadow-sm mt-3">
+            <div class="card-header bg-warning"><h5>@(FormModel.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h5></div>
+            <div class="card-body">
+                <EditForm Model="FormModel" OnValidSubmit="ManejarGuardar">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+    }
