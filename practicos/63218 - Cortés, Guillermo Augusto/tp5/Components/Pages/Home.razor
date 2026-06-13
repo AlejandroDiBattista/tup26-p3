@@ -1,6 +1,7 @@
 @page "/"
 @using tp5.Data
 @using tp5.Models
+@using Microsoft.EntityFrameworkCore
 @inject AgendaContext Db
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
@@ -8,21 +9,98 @@
 <div class="container mt-4">
     <h1 class="mb-4">Agenda de Contactos</h1>
 
-    <div class="list-group">
-        @foreach (var contacto in contactos)
-        {
-            <div class="list-group-item">
-                <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
-                <small>@contacto.Telefono</small>
+    <div class="row g-4">
+
+        <div class="col-12 col-md-4">
+            <h2 class="h5 mb-3">Contactos</h2>
+            <div class="list-group">
+                @foreach (var contacto in contactos)
+                {
+                    <button
+                        type="button"
+                        class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                        @onclick="() => SeleccionarContacto(contacto)">
+
+                        <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
+                        <small>@contacto.Telefono</small><br />
+                        <small>@contacto.Email</small>
+
+                    </button>
+                }
             </div>
-        }
+        </div>
+
+        <div class="col-12 col-md-8">
+            <h2 class="h5 mb-3">Detalle</h2>
+            @if (contactoSeleccionado is null)
+            {
+                <div class="alert alert-info">
+                    Seleccione un contacto.
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title">
+                            @contactoSeleccionado.Nombre
+                            @contactoSeleccionado.Apellido
+                        </h3>
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Telefono</dt>
+                            <dd class="col-sm-8">@contactoSeleccionado.Telefono</dd>
+
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@contactoSeleccionado.Email</dd>
+
+                            <dt class="col-sm-4">Empresa</dt>
+                            <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Empresa)</dd>
+
+                            <dt class="col-sm-4">Cargo</dt>
+                            <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Cargo)</dd>
+
+                            <dt class="col-sm-4">Direccion</dt>
+                            <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Direccion)</dd>
+
+                            <dt class="col-sm-4">Fecha de nacimiento</dt>
+                            <dd class="col-sm-8">@MostrarFecha(contactoSeleccionado.FechaNacimiento)</dd>
+
+                            <dt class="col-sm-4">Notas</dt>
+                            <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Notas)</dd>
+                        </dl>
+                    </div>
+                </div>
+            }
+        </div>
+
     </div>
 </div>
 
 @code {
     private List<Contacto> contactos = [];
+    private Contacto? contactoSeleccionado;
 
-    protected override void OnInitialized(){
-        contactos = Db.Contactos.ToList();
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos
+            .OrderBy(contacto => contacto.Apellido)
+            .ThenBy(contacto => contacto.Nombre)
+            .ToListAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+    }
+
+    private static string MostrarDato(string? valor)
+    {
+        return string.IsNullOrWhiteSpace(valor) ? "-" : valor;
+    }
+
+    private static string MostrarFecha(DateOnly? fecha)
+    {
+        return fecha?.ToString("dd/MM/yyyy") ?? "-";
     }
 }
