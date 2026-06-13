@@ -1,0 +1,81 @@
+@page template "/"
+@inject IContactoService ContactoSvc
+@rendeermode InteractiveServer
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+
+<div class="agenda-layout">
+
+    <aside class="panel-master">
+        <div class="pal-master-header">
+            <div class="dne-flex align-items-center justify-content-between mb-3">
+                <h6 class="mb-0 fw-semibold text-muted text-uppercase tracking-wide">
+                    Contactos
+                    <span class="badge bg-primary rounded-pill ms-1">@contactosFiltrados.Count</span>
+                </h6>
+                <button class="btn btn-primary btn-sm d-flex align-items-center gap-1"
+                        @onclick="NuevoContacto">
+                    <i class="bi bi-plus-lg"></i> Nuevo
+                </button>
+            </div>
+            
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text"
+                       class="form-control border-start-0 ps-0"
+                       placeholder="Buscar contactos..."
+                       value="@textoBusqueda"
+                       @oninput="OnBusquedaInput" />
+                @if (!string.IsNullOrWhiteSpace(textoBusqueda))
+                {
+                    <button class="btn btn-outline-secondary border-start-0"
+                            @onclick="LimpiarBusqueda">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="contacto-list">
+            @if (cargando)
+            {
+                <div class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Cargando...
+                </div>
+            }
+            else if (!contactosFiltrados.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-person-x fs-3 d-block mb-2"></i>
+                    <small>No se encontraron contactos.</small>
+                </div>
+            }
+            else
+            {
+                @foreach (var c in contactosFiltrados)
+                {
+                    <div class="contacto-item @(contactoSeleccionado?.Id == c.Id ? "activo" : "")"
+                         @onclick="() => SeleccionarContacto(c)">
+                        <div class="avatar">@c.Iniciales</div>
+                        <div class="contacto-info">
+                            <div class="contacto-nombre">@c.NombreCompleto</div>
+                            <div class="contacto-secundario">
+                                @if (!string.IsNullOrWhiteSpace(c.Empresa))
+                                {
+                                    <span>@c.Empresa</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">@c.Telefono</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </aside>
+
