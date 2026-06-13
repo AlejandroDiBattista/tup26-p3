@@ -56,3 +56,23 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
 .text-muted {
     color: #888888 !important;
 }
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    background-color: #eee; 
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.5rem;
+}

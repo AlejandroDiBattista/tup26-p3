@@ -22,12 +22,20 @@
                            @bind="filtro" @bind:event="oninput" />
                 </div>
                 <ul class="list-group list-group-flush">
-                    @foreach (var c in ContactosFiltrados)
+                    @foreach (Contacto c in ContactosFiltrados)
                     {
                         <li class="list-group-item list-group-item-action @(c == seleccionado ? "active" : "")"
                             style="cursor:pointer"
                             @onclick="() => seleccionado = c">
-                            <strong>@c.Apellido</strong>, @c.Nombre
+                            <div class="d-flex align-items-center">
+                                <div class="avatar" style="background-color:@AvatarHelper.Color(c.Nombre, c.Apellido)">
+                                    @AvatarHelper.Iniciales(c.Nombre, c.Apellido)
+                                </div>
+                                <div>
+                                    <p class="contact-name mb-0">@c.Nombre @c.Apellido</p>
+                                    <p class="contact-sub mb-0">@(string.IsNullOrEmpty(c.Empresa) ? "Independiente" : c.Empresa)</p>
+                                </div>
+                            </div>
                         </li>
                     }
                 </ul>
@@ -39,7 +47,18 @@
                 <div class="card-body">
                     @if (seleccionado != null)
                     {
-                        <h4 class="mb-3">@seleccionado.Nombre @seleccionado.Apellido</h4>
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(seleccionado.Nombre, seleccionado.Apellido)">
+                                @AvatarHelper.Iniciales(seleccionado.Nombre, seleccionado.Apellido)
+                            </div>
+                            <div>
+                                <h4 class="mb-0">@seleccionado.Nombre @seleccionado.Apellido</h4>
+                                @if (!string.IsNullOrEmpty(seleccionado.Empresa))
+                                {
+                                    <p class="text-primary mb-0">@seleccionado.Empresa</p>
+                                }
+                            </div>
+                        </div>
                         <ul class="list-unstyled">
                             <li><strong>Teléfono:</strong> @seleccionado.Telefono</li>
                             <li><strong>Email:</strong> @seleccionado.Email</li>
