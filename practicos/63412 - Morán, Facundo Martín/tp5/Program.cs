@@ -1,6 +1,7 @@
-using tp5.Components;
-using tp5.Models;
 using Microsoft.EntityFrameworkCore;
+using tp5.Components;
+using tp5.Data;
+using tp5.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,10 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddDbContext<AgendaDbContext>(config =>
+builder.Services.AddDbContextFactory<AgendaDbContext>(options =>
 {
-    config.UseSqlite("Data Source=contactos.db");
+    options.UseSqlite("Data Source=contactos.db");
 });
+
+builder.Services.AddScoped<ContactoService>();
 
 var app = builder.Build();
 

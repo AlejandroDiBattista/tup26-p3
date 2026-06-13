@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using tp5.Models;
-
+using tp5.Data;
 namespace tp5.Services;
 
 public class ContactoService
