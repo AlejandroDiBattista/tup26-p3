@@ -32,6 +32,32 @@ static async Task<List<MovimientoDto>> CargarMovimientosAsync(
     return await http.GetFromJsonAsync<List<MovimientoDto>>(url)
            ?? new List<MovimientoDto>();
 }
+static async Task AgregarProductoAsync(NuevoProductoDto producto)
+{
+    using var http = new HttpClient();
+
+    await http.PostAsJsonAsync(
+        "http://localhost:5050/productos",
+        producto
+    );
+}
+static async Task RegistrarMovimientoAsync(
+    int productoId,
+    int tipo,
+    int cantidad)
+{
+    using var http = new HttpClient();
+
+    await http.PostAsJsonAsync(
+        $"http://localhost:5050/productos/{productoId}/movimientos",
+        new
+        {
+            Tipo = tipo,
+            Cantidad = cantidad
+        }
+    );
+}
+
 static string FormatearMovimientos(List<MovimientoDto> movimientos)
 {
     if (movimientos.Count == 0)
@@ -90,62 +116,103 @@ var detalleProducto = new Label()
     Height = Dim.Fill()
 };
 
-listaProductos.ValueChanged += async (_, _) =>
+listaProductos.KeyDown += async (_, e) =>
 {
-    int indice = listaProductos.SelectedItem ?? 0;
+  
+    if (e.KeyCode == Key.A)
+    {
+        using AgregarProductoDialog dialog = new();
 
-    if (indice < 0 || indice >= productos.Count)
+        app.Run(dialog);
+
+        if (dialog.Guardado)
+        {
+            await AgregarProductoAsync(
+                new NuevoProductoDto(
+                    dialog.Codigo,
+                    dialog.Nombre,
+                    dialog.Precio,
+                    dialog.Stock
+                )
+            );
+
+            using var http = new HttpClient();
+
+            productos = await CargarProductosAsync(http);
+
+            items.Clear();
+
+            foreach (var p in productos)
+            {
+                items.Add($"{p.Codigo} - {p.Nombre}");
+            }
+
+            listaProductos.SetSource(items);
+
+            detalleProducto.Text =
+            """
+            PRODUCTO AGREGADO
+            """;
+        }
+    }
+
+    if (e.KeyCode == Key.M)
+    {
+        int indice = listaProductos.SelectedItem ?? 0;
+
+        if (indice < 0 || indice >= productos.Count)
+            return;
+
+        var producto = productos[indice];
+
+        using MovimientoDialog dialog = new();
+
+        app.Run(dialog);
+
+        if (dialog.Guardado)
+{
+    if (dialog.Cantidad <= 0)
         return;
 
-    var producto = productos[indice];
+    await RegistrarMovimientoAsync(
+        producto.Id,
+        dialog.Tipo,
+        dialog.Cantidad
+    );
 
     using var http = new HttpClient();
 
-    var movimientos = await CargarMovimientosAsync(http, producto.Id);
+    productos = await CargarProductosAsync(http);
 
-    detalleProducto.Text =
-    $"""
-    PRODUCTO
+    var productoActualizado =
+        productos.FirstOrDefault(p => p.Id == producto.Id);
 
-    {producto.Nombre}
+    var movimientos =
+        await CargarMovimientosAsync(http, producto.Id);
 
-    Stock: {producto.Stock}
+    if (productoActualizado != null)
+    {
+        detalleProducto.Text =
+        $"""
+        PRODUCTO
 
-    MOVIMIENTOS
+        {productoActualizado.Nombre}
 
-    {FormatearMovimientos(movimientos)}
-    """;
+        Stock: {productoActualizado.Stock}
+
+        MOVIMIENTOS
+
+        {FormatearMovimientos(movimientos)}
+        """;
+    }
+}
+    }
 };
 
 ventana.Add(detalleProducto);
 ventana.Add(listaProductos);
 
-listaProductos.KeyDown += (_, e) =>
-{
-    if (e.KeyCode == Key.A)
-    {
-        detalleProducto.Text =
-        """
-        AGREGAR PRODUCTO
-
-        Próximamente se abrirá
-        el formulario de alta.
-        """;
-    }
-
-    if (e.KeyCode == Key.M)
-    {
-        detalleProducto.Text =
-        """
-        REGISTRAR MOVIMIENTO
-
-        Próximamente se abrirá
-        el formulario de stock.
-        """;
-    }
-};
 app.Run(ventana);
-
 // ── API ───────────────────────────────────────────────────────────────────
 
 static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
@@ -173,3 +240,193 @@ record MovimientoDto(
     int Cantidad,
     DateTime Fecha
 );
+record NuevoProductoDto(
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
+);
+class AgregarProductoDialog : Dialog
+{
+   public TextField TxtCodigo;
+    public TextField TxtNombre;
+    public TextField TxtPrecio;
+    public TextField TxtStock;
+    public bool Guardado { get; private set; }
+
+    public string Codigo => TxtCodigo.Text?.ToString() ?? "";
+    public string Nombre => TxtNombre.Text?.ToString() ?? "";
+
+    public decimal Precio =>
+    decimal.TryParse(TxtPrecio.Text?.ToString(), out var p) ? p : 0;
+
+    public int Stock =>
+    int.TryParse(TxtStock.Text?.ToString(), out var s) ? s : 0;
+    
+    public AgregarProductoDialog(){
+        Title = "Agregar Producto";
+        Width = 60;
+        Height = 18;
+
+        var lblCodigo = new Label()
+        {
+            Text = "Código:",
+            X = 2,
+            Y = 2
+        };
+
+        TxtCodigo = new TextField()
+        {
+            X = 15,
+            Y = 2,
+            Width = 25
+        };
+
+        var lblNombre = new Label()
+        {
+            Text = "Nombre:",
+            X = 2,
+            Y = 4
+        };
+
+        TxtNombre = new TextField()
+        {
+            X = 15,
+            Y = 4,
+            Width = 25
+        };
+
+        var lblPrecio = new Label()
+        {
+            Text = "Precio:",
+            X = 2,
+            Y = 6
+        };
+
+    TxtPrecio = new TextField()
+        {
+            X = 15,
+            Y = 6,
+            Width = 25
+        };
+
+        var lblStock = new Label()
+        {
+            Text = "Stock:",
+            X = 2,
+            Y = 8
+        };
+
+        TxtStock = new TextField()
+        {
+            X = 15,
+            Y = 8,
+            Width = 25
+        };
+
+        Add(
+            lblCodigo, TxtCodigo,
+            lblNombre, TxtNombre,
+            lblPrecio, TxtPrecio,
+            lblStock, TxtStock
+        );
+
+        var btnCancelar = new Button()
+{
+    Title = "Cancelar"
+};
+
+btnCancelar.Accepting += (_, _) =>
+{
+    RequestStop();
+};
+
+var btnGuardar = new Button()
+{
+    Title = "Guardar"
+};
+
+btnGuardar.Accepting += (_, _) =>
+{
+    Guardado = true;
+    RequestStop();
+};
+
+AddButton(btnCancelar);
+AddButton(btnGuardar);
+    }
+}
+class MovimientoDialog : Dialog
+{
+    public TextField TxtTipo;
+    public TextField TxtCantidad;
+
+    public bool Guardado { get; private set; }
+
+    public int Tipo =>
+        int.TryParse(TxtTipo.Text?.ToString(), out var t) ? t : 0;
+
+    public int Cantidad =>
+        int.TryParse(TxtCantidad.Text?.ToString(), out var c) ? c : 0;
+
+    public MovimientoDialog()
+    {
+        Title = "Registrar Movimiento";
+        Width = 60;
+        Height = 14;
+
+        Add(new Label()
+        {
+            Text = "Tipo (0=Compra,1=Venta,2=Ajuste):",
+            X = 2,
+            Y = 2
+        });
+
+        TxtTipo = new TextField()
+        {
+            X = 38,
+            Y = 2,
+            Width = 10
+        };
+
+        Add(new Label()
+        {
+            Text = "Cantidad:",
+            X = 2,
+            Y = 5
+        });
+
+        TxtCantidad = new TextField()
+        {
+            X = 38,
+            Y = 5,
+            Width = 10
+        };
+
+        Add(TxtTipo, TxtCantidad);
+
+        var btnCancelar = new Button()
+        {
+            Title = "Cancelar"
+        };
+
+        btnCancelar.Accepting += (_, _) =>
+        {
+            RequestStop();
+        };
+
+        var btnGuardar = new Button()
+        {
+            Title = "Guardar"
+        };
+
+        btnGuardar.Accepting += (_, _) =>
+        {
+            Guardado = true;
+            RequestStop();
+        };
+
+        AddButton(btnCancelar);
+        AddButton(btnGuardar);
+    }
+}
