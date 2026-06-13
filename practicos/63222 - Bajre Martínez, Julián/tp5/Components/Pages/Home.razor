@@ -28,6 +28,13 @@ else
                 <i class="bi bi-plus-circle"></i>
                 Nuevo Contacto
             </button>
+
+            <div class="mb-3">
+                <InputText class="form-control"
+               placeholder="Buscar contacto..."
+               @bind-Value="textoBusqueda"
+               @bind-Value:event="oninput" />
+            </div>
             @if (mostrandoFormulario)
             {
                 <div class="card mb-3">
@@ -38,7 +45,9 @@ else
                     <div class="card-body">
 
                         <EditForm Model="nuevoContacto"
-                                  OnValidSubmit="GuardarContacto">
+                        OnValidSubmit="GuardarContacto">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
 
                             <div class="mb-2">
                                 <InputText class="form-control"
@@ -76,8 +85,14 @@ else
             }
             <div class="list-group">
 
-                @foreach (var contacto in contactos)
+                @foreach (var contacto in ContactosFiltrados())
                 {
+                    @if (!ContactosFiltrados().Any())
+                    {
+                        <div class="alert alert-warning mt-2">
+                            No se encontraron contactos.
+                        </div>
+                    }
                     <button class="list-group-item list-group-item-action @(contacto == seleccionado ? "active" : "")"
                         @onclick="() => Seleccionar(contacto)">
 
@@ -121,7 +136,9 @@ else
                         @if (editando)
                         {
                             <EditForm Model="contactoEditado"
-                                      OnValidSubmit="GuardarEdicion">
+                            OnValidSubmit="GuardarEdicion">
+                            <DataAnnotationsValidator /> 
+                            <ValidationSummary />
 
                                 <div class="mb-2">
                                     <InputText class="form-control"
@@ -234,6 +251,8 @@ else
     private Contacto nuevoContacto = new();
     private Contacto contactoEditado = new();
 
+    private string textoBusqueda = "";
+
     protected override async Task OnInitializedAsync()
     {
         contactos = await Db.Contactos.ToListAsync();
@@ -316,5 +335,16 @@ else
 
     editando = false;
     }
+
+    private IEnumerable<Contacto> ContactosFiltrados()
+        {
+    if (string.IsNullOrWhiteSpace(textoBusqueda))
+        return contactos ?? [];
+
+    return contactos!.Where(c =>
+        c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+        || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+        || c.Email.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+        }
 }
 
