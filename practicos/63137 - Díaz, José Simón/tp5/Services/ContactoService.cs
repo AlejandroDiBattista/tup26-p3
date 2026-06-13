@@ -49,9 +49,7 @@ public sealed class ContactoService
     {
         using var contexto = await contextoFactory.CreateDbContextAsync();
 
-        bool esNuevo = contacto.Id == 0;
-
-        if (esNuevo)
+        if (contacto.EsNuevo)
         {
             contexto.Contactos.Add(contacto);
         }
