@@ -13,21 +13,41 @@
 
         <div class="col-12 col-md-4">
             <h2 class="h5 mb-3">Contactos</h2>
-            <div class="list-group">
-                @foreach (var contacto in contactos)
-                {
-                    <button
-                        type="button"
-                        class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
-                        @onclick="() => SeleccionarContacto(contacto)">
 
-                        <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
-                        <small>@contacto.Telefono</small><br />
-                        <small>@contacto.Email</small>
-
-                    </button>
-                }
+            <div class="mb-3">
+                <label class="form-label" for="buscarContacto">Buscar</label>
+                <input
+                    id="buscarContacto"
+                    class="form-control"
+                    placeholder="Nombre, telefono o email"
+                    @bind="busqueda"
+                    @bind:event="oninput" />
             </div>
+
+            @if (!ContactosFiltrados.Any())
+            {
+                <div class="alert alert-warning mb-0">
+                    No se encontraron contactos.
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var contacto in ContactosFiltrados)
+                    {
+                        <button
+                            type="button"
+                            class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                            @onclick="() => SeleccionarContacto(contacto)">
+
+                            <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
+                            <small>@contacto.Telefono</small><br />
+                            <small>@contacto.Email</small>
+
+                        </button>
+                    }
+                </div>
+            }
         </div>
 
         <div class="col-12 col-md-8">
@@ -80,6 +100,9 @@
 @code {
     private List<Contacto> contactos = [];
     private Contacto? contactoSeleccionado;
+    private string busqueda = "";
+
+    private IEnumerable<Contacto> ContactosFiltrados => contactos.Where(CoincideBusqueda);
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,6 +115,21 @@
     private void SeleccionarContacto(Contacto contacto)
     {
         contactoSeleccionado = contacto;
+    }
+
+    private bool CoincideBusqueda(Contacto contacto)
+    {
+        if (string.IsNullOrWhiteSpace(busqueda))
+        {
+            return true;
+        }
+
+        var texto = busqueda.Trim();
+
+        return contacto.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || contacto.Apellido.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || contacto.Telefono.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || contacto.Email.Contains(texto, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string MostrarDato(string? valor)
