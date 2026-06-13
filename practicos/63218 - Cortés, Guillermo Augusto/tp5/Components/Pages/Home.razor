@@ -12,7 +12,12 @@
     <div class="row g-4">
 
         <div class="col-12 col-md-4">
-            <h2 class="h5 mb-3">Contactos</h2>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Contactos</h2>
+                <button type="button" class="btn btn-primary btn-sm" @onclick="NuevoContacto">
+                    Nuevo
+                </button>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label" for="buscarContacto">Buscar</label>
@@ -52,7 +57,72 @@
 
         <div class="col-12 col-md-8">
             <h2 class="h5 mb-3">Detalle</h2>
-            @if (contactoSeleccionado is null)
+            @if (mostrandoFormularioCrear)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title h5">Nuevo contacto</h3>
+
+                        <EditForm Model="contactoNuevo" OnValidSubmit="GuardarNuevoContacto">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="nombre">Nombre</label>
+                                    <InputText id="nombre" class="form-control" @bind-Value="contactoNuevo.Nombre" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="apellido">Apellido</label>
+                                    <InputText id="apellido" class="form-control" @bind-Value="contactoNuevo.Apellido" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="telefono">Telefono</label>
+                                    <InputText id="telefono" class="form-control" @bind-Value="contactoNuevo.Telefono" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="email">Email</label>
+                                    <InputText id="email" class="form-control" @bind-Value="contactoNuevo.Email" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="empresa">Empresa</label>
+                                    <InputText id="empresa" class="form-control" @bind-Value="contactoNuevo.Empresa" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="cargo">Cargo</label>
+                                    <InputText id="cargo" class="form-control" @bind-Value="contactoNuevo.Cargo" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label" for="direccion">Direccion</label>
+                                    <InputText id="direccion" class="form-control" @bind-Value="contactoNuevo.Direccion" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label" for="fechaNacimiento">Fecha de nacimiento</label>
+                                    <InputDate id="fechaNacimiento" class="form-control" @bind-Value="contactoNuevo.FechaNacimiento" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label" for="notas">Notas</label>
+                                    <InputTextArea id="notas" class="form-control" @bind-Value="contactoNuevo.Notas" />
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="button" class="btn btn-secondary ms-2" @onclick="CancelarNuevoContacto">Cancelar</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+            else if (contactoSeleccionado is null)
             {
                 <div class="alert alert-info">
                     Seleccione un contacto.
@@ -100,11 +170,18 @@
 @code {
     private List<Contacto> contactos = [];
     private Contacto? contactoSeleccionado;
+    private Contacto contactoNuevo = new();
     private string busqueda = "";
+    private bool mostrandoFormularioCrear;
 
     private IEnumerable<Contacto> ContactosFiltrados => contactos.Where(CoincideBusqueda);
 
     protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
     {
         contactos = await Db.Contactos
             .OrderBy(contacto => contacto.Apellido)
@@ -115,6 +192,32 @@
     private void SeleccionarContacto(Contacto contacto)
     {
         contactoSeleccionado = contacto;
+        mostrandoFormularioCrear = false;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoNuevo = new Contacto();
+        contactoSeleccionado = null;
+        mostrandoFormularioCrear = true;
+    }
+
+    private void CancelarNuevoContacto()
+    {
+        contactoNuevo = new Contacto();
+        mostrandoFormularioCrear = false;
+    }
+
+    private async Task GuardarNuevoContacto()
+    {
+        Db.Contactos.Add(contactoNuevo);
+        await Db.SaveChangesAsync();
+        await CargarContactos();
+
+        contactoSeleccionado = contactoNuevo;
+        contactoNuevo = new Contacto();
+        busqueda = "";
+        mostrandoFormularioCrear = false;
     }
 
     private bool CoincideBusqueda(Contacto contacto)
