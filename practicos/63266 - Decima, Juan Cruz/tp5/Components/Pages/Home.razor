@@ -23,7 +23,7 @@
                     <i class="bi bi-search"></i>
                 </span>
                 <input type="text" class="form-control" placeholder="Buscar por nombre o apellido..."
-                       @bind-value="textoBusqueda" @bind-value:event="oninput" />
+                    @bind-value="textoBusqueda" @bind-value:event="oninput" />
             </div>
 
             <div class="list-group">
@@ -56,6 +56,8 @@
                 <h3>@(esModoEdicion ? "Editar Contacto" : "Nuevo Contacto")</h3>
                 <div class="card p-4 shadow-sm mb-4">
                     <EditForm Model="elContacto" OnValidSubmit="GuardarContacto">
+                        
+                        <DataAnnotationsValidator />
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -76,6 +78,8 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Correo electrónico *</label>
                                 <InputText @bind-Value="elContacto.Email" class="form-control" required />
+
+                                <ValidationMessage For="() => elContacto.Email" class="text-danger small mt-1" />
                             </div>
                         </div>
 
