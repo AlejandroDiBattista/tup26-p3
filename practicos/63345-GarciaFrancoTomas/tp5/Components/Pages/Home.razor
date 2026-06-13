@@ -42,6 +42,7 @@
 
             <button class="btn btn-success" @onclick="Guardar">Guardar</button>
             <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+            <button class="btn btn-danger mt-2" @onclick="Eliminar">Eliminar</button>
         }
         else if (seleccionado != null)
         {
@@ -127,5 +128,21 @@
     void Cancelar()
     {
         editando = null;
+    }
+    void Eliminar()
+    {
+        if (editando != null)
+        {
+            var contacto = db.Contactos.Find(editando.Id);
+
+            if (contacto != null)
+            {
+                db.Contactos.Remove(contacto);
+                db.SaveChanges();
+
+                contactos = db.Contactos.ToList();
+                editando = null;
+            }
+        }
     }
 }
