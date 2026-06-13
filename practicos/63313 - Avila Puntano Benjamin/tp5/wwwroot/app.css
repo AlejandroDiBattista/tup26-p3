@@ -36,3 +36,23 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+body {
+    background-color: #0f0f1a;
+    color: #e0e0e0;
+}
+
+h1, h2, h3, h4, h5, h6, label, p, strong, li {
+    color: #e0e0e0;
+}
+
+.card {
+    background-color: #1a1a2e;
+    border: 2px solid #7c3aed;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 2px solid #7c3aed;
+    color: #e0e0e0;
+}
