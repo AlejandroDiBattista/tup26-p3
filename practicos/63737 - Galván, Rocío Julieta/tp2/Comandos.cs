@@ -1,6 +1,11 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
+namespace Calculadora;
+
+static class Comandos
+{
+    public static bool Procesar(string[] args)
+    {
+        switch (args)
+        {
             case ["--help"] or ["-h"] or ["--ayuda"]:
                 Console.WriteLine("""
 
@@ -26,12 +31,17 @@ Opciones:
 """);
                 return true;
 
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
+            case ["--probar"] or ["--prueba"] or ["-p"] or ["--test"] or ["-t"]:
                 Pruebas.Ejecutar();
                 return true;
 
             case [var expresion, var valor]:
-                var x = int.Parse(valor);
+                if (!int.TryParse(valor, out int x))
+                {
+                    Console.WriteLine("Error: valor de x inválido.");
+                    return true;
+                }
+
                 var funcion = Compilador.Parse(expresion);
                 Console.WriteLine(funcion.Evaluar(x));
                 return true;

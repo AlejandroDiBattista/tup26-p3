@@ -1,0 +1,28 @@
+@page
+@using Microsoft.AspNetCore.Mvc
+@using RazorHolaMundo.Models
+@using RazorHolaMundo.Services
+@inject AgendaService Agenda
+
+@{
+    List<Contacto> contactos = Agenda.Listar();
+    ViewData["Title"] = "Agenda";
+}
+
+<header class="page-header">
+    <h1>Agenda</h1>
+    <a class="button button-primary" href="/Nuevo">Agregar</a>
+</header>
+
+<section class="agenda">
+    @foreach (Contacto contacto in contactos) {
+        <partial name="_ContactCard" model="contacto" />
+    }
+</section>
+
+@functions {
+    public IActionResult OnPostToggleFavorito(int id) {
+        Agenda.CambiarFavorito(id);
+        return RedirectToPage();
+    }
+}

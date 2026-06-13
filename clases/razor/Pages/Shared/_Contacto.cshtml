@@ -1,0 +1,29 @@
+@using razor.Models
+@model Contacto
+
+<div class="detalle-contacto">
+    <header class="detalle-header">
+        <div>
+            <p>Contacto</p>
+            <h2>@Model.Nombre @Model.Apellido</h2>
+        </div>
+        <span class="estrella @(Model.Favorito ? "favorito" : "")">★</span>
+    </header>
+
+    <dl>
+        <dt>Telefono</dt>
+        <dd>📞 @Model.Telefono</dd>
+
+        <dt>Email</dt>
+        <dd>
+            @if (Model.Email is not null) {
+                <span>📧 @Model.Email</span>
+            } else {
+                <span class="texto-muted">Sin email</span>
+            }
+        </dd>
+
+        <dt>Favorito</dt>
+        <dd>@(Model.Favorito ? "Si" : "No")</dd>
+    </dl>
+</div>

@@ -1,0 +1,29 @@
+@using AgendaRazorHtmx.ViewModels
+@model ContactListItemViewModel
+
+@{
+    string inputId = $"contact-{Model.Contact.Id}";
+}
+
+<div
+    id="contact-option-@Model.Contact.Id"
+    class="contact-option">
+    <input
+        id="@inputId"
+        class="contact-radio"
+        type="radio"
+        name="selectedId"
+        value="@Model.Contact.Id"
+        checked="@Model.Selected"
+        hx-get="/?handler=Detail&id=@Model.Contact.Id"
+        hx-trigger="change"
+        hx-target="#detail"
+        hx-include="this"
+        hx-swap="innerHTML" />
+
+    <label class="contact-item" for="@inputId">
+        <strong>@Model.Contact.Apellido, @Model.Contact.Nombre</strong>
+        <br />
+        <span class="muted">@Model.Contact.Telefono</span>
+    </label>
+</div>

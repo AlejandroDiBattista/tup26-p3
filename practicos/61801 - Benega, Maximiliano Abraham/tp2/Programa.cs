@@ -1,28 +1,80 @@
-static class Program {
-    static void Main(string[] args) {
-        if (Comandos.Procesar(args)) {
-            return;
-        }
+using System;
 
-        Console.WriteLine("\n== Evaluación de Expresiones Matemáticas ==\n");
-        Console.Write("Ingrese una expresión matemática con la variable 'x' (ej: (x - 1) * (x - 8/4) + 3): \n>  ");
+namespace Calculadora
+{
+    class PuntoDeEntrada
+    {
+        static int Main(string[] argumentos)
+        {
+            try
+            {
+                if (ControladorDeOpciones.Manejar(argumentos))
+                    return 0;
 
-        var expresion = Console.ReadLine() ?? "";
-        if (expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
+                EjecutarSesionInteractiva();
+                return 0;
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fatal: {ex.Message}");
+                return 1;
+            }
+        }
 
-            Console.WriteLine(funcion.Evaluar(int.Parse(x)));
+        private static void EjecutarSesionInteractiva()
+        {
+            Console.WriteLine("=== Calculadora interactiva ===");
+            Console.WriteLine("Instrucciones: escriba una expresión con números, x, + - * / y paréntesis.");
+            Console.WriteLine("Para terminar, ingrese 'fin' como expresión o como valor de x.\n");
+
+            while (true)
+            {
+                Console.Write("Expresión: ");
+                string? expresion = Console.ReadLine()?.Trim();
+                if (string.IsNullOrEmpty(expresion) || expresion == "fin")
+                {
+                    Console.WriteLine("Saliendo...");
+                    break;
+                }
+
+                ExpresionMatematica arbol;
+                try
+                {
+                    arbol = ConstructorDeExpresiones.AnalizarCadena(expresion);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en expresión: {ex.Message}");
+                    continue;
+                }
+
+                while (true)
+                {
+                    Console.Write("x = ");
+                    string? entradaX = Console.ReadLine()?.Trim();
+                    if (entradaX == "fin" || string.IsNullOrEmpty(entradaX))
+                    {
+                        Console.WriteLine("Volviendo a pedir expresión...\n");
+                        break;
+                    }
+
+                    if (!int.TryParse(entradaX, out int valorX))
+                    {
+                        Console.WriteLine("Debe ingresar un número entero.");
+                        continue;
+                    }
+
+                    try
+                    {
+                        int resultado = arbol.Calcular(valorX);
+                        Console.WriteLine($"Resultado: {resultado}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error al evaluar: {ex.Message}");
+                    }
+                }
+            }
         }
     }
 }

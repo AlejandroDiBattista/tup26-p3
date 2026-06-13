@@ -5,45 +5,121 @@ using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
 
-// ── Consulta inicial al servidor ──────────────────────────────────────────
+// ── Cliente HTTP ──────────────────────────────────────────────────────────
 
-ProductoDto producto;
-try {
-    using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
-} catch (HttpRequestException ex) {
-    Console.Error.WriteLine($"No se pudo conectar con el servidor: {ex.Message}");
-    Console.Error.WriteLine("Verificá que servidor.cs esté corriendo en http://localhost:5050");
+var http = new HttpClient();
+
+// ── Cargar productos ──────────────────────────────────────────────────────
+
+List<ProductoDto> productos;
+
+try
+{
+    productos = await CargarProductosAsync(http);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error al conectar con el servidor: {ex.Message}");
     return;
 }
 
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
+// ── Cargar movimientos del primer producto ────────────────────────────────
+
+List<MovimientoDto> movimientos = [];
+
+if (productos.Any())
+{
+    movimientos = await CargarMovimientosAsync(http, productos[0].Id);
+}
+
+// ── Interfaz ──────────────────────────────────────────────────────────────
 
 using IApplication app = Application.Create().Init();
-using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para salir) " };
 
-var detalleProducto = new Label {
-    Text = $"""
-            # PRODUCTO 
-
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4, Y = 2,
+using Window ventana = new()
+{
+    Title = " Catalogo REST "
 };
 
-ventana.Add(detalleProducto);
+// ── PRODUCTOS ─────────────────────────────────────────────────────────────
+
+var productosLabel = new Label
+{
+    X = 1,
+    Y = 1,
+    Text =
+$"""
+# PRODUCTOS
+
+{string.Join("\n", productos.Select(p =>
+$"- {p.Id} | {p.Codigo} | {p.Nombre} | ${p.Precio:N2} | Stock: {p.Stock}"
+))}
+"""
+};
+
+// ── MOVIMIENTOS ───────────────────────────────────────────────────────────
+
+var movimientosLabel = new Label
+{
+    X = 1,
+    Y = productos.Count + 6,
+    Text =
+$"""
+# MOVIMIENTOS DEL PRODUCTO {productos.FirstOrDefault()?.Id}
+
+{string.Join("\n", movimientos.Select(m =>
+$"- {NombreMovimiento(m.Tipo)} | Cantidad: {m.Cantidad} | {m.Fecha:g}"
+))}
+"""
+};
+
+ventana.Add(productosLabel);
+ventana.Add(movimientosLabel);
 
 app.Run(ventana);
 
-static async Task<ProductoDto> CargarProductoAsync (HttpClient http) {
-    const string url = "http://localhost:5050/producto";
-    return await http.GetFromJsonAsync<ProductoDto>(url) ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+// ── Funciones HTTP ────────────────────────────────────────────────────────
+
+static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
+{
+    const string url = "http://localhost:5050/productos";
+
+    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
+           ?? [];
 }
 
-// ── DTO ───────────────────────────────────────────────────────────────────
+static async Task<List<MovimientoDto>> CargarMovimientosAsync(
+    HttpClient http,
+    int productoId)
+{
+    return await http.GetFromJsonAsync<List<MovimientoDto>>(
+        $"http://localhost:5050/productos/{productoId}/movimientos"
+    ) ?? [];
+}
 
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+static string NombreMovimiento(int tipo) =>
+    tipo switch
+    {
+        0 => "Compra",
+        1 => "Venta",
+        2 => "Ajuste",
+        _ => "Desconocido"
+    };
+
+// ── DTOs ──────────────────────────────────────────────────────────────────
+
+record ProductoDto(
+    int Id,
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
+);
+
+record MovimientoDto(
+    int Id,
+    int ProductoId,
+    int Tipo,
+    int Cantidad,
+    DateTime Fecha
+);

@@ -1,0 +1,62 @@
+﻿@page
+@using Microsoft.AspNetCore.Mvc
+@using razor.Services
+@inject IContactoService ContactoService
+@{
+    ViewData["Title"] = "Nuevo contacto";
+    Layout = "_Layout";
+}
+
+<h1>Nuevo contacto</h1>
+
+<form method="post" class="formulario">
+    <label>
+        Nombre
+        <input name="Nombre" required />
+    </label>
+
+    <label>
+        Apellido
+        <input name="Apellido" required />
+    </label>
+
+    <label>
+        Telefono
+        <input name="Telefono" required />
+    </label>
+
+    <label>
+        Email
+        <input name="Email" type="email" />
+    </label>
+
+    <label class="checkbox">
+        <input name="Favorito" type="checkbox" value="true" />
+        Favorito
+    </label>
+
+    <button type="submit">Guardar</button>
+    <a href="/">Cancelar</a>
+</form>
+
+@functions {
+    [BindProperty]
+    public string Nombre { get; set; } = "";
+
+    [BindProperty]
+    public string Apellido { get; set; } = "";
+
+    [BindProperty]
+    public string Telefono { get; set; } = "";
+
+    [BindProperty]
+    public string? Email { get; set; }
+
+    [BindProperty]
+    public bool Favorito { get; set; }
+
+    public async Task<IActionResult> OnPostAsync() {
+        await ContactoService.CrearAsync(Nombre, Apellido, Telefono, Email, Favorito);
+        return RedirectToPage("/Index");
+    }
+}

@@ -8,26 +8,10 @@ static class Program {
             Console.WriteLine("\n== Evaluador de Expresiones Matemáticas ==\n");
             Console.Write("Ingrese una expresión con la variable 'x'\n(ej: (x - 1) * (x - 8/4) + 3)\n>  ");
 
-
-        var expresion = Console.ReadLine() ?? "";
-        if (expresion.IsWhiteSpace()) {
-            Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
-            return;
-        }
-        var funcion = Compilador.Parse(expresion);
-
-        while (true) {
-            Console.Write("x = ");
-            var x = Console.ReadLine() ?? "";
-
-            if (x.IsWhiteSpace() || x == "fin") {
-                break;
-
             var input = Console.ReadLine() ?? "";
             if (string.IsNullOrWhiteSpace(input)) {
                 Console.WriteLine("No se ingresó ninguna expresión. Saliendo...");
                 return;
-
             }
 
             var funcion = Compilador.Parse(input);

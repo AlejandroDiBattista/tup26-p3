@@ -1,21 +1,50 @@
-namespace Calculadora;
+using System;
 
-static class Pruebas {
-    public static void Ejecutar() {
-        var tests = new (string exp, int x, int expected)[] {
-            ("1 + 2 * 3", 0, 7),
-            ("1 + 2 * x", 10, 21),
-            ("(x - 1) * (x - 8 / 4) + 3", 10, 75),
-            ("-(3 + 2)", 0, -5)
-        };
+public class Pruebas
+{
+    public static void EjecutarTodo()
+    {
+        Console.WriteLine("Ejecutando pruebas automáticas...");
+        bool todasPasaron = true;
 
-        foreach (var t in tests) {
-            try {
-                var res = Compilador.Parse(t.exp).Evaluar(t.x);
-                Console.WriteLine($"{t.exp} (x={t.x}) => {res} | {(res == t.expected ? "PASÓ" : "FALLÓ")}");
-            } catch (Exception e) {
-                Console.WriteLine($"{t.exp} => ERROR: {e.Message}");
+        todasPasaron &= ProbarCaso("1 + 2 * 3", 0, 7);
+        todasPasaron &= ProbarCaso("1 + 2 * x", 10, 21);
+        todasPasaron &= ProbarCaso("(x - 1) * (x - 8 / 4) + 3", 10, 75);
+        todasPasaron &= ProbarCaso("-(3 + 2)", 0, -5);
+        todasPasaron &= ProbarCaso("10 / 2", 0, 5);
+
+        if (todasPasaron)
+        {
+            Console.WriteLine("Todas las pruebas pasaron correctamente.");
+        }
+        else
+        {
+            Console.WriteLine("Algunas pruebas fallaron.");
+        }
+    }
+
+    private static bool ProbarCaso(string expresion, int x, int esperado)
+    {
+        try
+        {
+            Compilador comp = new Compilador(expresion);
+            Nodo ast = comp.Parsear();
+            int resultado = ast.Evaluar(x);
+
+            if (resultado == esperado)
+            {
+                return true;
             }
+            else
+            {
+                Console.WriteLine("Fallo: " + expresion + " con x=" + x + ". Esperado: " + esperado + ", Obtenido: " + resultado);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error inesperado en prueba '" + expresion + "': " + ex.Message);
+            return false;
         }
     }
 }

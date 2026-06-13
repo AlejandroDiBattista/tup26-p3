@@ -1,7 +1,10 @@
 @page
-@using AgendaRazorHtmx
+@using AgendaRazorHtmx.Dtos
+@using AgendaRazorHtmx.Models
+@using AgendaRazorHtmx.Services
+@using AgendaRazorHtmx.ViewModels
 @using Microsoft.AspNetCore.Mvc
-@inject ContactStore ContactStore
+@inject IContactService ContactService
 
 @{
     ViewData["Title"] = "Agenda";
@@ -13,14 +16,12 @@
 <div class="agenda">
     <section class="panel master-panel" aria-labelledby="agenda-title">
         <button
-            class="primary"
+            class="primary action-button"
             hx-get="/?handler=New"
             hx-target="#detail"
             hx-swap="innerHTML">
-            Nuevo contacto
+            Agregar
         </button>
-
-        <hr />
 
         <form id="search-form">
             <label class="visually-hidden" for="search">Buscar contactos</label>
@@ -32,6 +33,8 @@
                 autocomplete="off"
                 hx-get="/?handler=List"
                 hx-trigger="input changed delay:250ms, search"
+                hx-include="#search-form, #current-selection"
+                hx-vals='{"autoSelect":"true"}'
                 hx-target="#master"
                 hx-swap="innerHTML" />
         </form>
@@ -39,66 +42,101 @@
             id="master"
             class="list-scroll"
             hx-get="/?handler=List"
-            hx-trigger="load, contactsChanged from:body"
-            hx-include="#search-form"
+            hx-trigger="refresh-master from:body"
+            hx-include="#search-form, #current-selection"
+            hx-vals='{"autoSelect":"false"}'
+            hx-swap="innerHTML">
+        </div>
+        @* Carga inicial: permite autoseleccionar el primer contacto visible. *@
+        <div
+            class="visually-hidden"
+            hx-get="/?handler=List"
+            hx-trigger="load"
+            hx-target="#master"
+            hx-include="#search-form, #current-selection"
+            hx-vals='{"autoSelect":"true"}'
             hx-swap="innerHTML">
         </div>
     </section>
 
     <section class="panel">
         <div id="detail" aria-live="polite" aria-atomic="true">
+            <div id="current-selection"></div>
             <p>Seleccioná un contacto.</p>
         </div>
     </section>
 </div>
 
 @functions {
-    public IActionResult OnGetList(string? search, int? selectedId) {
-        return Partial("_ContactList", new ContactListViewModel(ContactStore.GetAll(search), selectedId));
+
+    public IActionResult OnGetList(string? search, int? selectedId, bool autoSelect) {
+        List<Contact> contacts = ContactService.GetAll(search);
+        int? effectiveSelectedId = contacts.Any(contact => contact.Id == selectedId) ? selectedId : null;
+        int? detailIdToLoad = null;
+        bool clearDetail = false;
+
+        if (autoSelect && effectiveSelectedId is null) {
+            Contact? firstContact = contacts.FirstOrDefault();
+
+            if (firstContact is null) {
+                clearDetail = true;
+            } else {
+                effectiveSelectedId = firstContact.Id;
+                detailIdToLoad = firstContact.Id;
+            }
+        }
+
+        return Partial("_ContactList", new ContactListViewModel(contacts, effectiveSelectedId, detailIdToLoad, clearDetail));
     }
 
     public IActionResult OnGetNew() {
-        Response.Headers["HX-Trigger"] = "contactsChanged";
+        TriggerMasterRefresh();
+
         return Partial("_ContactForm", new ContactInput(0, "", "", "", "", ""));
     }
 
     public IActionResult OnGetEmpty() {
-        return Content("<p>Seleccioná un contacto.</p>", "text/html");
+        return Content("""<div id="current-selection"></div> <p>Seleccioná un contacto.</p>""", "text/html");
     }
 
     public IActionResult OnGetDetail(int id) {
-        Contact? contact = ContactStore.GetById(id);
+        Contact? contact = ContactService.GetById(id);
 
-        if (contact is null) {
-            return NotFound();
-        }
+        if (contact is null) { return NotFound(); }
 
         return Partial("_ContactDetail", contact);
     }
 
     public IActionResult OnGetEdit(int id) {
-        Contact? contact = ContactStore.GetById(id);
+        Contact? contact = ContactService.GetById(id);
 
-        if (contact is null) {
-            return NotFound();
-        }
+        if (contact is null) { return NotFound(); }
 
-        Response.Headers["HX-Trigger"] = "contactsChanged";
         return Partial("_ContactForm", ToInput(contact));
     }
 
     public IActionResult OnPostSave(ContactInput input) {
-        Contact savedContact = ContactStore.Save(input);
+        Contact savedContact = ContactService.Save(input);
 
-        Response.Headers["HX-Trigger"] = "contactsChanged";
+        // Crear, guardar y borrar son mutaciones: siempre sincronizan la lista completa.
+        TriggerMasterRefresh();
+
         return Partial("_ContactDetail", savedContact);
     }
 
     public IActionResult OnPostDelete(int id) {
-        ContactStore.Delete(id);
+        ContactService.Delete(id);
+        TriggerMasterRefresh();
 
-        Response.Headers["HX-Trigger"] = "contactsChanged";
-        return Content("<p>Contacto eliminado.</p>", "text/html");
+        return Content("""
+            <div id="current-selection"></div>
+            <p>Contacto eliminado.</p>
+            """, "text/html");
+    }
+
+    private void TriggerMasterRefresh() {
+        // HTMX dispara este evento despues de actualizar #detail; #master lo escucha con hx-trigger.
+        Response.Headers["HX-Trigger-After-Swap"] = "refresh-master";
     }
 
     private static ContactInput ToInput(Contact contact) {

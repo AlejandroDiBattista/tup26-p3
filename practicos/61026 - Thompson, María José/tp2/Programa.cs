@@ -1,33 +1,54 @@
-namespace Calculadora;
+using System;
 
-class Program {
-    static void Main(string[] args) {
-        try {
-            if (!Comandos.Procesar(args)) {
-                ModoInteractivo();
-            }
-        } catch (Exception ex) {
-            Console.WriteLine(ex.Message);
-        }
+public class Programa
+{
+    public static void Main(string[] args)
+    {
+        Comandos.Ejecutar(args);
     }
 
-    static void ModoInteractivo() {
-        Console.WriteLine("--- Modo Interactivo (escriba 'fin' para salir) ---");
-        Console.Write("Ingrese expresión: ");
-        string exp = Console.ReadLine() ?? "";
-        if (string.IsNullOrEmpty(exp) || exp == "fin") return;
+    public static void ModoInteractivo()
+    {
+        Console.Write("Ingrese una expresión matemática: ");
+        string expresion = Console.ReadLine();
 
-        try {
-            var ast = Compilador.Parse(exp);
-            while (true) {
-                Console.Write("Valor de x: ");
-                string input = Console.ReadLine() ?? "";
-                if (input == "fin" || input == "") break;
-                if (int.TryParse(input, out int x)) Console.WriteLine($"Resultado: {ast.Evaluar(x)}");
-                else Console.WriteLine("Valor inválido.");
+        try
+        {
+            Compilador comp = new Compilador(expresion);
+            Nodo ast = comp.Parsear();
+
+            while (true)
+            {
+                Console.Write("Ingrese valor para x (o 'fin' para salir): ");
+                string entradaX = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(entradaX) || entradaX.ToLower() == "fin")
+                {
+                    break;
+                }
+
+                int x;
+                if (int.TryParse(entradaX, out x))
+                {
+                    try
+                    {
+                        int resultado = ast.Evaluar(x);
+                        Console.WriteLine("Resultado: " + resultado);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error: Valor de x inválido.");
+                }
             }
-        } catch (Exception e) {
-            Console.WriteLine(e.Message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
     }
 }

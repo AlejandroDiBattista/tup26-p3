@@ -1,0 +1,239 @@
+/* Estilos generales */
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    color: #172033;
+}
+
+/* Layout maestro-detalle */
+.maestro-detalle {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+}
+
+/* Panel izquierdo */
+.panel-lista {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    background: #172033;
+    color: white;
+    overflow: hidden;
+}
+
+.panel-lista-header {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.panel-lista h1 {
+    margin: 0;
+    font-size: 30px;
+}
+
+/* Boton para ir al formulario de alta */
+.boton-agregar {
+    padding: 10px 14px;
+    color: #172033;
+    background: #facc15;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Lista izquierda escroleable */
+.lista-contactos {
+    --scrollbar-thumb: #64748b;
+    --scrollbar-track: #172033;
+
+    margin: 0;
+    padding: 12px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+}
+
+.lista-contactos li {
+    margin-bottom: 4px;
+}
+
+.lista-contactos a {
+    min-height: 44px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #e5edf8;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.lista-contactos a:hover,
+.lista-contactos a.seleccionado {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.lista-contactos strong {
+    color: #facc15;
+}
+
+/* Panel derecho */
+.panel-detalle {
+    padding: 48px;
+    display: grid;
+    align-content: start;
+}
+
+/* Detalle simple: etiqueta y valor */
+.detalle-contacto {
+    max-width: 720px;
+}
+
+.detalle-header {
+    margin-bottom: 32px;
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.detalle-header p {
+    margin: 0 0 8px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.detalle-header h2 {
+    margin: 0;
+    font-size: 42px;
+}
+
+.detalle-contacto dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    border-top: 1px solid #cbd5e1;
+}
+
+.detalle-contacto dt,
+.detalle-contacto dd {
+    margin: 0;
+    padding: 18px 0;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.detalle-contacto dt {
+    color: #64748b;
+    font-weight: bold;
+}
+
+.detalle-contacto dd {
+    font-size: 20px;
+}
+
+.texto-muted {
+    color: #94a3b8;
+}
+
+/* Estrella de favorito */
+.estrella {
+    color: #cbd5e1;
+    font-size: 32px;
+}
+
+.estrella.favorito {
+    color: #facc15;
+}
+
+/* Formulario de contacto */
+.formulario {
+    width: min(420px, 90vw);
+    margin: 48px auto;
+    padding: 24px;
+    display: grid;
+    gap: 16px;
+    text-align: left;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.08);
+}
+
+.formulario label {
+    display: grid;
+    gap: 6px;
+    font-weight: bold;
+}
+
+.formulario input {
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.formulario .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.formulario button,
+.formulario a {
+    padding: 12px;
+    border: 0;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.formulario button {
+    color: white;
+    background: #16a34a;
+}
+
+.formulario a {
+    color: #111827;
+    background: #e5e7eb;
+}
+
+/* Version angosta */
+@media (max-width: 760px) {
+    .maestro-detalle {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-lista {
+        height: 40vh;
+    }
+
+    .panel-detalle {
+        padding: 24px;
+    }
+
+    .detalle-contacto dl {
+        grid-template-columns: 1fr;
+    }
+
+    .detalle-contacto dt {
+        padding-bottom: 4px;
+        border-bottom: 0;
+    }
+
+    .detalle-contacto dd {
+        padding-top: 0;
+    }
+}

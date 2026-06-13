@@ -1,53 +1,79 @@
-@using AgendaRazorHtmx
+@using AgendaRazorHtmx.Dtos
 @model ContactInput
 
-<h2>
-    @(Model.Id == 0 ? "Nuevo contacto" : $"Editar {Model.Nombre} {Model.Apellido}")
-</h2>
-
-<form
-    hx-post="/?handler=Save"
-    hx-target="#detail"
-    hx-swap="innerHTML">
-
-    @Html.AntiForgeryToken()
-
-    <input type="hidden" name="Id" value="@Model.Id" />
-
-    <label for="Nombre">Nombre <span class="required-mark" aria-hidden="true">*</span></label>
-    <input id="Nombre" name="Nombre" value="@Model.Nombre" autocomplete="given-name" required autofocus />
-
-    <label for="Apellido">Apellido <span class="required-mark" aria-hidden="true">*</span></label>
-    <input id="Apellido" name="Apellido" value="@Model.Apellido" autocomplete="family-name" required />
-
-    <label for="Telefono">Teléfono</label>
-    <input id="Telefono" name="Telefono" value="@Model.Telefono" autocomplete="tel" inputmode="tel" />
-
-    <label for="Email">Email</label>
-    <input id="Email" name="Email" type="email" value="@Model.Email" autocomplete="email" inputmode="email" />
-
-    <label for="Notas">Notas</label>
-    <textarea id="Notas" name="Notas">@Model.Notas</textarea>
-
-    <div class="actions">
-        <button class="primary" type="submit"> Guardar </button>
-
-        @if (Model.Id == 0) {
-            <button
-                type="button"
-                hx-get="/?handler=Empty"
-                hx-target="#detail"
-                hx-swap="innerHTML">
-                Cancelar
-            </button>
-        } else {
-            <button
-                type="button"
-                hx-get="/?handler=Detail&id=@Model.Id"
-                hx-target="#detail"
-                hx-swap="innerHTML">
-                Cancelar
-            </button>
+<div class="contact-form-view">
+    <div id="current-selection">
+        @if (Model.Id > 0) {
+            <input type="hidden" name="selectedId" value="@Model.Id" />
         }
     </div>
-</form>
+
+    <div class="form-header">
+        <h2>
+            @(Model.Id == 0 ? "Nuevo contacto" : $"Editar {Model.Nombre} {Model.Apellido}")
+        </h2>
+        <p class="muted">Los campos marcados con <span class="required-mark" aria-hidden="true">*</span> son obligatorios.</p>
+    </div>
+
+    <form
+        class="contact-form"
+        hx-post="/?handler=Save"
+        hx-target="#detail"
+        hx-swap="innerHTML">
+
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="Id" value="@Model.Id" />
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="Nombre">Nombre <span class="required-mark" aria-hidden="true">*</span></label>
+                <input id="Nombre" name="Nombre" value="@Model.Nombre" autocomplete="given-name" required autofocus />
+            </div>
+
+            <div class="form-field">
+                <label for="Apellido">Apellido <span class="required-mark" aria-hidden="true">*</span></label>
+                <input id="Apellido" name="Apellido" value="@Model.Apellido" autocomplete="family-name" required />
+            </div>
+
+            <div class="form-field">
+                <label for="Telefono">Teléfono</label>
+                <input id="Telefono" name="Telefono" value="@Model.Telefono" autocomplete="tel" inputmode="tel" />
+            </div>
+
+            <div class="form-field">
+                <label for="Email">Email</label>
+                <input id="Email" name="Email" type="email" value="@Model.Email" autocomplete="email" inputmode="email" />
+            </div>
+
+            <div class="form-field form-field-wide">
+                <label for="Notas">Notas</label>
+                <textarea id="Notas" name="Notas">@Model.Notas</textarea>
+            </div>
+        </div>
+
+        <div class="actions form-actions">
+            <button class="primary action-button" type="submit">Guardar</button>
+
+            @if (Model.Id == 0) {
+                <button
+                    type="button"
+                    class="action-button"
+                    hx-get="/?handler=Empty"
+                    hx-target="#detail"
+                    hx-swap="innerHTML">
+                    Cancelar
+                </button>
+            } else {
+                <button
+                    type="button"
+                    class="action-button"
+                    hx-get="/?handler=Detail&id=@Model.Id"
+                    hx-target="#detail"
+                    hx-swap="innerHTML">
+                    Cancelar
+                </button>
+            }
+        </div>
+    </form>
+</div>

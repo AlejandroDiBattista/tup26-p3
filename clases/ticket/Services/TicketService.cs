@@ -43,8 +43,8 @@ public class TicketService {
 
     public async Task CambiarEstadoAsync(int ticketId, EstadoTicket nuevoEstado) {
         var ticket = await this.repositorio.ObtenerPorIdAsync(ticketId)
-            ?? throw new InvalidOperationException($"No existe el ticket {ticketId}.");
-
+        ?? throw new InvalidOperationException($"No existe el ticket {ticketId}.");
+        
         ticket.Estado = nuevoEstado;
         await this.repositorio.GuardarCambiosAsync();
     }

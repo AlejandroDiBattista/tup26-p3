@@ -180,15 +180,15 @@ Laura,González,38,95000,Gerencia
 
 ### Casos de prueba mínimos
 
-| Comando | Resultado esperado |
-|---|---|
-| `sortx empleados.csv -b apellido` | Filas ordenadas por apellido A→Z |
-| `sortx empleados.csv -b salario:num:desc` | De mayor a menor salario |
-| `sortx empleados.csv -b departamento -b salario:num:desc` | Por depto, dentro por salario desc |
-| `sortx empleados.csv -b apellido:alpha:asc -o salida.csv` | Genera `salida.csv` |
-| `cat empleados.csv \| sortx -b apellido` | Mismo resultado, leyendo desde stdin |
-| `sortx empleados.csv -b columnaInexistente` | Error en stderr, código de salida ≠ 0 |
-| `sortx --help` | Muestra ayuda y termina con código 0 |
+| Comando                                                   | Resultado esperado                    |
+|-----------------------------------------------------------|---------------------------------------|
+| `sortx empleados.csv -b apellido`                         | Filas ordenadas por apellido A→Z      |
+| `sortx empleados.csv -b salario:num:desc`                 | De mayor a menor salario              |
+| `sortx empleados.csv -b departamento -b salario:num:desc` | Por depto, dentro por salario desc    |
+| `sortx empleados.csv -b apellido:alpha:asc -o salida.csv` | Genera `salida.csv`                   |  
+| `cat empleados.csv \| sortx -b apellido`                  | Mismo resultado, leyendo desde stdin  |
+| `sortx empleados.csv -b columnaInexistente`               | Error en stderr, código de salida ≠ 0 |
+| `sortx --help`                                            | Muestra ayuda y termina con código 0  |
 
 ---
 

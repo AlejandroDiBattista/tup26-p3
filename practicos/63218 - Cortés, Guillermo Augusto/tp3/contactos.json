@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 2,
+    "Nombre": "ana",
+    "Telefonos": "3812382838",
+    "Email": "ana@ana.com",
+    "Notas": "todo bien",
+    "Favorito": true
+  },
+  {
+    "Id": 1,
+    "Nombre": "Guille",
+    "Telefonos": "3816060586",
+    "Email": "Guille@guille.com",
+    "Notas": "hola\r\n",
+    "Favorito": false
+  },
+  {
+    "Id": 3,
+    "Nombre": "susana",
+    "Telefonos": "",
+    "Email": "susana@susana.com",
+    "Notas": "",
+    "Favorito": true
+  }
+]

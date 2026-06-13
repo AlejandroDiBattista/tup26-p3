@@ -68,8 +68,10 @@ static class Log {
         Console.ResetColor();
     }
 
-    public static void Debug(string mensaje) => WriteLine($"[debug]{mensaje}");
-    public static void Error(string mensaje) => WriteLine($"[error]{mensaje}");
-    public static void Info(string mensaje) => WriteLine($"[info]{mensaje}");
+    public static void Debug(string mensaje)   => WriteLine($"[debug]{mensaje}");
+    public static void Error(string mensaje)   => WriteLine($"[error]{mensaje}");
+    public static void Info(string mensaje)    => WriteLine($"[info]{mensaje}");
     public static void Warning(string mensaje) => WriteLine($"[warning]{mensaje}");
+    public static void Success(string mensaje) => WriteLine($"[green]{mensaje}");
+    public static void Print(string mensaje)   => WriteLine($"[white]{mensaje}");
 }

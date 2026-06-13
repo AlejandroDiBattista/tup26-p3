@@ -599,7 +599,7 @@
 
     <div class="counter" id="counter" aria-live="polite"></div>
 
-    <div class="grid" id="grid" role="list">
+    <div class="grid" id="grid">
       <div class="state">Cargando alumnos…</div>
     </div>
 
@@ -645,7 +645,7 @@
     }
 
     function fotoCandidates(carpetaNombre) {
-      const archivos = ['foto.png', 'foto.jpg', 'foto.jpeg'];
+      const archivos = ['foto.jpg'];//, 'foto.jpeg', 'foto.png'];
       const ubicaciones = ['', 'tp1/'];
       const paths = [];
       const localBase = localPracticosBasePath();
@@ -705,13 +705,12 @@
 
         const apellidoNombre = cols[1].trim();       // "Apellido, Nombre"
         const telefonoRaw    = cols[2].trim();
-        const fotoRaw        = cols[3].trim();
-        const gitHubRaw      = cols[4].trim();
-        const practicosRaw   = cols[5].trim();
-        const presenteRaw    = cols[7].trim();
-        const asistenciasRaw = cols[8].trim();
-        const notaRaw        = cols[9]?.trim() ?? '';
-        const codigoRaw      = cols[10]?.trim() ?? '';
+        const gitHubRaw      = cols[3].trim();
+        const practicosRaw   = cols[4].trim();
+        const presenteRaw    = cols[6].trim();
+        const asistenciasRaw = cols[7].trim();
+        const notaRaw        = cols[8]?.trim() ?? '';
+        const codigoRaw      = cols[9]?.trim() ?? '';
 
         const comma     = apellidoNombre.indexOf(',');
         const apellido  = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;
@@ -720,13 +719,13 @@
         const telefono  = (telefonoRaw === '—' || telefonoRaw === '-') ? '' : telefonoRaw;
         const gitHub    = (gitHubRaw   === '—' || gitHubRaw   === '-') ? '' : gitHubRaw;
         const codigo    = (codigoRaw   === '—' || codigoRaw   === '-') ? '' : codigoRaw;
-        const tieneFoto = /^(si|sí|true|yes)$/i.test(fotoRaw);
+        const tieneFoto = true;
         const presente  = /^(si|sí|true|yes)$/i.test(presenteRaw);
         const asistencias = Number.parseInt(asistenciasRaw, 10);
 
         // CarpetaNombre exactly mirrors C# CarpetaNombre property
         const carpetaNombre = `${legajo} - ${apellido}, ${nombre}`;
-        const fotoPaths     = tieneFoto ? fotoCandidates(carpetaNombre) : [];
+        const fotoPaths     = fotoCandidates(carpetaNombre);
         const notaParts     = notaRaw
         const codigoLegajo  = notaParts.length >= 1 ? Number.parseInt(notaParts[0], 10) : null;
         const nota = parseInt(notaRaw);

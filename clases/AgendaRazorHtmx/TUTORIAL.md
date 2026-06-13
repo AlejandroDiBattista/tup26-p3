@@ -19,7 +19,7 @@ HTMX funciona mediante atributos en el HTML. Los más importantes son:
 **`hx-get` / `hx-post`**: hacen un GET o POST cuando ocurre algo.
 
 ```html
-<button hx-get="/Agenda?handler=List">
+<button hx-get="/?handler=List">
     Cargar contactos
 </button>
 ```
@@ -30,7 +30,7 @@ Cuando el usuario hace clic, HTMX hace un GET a esa URL y usa la respuesta.
 
 ```html
 <button
-    hx-get="/Agenda?handler=List"
+    hx-get="/?handler=List"
     hx-target="#master">
     Cargar contactos
 </button>
@@ -44,7 +44,7 @@ La respuesta del servidor va dentro del elemento con `id="master"`.
 
 ```html
 <div
-    hx-get="/Agenda?handler=List"
+    hx-get="/?handler=List"
     hx-trigger="load">
 </div>
 ```
@@ -55,7 +55,7 @@ Esto hace el GET automáticamente cuando el elemento se carga en el DOM.
 
 ```html
 <button
-    hx-post="/Agenda?handler=Delete&id=3"
+    hx-post="/?handler=Delete&id=3"
     hx-include="closest form">
     Eliminar
 </button>
@@ -78,23 +78,21 @@ Una página Razor tiene dos características principales:
 
 La convención es fundamental: ASP.NET enruta automáticamente a los métodos según el verbo HTTP y el parámetro `handler` en la URL.
 
-En esta app, toda la lógica de la página Agenda vive dentro del bloque `@functions` en `Pages/Agenda/Index.cshtml`:
+En esta app, toda la lógica HTMX de la página Agenda vive dentro del bloque `@functions` en `Pages/Index.cshtml`:
 
 ```cshtml
 @page
-@inject ContactStore ContactStore
+@inject IContactService ContactService
 
 @functions {
-    public IActionResult OnGet() {
-        return Page();
-    }
-
-    public IActionResult OnGetList(string? search) {
-        return Partial("_ContactList", ContactStore.GetAll(search));
+    public IActionResult OnGetList(string? search, int? selectedId, bool autoSelect) {
+        List<Contact> contacts = ContactService.GetAll(search);
+        return Partial("_ContactList", new ContactListViewModel(contacts, selectedId));
     }
 
     public IActionResult OnPostSave(ContactInput input) {
-        Contact savedContact = ContactStore.Save(input);
+        Contact savedContact = ContactService.Save(input);
+        Response.Headers["HX-Trigger-After-Swap"] = "refresh-master";
         return Partial("_ContactDetail", savedContact);
     }
 }
@@ -120,7 +118,7 @@ Un partial puede recibir un modelo tipado con `@model`. Eso garantiza que el com
 @foreach (Contact contact in Model)
 {
     <button
-        hx-get="/Agenda?handler=Detail&id=@contact.Id"
+        hx-get="/?handler=Detail&id=@contact.Id"
         hx-target="#detail"
         hx-swap="innerHTML">
         @contact.Apellido, @contact.Nombre
@@ -128,7 +126,7 @@ Un partial puede recibir un modelo tipado con `@model`. Eso garantiza que el com
 }
 ```
 
-Cuando HTMX pide `/Agenda?handler=List`, el servidor renderiza `_ContactList.cshtml` con la lista de contactos y devuelve solo ese HTML. HTMX lo pone dentro de `#master`.
+Cuando HTMX pide `/?handler=List`, el servidor renderiza `_ContactList.cshtml` con la lista de contactos y devuelve solo ese HTML. HTMX lo pone dentro de `#master`.
 
 ## Cómo se construye el patrón maestro-detalle
 
@@ -140,7 +138,7 @@ La estructura base es esta:
 <div class="agenda">
     <section class="panel">
         <div id="master"
-             hx-get="/Agenda?handler=List"
+             hx-get="/?handler=List"
              hx-trigger="load"
              hx-swap="innerHTML">
         </div>
@@ -158,7 +156,7 @@ El `div#master` se auto-carga al llegar al DOM (`hx-trigger="load"`) pidiendo la
 
 ```html
 <button
-    hx-get="/Agenda?handler=Detail&id=@contact.Id"
+    hx-get="/?handler=Detail&id=@contact.Id"
     hx-target="#detail"
     hx-swap="innerHTML">
     @contact.Apellido, @contact.Nombre
@@ -182,7 +180,7 @@ El handler `OnGetDetail` devuelve el partial `_ContactDetail`, que incluye:
     <button
         type="button"
         class="danger"
-        hx-post="/Agenda?handler=Delete&id=@Model.Id"
+            hx-post="/?handler=Delete&id=@Model.Id"
         hx-include="closest form"
         hx-confirm="¿Eliminar este contacto?">
         Eliminar
@@ -194,7 +192,7 @@ El handler `OnGetDetail` devuelve el partial `_ContactDetail`, que incluye:
 
 **Paso 2: el usuario hace clic en Eliminar.**
 
-HTMX detecta el clic, muestra el confirm, y arma un POST a `/Agenda?handler=Delete&id=3`. Gracias a `hx-include="closest form"`, incluye también el token antiforgery del form.
+HTMX detecta el clic, muestra el confirm, y arma un POST a `/?handler=Delete&id=3`. Gracias a `hx-include="closest form"`, incluye también el token antiforgery del form.
 
 **Paso 3: el servidor valida y ejecuta.**
 
@@ -202,7 +200,7 @@ Antes de ejecutar `OnPostDelete`, ASP.NET verifica el token. Si es válido, borr
 
 **Paso 4: HTMX actualiza la UI.**
 
-La respuesta reemplaza `#detail`. El HTML de la respuesta incluye un div con `hx-trigger="load"` que recarga la lista automáticamente.
+La respuesta reemplaza `#detail`. Además, el handler agrega el header `HX-Trigger-After-Swap: refresh-master`. Cuando HTMX termina el swap del detalle, dispara ese evento y el contenedor `#master` se recarga.
 
 ## Por qué existe antiforgery
 
@@ -210,7 +208,7 @@ Supongamos que no hay ninguna protección. Un atacante podría crear una página
 
 ```html
 <!-- Página del atacante -->
-<form action="https://tuapp.com/Agenda?handler=Delete&id=1" method="post">
+<form action="https://tuapp.com/?handler=Delete&id=1" method="post">
     <input type="hidden" name="algo" value="algo" />
 </form>
 <script>document.forms[0].submit();</script>
@@ -261,11 +259,11 @@ builder.Services.AddDbContextFactory<AgendaDbContext>(options =>
 
 SQLite guarda todo en un archivo. En producción se cambiaría a SQL Server o PostgreSQL solo cambiando el paquete y la cadena de conexión, sin tocar el código de la app.
 
-## La fachada ContactStore
+## Servicio y repositorio de contactos
 
-Un patrón útil es separar la lógica de acceso a datos en una clase propia. Esto desacopla los handlers de EF Core directamente y hace más fácil cambiar el almacenamiento después.
+Un patrón útil es separar la lógica de la página de la lógica de datos. En este proyecto los handlers hablan con `IContactService`, y el servicio usa `IContactRepository` para persistir con EF Core.
 
-En `Program.cs` el `ContactStore` usa `IDbContextFactory<AgendaDbContext>` en lugar de un `DbContext` directamente. Esto es importante: en apps web, el DbContext tiene un ciclo de vida por request. La factory permite crear y descartar instancias manualmente con `using`, lo cual es más seguro en servicios con ciclo de vida no controlado:
+El repositorio usa `IDbContextFactory<AgendaDbContext>` en lugar de un `DbContext` directamente. La factory permite crear y descartar instancias manualmente con `using`, dejando el acceso a datos fuera de los partials y de los atributos HTMX:
 
 ```csharp
 public List<Contact> GetAll(string? search = null) {
@@ -298,7 +296,7 @@ El campo de búsqueda es el ejemplo más claro del poder de HTMX para interaccio
     <input
         name="search"
         type="search"
-        hx-get="/Agenda?handler=List"
+        hx-get="/?handler=List"
         hx-trigger="input changed delay:250ms, search"
         hx-target="#master"
         hx-swap="innerHTML" />
@@ -311,7 +309,7 @@ El servidor recibe el valor del input como query string porque el input tiene `n
 
 ```csharp
 public IActionResult OnGetList(string? search) {
-    return Partial("_ContactList", ContactStore.GetAll(search));
+    return Partial("_ContactList", ContactService.GetAll(search));
 }
 ```
 
@@ -320,16 +318,26 @@ public IActionResult OnGetList(string? search) {
 Para que veas cómo se conecta todo, el flujo de editar un contacto pasa por cuatro pasos:
 
 **1. El usuario selecciona un contacto.**
-HTMX hace `GET /Agenda?handler=Detail&id=2`. El servidor ejecuta `OnGetDetail` y devuelve `_ContactDetail`. HTMX reemplaza `#detail` con la vista readonly.
+HTMX hace `GET /?handler=Detail&id=2`. El servidor ejecuta `OnGetDetail` y devuelve `_ContactDetail`. HTMX reemplaza `#detail` con la vista readonly.
 
 **2. El usuario hace clic en Editar.**
-HTMX hace `GET /Agenda?handler=Edit&id=2`. El servidor ejecuta `OnGetEdit` y devuelve `_ContactForm` con los datos actuales. HTMX reemplaza `#detail` con el formulario.
+HTMX hace `GET /?handler=Edit&id=2`. El servidor ejecuta `OnGetEdit` y devuelve `_ContactForm` con los datos actuales. HTMX reemplaza `#detail` con el formulario. La lista no se toca: conserva scroll y selección.
 
 **3. El usuario guarda.**
-HTMX hace `POST /Agenda?handler=Save` con todos los campos del form más el token antiforgery. El servidor valida el token, ejecuta `OnPostSave`, persiste en SQLite, y devuelve `_ContactDetail` con los datos actualizados. HTMX reemplaza `#detail` con la vista readonly.
+HTMX hace `POST /?handler=Save` con todos los campos del form más el token antiforgery. El servidor valida el token, ejecuta `OnPostSave`, persiste en SQLite, y devuelve `_ContactDetail` con los datos actualizados. HTMX reemplaza `#detail` con la vista readonly.
 
 **4. La lista se actualiza sola.**
-El partial devuelto incluye un `div` con `hx-trigger="load"` que dispara `GET /Agenda?handler=List`. HTMX reemplaza `#master` con la lista actualizada.
+El handler responde con `HX-Trigger-After-Swap: refresh-master`. El contenedor `#master` escucha ese evento con `hx-trigger="refresh-master from:body"` y pide `GET /?handler=List`. Así se enseña una sola técnica para sincronizar otra zona después de crear, guardar o eliminar.
+
+Para que la lista sepa qué contacto debe quedar marcado, el detalle y el formulario de edición incluyen un fragmento pequeño:
+
+```html
+<div id="current-selection">
+    <input type="hidden" name="selectedId" value="10" />
+</div>
+```
+
+Entonces `#master` puede usar `hx-include="#search-form, #current-selection"` y enviar solo el buscador más la selección actual. No necesita incluir todo `#detail`.
 
 En ningún momento se recarga la página completa. En ningún momento se escribió JavaScript.
 
@@ -346,6 +354,17 @@ Cuando diseñás una app con HTMX:
 
 Esta separación es lo que permite que la app no tenga JavaScript propio. La lógica de presentación vive en el servidor, en los partials. El navegador solo necesita saber dónde poner cada fragmento.
 
+## Regla didáctica de esta app
+
+Para que el flujo sea fácil de explicar, la app usa una regla única:
+
+- `#detail` cambia por acciones directas del usuario: seleccionar, agregar, editar, cancelar, guardar y eliminar.
+- `#master` cambia al cargar, al buscar o después de una mutación real de datos.
+- Las mutaciones (`Agregar`, `Guardar`, `Eliminar`) sincronizan la lista con un solo mecanismo: el servidor responde con `HX-Trigger-After-Swap: refresh-master` y `#master` escucha `refresh-master from:body`.
+- El estado compartido entre ambas zonas vive en `#current-selection`, no en variables JavaScript.
+
+Esto evita mezclar varias técnicas de sincronización. No se refrescan ítems individuales de la lista: cuando los datos cambian, se vuelve a pedir la lista completa.
+
 ## Cómo crear el proyecto desde cero
 
 ```bash
@@ -356,15 +375,15 @@ dotnet add package Microsoft.EntityFrameworkCore.Sqlite
 
 La plantilla `webapp` genera una app con Razor Pages. A partir de ahí:
 
-1. Agregar la referencia a HTMX en `_Layout.cshtml`:
+1. Agregar la referencia local a HTMX en `_Layout.cshtml`:
 
 ```html
-<script src="https://unpkg.com/htmx.org@2"></script>
+<script src="/js/htmx.min.js"></script>
 ```
 
 2. Definir el modelo de datos y el DbContext en `Program.cs`.
 3. Registrar los servicios y configurar la cadena de conexión.
-4. Crear la página `Pages/Agenda/Index.cshtml` con los handlers.
+4. Crear la página `Pages/Index.cshtml` con los handlers.
 5. Crear los partials `_ContactList`, `_ContactDetail` y `_ContactForm`.
 6. Agregar los estilos en `wwwroot/css/site.css`.
 

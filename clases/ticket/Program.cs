@@ -14,7 +14,8 @@ builder.Services.ConfigureHttpJsonOptions(options => {
 });
 
 builder.Services.AddDbContext<TicketContext>(options =>
-	options.UseSqlite("Data Source=tickets.db"));
+	// options.UseSqlite("Data Source=tickets.db"));
+	options.UseInMemoryDatabase("TicketsDb"));
 
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
@@ -50,11 +51,12 @@ app.Use(async (context, next) => {
 });
 
 app.Use(async (context, next) => {
-	var auth = context.RequestServices.GetRequiredService<AuthService>();
+	var auth   = context.RequestServices.GetRequiredService<AuthService>();
 	var header = context.Request.Headers.Authorization.ToString();
 
 	if (header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) {
-		var token = header["Bearer ".Length..].Trim();
+		// var token = header["Bearer ".Length..].Trim();
+		var token = header.Substring(7).Trim();
 		var usuario = await auth.ValidarTokenAsync(token);
 
 		if (usuario is not null) {

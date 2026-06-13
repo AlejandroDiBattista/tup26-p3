@@ -48,7 +48,7 @@ class WAppService {
 
     public WAppService(string? store = null, TimeSpan? timeout = null, bool sincronizar = true) {
         this.store = store;
-        this.timeout = timeout ?? TimeSpan.FromMinutes(1);
+        this.timeout = timeout ?? TimeSpan.FromMinutes(2);
 
         if (sincronizar) {
             Sincronizar();
@@ -164,6 +164,14 @@ class WAppService {
 
     public List<GrupoWhatsApp> Grupos() {
         return ListarGruposDesdeBaseLocal();
+    }
+
+    public int CantidadMensajes(string[] referencias) {
+        DateOnly hoy = DateOnly.FromDateTime(DateTime.Today);
+        DateTime desde = new(hoy.Year, 4, 1);
+        DateTime hasta = hoy.ToDateTime(new TimeOnly(13, 0));
+        
+        return referencias.Sum(referencia => Mensajes(referencia, desde, hasta).Count);
     }
 
     public List<MensajeWhatsApp> Mensajes(string referencia, DateTime? desde = null, DateTime? hasta = null) {
@@ -868,7 +876,7 @@ class WAppService {
         string salida = EjecutarYObtenerSalida(argumentos);
 
         if (!string.IsNullOrWhiteSpace(salida)) {
-            Log.Info(salida);
+            // Log.Info(salida);
         }
     }
 

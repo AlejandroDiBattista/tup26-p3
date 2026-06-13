@@ -30,32 +30,4 @@ static class MensajesService {
         }
     }
 
-    public static void MensajeSinGithub() {
-        Alumnos alumnos = AlumnosManager.Leer(AppPaths.ArchivoAlumnos);
-
-        foreach (string comision in new[] { "C7", "C9" }) {
-            Alumnos lista = alumnos.ConGithub(false).EnComision(comision);
-            if (!lista.Any()) { continue; }
-
-            Console.WriteLine($"""
-            *{comision} - Sin Usuario GitHub*
-            
-            Los siguientes alumnos no me informaron cual es su usuario en GitHub.
-            Es necesario que tengan un usuario de GitHub para poder publicar el trabajo práctico y que yo pueda corregirlo.
-
-            ```
-            """);
-
-            foreach (Alumno a in lista) {
-                Console.WriteLine($"{a.Legajo}: {a.NombreCompleto}");
-            }
-
-            Console.WriteLine("""
-            Envien el usuario junto con su legajo por este grupo 
-
-            p.e "63241 josias57455"
-
-            """);
-        }
-    }
 }

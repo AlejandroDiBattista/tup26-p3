@@ -188,7 +188,7 @@ Laura,González,38,95000,Gerencia
 | `sortx empleados.csv -b apellido:alpha:asc -o salida.csv` | Genera `salida.csv` |
 | `cat empleados.csv \| sortx -b apellido` | Mismo resultado, leyendo desde stdin |
 | `sortx empleados.csv -b columnaInexistente` | Error en stderr, código de salida ≠ 0 |
-| `sortx --help` | Muestra ayuda y termina con código 0 |
+| `sortx --help` | Muestra ayuda y terminaempleados.csv -b columnaInexistente con código 0 |
 
 ---
 

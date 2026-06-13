@@ -1,27 +1,64 @@
-namespace Calculadora;
+using System;
 
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("Uso: dotnet run -- [expresion valor] [--test]");
-                return true;
+public class Comandos
+{
+    public static void Ejecutar(string[] args)
+    {
+        if (args.Length == 1 && (args[0] == "--help" || args[0] == "-h"))
+        {
+            MostrarAyuda();
+            return;
+        }
 
-            case ["--test"] or ["-t"] or ["--probar"] or ["-p"]:
-                Pruebas.Ejecutar();
-                return true;
+        if (args.Length == 1 && (args[0] == "--test" || args[0] == "-t" || args[0] == "--probar" || args[0] == "-p"))
+        {
+            Pruebas.EjecutarTodo();
+            return;
+        }
 
-            case [var expresion, var valor]:
-                if (int.TryParse(valor, out int x)) {
-                    var ast = Compilador.Parse(expresion);
-                    Console.WriteLine(ast.Evaluar(x));
-                } else {
-                    Console.WriteLine("Error: El valor de x debe ser un entero.");
-                }
-                return true;
+        if (args.Length == 2)
+        {
+            EjecutarModoDirecto(args[0], args[1]);
+            return;
+        }
 
-            default:
-                return false;
+        if (args.Length == 0)
+        {
+            Programa.ModoInteractivo();
+            return;
+        }
+
+        Console.WriteLine("Argumentos inválidos. Usá --help para ver las opciones.");
+    }
+
+    private static void MostrarAyuda()
+    {
+        Console.WriteLine("Uso: calculadora [expresion valor] [--help] [--probar]");
+        Console.WriteLine();
+        Console.WriteLine("Opciones:");
+        Console.WriteLine("  -h, --help    Muestra esta ayuda.");
+        Console.WriteLine("  -t, --test    Ejecuta las pruebas automáticas.");
+    }
+
+    private static void EjecutarModoDirecto(string expresion, string valorXStr)
+    {
+        int x;
+        if (!int.TryParse(valorXStr, out x))
+        {
+            Console.WriteLine("Error: Valor de x inválido.");
+            return;
+        }
+
+        try
+        {
+            Compilador comp = new Compilador(expresion);
+            Nodo ast = comp.Parsear();
+            int resultado = ast.Evaluar(x);
+            Console.WriteLine(resultado);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
     }
 }
