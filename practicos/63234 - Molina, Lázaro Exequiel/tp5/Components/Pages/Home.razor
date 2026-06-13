@@ -45,4 +45,22 @@
 
                             <div>
                                 <p class="contact-name">@item.Nombre @item.Apellido</p>
-                                <p class="contact-sub">
+                                <p class="contact-sub">  @if (string.IsNullOrEmpty(item.Empresa))
+                                    {
+                                        @:Independiente
+                                    }
+                                    else
+                                    {
+                                        @item.Empresa
+                                    }
+                                </p>
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="panel p-4">
