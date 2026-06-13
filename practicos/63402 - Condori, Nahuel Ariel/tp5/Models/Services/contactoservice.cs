@@ -6,44 +6,58 @@ namespace tp5.Services;
 
 public class ContactoService
 {
-    private readonly AgendaContext _context;
+    private readonly IDbContextFactory<AgendaContext> _contextFactory;
 
-    public ContactoService(AgendaContext context)
+    public ContactoService(IDbContextFactory<AgendaContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     public async Task<List<Contacto>> GetContactosAsync(string filtro = "")
     {
-        var query = _context.Contactos.AsQueryable();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var query = context.Contactos.AsNoTracking();
+
         if (!string.IsNullOrWhiteSpace(filtro))
         {
-            query = query.Where(c => c.Nombre.Contains(filtro) || 
-                                     c.Apellido.Contains(filtro) || 
-                                     c.Telefono.Contains(filtro));
+            filtro = filtro.Trim();
+            query = query.Where(c =>
+                c.Nombre.Contains(filtro) ||
+                c.Apellido.Contains(filtro) ||
+                c.Telefono.Contains(filtro) ||
+                c.Email.Contains(filtro) ||
+                c.Empresa.Contains(filtro));
         }
-        return await query.ToListAsync();
+
+        return await query
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync();
     }
 
     public async Task AddContactoAsync(Contacto contacto)
     {
-        _context.Contactos.Add(contacto);
-        await _context.SaveChangesAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        context.Contactos.Add(contacto);
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateContactoAsync(Contacto contacto)
     {
-        _context.Contactos.Update(contacto);
-        await _context.SaveChangesAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        context.Contactos.Update(contacto);
+        await context.SaveChangesAsync();
     }
 
     public async Task DeleteContactoAsync(int id)
     {
-        var contacto = await _context.Contactos.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var contacto = await context.Contactos.FindAsync(id);
+
         if (contacto != null)
         {
-            _context.Contactos.Remove(contacto);
-            await _context.SaveChangesAsync();
+            context.Contactos.Remove(contacto);
+            await context.SaveChangesAsync();
         }
     }
 }
