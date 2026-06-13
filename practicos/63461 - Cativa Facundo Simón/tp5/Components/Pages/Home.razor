@@ -58,6 +58,10 @@ else
                         <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
                         <p><strong>Fecha de nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")</p>
                         <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+                        <button class="btn btn-danger mt-3"
+        @onclick="EliminarContacto">
+    Eliminar
+</button>
                     </div>
                 </div>
             }
@@ -91,6 +95,20 @@ else
     private void SeleccionarContacto(Contacto contacto)
 {
     contactoSeleccionado = contacto;
+}
+
+private async Task EliminarContacto()
+{
+    if (contactoSeleccionado is null)
+        return;
+
+    Db.Contactos.Remove(contactoSeleccionado);
+
+    await Db.SaveChangesAsync();
+
+    contactos?.Remove(contactoSeleccionado);
+
+    contactoSeleccionado = null;
 }
 
 }
