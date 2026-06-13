@@ -1,9 +1,11 @@
-@using Microsoft.AspNetCore.Components.Routing
-
-<Router AppAssembly="@typeof(Program).Assembly">
+<Microsoft.AspNetCore.Components.Routing.Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <Microsoft.AspNetCore.Components.RouteView
+            RouteData="@routeData"
+            DefaultLayout="@typeof(Layout.MainLayout)" />
+        <Microsoft.AspNetCore.Components.Routing.FocusOnNavigate
+            RouteData="@routeData"
+            Selector="h1" />
     </Found>
     <NotFound>
         <div class="text-center mt-5">
@@ -11,4 +13,4 @@
             <p>No hay nada en esta dirección.</p>
         </div>
     </NotFound>
-</Router>
+</Microsoft.AspNetCore.Components.Routing.Router>
