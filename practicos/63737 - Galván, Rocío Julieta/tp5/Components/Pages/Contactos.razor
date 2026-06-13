@@ -6,7 +6,7 @@
 
 <h3>Contactos</h3>
 
-<h4>Agregar contacto</h4>
+<h4>Agregar / editar contacto</h4>
 
 <EditForm Model="nuevoContacto"
           OnValidSubmit="GuardarContacto"
@@ -31,35 +31,35 @@
         <label>Email:</label>
         <InputText @bind-Value="nuevoContacto.Email" />
     </div>
+
     <div>
-    <label>Empresa:</label>
-    <InputText @bind-Value="nuevoContacto.Empresa" />
-</div>
+        <label>Empresa:</label>
+        <InputText @bind-Value="nuevoContacto.Empresa" />
+    </div>
 
-<div>
-    <label>Cargo:</label>
-    <InputText @bind-Value="nuevoContacto.Cargo" />
-</div>
+    <div>
+        <label>Cargo:</label>
+        <InputText @bind-Value="nuevoContacto.Cargo" />
+    </div>
 
-<div>
-    <label>Dirección:</label>
-    <InputText @bind-Value="nuevoContacto.Direccion" />
-</div>
+    <div>
+        <label>Dirección:</label>
+        <InputText @bind-Value="nuevoContacto.Direccion" />
+    </div>
 
-<div>
-    <label>Fecha de nacimiento:</label>
-    <InputDate @bind-Value="nuevoContacto.FechaNacimiento" />
-</div>
+    <div>
+        <label>Fecha de nacimiento:</label>
+        <InputDate @bind-Value="nuevoContacto.FechaNacimiento" />
+    </div>
 
-<div>
-    <label>Notas:</label>
-    <InputTextArea @bind-Value="nuevoContacto.Notas" />
-</div>
+    <div>
+        <label>Notas:</label>
+        <InputTextArea @bind-Value="nuevoContacto.Notas" />
+    </div>
 
     <button type="submit">
         Guardar
     </button>
-
 </EditForm>
 
 <hr />
@@ -75,13 +75,18 @@ else
         {
             <li>
                 @contacto.Nombre @contacto.Apellido
+                - @contacto.Telefono
+                - @contacto.Email
+
+                <button @onclick="() => Editar(contacto)">
+                    Editar
+                </button>
             </li>
         }
     </ul>
 }
 
 @code {
-
     private List<Contacto> contactos = [];
 
     private Contacto nuevoContacto = new();
@@ -93,12 +98,19 @@ else
 
     private void GuardarContacto()
     {
-        Db.Contactos.Add(nuevoContacto);
+        if (nuevoContacto.Id == 0)
+        {
+            Db.Contactos.Add(nuevoContacto);
+        }
 
         Db.SaveChanges();
 
         nuevoContacto = new Contacto();
-
         contactos = Db.Contactos.ToList();
+    }
+
+    private void Editar(Contacto contacto)
+    {
+        nuevoContacto = contacto;
     }
 }
