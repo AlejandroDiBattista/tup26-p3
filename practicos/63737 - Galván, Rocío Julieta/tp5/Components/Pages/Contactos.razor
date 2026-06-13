@@ -4,128 +4,171 @@
 @using tp5.Models
 @inject tp5.Data.AgendaDbContext Db
 
-<h3>Contactos</h3>
+<div class="container py-4">
 
-<h4>Agregar / editar contacto</h4>
-
-<EditForm Model="nuevoContacto"
-          OnValidSubmit="GuardarContacto"
-          FormName="contactoForm">
-          <DataAnnotationsValidator />
-         <ValidationSummary />
-
-    <div>
-        <label>Nombre:</label>
-        <InputText @bind-Value="nuevoContacto.Nombre" />
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h1 class="mb-0">Agenda</h1>
+            <p class="text-muted mb-0">Contactos personales y profesionales</p>
+        </div>
     </div>
 
-    <div>
-        <label>Apellido:</label>
-        <InputText @bind-Value="nuevoContacto.Apellido" />
-    </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4>Agregar / editar contacto</h4>
 
-    <div>
-        <label>Teléfono:</label>
-        <InputText @bind-Value="nuevoContacto.Telefono" />
-    </div>
+            <EditForm Model="nuevoContacto"
+                      OnValidSubmit="GuardarContacto"
+                      FormName="contactoForm">
 
-    <div>
-        <label>Email:</label>
-        <InputText @bind-Value="nuevoContacto.Email" />
-    </div>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-    <div>
-        <label>Empresa:</label>
-        <InputText @bind-Value="nuevoContacto.Empresa" />
-    </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Nombre" />
+                    </div>
 
-    <div>
-        <label>Cargo:</label>
-        <InputText @bind-Value="nuevoContacto.Cargo" />
-    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Apellido</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Apellido" />
+                    </div>
 
-    <div>
-        <label>Dirección:</label>
-        <InputText @bind-Value="nuevoContacto.Direccion" />
-    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Telefono" />
+                    </div>
 
-    <div>
-        <label>Fecha de nacimiento:</label>
-        <InputDate @bind-Value="nuevoContacto.FechaNacimiento" />
-    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Email" />
+                    </div>
 
-    <div>
-        <label>Notas:</label>
-        <InputTextArea @bind-Value="nuevoContacto.Notas" />
-    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Empresa</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Empresa" />
+                    </div>
 
-    <button type="submit">
-        Guardar
-    </button>
-</EditForm>
+                    <div class="col-md-6">
+                        <label class="form-label">Cargo</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Cargo" />
+                    </div>
 
-<hr />
+                    <div class="col-md-6">
+                        <label class="form-label">Dirección</label>
+                        <InputText class="form-control" @bind-Value="nuevoContacto.Direccion" />
+                    </div>
 
-@if (contactos.Count == 0)
-{
-    <p>No hay contactos cargados.</p>
-}
-else
-{
-    <div style="display: flex; gap: 30px;">
-        <div style="width: 300px;">
-            <h4>Lista de contactos</h4>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha de nacimiento</label>
+                        <InputDate class="form-control" @bind-Value="nuevoContacto.FechaNacimiento" />
+                    </div>
 
-            @foreach (var contacto in contactos)
-            {
-                <div>
-                    <button @onclick="() => Seleccionar(contacto)">
-                        @contacto.Nombre @contacto.Apellido
-                    </button>
+                    <div class="col-12">
+                        <label class="form-label">Notas</label>
+                        <InputTextArea class="form-control" @bind-Value="nuevoContacto.Notas" />
+                    </div>
+
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit">
+                            Guardar
+                        </button>
+                    </div>
                 </div>
-            }
-        </div>
-
-        <div>
-            <h4>Detalle</h4>
-
-            @if (contactoSeleccionado is not null)
-            {
-                <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
-                <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
-                <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
-                <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
-                <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
-                <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
-                <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
-                <p><strong>Fecha de nacimiento:</strong> @contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy")</p>
-                <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
-
-                <button @onclick="() => Editar(contactoSeleccionado)">
-                    Editar
-                </button>
-
-                <button @onclick="() => Eliminar(contactoSeleccionado)">
-                    Eliminar
-                </button>
-            }
-            else
-            {
-                <p>Seleccione un contacto.</p>
-            }
+            </EditForm>
         </div>
     </div>
-}
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4>Lista de contactos</h4>
+
+                <div class="mb-3">
+                    <label class="form-label">Buscar contacto:</label>
+
+                    <input class="form-control"
+                           placeholder="Buscar por nombre, apellido, teléfono o email..."
+                           value="@busqueda"
+                           @oninput="Buscar" />
+                </div>
+
+                @if (contactos.Count == 0)
+                {
+                    <div class="alert alert-info">
+                        @if (string.IsNullOrWhiteSpace(busqueda))
+                        {
+                            <span>No hay contactos cargados.</span>
+                        }
+                        else
+                        {
+                            <span>No se encontraron contactos para la búsqueda "@busqueda".</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var contacto in contactos)
+                        {
+                            <button class="list-group-item list-group-item-action"
+                                    @onclick="() => Seleccionar(contacto)">
+                                <strong>@contacto.Nombre @contacto.Apellido</strong><br />
+                                <small class="text-muted">@contacto.Empresa</small>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4>Detalle</h4>
+
+                @if (contactoSeleccionado is not null)
+                {
+                    <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
+                    <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
+                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+                    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+                    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+                    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+                    <p><strong>Fecha de nacimiento:</strong> @contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy")</p>
+                    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+
+                    <button class="btn btn-outline-primary btn-sm" @onclick="() => Editar(contactoSeleccionado)">
+                        Editar
+                    </button>
+
+                    <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(contactoSeleccionado)">
+                        Eliminar
+                    </button>
+                }
+                else
+                {
+                    <p class="text-muted">Seleccione un contacto.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+  </div>
 
 @code {
     private List<Contacto> contactos = [];
-
     private Contacto nuevoContacto = new();
+    private Contacto? contactoSeleccionado;
 
     protected override void OnInitialized()
-    {
-        contactos = Db.Contactos.ToList();
-    }
+{
+    CargarContactos();
+}
 
     private void GuardarContacto()
     {
@@ -137,7 +180,7 @@ else
         Db.SaveChanges();
 
         nuevoContacto = new Contacto();
-        contactos = Db.Contactos.ToList();
+        CargarContactos();
     }
 
     private void Editar(Contacto contacto)
@@ -145,19 +188,38 @@ else
         nuevoContacto = contacto;
     }
 
-private void Eliminar(Contacto contacto)
+    private void Eliminar(Contacto contacto)
+    {
+        Db.Contactos.Remove(contacto);
+        Db.SaveChanges();
+
+        contactoSeleccionado = null;
+        CargarContactos();
+    }
+
+    private void Seleccionar(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+    }
+
+    private string busqueda = "";
+
+private void CargarContactos()
 {
-    Db.Contactos.Remove(contacto);
-    Db.SaveChanges();
-
-    contactoSeleccionado = null;
-    contactos = Db.Contactos.ToList();
+    contactos = Db.Contactos
+        .Where(c =>
+            c.Nombre.Contains(busqueda) ||
+            c.Apellido.Contains(busqueda) ||
+            c.Telefono.Contains(busqueda) ||
+            c.Email.Contains(busqueda) ||
+            c.Empresa.Contains(busqueda) ||
+            c.Cargo.Contains(busqueda) ||
+            c.Direccion.Contains(busqueda))
+        .ToList();
 }
-
-  private Contacto? contactoSeleccionado;
-
-  private void Seleccionar(Contacto contacto)
-  {
-    contactoSeleccionado = contacto;
- }
+private void Buscar(ChangeEventArgs e)
+{
+    busqueda = e.Value?.ToString() ?? "";
+    CargarContactos();
+}
 }
