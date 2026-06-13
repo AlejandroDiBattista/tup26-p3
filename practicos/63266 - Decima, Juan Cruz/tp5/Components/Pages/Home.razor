@@ -23,7 +23,7 @@
                     <i class="bi bi-search"></i>
                 </span>
                 <input type="text" class="form-control" placeholder="Buscar por nombre o apellido..."
-                    @bind-value="textoBusqueda" @bind-value:event="oninput" />
+                       @bind-value="textoBusqueda" @bind-value:event="oninput" />
             </div>
 
             <div class="list-group">
@@ -56,7 +56,7 @@
                 <h3>@(esModoEdicion ? "Editar Contacto" : "Nuevo Contacto")</h3>
                 <div class="card p-4 shadow-sm mb-4">
                     <EditForm Model="elContacto" OnValidSubmit="GuardarContacto">
-                        
+
                         <DataAnnotationsValidator />
 
                         <div class="row">
@@ -101,6 +101,11 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label">Fecha de Nacimiento</label>
+                            <InputDate @bind-Value="elContacto.FechaNacimiento" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">Notas</label>
                             <InputTextArea @bind-Value="elContacto.Notas" class="form-control" rows="2" />
                         </div>
@@ -123,10 +128,13 @@
                     <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
                     <p><strong>Correo electrónico:</strong> @contactoSeleccionado.Email</p>
                     <p><strong>Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "No especificada" : contactoSeleccionado.Empresa)</p>
-                    <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" :contactoSeleccionado.Cargo)</p>
+                    <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" :
+                                            contactoSeleccionado.Cargo)</p>
                         <p><strong>Dirección:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Direccion) ? "No especificada" : contactoSeleccionado.Direccion)</p>
-                        <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString()?? "No especificada")</p>
-                            <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" : contactoSeleccionado.Notas)</p>
+                        <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString() ??
+                                                        "No especificada")</p>
+                            <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" :
+                                                                                contactoSeleccionado.Notas)</p>
                                 <hr />
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-warning" @onclick="MostrarFormularioEditar">
@@ -238,6 +246,7 @@
                 contactoDb.Empresa = elContacto.Empresa;
                 contactoDb.Cargo = elContacto.Cargo;
                 contactoDb.Direccion = elContacto.Direccion;
+                contactoDb.FechaNacimiento = elContacto.FechaNacimiento;
                 contactoDb.Notas = elContacto.Notas;
 
                 DbContext.Contactos.Update(contactoDb);
