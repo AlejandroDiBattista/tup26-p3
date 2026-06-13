@@ -1,6 +1,7 @@
 @page "/"
 @using tp5.Data
 @using tp5.Models
+@rendermode InteractiveServer
 @inject AgendaContext db
 
 <h3>Agenda de Contactos</h3>
@@ -8,6 +9,12 @@
 <div style="display: flex; gap: 20px;">
 
     <div style="width: 40%;">
+    <button type="button"
+            class="btn btn-primary mb-2"
+            @onclick="Nuevo"
+            @onclick:stopPropagation="true">
+        Nuevo contacto
+    </button>
         <input placeholder="Buscar..." @bind="filtro" class="form-control mb-2" />
 
         @foreach (var c in ContactosFiltrados)
@@ -21,8 +28,22 @@
         }
     </div>
 
-    <div style="width: 60%;">
-        @if (seleccionado != null)
+   <div style="width: 60%;">
+        <p>editando: @(editando != null)</p>
+
+        @if (editando != null)
+        {
+            <h4>Nuevo contacto</h4>
+
+            <input class="form-control mb-2" placeholder="Nombre" @bind="editando.Nombre" />
+            <input class="form-control mb-2" placeholder="Apellido" @bind="editando.Apellido" />
+            <input class="form-control mb-2" placeholder="Teléfono" @bind="editando.Telefono" />
+            <input class="form-control mb-2" placeholder="Email" @bind="editando.Email" />
+
+            <button class="btn btn-success" @onclick="Guardar">Guardar</button>
+            <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+        }
+        else if (seleccionado != null)
         {
             <h4>@seleccionado.Nombre @seleccionado.Apellido</h4>
             <p><b>Teléfono:</b> @seleccionado.Telefono</p>
@@ -37,14 +58,13 @@
             <p>Seleccioná un contacto</p>
         }
     </div>
-
 </div>
 
 @code {
     List<Contacto> contactos = new();
     Contacto? seleccionado;
     string filtro = "";
-
+    Contacto? editando = null;
     protected override void OnInitialized()
     {
         contactos = db.Contactos.ToList();
@@ -59,5 +79,23 @@
     void Seleccionar(Contacto c)
     {
         seleccionado = c;
+        editando = null;
+    }
+    void Nuevo()
+    {
+        editando = new Contacto();
+        seleccionado = null;
+    }
+    void Guardar()
+    {
+        db.Contactos.Add(editando);
+        db.SaveChanges();
+
+        contactos = db.Contactos.ToList();
+        editando = null;
+    }
+    void Cancelar()
+    {
+        editando = null;
     }
 }
