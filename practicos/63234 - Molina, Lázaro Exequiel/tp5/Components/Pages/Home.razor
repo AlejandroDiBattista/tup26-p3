@@ -110,3 +110,22 @@
                         <div class="detail-field-label">Teléfono</div>
                         <div>@actual.Telefono</div>
                     </div>
+                    
+                    <div class="detail-field">
+                        <i class="bi bi-building"></i>
+                        <div class="detail-field-label">Empresa</div>
+                        <div>@(string.IsNullOrEmpty(actual.Empresa) ? "—" : actual.Empresa)</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-briefcase"></i>
+                        <div class="detail-field-label">Cargo</div>
+                        <div>@(string.IsNullOrEmpty(actual.Cargo) ? "—" : actual.Cargo)</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-geo-alt"></i>
+                        <div class="detail-field-label">Dirección</div>
+                        <div>@(string.IsNullOrEmpty(actual.Direccion) ? "—" : actual.Direccion)</div>
+                    </div>
+
