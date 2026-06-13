@@ -1,7 +1,306 @@
 @page "/"
+@rendermode InteractiveServer
+@inject ContactoService ContactoService
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
-</div>
+<main class="agenda-page">
+    <header class="agenda-header">
+        <div>
+            <h1>Agenda</h1>
+            <p>@Subtitulo</p>
+        </div>
+        <button class="btn btn-primary" type="button" @onclick="NuevoContacto">
+            <i class="bi bi-plus-lg"></i>
+            Nuevo contacto
+        </button>
+    </header>
+
+    <section class="agenda-grid">
+        <aside class="master-panel">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input class="form-control" placeholder="Buscar contacto..." value="@busqueda" @oninput="Buscar" />
+            </div>
+
+            <div class="contact-list">
+                @if (cargando)
+                {
+                    <p class="empty-state">Cargando contactos...</p>
+                }
+                else if (contactos.Count == 0)
+                {
+                    <p class="empty-state">No se encontraron contactos.</p>
+                }
+                else
+                {
+                    @foreach (var contacto in contactos)
+                    {
+                        <button class="contact-item @(contacto.Id == contactoSeleccionado?.Id ? "active" : "")"
+                                type="button"
+                                @onclick="() => SeleccionarContacto(contacto.Id)">
+                            <span class="avatar">@Iniciales(contacto)</span>
+                            <span>
+                                <strong>@NombreCompleto(contacto)</strong>
+                                <small>@TextoSecundario(contacto)</small>
+                            </span>
+                        </button>
+                    }
+                }
+            </div>
+        </aside>
+
+        <section class="detail-panel">
+            @if (modoFormulario)
+            {
+                <EditForm Model="contactoFormulario" OnValidSubmit="GuardarContacto">
+                    <DataAnnotationsValidator />
+
+                    <div class="detail-heading">
+                        <span class="avatar avatar-lg">@Iniciales(contactoFormulario)</span>
+                        <div>
+                            <h2>@(contactoFormulario.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
+                            <p>@(contactoFormulario.Id == 0 ? "Registrar informacion de contacto" : $"Modificar los datos de {NombreCompleto(contactoFormulario)}")</p>
+                        </div>
+                        <div class="heading-actions">
+                            <button class="btn btn-outline-secondary" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-floppy"></i>
+                                Guardar cambios
+                            </button>
+                        </div>
+                    </div>
+
+                    <ValidationSummary />
+
+                    <div class="form-grid">
+                        <label>
+                            Nombre
+                            <input class="form-control" @bind="contactoFormulario.Nombre" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Apellido
+                            <input class="form-control" @bind="contactoFormulario.Apellido" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Telefono
+                            <input class="form-control" @bind="contactoFormulario.Telefono" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Email
+                            <input class="form-control" type="email" @bind="contactoFormulario.Email" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Empresa
+                            <input class="form-control" @bind="contactoFormulario.Empresa" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Cargo
+                            <input class="form-control" @bind="contactoFormulario.Cargo" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Direccion
+                            <input class="form-control" @bind="contactoFormulario.Direccion" @bind:event="oninput" />
+                        </label>
+                        <label>
+                            Fecha de nacimiento
+                            <InputDate class="form-control" @bind-Value="contactoFormulario.FechaNacimiento" />
+                        </label>
+                        <label class="span-2">
+                            Notas
+                            <textarea class="form-control" rows="5" @bind="contactoFormulario.Notas" @bind:event="oninput"></textarea>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-outline-secondary" type="button" @onclick="CancelarFormulario">Cancelar</button>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-floppy"></i>
+                            Guardar cambios
+                        </button>
+                    </div>
+                </EditForm>
+            }
+            else if (contactoSeleccionado is not null)
+            {
+                <div class="detail-heading">
+                    <span class="avatar avatar-lg">@Iniciales(contactoSeleccionado)</span>
+                    <div>
+                        <h2>@NombreCompleto(contactoSeleccionado)</h2>
+                        <p>@TextoSecundario(contactoSeleccionado)</p>
+                    </div>
+                    <div class="heading-actions">
+                        <button class="btn btn-outline-secondary" type="button" @onclick="EditarContacto">
+                            <i class="bi bi-pencil"></i>
+                            Editar
+                        </button>
+                        <button class="btn btn-outline-danger" type="button" @onclick="EliminarContacto">
+                            <i class="bi bi-trash"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+
+                <dl class="contact-detail">
+                    <div>
+                        <dt><i class="bi bi-envelope"></i>Email</dt>
+                        <dd>@contactoSeleccionado.Email</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-telephone"></i>Telefono</dt>
+                        <dd>@contactoSeleccionado.Telefono</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-building"></i>Empresa</dt>
+                        <dd>@Valor(contactoSeleccionado.Empresa)</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-briefcase"></i>Cargo</dt>
+                        <dd>@Valor(contactoSeleccionado.Cargo)</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-geo-alt"></i>Direccion</dt>
+                        <dd>@Valor(contactoSeleccionado.Direccion)</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-calendar-event"></i>Fecha de nacimiento</dt>
+                        <dd>@(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")</dd>
+                    </div>
+                    <div>
+                        <dt><i class="bi bi-card-text"></i>Notas</dt>
+                        <dd>@Valor(contactoSeleccionado.Notas)</dd>
+                    </div>
+                </dl>
+            }
+            else
+            {
+                <p class="empty-state">Seleccione un contacto o cree uno nuevo.</p>
+            }
+        </section>
+    </section>
+</main>
+
+@code {
+    private List<Contacto> contactos = [];
+    private Contacto? contactoSeleccionado;
+    private Contacto contactoFormulario = new();
+    private bool cargando = true;
+    private bool modoFormulario;
+    private string busqueda = "";
+
+    private string Subtitulo => modoFormulario ? "Editar informacion de contacto" : "Contactos personales y profesionales";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos(int? seleccionarId = null)
+    {
+        cargando = true;
+        contactos = await ContactoService.BuscarAsync(busqueda);
+        cargando = false;
+
+        var id = seleccionarId ?? contactoSeleccionado?.Id;
+        contactoSeleccionado = id is null
+            ? contactos.FirstOrDefault()
+            : contactos.FirstOrDefault(c => c.Id == id) ?? contactos.FirstOrDefault();
+    }
+
+    private async Task Buscar(ChangeEventArgs e)
+    {
+        busqueda = e.Value?.ToString() ?? "";
+        modoFormulario = false;
+        await CargarContactos();
+    }
+
+    private async Task SeleccionarContacto(int id)
+    {
+        modoFormulario = false;
+        contactoSeleccionado = await ContactoService.ObtenerAsync(id);
+    }
+
+    private void NuevoContacto()
+    {
+        contactoFormulario = new Contacto();
+        modoFormulario = true;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        contactoFormulario = Copiar(contactoSeleccionado);
+        modoFormulario = true;
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (contactoFormulario.Id == 0)
+        {
+            await ContactoService.CrearAsync(contactoFormulario);
+        }
+        else
+        {
+            await ContactoService.ActualizarAsync(contactoFormulario);
+        }
+
+        modoFormulario = false;
+        await CargarContactos(contactoFormulario.Id);
+    }
+
+    private void CancelarFormulario()
+    {
+        modoFormulario = false;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        var idEliminado = contactoSeleccionado.Id;
+        await ContactoService.EliminarAsync(idEliminado);
+        contactoSeleccionado = null;
+        await CargarContactos();
+    }
+
+    private static Contacto Copiar(Contacto contacto) => new()
+    {
+        Id = contacto.Id,
+        Nombre = contacto.Nombre,
+        Apellido = contacto.Apellido,
+        Telefono = contacto.Telefono,
+        Email = contacto.Email,
+        Empresa = contacto.Empresa,
+        Cargo = contacto.Cargo,
+        Direccion = contacto.Direccion,
+        FechaNacimiento = contacto.FechaNacimiento,
+        Notas = contacto.Notas
+    };
+
+    private static string NombreCompleto(Contacto contacto)
+    {
+        var nombre = $"{contacto.Nombre} {contacto.Apellido}".Trim();
+        return string.IsNullOrWhiteSpace(nombre) ? "Sin nombre" : nombre;
+    }
+
+    private static string TextoSecundario(Contacto contacto) =>
+        string.IsNullOrWhiteSpace(contacto.Empresa) ? "Sin empresa" : contacto.Empresa;
+
+    private static string Iniciales(Contacto contacto)
+    {
+        var primera = string.IsNullOrWhiteSpace(contacto.Nombre) ? "" : contacto.Nombre.Trim()[0].ToString();
+        var segunda = string.IsNullOrWhiteSpace(contacto.Apellido) ? "" : contacto.Apellido.Trim()[0].ToString();
+        var iniciales = $"{primera}{segunda}".ToUpperInvariant();
+        return string.IsNullOrWhiteSpace(iniciales) ? "?" : iniciales;
+    }
+
+    private static string Valor(string valor) =>
+        string.IsNullOrWhiteSpace(valor) ? "-" : valor;
+}
