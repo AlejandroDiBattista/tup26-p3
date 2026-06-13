@@ -9,5 +9,5 @@ public class AgendaContext : DbContext
     {
     }
 
-    public DbSet<Contacto> Contactos { get; set; }
+    public DbSet<Contacto> Contactos => Set<Contacto>();
 }
