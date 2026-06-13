@@ -13,3 +13,13 @@ public class Contacto
     public DateOnly? FechaNacimiento { get; set; }
     public string Notas { get; set; } = "";
 }
+
+public class AgendaDbContext : DbContext
+{
+    public AgendaDbContext(DbContextOptions<AgendaDbContext> options)
+        : base(options)
+    {
+    }
+
+    public DbSet<Contacto> Contactos => Set<Contacto>();
+}
