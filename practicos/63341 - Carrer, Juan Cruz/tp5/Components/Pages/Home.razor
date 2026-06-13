@@ -20,9 +20,13 @@ else
         <div class="col-4">
             <h3>Contactos</h3>
 
+            <input class="form-control mb-3"
+                placeholder="Buscar contacto..."
+                @bind="textoBusqueda" />
+
             <ul class="list-group">
 
-                @foreach (var c in contactos)
+                @foreach (var c in contactosFiltrados)
                 {
                     <li class="list-group-item @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
                         @onclick="() => Seleccionar(c)"
@@ -83,4 +87,13 @@ else
     {
         contactoSeleccionado = contacto;
     }
+
+    string textoBusqueda = "";
+
+    IEnumerable<Contacto> contactosFiltrados =>
+        contactos?.Where(c =>
+            string.IsNullOrWhiteSpace(textoBusqueda) ||
+            c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+        ?? Enumerable.Empty<Contacto>();
 }
