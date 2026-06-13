@@ -11,6 +11,8 @@
 <EditForm Model="nuevoContacto"
           OnValidSubmit="GuardarContacto"
           FormName="contactoForm">
+          <DataAnnotationsValidator />
+         <ValidationSummary />
 
     <div>
         <label>Nombre:</label>
