@@ -7,7 +7,14 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<h1>TP5: AgendaWeb</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>TP5: AgendaWeb</h1>
+
+    <button class="btn btn-primary"
+            @onclick="PrepararNuevoContacto">
+        Nuevo contacto
+    </button>
+</div>
 
 <div class="mb-3">
     <input class="form-control"
@@ -37,6 +44,57 @@ else
         </div>
 
         <div class="col-md-8">
+
+            @if (mostrandoFormulario)
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4>Nuevo contacto</h4>
+        </div>
+
+        <div class="card-body">
+            <EditForm Model="nuevoContacto"
+                      OnValidSubmit="GuardarNuevoContacto">
+
+                <div class="mb-2">
+                    <label>Nombre</label>
+                    <InputText class="form-control"
+                               @bind-Value="nuevoContacto.Nombre" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Apellido</label>
+                    <InputText class="form-control"
+                               @bind-Value="nuevoContacto.Apellido" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Teléfono</label>
+                    <InputText class="form-control"
+                               @bind-Value="nuevoContacto.Telefono" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Email</label>
+                    <InputText class="form-control"
+                               @bind-Value="nuevoContacto.Email" />
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success me-2">
+                    Guardar
+                </button>
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        @onclick="() => mostrandoFormulario = false">
+                    Cancelar
+                </button>
+            </EditForm>
+        </div>
+    </div>
+}
+
             @if (contactoSeleccionado is null)
             {
                 <div class="alert alert-info">
@@ -76,6 +134,9 @@ else
 
         private Contacto? contactoSeleccionado;
 
+        private bool mostrandoFormulario = false;
+private Contacto nuevoContacto = new();
+
         private IEnumerable<Contacto> ContactosFiltrados =>
     string.IsNullOrWhiteSpace(busqueda)
         ? contactos ?? Enumerable.Empty<Contacto>()
@@ -109,6 +170,32 @@ private async Task EliminarContacto()
     contactos?.Remove(contactoSeleccionado);
 
     contactoSeleccionado = null;
+}
+
+private void PrepararNuevoContacto()
+{
+    nuevoContacto = new Contacto();
+    mostrandoFormulario = true;
+}
+
+private async Task GuardarNuevoContacto()
+{
+    Db.Contactos.Add(nuevoContacto);
+
+    await Db.SaveChangesAsync();
+
+    contactos ??= new List<Contacto>();
+
+    contactos.Add(nuevoContacto);
+
+    contactos = contactos
+        .OrderBy(c => c.Apellido)
+        .ThenBy(c => c.Nombre)
+        .ToList();
+
+    mostrandoFormulario = false;
+
+    contactoSeleccionado = nuevoContacto;
 }
 
 }
