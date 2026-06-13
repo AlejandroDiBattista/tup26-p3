@@ -1,4 +1,5 @@
 @page "/"
+@rendermode InteractiveServer
 
 @using Microsoft.EntityFrameworkCore
 @using tp5.Data
@@ -8,33 +9,78 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<h1 class="mb-4">Agenda de Contactos</h1>
-
 @if (contactos == null)
 {
     <p>Cargando...</p>
 }
 else
 {
-    <ul class="list-group">
-        @foreach (var c in contactos)
-        {
-            <li class="list-group-item">
-                @c.Apellido, @c.Nombre
-            </li>
-        }
-    </ul>
+    <div class="row">
+
+        <div class="col-4">
+            <h3>Contactos</h3>
+
+            <ul class="list-group">
+
+                @foreach (var c in contactos)
+                {
+                    <li class="list-group-item @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
+                        @onclick="() => Seleccionar(c)"
+                        style="cursor:pointer">
+
+                        @c.Apellido, @c.Nombre
+
+                    </li>
+                }
+
+            </ul>
+        </div>
+
+        <div class="col-8">
+
+            @if (contactoSeleccionado != null)
+            {
+                <h2>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+
+                <hr>
+
+                <p><b>Teléfono:</b> @contactoSeleccionado.Telefono</p>
+
+                <p><b>Email:</b> @contactoSeleccionado.Email</p>
+
+                <p><b>Empresa:</b> @contactoSeleccionado.Empresa</p>
+
+                <p><b>Cargo:</b> @contactoSeleccionado.Cargo</p>
+
+                <p><b>Dirección:</b> @contactoSeleccionado.Direccion</p>
+
+                <p><b>Fecha Nacimiento:</b> @contactoSeleccionado.FechaNacimiento</p>
+
+                <p><b>Notas:</b> @contactoSeleccionado.Notas</p>
+            }
+
+        </div>
+
+    </div>
 }
 
 @code {
 
     List<Contacto>? contactos;
 
+    Contacto? contactoSeleccionado;
+
     protected override async Task OnInitializedAsync()
     {
         contactos = await Db.Contactos
             .OrderBy(c => c.Apellido)
             .ToListAsync();
+
+        contactoSeleccionado = contactos.FirstOrDefault();
     }
 
+    void Seleccionar(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+    }
 }
