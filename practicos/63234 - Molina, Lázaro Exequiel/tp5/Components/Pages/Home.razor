@@ -28,3 +28,21 @@
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-search"></i>
                         </span>
+                                      placeholder="Buscar contacto..."
+                               @bind="textoBusqueda" @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <ul class="list-group list-group-flush contact-list">
+                    @foreach (var item in ListaFiltrada())
+                    {
+                        <li class="list-group-item @(item == actual ? "active" : "")"
+                            @onclick="@(() => actual = item)">
+
+                            <div class="avatar" style="background-color:@AvatarHelper.Color(item.Nombre, item.Apellido)">
+                                @AvatarHelper.Iniciales(item.Nombre, item.Apellido)
+                            </div>
+
+                            <div>
+                                <p class="contact-name">@item.Nombre @item.Apellido</p>
+                                <p class="contact-sub">
