@@ -1,0 +1,15 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "dotnet.defaultSolution": "tp5.slnx",
+        "dotnet.projects.enableFileBasedPrograms": false,
+        "files.watcherExclude": {
+            "**/bin/**": true,
+            "**/obj/**": true
+        }
+    }
+}
