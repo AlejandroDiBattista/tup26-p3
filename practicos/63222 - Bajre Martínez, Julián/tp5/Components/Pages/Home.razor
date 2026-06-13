@@ -1,27 +1,79 @@
 @page "/"
 
+@using Microsoft.AspNetCore.Components
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Forms
 @using tp5.Models
 
 @inject AgendaDbContext Db
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<h1 class="text-center mt-4 mb-4">
+<h1 class="text-center my-4">
     <i class="bi bi-person-vcard me-2"></i>
     TP5: AgendaWeb
 </h1>
 
 @if (contactos == null)
 {
-    <p class="text-center">Cargando contactos...</p>
+    <p>Cargando contactos...</p>
 }
 else
 {
     <div class="row">
 
-        <!-- Maestro -->
         <div class="col-md-4">
+            <button class="btn btn-success w-100 mb-3"
+                    @onclick="MostrarFormulario">
+                <i class="bi bi-plus-circle"></i>
+                Nuevo Contacto
+            </button>
+            @if (mostrandoFormulario)
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Nuevo Contacto
+                    </div>
+
+                    <div class="card-body">
+
+                        <EditForm Model="nuevoContacto"
+                                  OnValidSubmit="GuardarContacto">
+
+                            <div class="mb-2">
+                                <InputText class="form-control"
+                                           @bind-Value="nuevoContacto.Nombre"
+                                           placeholder="Nombre" />
+                            </div>
+
+                            <div class="mb-2">
+                                <InputText class="form-control"
+                                           @bind-Value="nuevoContacto.Apellido"
+                                           placeholder="Apellido" />
+                            </div>
+
+                            <div class="mb-2">
+                                <InputText class="form-control"
+                                           @bind-Value="nuevoContacto.Telefono"
+                                           placeholder="Teléfono" />
+                            </div>
+
+                            <div class="mb-2">
+                                <InputText class="form-control"
+                                           @bind-Value="nuevoContacto.Email"
+                                           placeholder="Email" />
+                            </div>
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                Guardar
+                            </button>
+
+                        </EditForm>
+
+                    </div>
+                </div>
+            }
             <div class="list-group">
 
                 @foreach (var contacto in contactos)
@@ -37,7 +89,6 @@ else
             </div>
         </div>
 
-        <!-- Detalle -->
         <div class="col-md-8">
 
             @if (seleccionado != null)
@@ -107,6 +158,10 @@ else
     private List<Contacto>? contactos;
     private Contacto? seleccionado;
 
+    private bool mostrandoFormulario = false;
+
+    private Contacto nuevoContacto = new();
+
     protected override async Task OnInitializedAsync()
     {
         contactos = await Db.Contactos.ToListAsync();
@@ -117,6 +172,26 @@ else
     private void Seleccionar(Contacto contacto)
     {
         seleccionado = contacto;
+    }
+
+    private void MostrarFormulario()
+    {
+        mostrandoFormulario = !mostrandoFormulario;
+    }
+
+    private async Task GuardarContacto()
+    {
+        Db.Contactos.Add(nuevoContacto);
+
+        await Db.SaveChangesAsync();
+
+        contactos = await Db.Contactos.ToListAsync();
+
+        seleccionado = nuevoContacto;
+
+        nuevoContacto = new Contacto();
+
+        mostrandoFormulario = false;
     }
 }
 
