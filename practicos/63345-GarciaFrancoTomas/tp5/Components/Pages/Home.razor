@@ -1,7 +1,63 @@
 @page "/"
+@using tp5.Data
+@using tp5.Models
+@inject AgendaContext db
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+<h3>Agenda de Contactos</h3>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div style="display: flex; gap: 20px;">
+
+    <div style="width: 40%;">
+        <input placeholder="Buscar..." @bind="filtro" class="form-control mb-2" />
+
+        @foreach (var c in ContactosFiltrados)
+        {
+            <div class="card p-2 mb-2"
+                 style="cursor:pointer"
+                 @onclick="() => Seleccionar(c)">
+                <b>@c.Nombre @c.Apellido</b><br />
+                <small>@c.Telefono</small>
+            </div>
+        }
+    </div>
+
+    <div style="width: 60%;">
+        @if (seleccionado != null)
+        {
+            <h4>@seleccionado.Nombre @seleccionado.Apellido</h4>
+            <p><b>Teléfono:</b> @seleccionado.Telefono</p>
+            <p><b>Email:</b> @seleccionado.Email</p>
+            <p><b>Empresa:</b> @seleccionado.Empresa</p>
+            <p><b>Cargo:</b> @seleccionado.Cargo</p>
+            <p><b>Dirección:</b> @seleccionado.Direccion</p>
+            <p><b>Notas:</b> @seleccionado.Notas</p>
+        }
+        else
+        {
+            <p>Seleccioná un contacto</p>
+        }
+    </div>
+
 </div>
+
+@code {
+    List<Contacto> contactos = new();
+    Contacto? seleccionado;
+    string filtro = "";
+
+    protected override void OnInitialized()
+    {
+        contactos = db.Contactos.ToList();
+    }
+
+    IEnumerable<Contacto> ContactosFiltrados =>
+        contactos.Where(c =>
+            (c.Nombre + " " + c.Apellido)
+            .ToLower()
+            .Contains(filtro.ToLower()));
+
+    void Seleccionar(Contacto c)
+    {
+        seleccionado = c;
+    }
+}
