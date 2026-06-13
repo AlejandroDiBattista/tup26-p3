@@ -104,18 +104,39 @@
         modoEdicion = true;
     }
 
-    async Task Guardar()
+   async Task Guardar()
+{
+    if (contactoEditando.Id == 0)
     {
-        if (contactoEditando.Id == 0)
-            Db.Contactos.Add(contactoEditando);
-        else
-            Db.Contactos.Update(contactoEditando);
-
-        await Db.SaveChangesAsync();
-        contactos = await Db.Contactos.ToListAsync();
-        contactoSeleccionado = contactoEditando;
-        modoEdicion = false;
+        Db.Contactos.Add(contactoEditando);
     }
+    else
+    {
+        var contactoDb = await Db.Contactos.FindAsync(contactoEditando.Id);
+
+        if (contactoDb != null)
+        {
+            contactoDb.Nombre = contactoEditando.Nombre;
+            contactoDb.Apellido = contactoEditando.Apellido;
+            contactoDb.Telefono = contactoEditando.Telefono;
+            contactoDb.Email = contactoEditando.Email;
+            contactoDb.Empresa = contactoEditando.Empresa;
+            contactoDb.Cargo = contactoEditando.Cargo;
+            contactoDb.Direccion = contactoEditando.Direccion;
+            contactoDb.FechaNacimiento = contactoEditando.FechaNacimiento;
+            contactoDb.Notas = contactoEditando.Notas;
+        }
+    }
+
+    await Db.SaveChangesAsync();
+
+    contactos = await Db.Contactos.ToListAsync();
+
+    contactoSeleccionado = contactos
+        .FirstOrDefault(c => c.Id == contactoEditando.Id);
+
+    modoEdicion = false;
+}
 
     async Task EliminarContacto()
     {
