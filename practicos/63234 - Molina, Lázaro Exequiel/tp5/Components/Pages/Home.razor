@@ -75,3 +75,38 @@
 
                         <div class="d-flex gap-3 align-items-center">
                             <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(actual.Nombre, actual.Apellido)">
+                                 @AvatarHelper.Iniciales(actual.Nombre, actual.Apellido)
+                            </div>
+                            <div>
+                                <h4 class="mb-0">@actual.Nombre @actual.Apellido</h4>
+                                @if (!string.IsNullOrEmpty(actual.Empresa))
+                                {
+                                    <p class="text-primary mb-0">@actual.Empresa</p>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary" @onclick="IrAEditar">
+                                <i class="bi bi-pencil me-1"></i>Editar
+                            </button>
+                            <button class="btn btn-outline-danger" @onclick="BorrarContacto">
+                                <i class="bi bi-trash me-1"></i>Eliminar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <hr />
+
+                    <div class="detail-field">
+                        <i class="bi bi-envelope"></i>
+                        <div class="detail-field-label">Email</div>
+                        <div>@actual.Email</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-telephone"></i>
+                        <div class="detail-field-label">Teléfono</div>
+                        <div>@actual.Telefono</div>
+                    </div>
