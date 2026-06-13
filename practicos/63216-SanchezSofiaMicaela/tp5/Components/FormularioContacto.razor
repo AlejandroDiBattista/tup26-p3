@@ -1,1 +1,79 @@
-﻿
+﻿@using tp5.Models
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">@(Contacto.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label">Nombre *</label>
+                <input class="form-control" @bind="Contacto.Nombre" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Apellido *</label>
+                <input class="form-control" @bind="Contacto.Apellido" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Teléfono *</label>
+                <input class="form-control" @bind="Contacto.Telefono" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email *</label>
+                <input class="form-control" @bind="Contacto.Email" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Empresa</label>
+                <input class="form-control" @bind="Contacto.Empresa" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Cargo</label>
+                <input class="form-control" @bind="Contacto.Cargo" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Dirección</label>
+                <input class="form-control" @bind="Contacto.Direccion" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Fecha de nacimiento</label>
+                <input class="form-control" type="date" @bind="Contacto.FechaNacimiento" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">Notas</label>
+                <textarea class="form-control" rows="3" @bind="Contacto.Notas"></textarea>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert alert-danger mt-2">@error</div>
+        }
+
+        <div class="mt-3">
+            <button class="btn btn-success me-2" @onclick="Validar">Guardar</button>
+            <button class="btn btn-secondary" @onclick="OnCancelar">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Contacto Contacto { get; set; } = new();
+    [Parameter] public EventCallback OnGuardar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    string error = "";
+
+    async Task Validar()
+    {
+        if (string.IsNullOrWhiteSpace(Contacto.Nombre) ||
+            string.IsNullOrWhiteSpace(Contacto.Apellido) ||
+            string.IsNullOrWhiteSpace(Contacto.Telefono) ||
+            string.IsNullOrWhiteSpace(Contacto.Email))
+        {
+            error = "Los campos Nombre, Apellido, Teléfono y Email son obligatorios.";
+            return;
+        }
+        error = "";
+        await OnGuardar.InvokeAsync();
+    }
+}
