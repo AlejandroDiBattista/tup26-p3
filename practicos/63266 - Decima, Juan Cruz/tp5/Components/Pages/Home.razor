@@ -12,10 +12,20 @@
 
     <div class="row">
         <div class="col-md-4 border-end">
+
             <h3>Contactos</h3>
             <button class="btn btn-primary w-100 mb-3" @onclick="MostrarFormularioNuevo">
                 <i class="bi bi-plus-circle"></i> Nuevo Contacto
             </button>
+
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="buscar-addon">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Buscar por nombre o apellido..."
+                       @bind-value="textoBusqueda" @bind-value:event="oninput" />
+            </div>
+
             <div class="list-group">
                 @if (contactos == null)
                 {
@@ -27,7 +37,7 @@
                 }
                 else
                 {
-                    @foreach (var con in contactos)
+                    @foreach (var con in ContactosFiltrados)
                     {
                         <button
                             class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == con.Id ? "active" : "")"
@@ -109,13 +119,10 @@
                     <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
                     <p><strong>Correo electrónico:</strong> @contactoSeleccionado.Email</p>
                     <p><strong>Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "No especificada" : contactoSeleccionado.Empresa)</p>
-                    <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" :
-                                                                                                                    contactoSeleccionado.Cargo)</p>
+                    <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" :contactoSeleccionado.Cargo)</p>
                         <p><strong>Dirección:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Direccion) ? "No especificada" : contactoSeleccionado.Direccion)</p>
-                        <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString()
-                                                                                                                                    ?? "No especificada")</p>
-                            <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" :
-                                                                                                                    contactoSeleccionado.Notas)</p>
+                        <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString()?? "No especificada")</p>
+                            <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" : contactoSeleccionado.Notas)</p>
                                 <hr />
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-warning" @onclick="MostrarFormularioEditar">
@@ -145,6 +152,8 @@
 
     private bool mostrarFormulario = false;
     private bool esModoEdicion = false;
+
+    private string textoBusqueda = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -240,6 +249,20 @@
         contactos = await DbContext.Contactos.OrderBy(c => c.Apellido).ToListAsync();
         mostrarFormulario = false;
         contactoSeleccionado = null;
+    }
+
+    private IEnumerable<Contacto> ContactosFiltrados
+    {
+        get
+        {
+            if (contactos == null) return Enumerable.Empty<Contacto>();
+
+            if (string.IsNullOrWhiteSpace(textoBusqueda)) return contactos;
+
+            return contactos.Where(c =>
+                c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+        }
     }
 
 }
