@@ -19,4 +19,9 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AgendaDbContext>();
+    db.Database.EnsureCreated();
+}
 app.Run();
