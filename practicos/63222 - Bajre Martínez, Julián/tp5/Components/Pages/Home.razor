@@ -18,36 +18,105 @@
 }
 else
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-            </tr>
-        </thead>
+    <div class="row">
 
-        <tbody>
-            @foreach (var contacto in contactos)
+        <!-- Maestro -->
+        <div class="col-md-4">
+            <div class="list-group">
+
+                @foreach (var contacto in contactos)
+                {
+                    <button
+                        class="list-group-item list-group-item-action @(contacto == seleccionado ? "active" : "")"
+                        @onclick="() => Seleccionar(contacto)">
+
+                        @contacto.Apellido, @contacto.Nombre
+                    </button>
+                }
+
+            </div>
+        </div>
+
+        <!-- Detalle -->
+        <div class="col-md-8">
+
+            @if (seleccionado != null)
             {
-                <tr>
-                    <td>@contacto.Nombre</td>
-                    <td>@contacto.Apellido</td>
-                    <td>@contacto.Telefono</td>
-                    <td>@contacto.Email</td>
-                </tr>
+                <div class="card">
+                    <div class="card-header">
+                        Detalle del contacto
+                    </div>
+
+                    <div class="card-body">
+
+                        <h4>
+                            @seleccionado.Nombre @seleccionado.Apellido
+                        </h4>
+
+                        <p>
+                            <strong>Teléfono:</strong>
+                            @seleccionado.Telefono
+                        </p>
+
+                        <p>
+                            <strong>Email:</strong>
+                            @seleccionado.Email
+                        </p>
+
+                        <p>
+                            <strong>Empresa:</strong>
+                            @seleccionado.Empresa
+                        </p>
+
+                        <p>
+                            <strong>Cargo:</strong>
+                            @seleccionado.Cargo
+                        </p>
+
+                        <p>
+                            <strong>Dirección:</strong>
+                            @seleccionado.Direccion
+                        </p>
+
+                        <p>
+                            <strong>Fecha Nacimiento:</strong>
+                            @seleccionado.FechaNacimiento
+                        </p>
+
+                        <p>
+                            <strong>Notas:</strong>
+                            @seleccionado.Notas
+                        </p>
+
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
+            else
+            {
+                <div class="alert alert-info">
+                    Seleccione un contacto.
+                </div>
+            }
+
+        </div>
+
+    </div>
 }
 
 @code {
     private List<Contacto>? contactos;
+    private Contacto? seleccionado;
 
     protected override async Task OnInitializedAsync()
     {
         contactos = await Db.Contactos.ToListAsync();
+
+        seleccionado = contactos.FirstOrDefault();
+    }
+
+    private void Seleccionar(Contacto contacto)
+    {
+        seleccionado = contacto;
     }
 }
 
