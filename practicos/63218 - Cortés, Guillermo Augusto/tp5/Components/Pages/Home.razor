@@ -57,66 +57,66 @@
 
         <div class="col-12 col-md-8">
             <h2 class="h5 mb-3">Detalle</h2>
-            @if (mostrandoFormularioCrear)
+            @if (mostrandoFormulario)
             {
                 <div class="card">
                     <div class="card-body">
-                        <h3 class="card-title h5">Nuevo contacto</h3>
+                        <h3 class="card-title h5">@(editandoContacto ? "Editar contacto" : "Nuevo contacto")</h3>
 
-                        <EditForm Model="contactoNuevo" OnValidSubmit="GuardarNuevoContacto">
+                        <EditForm Model="contactoFormulario" OnValidSubmit="GuardarContacto">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
 
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label" for="nombre">Nombre</label>
-                                    <InputText id="nombre" class="form-control" @bind-Value="contactoNuevo.Nombre" />
+                                    <InputText id="nombre" class="form-control" @bind-Value="contactoFormulario.Nombre" />
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="apellido">Apellido</label>
-                                    <InputText id="apellido" class="form-control" @bind-Value="contactoNuevo.Apellido" />
+                                    <InputText id="apellido" class="form-control" @bind-Value="contactoFormulario.Apellido" />
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="telefono">Telefono</label>
-                                    <InputText id="telefono" class="form-control" @bind-Value="contactoNuevo.Telefono" />
+                                    <InputText id="telefono" class="form-control" @bind-Value="contactoFormulario.Telefono" />
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="email">Email</label>
-                                    <InputText id="email" class="form-control" @bind-Value="contactoNuevo.Email" />
+                                    <InputText id="email" class="form-control" @bind-Value="contactoFormulario.Email" />
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="empresa">Empresa</label>
-                                    <InputText id="empresa" class="form-control" @bind-Value="contactoNuevo.Empresa" />
+                                    <InputText id="empresa" class="form-control" @bind-Value="contactoFormulario.Empresa" />
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="cargo">Cargo</label>
-                                    <InputText id="cargo" class="form-control" @bind-Value="contactoNuevo.Cargo" />
+                                    <InputText id="cargo" class="form-control" @bind-Value="contactoFormulario.Cargo" />
                                 </div>
 
                                 <div class="col-12">
                                     <label class="form-label" for="direccion">Direccion</label>
-                                    <InputText id="direccion" class="form-control" @bind-Value="contactoNuevo.Direccion" />
+                                    <InputText id="direccion" class="form-control" @bind-Value="contactoFormulario.Direccion" />
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="fechaNacimiento">Fecha de nacimiento</label>
-                                    <InputDate id="fechaNacimiento" class="form-control" @bind-Value="contactoNuevo.FechaNacimiento" />
+                                    <InputDate id="fechaNacimiento" class="form-control" @bind-Value="contactoFormulario.FechaNacimiento" />
                                 </div>
 
                                 <div class="col-12">
                                     <label class="form-label" for="notas">Notas</label>
-                                    <InputTextArea id="notas" class="form-control" @bind-Value="contactoNuevo.Notas" />
+                                    <InputTextArea id="notas" class="form-control" @bind-Value="contactoFormulario.Notas" />
                                 </div>
                             </div>
 
                             <div class="mt-3">
                                 <button type="submit" class="btn btn-primary">Guardar</button>
-                                <button type="button" class="btn btn-secondary ms-2" @onclick="CancelarNuevoContacto">Cancelar</button>
+                                <button type="button" class="btn btn-secondary ms-2" @onclick="CancelarFormulario">Cancelar</button>
                             </div>
                         </EditForm>
                     </div>
@@ -132,10 +132,16 @@
             {
                 <div class="card">
                     <div class="card-body">
-                        <h3 class="card-title">
-                            @contactoSeleccionado.Nombre
-                            @contactoSeleccionado.Apellido
-                        </h3>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h3 class="card-title mb-0">
+                                @contactoSeleccionado.Nombre
+                                @contactoSeleccionado.Apellido
+                            </h3>
+
+                            <button type="button" class="btn btn-outline-primary btn-sm" @onclick="EditarContacto">
+                                Editar
+                            </button>
+                        </div>
 
                         <dl class="row mb-0">
                             <dt class="col-sm-4">Telefono</dt>
@@ -170,9 +176,10 @@
 @code {
     private List<Contacto> contactos = [];
     private Contacto? contactoSeleccionado;
-    private Contacto contactoNuevo = new();
+    private Contacto contactoFormulario = new();
     private string busqueda = "";
-    private bool mostrandoFormularioCrear;
+    private bool mostrandoFormulario;
+    private bool editandoContacto;
 
     private IEnumerable<Contacto> ContactosFiltrados => contactos.Where(CoincideBusqueda);
 
@@ -192,32 +199,63 @@
     private void SeleccionarContacto(Contacto contacto)
     {
         contactoSeleccionado = contacto;
-        mostrandoFormularioCrear = false;
+        mostrandoFormulario = false;
+        editandoContacto = false;
     }
 
     private void NuevoContacto()
     {
-        contactoNuevo = new Contacto();
+        contactoFormulario = new Contacto();
         contactoSeleccionado = null;
-        mostrandoFormularioCrear = true;
+        mostrandoFormulario = true;
+        editandoContacto = false;
     }
 
-    private void CancelarNuevoContacto()
+    private void EditarContacto()
     {
-        contactoNuevo = new Contacto();
-        mostrandoFormularioCrear = false;
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        contactoFormulario = CopiarContacto(contactoSeleccionado);
+        mostrandoFormulario = true;
+        editandoContacto = true;
     }
 
-    private async Task GuardarNuevoContacto()
+    private void CancelarFormulario()
     {
-        Db.Contactos.Add(contactoNuevo);
-        await Db.SaveChangesAsync();
+        contactoFormulario = new Contacto();
+        mostrandoFormulario = false;
+        editandoContacto = false;
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (editandoContacto)
+        {
+            var contactoGuardado = await Db.Contactos.FindAsync(contactoFormulario.Id);
+
+            if (contactoGuardado is not null)
+            {
+                CopiarDatos(contactoFormulario, contactoGuardado);
+                await Db.SaveChangesAsync();
+            }
+        }
+        else
+        {
+            Db.Contactos.Add(contactoFormulario);
+            await Db.SaveChangesAsync();
+        }
+
+        var idSeleccionado = contactoFormulario.Id;
         await CargarContactos();
 
-        contactoSeleccionado = contactoNuevo;
-        contactoNuevo = new Contacto();
+        contactoSeleccionado = contactos.FirstOrDefault(contacto => contacto.Id == idSeleccionado);
+        contactoFormulario = new Contacto();
         busqueda = "";
-        mostrandoFormularioCrear = false;
+        mostrandoFormulario = false;
+        editandoContacto = false;
     }
 
     private bool CoincideBusqueda(Contacto contacto)
@@ -233,6 +271,36 @@
             || contacto.Apellido.Contains(texto, StringComparison.OrdinalIgnoreCase)
             || contacto.Telefono.Contains(texto, StringComparison.OrdinalIgnoreCase)
             || contacto.Email.Contains(texto, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Contacto CopiarContacto(Contacto contacto)
+    {
+        return new Contacto
+        {
+            Id = contacto.Id,
+            Nombre = contacto.Nombre,
+            Apellido = contacto.Apellido,
+            Telefono = contacto.Telefono,
+            Email = contacto.Email,
+            Empresa = contacto.Empresa,
+            Cargo = contacto.Cargo,
+            Direccion = contacto.Direccion,
+            FechaNacimiento = contacto.FechaNacimiento,
+            Notas = contacto.Notas
+        };
+    }
+
+    private static void CopiarDatos(Contacto origen, Contacto destino)
+    {
+        destino.Nombre = origen.Nombre;
+        destino.Apellido = origen.Apellido;
+        destino.Telefono = origen.Telefono;
+        destino.Email = origen.Email;
+        destino.Empresa = origen.Empresa;
+        destino.Cargo = origen.Cargo;
+        destino.Direccion = origen.Direccion;
+        destino.FechaNacimiento = origen.FechaNacimiento;
+        destino.Notas = origen.Notas;
     }
 
     private static string MostrarDato(string? valor)
