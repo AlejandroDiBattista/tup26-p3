@@ -47,3 +47,41 @@ EditarContacto.razor
          <InputText class="form-control" @bind-Value="contacto.Cargo" />
         </div>
 </div>
+ <div class="mb-2">
+        <label>Dirección</label>
+        <InputText class="form-control" @bind-Value="contacto.Direccion" />
+    </div>
+
+    <div class="mb-3">
+        <label>Notas</label>
+        <InputTextArea class="form-control" @bind-Value="contacto.Notas" rows="3" />
+    </div>
+
+    <button type="submit" class="btn btn-success me-2">Guardar</button>
+    <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+[Parameter] public int? Id { get; set; }
+
+ Contacto contacto = new();
+
+ protected override async Task OnInitializedAsync()
+ {
+ if (Id.HasValue) {
+    var existente = await Db.Contactos.FindAsync(Id.Value);
+    if (existente != null)  
+    contacto = existente;}
+}
+
+  async Task Guardar()
+{
+     if (contacto.Id == 0)
+    Db.Contactos.Add(contacto);
+        else
+    Db.Contactos.Update(contacto);
+     await Db.SaveChangesAsync();
+     Nav.NavigateTo("/");
+}
+ void Cancelar() => Nav.NavigateTo("/");
+}
