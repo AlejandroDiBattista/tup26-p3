@@ -128,6 +128,11 @@ else
                         @onclick="EditarContacto">
                     Editar
                 </button>
+
+                <button class="btn btn-danger ms-2"
+                        @onclick="EliminarContacto">
+                    Eliminar
+                </button>
             }
 
         </div>
@@ -181,6 +186,22 @@ else
         };
 
         modoEdicion = true;
+    }
+
+    async Task EliminarContacto()
+    {
+        if (contactoSeleccionado == null)
+            return;
+
+        Db.Contactos.Remove(contactoSeleccionado);
+
+        await Db.SaveChangesAsync();
+
+        contactos = await Db.Contactos
+            .OrderBy(c => c.Apellido)
+            .ToListAsync();
+
+        contactoSeleccionado = contactos.FirstOrDefault();
     }
 
     async Task GuardarContacto()
