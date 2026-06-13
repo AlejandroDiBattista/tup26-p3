@@ -4,11 +4,11 @@ using tp5.Models;
 
 namespace tp5.Services;
 
-public class ContactoService : IContactService
+public class ContactoService : IContactoService
 {
-    private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly IDbContextFactory<AgendaDbContext> _contextFactory;
 
-    public ContactoService(IDbContextFactory<AppDbContext> contextFactory)
+    public ContactoService(IDbContextFactory<AgendaDbContext> contextFactory)
     {
         _contextFactory = contextFactory;
     }
