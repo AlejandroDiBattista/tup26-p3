@@ -1,4 +1,4 @@
- h1:focus {
+h1:focus {
     outline: none;
 }
 
@@ -20,9 +20,8 @@
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after {
+}
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
@@ -56,6 +55,7 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
     border-bottom: 2px solid #7c3aed;
     color: #e0e0e0;
 }
+
 .list-group-item {
     background-color: #1a1a2e;
     border: 1px solid #7c3aed;
@@ -93,4 +93,32 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
 
 .text-muted {
     color: #888888 !important;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #7c3aed;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #7c3aed;
+    margin-bottom: 15px;
 }

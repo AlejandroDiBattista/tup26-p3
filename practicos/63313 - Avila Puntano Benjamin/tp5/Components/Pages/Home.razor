@@ -16,8 +16,13 @@
             @foreach (var c in ContactosFiltrados)
             {
                 <button class="list-group-item list-group-item-action @(seleccionado?.Id == c.Id ? "active" : "")" @onclick="() => seleccionado = c">
-                    <strong>@c.Nombre @c.Apellido</strong><br/>
-                    <small>@c.Telefono</small>
+                <div style="display:flex; align-items:center;">
+                <div class="avatar">@c.Nombre[0]</div>
+            <div>
+                <strong>@c.Nombre @c.Apellido</strong><br/>
+                <small>@c.Telefono</small>
+            </div>
+    </div>
                 </button>
             }
         </div>
@@ -29,6 +34,7 @@
   else
         {
         <div class="card p-3">
+        <div class="avatar avatar-lg mb-2">@seleccionado.Nombre[0]</div>
                 <h4>@seleccionado.Nombre @seleccionado.Apellido</h4>
                 <p>Telef: @seleccionado.Telefono</p>
                 <p>Email: @seleccionado.Email</p>
