@@ -139,4 +139,49 @@
             </div>
         </div>
         
+    </div>
+</div>
+
+@code {
+    List<Contacto> listaContactos = new();
+    Contacto? actual;
+    string textoBusqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaContactos = await Db.Contactos.ToListAsync();
+    }
+
+    List<Contacto> ListaFiltrada()
+    {
+        if (string.IsNullOrEmpty(textoBusqueda))
+            return listaContactos;
+
+        return listaContactos
+            .Where(x => x.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                     || x.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    async Task BorrarContacto()
+    {
+        if (actual == null) return;
+
+        Db.Contactos.Remove(actual);
+        await Db.SaveChangesAsync();
+        listaContactos.Remove(actual);
+        actual = null;
+    }
+
+    void IrAEditar()
+    {
+        if (actual != null)
+            Nav.NavigateTo("/editar/" + actual.Id);
+    }
+
+    void Nuevo()
+    {
+        Nav.NavigateTo("/nuevo");
+    }
+}
 
