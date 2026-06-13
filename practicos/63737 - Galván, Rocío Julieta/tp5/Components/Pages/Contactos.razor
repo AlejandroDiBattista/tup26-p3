@@ -1,0 +1,32 @@
+@page "/contactos"
+@rendermode InteractiveServer
+
+@using tp5.Models
+@inject tp5.Data.AgendaDbContext Db
+
+<h3>Contactos</h3>
+
+@if (contactos.Count == 0)
+{
+    <p>No hay contactos cargados.</p>
+}
+else
+{
+    <ul>
+        @foreach (var contacto in contactos)
+        {
+            <li>
+                @contacto.Nombre @contacto.Apellido
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Contacto> contactos = [];
+
+    protected override void OnInitialized()
+    {
+        contactos = Db.Contactos.ToList();
+    }
+}
