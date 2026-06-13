@@ -1,4 +1,5 @@
 @page "/"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using tp5.Data
 @using tp5.Models
@@ -8,6 +9,13 @@
 
 <h1>TP5: AgendaWeb</h1>
 
+<div class="mb-3">
+    <input class="form-control"
+           placeholder="Buscar contacto..."
+           @bind="busqueda"
+           @bind:event="oninput" />
+</div>
+
 @if (contactos == null)
 {
     <p>Cargando contactos...</p>
@@ -15,18 +23,29 @@
 else
 {
     <ul class="list-group">
-        @foreach (var contacto in contactos)
+        @foreach (var contacto in ContactosFiltrados)
         {
             <li class="list-group-item">
                 @contacto.Nombre @contacto.Apellido
             </li>
         }
-        
+
     </ul>
 }
 
 @code {
+
+    private string busqueda = "";
     private List<Contacto>? contactos;
+
+        private IEnumerable<Contacto> ContactosFiltrados =>
+    string.IsNullOrWhiteSpace(busqueda)
+        ? contactos ?? Enumerable.Empty<Contacto>()
+        : (contactos ?? Enumerable.Empty<Contacto>())
+            .Where(c =>
+                c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Email.Contains(busqueda, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
