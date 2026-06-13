@@ -103,6 +103,77 @@ else
             }
             else
             {
+               @if (editando)
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <h4>Editar contacto</h4>
+        </div>
+
+        <div class="card-body">
+
+            <div class="mb-2">
+                <label>Nombre</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Nombre" />
+            </div>
+
+            <div class="mb-2">
+                <label>Apellido</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Apellido" />
+            </div>
+
+            <div class="mb-2">
+                <label>Teléfono</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Telefono" />
+            </div>
+
+            <div class="mb-2">
+                <label>Email</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Email" />
+            </div>
+
+            <div class="mb-2">
+                <label>Empresa</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Empresa" />
+            </div>
+
+            <div class="mb-2">
+                <label>Cargo</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Cargo" />
+            </div>
+
+            <div class="mb-2">
+                <label>Dirección</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Direccion" />
+            </div>
+
+            <div class="mb-2">
+                <label>Notas</label>
+                <InputText class="form-control"
+                           @bind-Value="contactoSeleccionado.Notas" />
+            </div>
+
+            <button class="btn btn-success me-2"
+                    @onclick="GuardarCambios">
+                Guardar cambios
+            </button>
+
+            <button class="btn btn-secondary"
+                    @onclick="CancelarEdicion">
+                Cancelar
+            </button>
+
+        </div>
+    </div>
+}
+
                 <div class="card">
                     <div class="card-header">
                         <h4>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h4>
@@ -116,10 +187,16 @@ else
                         <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
                         <p><strong>Fecha de nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")</p>
                         <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
-                        <button class="btn btn-danger mt-3"
+                        <button class="btn btn-warning mt-3 me-2"
+        @onclick="ComenzarEdicion">
+    Editar
+</button>
+
+<button class="btn btn-danger mt-3"
         @onclick="EliminarContacto">
     Eliminar
 </button>
+                        
                     </div>
                 </div>
             }
@@ -136,6 +213,8 @@ else
 
         private bool mostrandoFormulario = false;
 private Contacto nuevoContacto = new();
+
+private bool editando = false;
 
         private IEnumerable<Contacto> ContactosFiltrados =>
     string.IsNullOrWhiteSpace(busqueda)
@@ -196,6 +275,28 @@ private async Task GuardarNuevoContacto()
     mostrandoFormulario = false;
 
     contactoSeleccionado = nuevoContacto;
+}
+
+private void ComenzarEdicion()
+{
+    editando = true;
+}
+
+private async Task GuardarCambios()
+{
+    await Db.SaveChangesAsync();
+
+    contactos = contactos?
+        .OrderBy(c => c.Apellido)
+        .ThenBy(c => c.Nombre)
+        .ToList();
+
+    editando = false;
+}
+
+private void CancelarEdicion()
+{
+    editando = false;
 }
 
 }
