@@ -49,4 +49,49 @@
                 <EditForm Model="FormModel" OnValidSubmit="ManejarGuardar">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
+                    <div class="row"><div class="col-md-6 mb-3"><label>Nombre</label><InputText class="form-control" @bind-Value="FormModel.Nombre" /></div><div class="col-md-6 mb-3"><label>Apellido</label><InputText class="form-control" @bind-Value="FormModel.Apellido" /></div></div>
+                    <div class="mb-3"><label>Email</label><InputText class="form-control" @bind-Value="FormModel.Email" /></div>
+                    <div class="mb-3"><label>Teléfono</label><InputText class="form-control" @bind-Value="FormModel.Telefono" /></div>
+                    <div class="row"><div class="col-md-6 mb-3"><label>Empresa</label><InputText class="form-control"
+                    @bind-Value="FormModel.Empresa" /></div><div class="col-md-6 mb-3"><label>Cargo</label><InputText class="form-control" @bind-Value="FormModel.Cargo" /></div></div>
+                    <div class="mb-3"><label>Dirección</label><InputText class="form-control" @bind-Value="FormModel.Direccion" /></div>
+                    <div class="mb-3"><label>Notas</label><InputTextArea class="form-control" @bind-Value="FormModel.Notas" /></div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                    </EditForm>
+                    </div>
+                </div>
     }
+            else if (ContactoSeleccionado != null)
+            {
+                    <div class="card shadow-sm mt-3 p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2>@ContactoSeleccionado.Nombre @ContactoSeleccionado.Apellido</h2>
+                            <div>
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="AbrirEdicion">Editar</button>
+                                <button class="btn btn-danger btn-sm" @onclick="() => EliminarContacto(ContactoSeleccionado.Id)">Eliminar</button>
+                            </div>
+                        </div>
+                        <p class="text-primary fw-bold mb-4">@ContactoSeleccionado.Empresa</p>
+                        <hr />
+                        <p><i class="bi bi-envelope"></i> <strong>Email:</strong> @ContactoSeleccionado.Email</p>
+                        <p><i class="bi bi-telephone"></i> <strong>Teléfono:</strong> @ContactoSeleccionado.Telefono</p>
+                        <p><i class="bi bi-briefcase"></i> <strong>Cargo:</strong> @ContactoSeleccionado.Cargo</p>
+                        <p><i class="bi bi-geo-alt"></i> <strong>Dirección:</strong> @ContactoSeleccionado.Direccion</p>
+                        <p><i class="bi bi-journal-text"></i> <strong>Notas:</strong> @ContactoSeleccionado.Notas</p>
+                    </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code{
+    private List<Contacto>? contactos;
+    private List<Contacto>? contactosFiltrados;
+    private Contacto? ContactoSeleccionado;
+    private bool ModoEdicion = false;
+    private ContactoFormModel FormModel = new ContactoFormModel();
+    protected override async Task OnInitializedAsync() => await CargarContactos();
+
+    
+}
