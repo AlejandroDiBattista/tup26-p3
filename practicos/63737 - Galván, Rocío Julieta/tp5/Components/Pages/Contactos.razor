@@ -6,6 +6,40 @@
 
 <h3>Contactos</h3>
 
+<h4>Agregar contacto</h4>
+
+<EditForm Model="nuevoContacto"
+          OnValidSubmit="GuardarContacto"
+          FormName="contactoForm">
+
+    <div>
+        <label>Nombre:</label>
+        <InputText @bind-Value="nuevoContacto.Nombre" />
+    </div>
+
+    <div>
+        <label>Apellido:</label>
+        <InputText @bind-Value="nuevoContacto.Apellido" />
+    </div>
+
+    <div>
+        <label>Teléfono:</label>
+        <InputText @bind-Value="nuevoContacto.Telefono" />
+    </div>
+
+    <div>
+        <label>Email:</label>
+        <InputText @bind-Value="nuevoContacto.Email" />
+    </div>
+
+    <button type="submit">
+        Guardar
+    </button>
+
+</EditForm>
+
+<hr />
+
 @if (contactos.Count == 0)
 {
     <p>No hay contactos cargados.</p>
@@ -23,10 +57,24 @@ else
 }
 
 @code {
+
     private List<Contacto> contactos = [];
+
+    private Contacto nuevoContacto = new();
 
     protected override void OnInitialized()
     {
+        contactos = Db.Contactos.ToList();
+    }
+
+    private void GuardarContacto()
+    {
+        Db.Contactos.Add(nuevoContacto);
+
+        Db.SaveChanges();
+
+        nuevoContacto = new Contacto();
+
         contactos = Db.Contactos.ToList();
     }
 }
