@@ -78,8 +78,19 @@
 
     void Seleccionar(Contacto c)
     {
-        seleccionado = c;
-        editando = null;
+        editando = new Contacto
+        {
+            Id = c.Id,
+            Nombre = c.Nombre,
+            Apellido = c.Apellido,
+            Telefono = c.Telefono,
+            Email = c.Email,
+            Empresa = c.Empresa,
+            Cargo = c.Cargo,
+            Direccion = c.Direccion,
+            Notas = c.Notas
+        };
+        seleccionado = null;
     }
     void Nuevo()
     {
@@ -88,9 +99,28 @@
     }
     void Guardar()
     {
-        db.Contactos.Add(editando);
-        db.SaveChanges();
+        if (editando.Id == 0)
+        {
+            db.Contactos.Add(editando);
+        }
+        else
+        {
+            var original = db.Contactos.Find(editando.Id);
 
+            if (original != null)
+            {
+                original.Nombre = editando.Nombre;
+                original.Apellido = editando.Apellido;
+                original.Telefono = editando.Telefono;
+                original.Email = editando.Email;
+                original.Empresa = editando.Empresa;
+                original.Cargo = editando.Cargo;
+                original.Direccion = editando.Direccion;
+                original.Notas = editando.Notas;
+            }
+        }
+
+        db.SaveChanges();
         contactos = db.Contactos.ToList();
         editando = null;
     }
