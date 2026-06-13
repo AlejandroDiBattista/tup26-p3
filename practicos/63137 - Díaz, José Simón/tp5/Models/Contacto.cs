@@ -37,4 +37,8 @@ public class Contacto
 
     [StringLength(500, ErrorMessage = "Las notas no pueden superar los 500 caracteres.")]
     public string Notas { get; set; } = string.Empty;
+
+    public bool EsNuevo => Id == 0;
+
+    public Contacto Clonar() => (Contacto)MemberwiseClone();
 }
