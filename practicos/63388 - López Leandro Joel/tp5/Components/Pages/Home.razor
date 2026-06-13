@@ -1,6 +1,6 @@
-@page template "/"
+@page "/"
 @inject IContactoService ContactoSvc
-@rendeermode InteractiveServer
+@rendermode InteractiveServer
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 
@@ -8,7 +8,7 @@
 
     <aside class="panel-master">
         <div class="pal-master-header">
-            <div class="dne-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-3">
                 <h6 class="mb-0 fw-semibold text-muted text-uppercase tracking-wide">
                     Contactos
                     <span class="badge bg-primary rounded-pill ms-1">@contactosFiltrados.Count</span>
@@ -276,3 +276,155 @@
         }
     </section>
 </div>
+
+@code {
+    private List<Contacto> todosLosContactos = new();
+    private List<Contacto> contactosFiltrados = new();
+    private string textoBusqueda = string.Empty;
+    private bool cargando = true;
+
+    private Contacto? contactoSeleccionado;
+
+    private bool modoFormulario = false;
+    private bool esNuevo = false;
+    private Contacto contactoEdicion = new();
+    private bool guardando = false;
+    private string mensajeError = string.Empty;
+
+    private bool confirmarEliminacion = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
+    {
+        cargando = true;
+        todosLosContactos = await ContactoSvc.GetTodosAsync();
+        FiltrarContactos();
+        cargando = false;
+    }
+
+    private void OnBusquedaInput(ChangeEventArgs e)
+    {
+        textoBusqueda = e.Value?.ToString() ?? string.Empty;
+        FiltrarContactos();
+    }
+
+    private void FiltrarContactos()
+    {
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            contactosFiltrados = todosLosContactos.ToList();
+        }
+        else
+        {
+            var t = textoBusqueda.Trim().ToLower();
+            contactosFiltrados = todosLosContactos.Where(c =>
+                c.Nombre.ToLower().Contains(t) ||
+                c.Apellido.ToLower().Contains(t) ||
+                c.Email.ToLower().Contains(t) ||
+                c.Telefono.Contains(t) ||
+                (c.Empresa?.ToLower().Contains(t) ?? false) ||
+                (c.Cargo?.ToLower().Contains(t) ?? false)
+            ).ToList();
+        }
+    }
+
+    private void LimpiarBusqueda()
+    {
+        textoBusqueda = string.Empty;
+        FiltrarContactos();
+    }
+
+    private void SeleccionarContacto(Contacto c)
+    {
+        contactoSeleccionado = c;
+        modoFormulario = false;
+        confirmarEliminacion = false;
+        mensajeError = string.Empty;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoEdicion = new Contacto();
+        esNuevo = true;
+        modoFormulario = true;
+        confirmarEliminacion = false;
+        mensajeError = string.Empty;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null) return;
+        // Clonar para no mutar el original hasta guardar
+        contactoEdicion = new Contacto
+        {
+            Id = contactoSeleccionado.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas,
+        };
+        esNuevo = false;
+        modoFormulario = true;
+        mensajeError = string.Empty;
+    }
+
+    private async Task GuardarContacto()
+    {
+        guardando = true;
+        mensajeError = string.Empty;
+        try
+        {
+            if (esNuevo)
+            {
+                var nuevo = await ContactoSvc.CrearAsync(contactoEdicion);
+                await CargarContactos();
+                contactoSeleccionado = todosLosContactos.FirstOrDefault(c => c.Id == nuevo.Id);
+            }
+            else
+            {
+                await ContactoSvc.ActualizarAsync(contactoEdicion);
+                await CargarContactos();
+                contactoSeleccionado = todosLosContactos.FirstOrDefault(c => c.Id == contactoEdicion.Id);
+            }
+            modoFormulario = false;
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al guardar: {ex.Message}";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private void CancelarFormulario()
+    {
+        modoFormulario = false;
+        mensajeError = string.Empty;
+    }
+
+    private void ConfirmarEliminar()
+    {
+        confirmarEliminacion = true;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado is null) return;
+        await ContactoSvc.EliminarAsync(contactoSeleccionado.Id);
+        contactoSeleccionado = null;
+        confirmarEliminacion = false;
+        modoFormulario = false;
+        await CargarContactos();
+    }
+}

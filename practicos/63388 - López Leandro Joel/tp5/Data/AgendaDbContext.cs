@@ -15,7 +15,6 @@ public class AgendaDbContext : DbContext
 
         modelBuilder.Entity<Contacto>(entity =>
         {
-            // Nombre explícito de tabla para que coincida con el .db del repo
             entity.ToTable("Contactos");
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Id).HasColumnName("Id");
