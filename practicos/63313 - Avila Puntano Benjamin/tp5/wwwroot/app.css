@@ -123,3 +123,8 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
     background-color: #7c3aed;
     margin-bottom: 15px;
 }
+
+.list-group {
+    max-height: 500px;
+    overflow-y: auto;
+}
