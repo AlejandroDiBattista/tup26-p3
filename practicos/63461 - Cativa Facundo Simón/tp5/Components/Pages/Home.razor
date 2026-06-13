@@ -8,17 +8,22 @@
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>TP5: AgendaWeb</h1>
+    <div>
+    <h1 class="mb-0">Agenda</h1>
+    <p class="text-muted">
+        Contactos personales y profesionales
+    </p>
+</div>
 
     <button class="btn btn-primary"
             @onclick="PrepararNuevoContacto">
-        Nuevo contacto
+       ➕ Nuevo contacto
     </button>
 </div>
 
 <div class="mb-3">
     <input class="form-control"
-           placeholder="Buscar contacto..."
+           placeholder="🔍 Buscar contacto..."
            @bind="busqueda"
            @bind:event="oninput" />
 </div>
@@ -37,7 +42,17 @@ else
                     <li class="list-group-item @(contacto == contactoSeleccionado ? "active" : "")"
                         @onclick="() => SeleccionarContacto(contacto)"
                         style="cursor: pointer;">
-                        @contacto.Nombre @contacto.Apellido
+                       <div class="d-flex align-items-center">
+    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-2"
+         style="width:40px; height:40px;">
+        @ObtenerIniciales(contacto)
+    </div>
+
+    <div>
+        @contacto.Nombre @contacto.Apellido
+    </div>
+</div>
+
                     </li>
                 }
             </ul>
@@ -189,12 +204,12 @@ else
                         <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
                         <button class="btn btn-warning mt-3 me-2"
         @onclick="ComenzarEdicion">
-    Editar
+   ✏️ Editar
 </button>
 
 <button class="btn btn-danger mt-3"
         @onclick="EliminarContacto">
-    Eliminar
+  🗑️ Eliminar
 </button>
                         
                     </div>
@@ -297,6 +312,18 @@ private async Task GuardarCambios()
 private void CancelarEdicion()
 {
     editando = false;
+}
+private string ObtenerIniciales(Contacto contacto)
+{
+    var iniciales = "";
+
+    if (!string.IsNullOrWhiteSpace(contacto.Nombre))
+        iniciales += contacto.Nombre[0];
+
+    if (!string.IsNullOrWhiteSpace(contacto.Apellido))
+        iniciales += contacto.Apellido[0];
+
+    return iniciales.ToUpper();
 }
 
 }
