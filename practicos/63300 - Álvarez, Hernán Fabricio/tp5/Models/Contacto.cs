@@ -1,3 +1,5 @@
+using System;
+
 namespace tp5.Models;
 
 public class Contacto
