@@ -1,19 +1,11 @@
-@using tp5.Models
-
 <div class="list-group">
     @foreach (Contacto contacto in Contactos)
     {
-        <button
-            type="button"
-            class="@ObtenerClaseItem(contacto.Id)"
-            @onclick="() => OnContactoSeleccionado.InvokeAsync(contacto)"
-            @key="contacto.Id">
-            <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-0">@contacto.Apellido, @contacto.Nombre</h6>
-                <small>@contacto.Telefono</small>
-            </div>
-            <small>@contacto.Email</small>
-        </button>
+        <ItemContacto
+            Contacto="contacto"
+            Activo="contacto.Id == ContactoIdSeleccionado"
+            OnSeleccionar="OnContactoSeleccionado"
+            @key="contacto.Id" />
     }
 </div>
 
@@ -34,10 +26,4 @@
 
     [Parameter]
     public EventCallback<Contacto> OnContactoSeleccionado { get; set; }
-
-    private string ObtenerClaseItem(int contactoId)
-    {
-        string activo = contactoId == ContactoIdSeleccionado ? " active" : "";
-        return $"list-group-item list-group-item-action{activo}";
-    }
 }
