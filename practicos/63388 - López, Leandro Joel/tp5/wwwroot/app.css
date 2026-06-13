@@ -156,3 +156,108 @@ html, body {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
 }
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.detail-field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem 1rem;
+}
+
+.detail-field.full-width { grid-column: 1 / -1; }
+
+.detail-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    word-break: break-word;
+}
+
+.detail-value a {
+    color: var(--primary);
+    text-decoration: none;
+}
+.detail-value a:hover { text-decoration: underline; }
+
+.detail-value.notas {
+    white-space: pre-wrap;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+/* ── Formulario ── */
+.contacto-form { max-width: 700px; }
+
+.form-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 0.3rem;
+}
+
+/* ── Empty state ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+    gap: 0.5rem;
+    padding: 2rem;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    opacity: 0.3;
+}
+
+.empty-state h6 { font-weight: 600; color: var(--text-main); margin: 0; }
+.empty-state p { font-size: 13px; margin: 0 0 1rem; }
+
+/* ── Responsive: mobile stack ── */
+@media (max-width: 768px) {
+    .agenda-layout {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+
+    .panel-master {
+        width: 100%;
+        height: 45vh;
+    }
+
+    .panel-detail {
+        height: auto;
+        min-height: 55vh;
+    }
+
+    .detail-grid { grid-template-columns: 1fr; }
+}
