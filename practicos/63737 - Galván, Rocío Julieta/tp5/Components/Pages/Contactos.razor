@@ -31,6 +31,30 @@
         <label>Email:</label>
         <InputText @bind-Value="nuevoContacto.Email" />
     </div>
+    <div>
+    <label>Empresa:</label>
+    <InputText @bind-Value="nuevoContacto.Empresa" />
+</div>
+
+<div>
+    <label>Cargo:</label>
+    <InputText @bind-Value="nuevoContacto.Cargo" />
+</div>
+
+<div>
+    <label>Dirección:</label>
+    <InputText @bind-Value="nuevoContacto.Direccion" />
+</div>
+
+<div>
+    <label>Fecha de nacimiento:</label>
+    <InputDate @bind-Value="nuevoContacto.FechaNacimiento" />
+</div>
+
+<div>
+    <label>Notas:</label>
+    <InputTextArea @bind-Value="nuevoContacto.Notas" />
+</div>
 
     <button type="submit">
         Guardar
