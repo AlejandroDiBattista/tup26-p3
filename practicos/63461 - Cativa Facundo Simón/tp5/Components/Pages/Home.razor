@@ -22,21 +22,55 @@
 }
 else
 {
-    <ul class="list-group">
-        @foreach (var contacto in ContactosFiltrados)
-        {
-            <li class="list-group-item">
-                @contacto.Nombre @contacto.Apellido
-            </li>
-        }
+    <div class="row">
+        <div class="col-md-4">
+            <ul class="list-group">
+                @foreach (var contacto in ContactosFiltrados)
+                {
+                    <li class="list-group-item @(contacto == contactoSeleccionado ? "active" : "")"
+                        @onclick="() => SeleccionarContacto(contacto)"
+                        style="cursor: pointer;">
+                        @contacto.Nombre @contacto.Apellido
+                    </li>
+                }
+            </ul>
+        </div>
 
-    </ul>
+        <div class="col-md-8">
+            @if (contactoSeleccionado is null)
+            {
+                <div class="alert alert-info">
+                    Seleccione un contacto para ver sus detalles.
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h4>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h4>
+                    </div>
+
+                    <div class="card-body">
+                        <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                        <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+                        <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+                        <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+                        <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+                        <p><strong>Fecha de nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")</p>
+                        <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 }
 
 @code {
 
     private string busqueda = "";
     private List<Contacto>? contactos;
+
+        private Contacto? contactoSeleccionado;
 
         private IEnumerable<Contacto> ContactosFiltrados =>
     string.IsNullOrWhiteSpace(busqueda)
@@ -54,4 +88,9 @@ else
             .ThenBy(c => c.Nombre)
             .ToListAsync();
     }
+    private void SeleccionarContacto(Contacto contacto)
+{
+    contactoSeleccionado = contacto;
+}
+
 }
