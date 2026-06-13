@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AgendaWeb.Data;
-
+using AgendaWeb.Services;
 using tp5.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +14,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContext<AgendaContext>(options =>
     options.UseSqlite("Data Source=agenda.db"));
 
-
+builder.Services.AddScoped<ContactoService>();
 
 var app = builder.Build();
 
