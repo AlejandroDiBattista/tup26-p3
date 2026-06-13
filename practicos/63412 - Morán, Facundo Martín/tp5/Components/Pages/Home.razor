@@ -1,7 +1,32 @@
 @page "/"
+@inject ContactoService ContactoService
+@using tp5.Models
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<h3>Agenda de Contactos</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <ul class="list-group">
+            @foreach (var contacto in contactos)
+            {
+                <li class="list-group-item">
+                    @contacto.Nombre @contacto.Apellido
+                </li>
+            }
+        </ul>
+    </div>
+
+    <div class="col-md-8">
+    </div>
 </div>
+
+@code {
+    private List<Contacto> contactos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await ContactoService.ObtenerTodosAsync();
+    }
+}
