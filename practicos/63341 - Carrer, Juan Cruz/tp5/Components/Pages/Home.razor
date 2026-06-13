@@ -75,6 +75,30 @@ else
                         @bind="contactoEditando.Email" />
                 </div>
 
+                <div class="mb-2">
+                    <label>Empresa</label>
+                    <input class="form-control"
+                        @bind="contactoEditando.Empresa" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Cargo</label>
+                    <input class="form-control"
+                        @bind="contactoEditando.Cargo" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Dirección</label>
+                    <input class="form-control"
+                        @bind="contactoEditando.Direccion" />
+                </div>
+
+                <div class="mb-2">
+                    <label>Notas</label>
+                    <textarea class="form-control"
+                            @bind="contactoEditando.Notas"></textarea>
+                </div>
+
                 <button class="btn btn-success"
                         @onclick="GuardarContacto">
                     Guardar
@@ -99,6 +123,11 @@ else
                 <p><b>Fecha Nacimiento:</b> @contactoSeleccionado.FechaNacimiento</p>
 
                 <p><b>Notas:</b> @contactoSeleccionado.Notas</p>
+
+                <button class="btn btn-warning"
+                        @onclick="EditarContacto">
+                    Editar
+                </button>
             }
 
         </div>
@@ -132,9 +161,51 @@ else
         modoEdicion = true;
     }
 
+    void EditarContacto()
+    {
+        if (contactoSeleccionado == null)
+            return;
+
+        contactoEditando = new Contacto
+        {
+            Id = contactoSeleccionado.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas
+        };
+
+        modoEdicion = true;
+    }
+
     async Task GuardarContacto()
     {
-        Db.Contactos.Add(contactoEditando);
+        if (contactoEditando.Id == 0)
+        {
+            Db.Contactos.Add(contactoEditando);
+        }
+       else
+        {
+            var contactoExistente = await Db.Contactos.FindAsync(contactoEditando.Id);
+
+            if (contactoExistente != null)
+            {
+                contactoExistente.Nombre = contactoEditando.Nombre;
+                contactoExistente.Apellido = contactoEditando.Apellido;
+                contactoExistente.Telefono = contactoEditando.Telefono;
+                contactoExistente.Email = contactoEditando.Email;
+                contactoExistente.Empresa = contactoEditando.Empresa;
+                contactoExistente.Cargo = contactoEditando.Cargo;
+                contactoExistente.Direccion = contactoEditando.Direccion;
+                contactoExistente.FechaNacimiento = contactoEditando.FechaNacimiento;
+                contactoExistente.Notas = contactoEditando.Notas;
+            }
+}
 
         await Db.SaveChangesAsync();
 
@@ -142,7 +213,8 @@ else
             .OrderBy(c => c.Apellido)
             .ToListAsync();
 
-        contactoSeleccionado = contactoEditando;
+        contactoSeleccionado = contactos
+            .FirstOrDefault(c => c.Id == contactoEditando.Id);
 
         modoEdicion = false;
     }
