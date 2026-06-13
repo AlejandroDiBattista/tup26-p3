@@ -1,7 +1,25 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@inject AgendaDbContext Db
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+<Pagetitle>AgendaWeb</Pagetitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<h3>Agenda de contactos</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <a href="/nuevo" class="btn btn-success mb-2">Nuevo contacto</a>
+        <input class="form-control mb-2" placeholder="Buscar..." @bind="busqueda" @bind:event="oninput" />
+<div class="list-group">
+    @foreach (var c in ContactosFiltrados)
+    {
+    <button class="list-group-item list-group-item-action @(seleccionado?.Id == c.Id ? "active" : "")" @onclick="() => seleccionado = c">
+    <strong>@c.Nombre @c.Apellido</strong><br/>
+    <small>@c.Telefono</small>
+    </button>}
 </div>
+   <div class="col-md-8">
+    @if (seleccionado == null)
+    {
+    <p>Selecciona un contacto</p>}
