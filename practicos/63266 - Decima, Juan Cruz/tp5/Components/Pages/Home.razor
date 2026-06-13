@@ -13,7 +13,7 @@
     <div class="row">
         <div class="col-md-4 border-end">
             <h3>Contactos</h3>
-            <button class="btn btn-primary w-100 mb-3">
+            <button class="btn btn-primary w-100 mb-3" @onclick="MostrarFormularioNuevo">
                 <i class="bi bi-plus-circle"></i> Nuevo Contacto
             </button>
             <div class="list-group">
@@ -40,6 +40,67 @@
         </div>
 
         <div class="col-md-8 ps-4">
+
+            @if (mostrarFormulario)
+            {
+                <h3>@(esModoEdicion ? "Editar Contacto" : "Nuevo Contacto")</h3>
+                <div class="card p-4 shadow-sm mb-4">
+                    <EditForm Model="elContacto" OnValidSubmit="GuardarContacto">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre *</label>
+                                <InputText @bind-value="elContacto.Nombre" class="form-control" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido *</label>
+                                <InputText @bind-value="elContacto.Apellido" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono *</label>
+                                <InputText @bind-Value="elContacto.Telefono" class="form-control" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correo electrónico *</label>
+                                <InputText @bind-Value="elContacto.Email" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Empresa</label>
+                                <InputText @bind-Value="elContacto.Empresa" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cargo</label>
+                                <InputText @bind-Value="elContacto.Cargo" class="form-control" />
+                            </div>
+                        </div>
+
+                    
+                        <div class="mb-3">
+                            <label class="form-label">Dirección</label>
+                            <InputText @bind-Value="elContacto.Direccion" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notas</label>
+                            <InputTextArea @bind-Value="elContacto.Notas" class="form-control" rows="2" />
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" @onclick="CancelarFormulario">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Guardar</button>
+                        </div>
+                    </EditForm>
+                </div>
+            }
+
+
+
             @if (contactoSeleccionado != null)
             {
                 <h3>Detalle del Contacto</h3>
@@ -49,23 +110,21 @@
                     <p><strong>Correo electrónico:</strong> @contactoSeleccionado.Email</p>
                     <p><strong>Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "No especificada" : contactoSeleccionado.Empresa)</p>
                     <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" :
-                                                                                                                                                                                            contactoSeleccionado.Cargo)</p>
+                                                                                                                    contactoSeleccionado.Cargo)</p>
                         <p><strong>Dirección:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Direccion) ? "No especificada" : contactoSeleccionado.Direccion)</p>
-                        <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString() ??
-                                                                                                                                                                                                                        "No especificada")</p>
+                        <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString()
+                                                                                                                                    ?? "No especificada")</p>
                             <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" :
-                                                                                                                                                                                                                                                    contactoSeleccionado.Notas)</p>
-
+                                                                                                                    contactoSeleccionado.Notas)</p>
                                 <hr />
                                 <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-warning">
+                                    <button class="btn btn-warning" @onclick="MostrarFormularioEditar">
                                         <i class="bi bi-pencil"></i> Editar Contacto
                                     </button>
                                     <button class="btn btn-danger" @onclick="EliminarContacto">
                                         <i class="bi bi-trash"></i> Eliminar Contacto
                                     </button>
                                 </div>
-
                             </div>
                         }
             else
@@ -81,6 +140,11 @@
 @code {
     private List<Contacto>? contactos;
     private Contacto? contactoSeleccionado;
+
+    private Contacto elContacto = new Contacto();
+
+    private bool mostrarFormulario = false;
+    private bool esModoEdicion = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,6 +176,70 @@
         contactos = await DbContext.Contactos.OrderBy(c => c.Apellido).ToListAsync();
     }
 
+    private void MostrarFormularioNuevo()
+    {
+        contactoSeleccionado = null;
+        esModoEdicion = false;
+        elContacto = new Contacto();
+        mostrarFormulario = true;
+    }
 
+    private void MostrarFormularioEditar()
+    {
+        if (contactoSeleccionado != null)
+        {
+            esModoEdicion = true;
+            elContacto = new Contacto
+            {
+                Id = contactoSeleccionado.Id,
+                Nombre = contactoSeleccionado.Nombre,
+                Apellido = contactoSeleccionado.Apellido,
+                Telefono = contactoSeleccionado.Telefono,
+                Email = contactoSeleccionado.Email,
+                Empresa = contactoSeleccionado.Empresa,
+                Cargo = contactoSeleccionado.Cargo,
+                Direccion = contactoSeleccionado.Direccion,
+                FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+                Notas = contactoSeleccionado.Notas
+            };
+            mostrarFormulario = true;
+        }
+    }
+
+    private void CancelarFormulario()
+    {
+        mostrarFormulario = false;
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (esModoEdicion)
+        {
+            var contactoDb = await DbContext.Contactos.FindAsync(elContacto.Id);
+            if (contactoDb != null)
+            {
+                contactoDb.Nombre = elContacto.Nombre;
+                contactoDb.Apellido = elContacto.Apellido;
+                contactoDb.Telefono = elContacto.Telefono;
+                contactoDb.Email = elContacto.Email;
+                contactoDb.Empresa = elContacto.Empresa;
+                contactoDb.Cargo = elContacto.Cargo;
+                contactoDb.Direccion = elContacto.Direccion;
+                contactoDb.Notas = elContacto.Notas;
+
+                DbContext.Contactos.Update(contactoDb);
+            }
+        }
+        else
+        {
+            DbContext.Contactos.Add(elContacto);
+        }
+
+        await DbContext.SaveChangesAsync();
+
+        contactos = await DbContext.Contactos.OrderBy(c => c.Apellido).ToListAsync();
+        mostrarFormulario = false;
+        contactoSeleccionado = null;
+    }
 
 }
