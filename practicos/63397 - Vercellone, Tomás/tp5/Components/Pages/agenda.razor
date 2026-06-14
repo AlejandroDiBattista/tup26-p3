@@ -1,0 +1,189 @@
+@page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Services
+@inject ContactoService ContactoService
+
+<div class="agenda-header">
+    <div>
+        <h1 class="agenda-titulo">Agenda</h1>
+        <p class="agenda-subtitulo">@subtitulo</p>
+    </div>
+    <button class="btn btn-primary btn-nuevo" @onclick="NuevoContacto">
+        + Nuevo contacto
+    </button>
+</div>
+
+<div class="agenda-body">
+
+  
+    <div class="panel-lista">
+        <div class="busqueda-container">
+            <input class="form-control busqueda-input"
+                   type="text"
+                   placeholder="Buscar contacto..."
+                   @bind="textoBusqueda"
+                   @bind:event="oninput"
+                   @oninput="BuscarContactos" />
+        </div>
+
+        @if (contactos == null)
+        {
+            <p class="p-3 text-muted">Cargando...</p>
+        }
+        else if (contactos.Count == 0)
+        {
+            <p class="p-3 text-muted">No se encontraron contactos.</p>
+        }
+        else
+        {
+            <div class="lista-contactos">
+                @foreach (var contacto in contactos)
+                {
+                    <div class="item-contacto @(contactoSeleccionado?.Id == contacto.Id ? "activo" : "")"
+                         @onclick="() => SeleccionarContacto(contacto)">
+                        <div class="avatar" style="background-color: @ObtenerColorAvatar(contacto.Id)">
+                            @contacto.ObtenerIniciales()
+                        </div>
+                        <div class="info-item">
+                            <span class="nombre-item">@contacto.NombreCompleto</span>
+                            <span class="empresa-item">@(contacto.Empresa ?? "Independiente")</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+
+
+    <div class="panel-detalle">
+        @if (mostrarFormulario)
+        {
+            <FormularioContacto
+                Contacto="contactoEnEdicion"
+                EsNuevo="esNuevoContacto"
+                OnGuardar="GuardarContacto"
+                OnCancelar="CancelarEdicion" />
+        }
+        else if (contactoSeleccionado != null)
+        {
+            <DetalleContacto
+                Contacto="contactoSeleccionado"
+                OnEditar="EditarContacto"
+                OnEliminar="EliminarContacto" />
+        }
+        else
+        {
+            <div class="detalle-vacio">
+                <p>Seleccioná un contacto para ver su información</p>
+            </div>
+        }
+    </div>
+
+</div> 
+
+
+@code {
+    private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+    private Contacto contactoEnEdicion = new();
+    private bool mostrarFormulario = false;
+    private bool esNuevoContacto = false;
+    private string textoBusqueda = "";
+    private string subtitulo = "Contactos personales y profesionales";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
+    {
+        contactos = await ContactoService.ObtenerTodosAsync(textoBusqueda);
+    }
+
+    private async Task BuscarContactos()
+    {
+        await CargarContactos();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        mostrarFormulario = false;
+        subtitulo = "Contactos personales y profesionales";
+    }
+
+    private void NuevoContacto()
+    {
+       
+        contactoEnEdicion = new Contacto();
+        esNuevoContacto = true;
+        mostrarFormulario = true;
+        subtitulo = "Nuevo contacto";
+    }
+
+    private void EditarContacto(Contacto contacto)
+    {
+       
+        contactoEnEdicion = new Contacto
+        {
+            Id = contacto.Id,
+            Nombre = contacto.Nombre,
+            Apellido = contacto.Apellido,
+            Telefono = contacto.Telefono,
+            Email = contacto.Email,
+            Empresa = contacto.Empresa,
+            Cargo = contacto.Cargo,
+            Direccion = contacto.Direccion,
+            FechaNacimiento = contacto.FechaNacimiento,
+            Notas = contacto.Notas
+        };
+        esNuevoContacto = false;
+        mostrarFormulario = true;
+        subtitulo = "Editar información de contacto";
+    }
+
+    private async Task GuardarContacto(Contacto contacto)
+    {
+        if (esNuevoContacto)
+        {
+            await ContactoService.AgregarAsync(contacto);
+        }
+        else
+        {
+            await ContactoService.ActualizarAsync(contacto);
+        }
+
+        mostrarFormulario = false;
+        subtitulo = "Contactos personales y profesionales";
+        await CargarContactos();
+
+        
+        contactoSeleccionado = contactos?.FirstOrDefault(c => c.Id == contacto.Id);
+    }
+
+    private async Task EliminarContacto(int id)
+    {
+        await ContactoService.EliminarAsync(id);
+        contactoSeleccionado = null;
+        await CargarContactos();
+    }
+
+    private void CancelarEdicion()
+    {
+        mostrarFormulario = false;
+        subtitulo = "Contactos personales y profesionales";
+    }
+
+    private string ObtenerColorAvatar(int id)
+    {
+        string[] colores = {
+            "#a8c4f0", "#a8e6cf", "#f0c4a8", "#c4a8f0",
+            "#f0a8c4", "#a8f0e6", "#f0e6a8", "#c4f0a8",
+            "#f0a8a8", "#a8a8f0"
+        };
+        return colores[id % colores.Length];
+    }
+}

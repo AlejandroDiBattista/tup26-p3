@@ -1,0 +1,133 @@
+@using tp5.Models
+
+<div class="detalle-header">
+    <div class="avatar-grande" style="background-color: #a8c4f0">
+        @(Contacto.ObtenerIniciales() == "" ? "?" : Contacto.ObtenerIniciales())
+    </div>
+    <div class="detalle-nombre-container">
+        <h2 class="detalle-nombre">@(EsNuevo ? "Nuevo contacto" : "Editar contacto")</h2>
+        <span class="detalle-empresa">
+            @if (EsNuevo)
+            {
+                <span>Completá los datos del contacto</span>
+            }
+            else
+            {
+                <span>Modificá los datos de <a class="detalle-link">@Contacto.NombreCompleto</a></span>
+            }
+        </span>
+    </div>
+    <div class="detalle-acciones">
+        <button class="btn btn-outline-secondary btn-accion" @onclick="Cancelar">
+            Cancelar
+        </button>
+        <button class="btn btn-primary btn-accion" @onclick="Guardar">
+            💾 Guardar cambios
+        </button>
+    </div>
+</div>
+
+<hr class="detalle-separador" />
+
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger">@mensajeError</div>
+}
+
+<div class="formulario-grid">
+
+    <div class="campo-grupo">
+        <label>Nombre <span class="campo-obligatorio">*</span></label>
+        <input class="form-control" @bind="Contacto.Nombre" placeholder="Nombre" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Empresa</label>
+        <input class="form-control" @bind="Contacto.Empresa" placeholder="Empresa u organización" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Apellido <span class="campo-obligatorio">*</span></label>
+        <input class="form-control" @bind="Contacto.Apellido" placeholder="Apellido" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Cargo</label>
+        <input class="form-control" @bind="Contacto.Cargo" placeholder="Cargo o función" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Teléfono <span class="campo-obligatorio">*</span></label>
+        <input class="form-control" @bind="Contacto.Telefono" placeholder="Ej: 381 555-1234" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Email <span class="campo-obligatorio">*</span></label>
+        <input class="form-control" type="email" @bind="Contacto.Email" placeholder="correo@ejemplo.com" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Dirección</label>
+        <input class="form-control" @bind="Contacto.Direccion" placeholder="Dirección postal" />
+    </div>
+
+    <div class="campo-grupo">
+        <label>Fecha de nacimiento</label>
+        <input class="form-control" type="date" @bind="Contacto.FechaNacimiento" />
+    </div>
+
+    <div class="campo-grupo campo-grupo-ancho-completo">
+        <label>Notas</label>
+        <textarea class="form-control" rows="4" @bind="Contacto.Notas" placeholder="Información adicional..."></textarea>
+    </div>
+
+</div>
+
+<hr class="detalle-separador" />
+
+<div class="formulario-botones-abajo">
+    <button class="btn btn-outline-secondary" @onclick="Cancelar">Cancelar</button>
+    <button class="btn btn-primary" @onclick="Guardar">💾 Guardar cambios</button>
+</div>
+
+@code {
+    [Parameter] public Contacto Contacto { get; set; } = null!;
+    [Parameter] public bool EsNuevo { get; set; }
+    [Parameter] public EventCallback<Contacto> OnGuardar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private string mensajeError = "";
+
+    private async Task Guardar()
+    {
+        if (string.IsNullOrWhiteSpace(Contacto.Nombre))
+        {
+            mensajeError = "El nombre es obligatorio.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(Contacto.Apellido))
+        {
+            mensajeError = "El apellido es obligatorio.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(Contacto.Telefono))
+        {
+            mensajeError = "El teléfono es obligatorio.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(Contacto.Email))
+        {
+            mensajeError = "El email es obligatorio.";
+            return;
+        }
+
+        mensajeError = "";
+        await OnGuardar.InvokeAsync(Contacto);
+    }
+
+    private async Task Cancelar()
+    {
+        mensajeError = "";
+        await OnCancelar.InvokeAsync();
+    }
+}
