@@ -1,0 +1,112 @@
+@page "/editar/{Id:int}"
+@page "/nuevo"
+@rendermode InteractiveServer
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card" style="background-color: #1e3a5f; border: none; border-radius: 16px;">
+        <div class="card-header d-flex align-items-center gap-3" style="background-color: #4f8fa8; border-radius: 16px 16px 0 0; padding: 1.5rem;">
+            <div class="avatar avatar-lg" style="background-color: @AvatarHelper.Color(contacto.Nombre, contacto.Apellido); color: #1a1a2e;">
+                @AvatarHelper.Iniciales(contacto.Nombre, contacto.Apellido)
+            </div>
+            <div>
+                <h4 class="mb-0 text-white">@(Id.HasValue ? "Editar contacto" : "Nuevo contacto")</h4>
+                <small style="color: #b8c5d6;">@contacto.Nombre @contacto.Apellido</small>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <EditForm Model="contacto" OnValidSubmit="Guardar">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white">Nombre</label>
+                        <InputText class="form-control form-dark" @bind-Value="contacto.Nombre" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white">Apellido</label>
+                        <InputText class="form-control form-dark" @bind-Value="contacto.Apellido" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white">Teléfono</label>
+                        <InputText class="form-control form-dark" @bind-Value="contacto.Telefono" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white">Email</label>
+                        <InputText class="form-control form-dark" @bind-Value="contacto.Email" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white">Empresa</label>
+                        <InputText class="form-control form-dark" @bind-Value="contacto.Empresa" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-white">Cargo</label>
+                        <InputText class="form-control form-dark" @bind-Value="contacto.Cargo" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-white">Dirección</label>
+                    <InputText class="form-control form-dark" @bind-Value="contacto.Direccion" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-white">Notas</label>
+                    <InputTextArea class="form-control form-dark" rows="3" @bind-Value="contacto.Notas" />
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4"> Guardar</button>
+                    <button type="button" class="btn btn-secondary px-4" @onclick="Cancelar">Cancelar</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    Contacto contacto = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var contactoEncontrado = await Db.Contactos.FindAsync(Id.Value);
+            if (contactoEncontrado != null)
+            {
+                contacto = contactoEncontrado;
+            }
+        }
+    }
+
+    async Task Guardar()
+    {
+        if (contacto.Id == 0)
+        {
+            Db.Contactos.Add(contacto);
+        }
+        else
+        {
+            Db.Contactos.Update(contacto);
+        }
+        await Db.SaveChangesAsync();
+        Nav.NavigateTo("/");
+    }
+
+    void Cancelar()
+    {
+        Nav.NavigateTo("/");
+    }
+}
