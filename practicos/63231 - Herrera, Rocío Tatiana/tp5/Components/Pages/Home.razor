@@ -48,3 +48,22 @@
         </div>
     </div>
 </div>
+<ul class="list-group list-group-flush contact-list">
+    @foreach (var contacto in contactos)
+    {
+        <li class="list-group-item @(contacto == seleccionado ? "active" : "")"
+            @onclick="@(() => Seleccionar(contacto))">
+
+            <div class="avatar" style="background-color:@AvatarHelper.Color(contacto.Nombre, contacto.Apellido)">
+                @AvatarHelper.Iniciales(contacto.Nombre, contacto.Apellido)
+            </div>
+
+            <div>
+                <p class="contact-name">@contacto.Nombre @contacto.Apellido</p>
+                <p class="contact-sub">
+                    @(string.IsNullOrEmpty(contacto.Empresa) ? "Independiente" : contacto.Empresa)
+                </p>
+            </div>
+        </li>
+    }
+</ul>
