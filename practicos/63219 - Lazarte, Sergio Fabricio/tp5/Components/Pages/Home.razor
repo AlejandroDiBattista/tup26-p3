@@ -7,17 +7,17 @@
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 <div class="agenda-layout">
-    <!-- Panel Maestro -->
     <aside class="panel-maestro">
         <div class="panel-header">
             <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Agenda</h5>
+            <button class="btn btn-sm btn-primary" @onclick="NuevoContacto">
+                <i class="bi bi-plus-lg"></i>
+            </button>
         </div>
         <ul class="lista-contactos">
             @if (contactos is null)
             {
-                <li class="list-item-placeholder">
-                    <i class="bi bi-hourglass-split me-2"></i>Cargando...
-                </li>
+                <li class="list-item-placeholder"><i class="bi bi-hourglass-split me-2"></i>Cargando...</li>
             }
             else if (!contactos.Any())
             {
@@ -44,9 +44,15 @@
         }
     </aside>
 
-    <!-- Panel Detalle -->
     <main class="panel-detalle">
-        @if (contactoSeleccionado is not null)
+        @if (modoEdicion)
+        {
+            <FormularioContacto Contacto="contactoForm"
+                                EsNuevo="esNuevo"
+                                OnGuardar="GuardarAsync"
+                                OnCancelar="CancelarEdicion" />
+        }
+        else if (contactoSeleccionado is not null)
         {
             <DetalleContacto Contacto="contactoSeleccionado" />
         }
@@ -55,6 +61,9 @@
             <div class="placeholder-detalle">
                 <i class="bi bi-person-vcard display-1 text-muted"></i>
                 <p class="text-muted mt-3">Seleccioná un contacto para ver su información</p>
+                <button class="btn btn-primary mt-2" @onclick="NuevoContacto">
+                    <i class="bi bi-plus-circle me-2"></i>Nuevo contacto
+                </button>
             </div>
         }
     </main>
@@ -63,10 +72,43 @@
 @code {
     private List<Contacto>? contactos;
     private Contacto? contactoSeleccionado;
+    private Contacto contactoForm = new();
+    private bool modoEdicion = false;
+    private bool esNuevo = false;
 
     protected override async Task OnInitializedAsync()
         => contactos = await ContactoSvc.ObtenerTodosAsync();
 
     private void SeleccionarContacto(Contacto c)
-        => contactoSeleccionado = c;
+    {
+        contactoSeleccionado = c;
+        modoEdicion = false;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoForm = new Contacto();
+        esNuevo = true;
+        modoEdicion = true;
+        contactoSeleccionado = null;
+    }
+
+    private async Task GuardarAsync(Contacto c)
+    {
+        if (esNuevo)
+        {
+            var nuevo = await ContactoSvc.CrearAsync(c);
+            contactos = await ContactoSvc.ObtenerTodosAsync();
+            contactoSeleccionado = contactos.FirstOrDefault(x => x.Id == nuevo.Id);
+        }
+        else
+        {
+            await ContactoSvc.ActualizarAsync(c);
+            contactos = await ContactoSvc.ObtenerTodosAsync();
+            contactoSeleccionado = contactos.FirstOrDefault(x => x.Id == c.Id);
+        }
+        modoEdicion = false;
+    }
+
+    private void CancelarEdicion() => modoEdicion = false;
 }

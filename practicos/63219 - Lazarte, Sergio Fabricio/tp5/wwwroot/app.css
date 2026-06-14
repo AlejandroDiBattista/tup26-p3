@@ -149,3 +149,28 @@ html, body { height: 100%; margin: 0; }
 }
 
 .campo-icono { font-size: 1.1rem; color: #6c757d; margin-top: 2px; }
+
+/* Formulario */
+.formulario-contacto { padding: 28px 32px; max-width: 720px; }
+
+.form-header {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.form-section { margin-bottom: 24px; }
+
+.section-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-actions {
+    display: flex; justify-content: flex-end; gap: 10px;
+    padding-top: 16px; border-top: 1px solid #dee2e6;
+    margin-top: 8px;
+}
