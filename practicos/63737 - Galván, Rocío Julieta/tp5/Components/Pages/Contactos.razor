@@ -8,184 +8,192 @@
 <div class="container py-4">
 
     <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h1 class="mb-0">Agenda</h1>
-            <p class="text-muted mb-0">Contactos personales y profesionales</p>
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-0">Agenda</h1>
+                <p class="text-muted mb-0">
+                    @(modoEdicion ? "Editar información de contacto" : "Contactos personales y profesionales")
+                </p>
+            </div>
+
+            <button class="btn btn-primary" @onclick="NuevoContacto">
+                + Nuevo contacto
+            </button>
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h4>Agregar / editar contacto</h4>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4>Lista de contactos</h4>
 
-            <FormularioContacto Contacto="nuevoContacto"
-                    OnGuardar="GuardarContacto" />
-        </div>
-    </div>
-
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h4>Lista de contactos</h4>
-
-                <div class="mb-3">
-                    <label class="form-label">Buscar contacto:</label>
-
-                    <input class="form-control"
-                           placeholder="Buscar por nombre, apellido, teléfono o email..."
-                           value="@busqueda"
-                           @oninput="Buscar" />
-                </div>
-
-                @if (contactos.Count == 0)
-                {
-                    <div class="alert alert-info">
-                        @if (string.IsNullOrWhiteSpace(busqueda))
-                        {
-                            <span>No hay contactos cargados.</span>
-                        }
-                        else
-                        {
-                            <span>No se encontraron contactos para la búsqueda "@busqueda".</span>
-                        }
+                    <div class="mb-3">
+                        <input class="form-control"
+                               placeholder="Buscar contacto..."
+                               value="@busqueda"
+                               @oninput="Buscar" />
                     </div>
-                }
-                else
-                {
-                    <div class="list-group"
-                     style="max-height: 500px; overflow-y: auto;">
 
-                        @foreach (var contacto in contactos)
+                    @if (contactos.Count == 0)
                     {
-                     <ItemContacto Contacto="contacto"
-                     OnSeleccionar="() => Seleccionar(contacto)" />
-                      }
-                    </div>
-                }
+                        <div class="alert alert-info">
+                            @if (string.IsNullOrWhiteSpace(busqueda))
+                            {
+                                <span>No hay contactos cargados.</span>
+                            }
+                            else
+                            {
+                                <span>No se encontraron contactos para la búsqueda "@busqueda".</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group" style="max-height: 500px; overflow-y: auto;">
+                            @foreach (var contacto in contactos)
+                            {
+                                <ItemContacto Contacto="contacto"
+                                              OnSeleccionar="() => Seleccionar(contacto)" />
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h4>Detalle</h4>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
 
-                <DetalleContacto Contacto="contactoSeleccionado"
-                 OnEditar="EditarSeleccionado"
-                 OnEliminar="EliminarSeleccionado" />
+                    @if (modoEdicion)
+                    {
+                        <h4>Editar contacto</h4>
+
+                        <FormularioContacto Contacto="nuevoContacto"
+                        OnGuardar="GuardarContacto"
+                        OnCancelar="Cancelar" />
+                    }
+                    else
+                    {
+                        <h4>Detalle</h4>
+
+                        <DetalleContacto Contacto="contactoSeleccionado"
+                                         OnEditar="EditarSeleccionado"
+                                         OnEliminar="EliminarSeleccionado" />
+                    }
+
+                </div>
             </div>
         </div>
     </div>
 </div>
-  </div>
 
 @code {
     private List<Contacto> contactos = [];
     private Contacto nuevoContacto = new();
     private Contacto? contactoSeleccionado;
+    private string busqueda = "";
+    private bool modoEdicion = false;
 
     protected override void OnInitialized()
-{
-    CargarContactos();
-}
-
-private void GuardarContacto()
-{
-    int idGuardado;
-
-    if (nuevoContacto.Id == 0)
     {
-        Db.Contactos.Add(nuevoContacto);
-        Db.SaveChanges();
-
-        idGuardado = nuevoContacto.Id;
+        CargarContactos();
     }
-    else
+
+    private void CargarContactos()
     {
-        var contactoOriginal = Db.Contactos.FirstOrDefault(c => c.Id == nuevoContacto.Id);
+        contactos = Db.Contactos
+            .AsNoTracking()
+            .Where(c =>
+                c.Nombre.Contains(busqueda) ||
+                c.Apellido.Contains(busqueda) ||
+                c.Telefono.Contains(busqueda) ||
+                c.Email.Contains(busqueda) ||
+                c.Empresa.Contains(busqueda) ||
+                c.Cargo.Contains(busqueda) ||
+                c.Direccion.Contains(busqueda))
+            .ToList();
+    }
 
-        if (contactoOriginal is not null)
+    private void NuevoContacto()
+    {
+        nuevoContacto = new Contacto();
+        contactoSeleccionado = null;
+        modoEdicion = true;
+    }
+
+    private void GuardarContacto()
+    {
+        int idGuardado;
+
+        Db.ChangeTracker.Clear();
+
+        if (nuevoContacto.Id == 0)
         {
-            contactoOriginal.Nombre = nuevoContacto.Nombre;
-            contactoOriginal.Apellido = nuevoContacto.Apellido;
-            contactoOriginal.Telefono = nuevoContacto.Telefono;
-            contactoOriginal.Email = nuevoContacto.Email;
-            contactoOriginal.Empresa = nuevoContacto.Empresa;
-            contactoOriginal.Cargo = nuevoContacto.Cargo;
-            contactoOriginal.Direccion = nuevoContacto.Direccion;
-            contactoOriginal.FechaNacimiento = nuevoContacto.FechaNacimiento;
-            contactoOriginal.Notas = nuevoContacto.Notas;
-
+            Db.Contactos.Add(nuevoContacto);
             Db.SaveChanges();
+
+            idGuardado = nuevoContacto.Id;
+        }
+        else
+        {
+            Db.Contactos.Update(nuevoContacto);
+            Db.SaveChanges();
+
+            idGuardado = nuevoContacto.Id;
         }
 
-        idGuardado = nuevoContacto.Id;
-    }
+        busqueda = "";
+        nuevoContacto = new Contacto();
+        modoEdicion = false;
 
-    busqueda = "";
-    nuevoContacto = new Contacto();
-
-    CargarContactos();
-
-    contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == idGuardado);
-}
-  private void Editar(Contacto contacto)
-{
-    nuevoContacto = contacto.Clonar();
-}
-
-    private void Eliminar(Contacto contacto)
-    {
-        Db.Contactos.Remove(contacto);
-        Db.SaveChanges();
-
-        contactoSeleccionado = null;
         CargarContactos();
+
+        contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == idGuardado);
     }
 
     private void Seleccionar(Contacto contacto)
     {
         contactoSeleccionado = contacto;
+        modoEdicion = false;
     }
 
-    private string busqueda = "";
-
-private void CargarContactos()
-{
-    Db.ChangeTracker.Clear();
-
-    contactos = Db.Contactos
-        .Where(c =>
-            c.Nombre.Contains(busqueda) ||
-            c.Apellido.Contains(busqueda) ||
-            c.Telefono.Contains(busqueda) ||
-            c.Email.Contains(busqueda) ||
-            c.Empresa.Contains(busqueda) ||
-            c.Cargo.Contains(busqueda) ||
-            c.Direccion.Contains(busqueda))
-        .ToList();
-}
-private void Buscar(ChangeEventArgs e)
-{
-    busqueda = e.Value?.ToString() ?? "";
-    CargarContactos();
-}
-
-private void EditarSeleccionado()
-{
-    if (contactoSeleccionado is not null)
+    private void EditarSeleccionado()
     {
-        Editar(contactoSeleccionado);
+        if (contactoSeleccionado is not null)
+        {
+            nuevoContacto = contactoSeleccionado.Clonar();
+            modoEdicion = true;
+        }
     }
-}
 
-private void EliminarSeleccionado()
-{
-    if (contactoSeleccionado is not null)
+    private void EliminarSeleccionado()
     {
-        Eliminar(contactoSeleccionado);
+        if (contactoSeleccionado is not null)
+        {
+            Db.ChangeTracker.Clear();
+
+            Db.Contactos.Remove(contactoSeleccionado);
+            Db.SaveChanges();
+
+            contactoSeleccionado = null;
+            nuevoContacto = new Contacto();
+            modoEdicion = false;
+
+            CargarContactos();
+        }
     }
-}
+
+    private void Cancelar()
+    {
+        nuevoContacto = new Contacto();
+        modoEdicion = false;
+    }
+
+    private void Buscar(ChangeEventArgs e)
+    {
+        busqueda = e.Value?.ToString() ?? "";
+        CargarContactos();
+    }
 }

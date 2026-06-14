@@ -57,29 +57,37 @@
                        @bind-Value="Contacto.FechaNacimiento" />
         </div>
 
-        <div class="col-12">
-            <label class="form-label">Notas</label>
-            <InputTextArea class="form-control"
-                           @bind-Value="Contacto.Notas" />
-        </div>
+<div class="col-12">
+    <label class="form-label">Notas</label>
+    <InputTextArea class="form-control"
+                   @bind-Value="Contacto.Notas" />
+</div>
 
-        <div class="col-12">
-            <button class="btn btn-primary"
-                    type="submit">
-                Guardar
-            </button>
-        </div>
+<div class="col-12">
+    <button class="btn btn-secondary me-2"
+            type="button"
+            @onclick="OnCancelar">
+        Cancelar
+    </button>
+
+    <button class="btn btn-primary"
+            type="submit">
+        Guardar cambios
+    </button>
+</div>
+
 
     </div>
 
 </EditForm>
 
 @code {
-
     [Parameter]
     public Contacto Contacto { get; set; } = default!;
 
     [Parameter]
     public EventCallback OnGuardar { get; set; }
 
+    [Parameter]
+    public EventCallback OnCancelar { get; set; }
 }
