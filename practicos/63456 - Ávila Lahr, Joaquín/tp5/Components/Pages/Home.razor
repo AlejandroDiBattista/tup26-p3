@@ -5,8 +5,11 @@
 @inject ServicioContacto Servicio
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
+
 <div class="agenda">
-<div class="panel-lista">
+
+    <!-- LISTA -->
+    <div class="panel-lista">
 
         <input type="text" placeholder="Buscar..." @bind="busqueda" />
         <button class="btn-azul" @onclick="Buscar">Buscar</button>
@@ -23,8 +26,43 @@
 
         <div class="pie-lista">@contactos.Count contacto(s)</div>
     </div>
+
+    <!-- DETALLE -->
     <div class="panel-detalle">
-        <p>Seleccioná un contacto o creá uno nuevo.</p>
+
+        @if (seleccionado == null)
+        {
+            <p>Seleccioná un contacto o creá uno nuevo.</p>
+        }
+        else
+        {
+            <h3>@seleccionado.Nombre @seleccionado.Apellido</h3>
+
+            <p><strong>Teléfono:</strong> @seleccionado.Telefono</p>
+            <p><strong>Email:</strong> @seleccionado.Email</p>
+
+            @if (!string.IsNullOrEmpty(seleccionado.Empresa))
+            {
+                <p><strong>Empresa:</strong> @seleccionado.Empresa</p>
+            }
+            @if (!string.IsNullOrEmpty(seleccionado.Cargo))
+            {
+                <p><strong>Cargo:</strong> @seleccionado.Cargo</p>
+            }
+            @if (!string.IsNullOrEmpty(seleccionado.Direccion))
+            {
+                <p><strong>Dirección:</strong> @seleccionado.Direccion</p>
+            }
+            @if (seleccionado.FechaNacimiento.HasValue)
+            {
+                <p><strong>Fecha de nacimiento:</strong> @seleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")</p>
+            }
+            @if (!string.IsNullOrEmpty(seleccionado.Notas))
+            {
+                <p><strong>Notas:</strong> @seleccionado.Notas</p>
+            }
+        }
+
     </div>
 
 </div>
@@ -56,5 +94,5 @@
 
     private void NuevoContacto()
     {
-      }
+    }
 }
