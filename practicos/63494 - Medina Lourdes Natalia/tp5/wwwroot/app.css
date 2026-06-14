@@ -56,7 +56,18 @@ a, .btn-link {
     border-right: 1px solid #d9e2ec;
     padding: 1rem;
 }
-
+.contact-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #2563eb;
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .contact-list {
     display: flex;
     flex-direction: column;
