@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 
 @using tp5.Models
+@using Microsoft.EntityFrameworkCore
 @inject tp5.Data.AgendaDbContext Db
 
 <div class="container py-4">
@@ -110,7 +111,9 @@
                 }
                 else
                 {
-                    <div class="list-group">
+                    <div class="list-group"
+                     style="max-height: 500px; overflow-y: auto;">
+
                         @foreach (var contacto in contactos)
                         {
                             <button class="list-group-item list-group-item-action"
@@ -170,23 +173,50 @@
     CargarContactos();
 }
 
-    private void GuardarContacto()
-    {
-        if (nuevoContacto.Id == 0)
-        {
-            Db.Contactos.Add(nuevoContacto);
-        }
+private void GuardarContacto()
+{
+    int idGuardado;
 
+    if (nuevoContacto.Id == 0)
+    {
+        Db.Contactos.Add(nuevoContacto);
         Db.SaveChanges();
 
-        nuevoContacto = new Contacto();
-        CargarContactos();
+        idGuardado = nuevoContacto.Id;
+    }
+    else
+    {
+        var contactoOriginal = Db.Contactos.FirstOrDefault(c => c.Id == nuevoContacto.Id);
+
+        if (contactoOriginal is not null)
+        {
+            contactoOriginal.Nombre = nuevoContacto.Nombre;
+            contactoOriginal.Apellido = nuevoContacto.Apellido;
+            contactoOriginal.Telefono = nuevoContacto.Telefono;
+            contactoOriginal.Email = nuevoContacto.Email;
+            contactoOriginal.Empresa = nuevoContacto.Empresa;
+            contactoOriginal.Cargo = nuevoContacto.Cargo;
+            contactoOriginal.Direccion = nuevoContacto.Direccion;
+            contactoOriginal.FechaNacimiento = nuevoContacto.FechaNacimiento;
+            contactoOriginal.Notas = nuevoContacto.Notas;
+
+            Db.SaveChanges();
+        }
+
+        idGuardado = nuevoContacto.Id;
     }
 
-    private void Editar(Contacto contacto)
-    {
-        nuevoContacto = contacto;
-    }
+    busqueda = "";
+    nuevoContacto = new Contacto();
+
+    CargarContactos();
+
+    contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == idGuardado);
+}
+  private void Editar(Contacto contacto)
+{
+    nuevoContacto = contacto.Clonar();
+}
 
     private void Eliminar(Contacto contacto)
     {
@@ -206,6 +236,8 @@
 
 private void CargarContactos()
 {
+    Db.ChangeTracker.Clear();
+
     contactos = Db.Contactos
         .Where(c =>
             c.Nombre.Contains(busqueda) ||
