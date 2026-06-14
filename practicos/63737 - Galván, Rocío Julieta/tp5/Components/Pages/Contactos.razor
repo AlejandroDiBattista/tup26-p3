@@ -114,20 +114,24 @@
         CargarContactos();
     }
 
-    private void CargarContactos()
-    {
-        contactos = Db.Contactos
-            .AsNoTracking()
-            .Where(c =>
-                c.Nombre.Contains(busqueda) ||
-                c.Apellido.Contains(busqueda) ||
-                c.Telefono.Contains(busqueda) ||
-                c.Email.Contains(busqueda) ||
-                c.Empresa.Contains(busqueda) ||
-                c.Cargo.Contains(busqueda) ||
-                c.Direccion.Contains(busqueda))
-            .ToList();
-    }
+private void CargarContactos()
+{
+    Db.ChangeTracker.Clear();
+
+    var texto = busqueda.ToLower();
+
+    contactos = Db.Contactos
+        .AsNoTracking()
+        .Where(c =>
+            c.Nombre.ToLower().Contains(texto) ||
+            c.Apellido.ToLower().Contains(texto) ||
+            c.Telefono.ToLower().Contains(texto) ||
+            c.Email.ToLower().Contains(texto) ||
+            c.Empresa.ToLower().Contains(texto) ||
+            c.Cargo.ToLower().Contains(texto) ||
+            c.Direccion.ToLower().Contains(texto))
+        .ToList();
+}
 
    private void NuevoContacto()
 {
@@ -138,36 +142,38 @@
     modoEdicion = true;
 }
 
-    private void GuardarContacto()
+   private void GuardarContacto()
+{
+    int idGuardado;
+
+    Db.ChangeTracker.Clear();
+
+    if (nuevoContacto.Id == 0)
     {
-        int idGuardado;
+        Db.Contactos.Add(nuevoContacto);
+        Db.SaveChanges();
 
-        Db.ChangeTracker.Clear();
-
-        if (nuevoContacto.Id == 0)
-        {
-            Db.Contactos.Add(nuevoContacto);
-            Db.SaveChanges();
-
-            idGuardado = nuevoContacto.Id;
-        }
-        else
-        {
-            Db.Contactos.Update(nuevoContacto);
-            Db.SaveChanges();
-
-            idGuardado = nuevoContacto.Id;
-        }
-
-        busqueda = "";
-        nuevoContacto = new Contacto();
-        esNuevoContacto = false;
-        modoEdicion = false;
-
-        CargarContactos();
-
-        contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == idGuardado);
+        idGuardado = nuevoContacto.Id;
     }
+    else
+    {
+        Db.Contactos.Update(nuevoContacto);
+        Db.SaveChanges();
+
+        idGuardado = nuevoContacto.Id;
+    }
+
+    busqueda = "";
+    modoEdicion = false;
+    esNuevoContacto = false;
+
+    Db.ChangeTracker.Clear();
+    CargarContactos();
+
+    contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == idGuardado);
+
+    nuevoContacto = new Contacto();
+}
 
     private void Seleccionar(Contacto contacto)
     {
