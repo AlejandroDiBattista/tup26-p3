@@ -1,0 +1,15 @@
+@using tp5.Models
+
+<button class="list-group-item list-group-item-action"
+        @onclick="OnSeleccionar">
+    <strong>@Contacto.Nombre @Contacto.Apellido</strong><br />
+    <small class="text-muted">@Contacto.Empresa</small>
+</button>
+
+@code {
+    [Parameter]
+    public Contacto Contacto { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnSeleccionar { get; set; }
+}

@@ -115,13 +115,10 @@
                      style="max-height: 500px; overflow-y: auto;">
 
                         @foreach (var contacto in contactos)
-                        {
-                            <button class="list-group-item list-group-item-action"
-                                    @onclick="() => Seleccionar(contacto)">
-                                <strong>@contacto.Nombre @contacto.Apellido</strong><br />
-                                <small class="text-muted">@contacto.Empresa</small>
-                            </button>
-                        }
+                    {
+                     <ItemContacto Contacto="contacto"
+                     OnSeleccionar="() => Seleccionar(contacto)" />
+                      }
                     </div>
                 }
             </div>
