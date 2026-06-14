@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace tp5.Models;
-
 public class Contacto
 {
     public int Id { get; set; }
