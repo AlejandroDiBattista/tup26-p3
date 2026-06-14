@@ -177,3 +177,22 @@ html, body { height: 100%; margin: 0; }
 
 /* Buscador */
 .search-box { background: #fff; border-bottom: 1px solid #dee2e6; }
+
+/* Toast notificación */
+.toast-notif {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-left: 4px solid #198754;
+    border-radius: 6px;
+    padding: 12px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    z-index: 9999;
+    font-size: 0.9rem;
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

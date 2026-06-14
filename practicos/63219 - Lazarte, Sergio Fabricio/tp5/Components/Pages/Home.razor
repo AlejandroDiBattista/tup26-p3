@@ -82,6 +82,13 @@
             </div>
         }
     </main>
+
+    @if (mensajeExito is not null)
+    {
+        <div class="toast-notif">
+            <i class="bi bi-check-circle-fill me-2 text-success"></i>@mensajeExito
+        </div>
+    }
 </div>
 
 @code {
@@ -91,6 +98,8 @@
     private string textoBusqueda = "";
     private bool modoEdicion = false;
     private bool esNuevo = false;
+
+    private string? mensajeExito;
 
     protected override async Task OnInitializedAsync()
         => await CargarContactosAsync();
@@ -148,12 +157,14 @@
             var nuevo = await ContactoSvc.CrearAsync(c);
             await CargarContactosAsync();
             contactoSeleccionado = contactos?.FirstOrDefault(x => x.Id == nuevo.Id);
+            MostrarExito("Contacto creado correctamente.");
         }
         else
         {
             await ContactoSvc.ActualizarAsync(c);
             await CargarContactosAsync();
             contactoSeleccionado = contactos?.FirstOrDefault(x => x.Id == c.Id);
+            MostrarExito("Contacto actualizado correctamente.");
         }
         modoEdicion = false;
     }
@@ -167,5 +178,19 @@
         contactoSeleccionado = null;
         modoEdicion = false;
         await CargarContactosAsync();
+        MostrarExito("Contacto eliminado.");
+    }
+
+    private void MostrarExito(string msg)
+    {
+        mensajeExito = msg;
+        _ = OcultarMensajeAsync();
+    }
+
+    private async Task OcultarMensajeAsync()
+    {
+        await Task.Delay(3000);
+        mensajeExito = null;
+        StateHasChanged();
     }
 }
