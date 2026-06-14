@@ -2,8 +2,7 @@
 @using AgendaWeb.Services
 @using AgendaWeb.Data
 @inject ContactoService ContactoService
-
-
+@rendermode InteractiveServer
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
@@ -248,9 +247,19 @@
     {
         if (contactoSeleccionado != null)
         {
-            await ContactoService.ActualizarAsync(contactoSeleccionado);
+            if (contactoSeleccionado.Id == 0)
+            {
+                // Es un contacto nuevo
+                await ContactoService.CrearAsync(contactoSeleccionado);
+            }
+            else
+            {
+                // Es un contacto existente
+                await ContactoService.ActualizarAsync(contactoSeleccionado);
+            }
             editando = false;
             await CargarContactos();
+            contactoSeleccionado = null;
         }
     }
 
