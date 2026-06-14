@@ -164,3 +164,13 @@ private async Task EliminarSeleccionado()
     contactos.Remove(seleccionado);
     seleccionado = null;
 }
+private void IrAEditar()
+{
+    if (seleccionado is not null)
+        Nav.NavigateTo($"/editar/{seleccionado.Id}");
+}
+
+private void IrANuevo()
+{
+    Nav.NavigateTo("/nuevo");
+}
