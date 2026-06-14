@@ -8,10 +8,6 @@
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 @code {
-    private void Seleccionar(Contacto contacto)
-{
-    seleccionado = contacto;
-}
     private string busqueda = string.Empty;
     private List<Contacto> contactos = new();
     private Contacto? seleccionado;
@@ -19,6 +15,44 @@
     protected override async Task OnInitializedAsync()
     {
         contactos = await Db.Contactos.ToListAsync();
+    }
+
+    private void Seleccionar(Contacto contacto)
+    {
+        seleccionado = contacto;
+    }
+
+    private List<Contacto> Filtrados()
+    {
+        if (string.IsNullOrWhiteSpace(busqueda))
+            return contactos;
+
+        return contactos.Where(c =>
+            c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private async Task EliminarSeleccionado()
+    {
+        if (seleccionado is null) return;
+
+        Db.Contactos.Remove(seleccionado);
+        await Db.SaveChangesAsync();
+
+        contactos.Remove(seleccionado);
+        seleccionado = null;
+    }
+
+    private void IrAEditar()
+    {
+        if (seleccionado is not null)
+            Nav.NavigateTo($"/editar/{seleccionado.Id}");
+    }
+
+    private void IrANuevo()
+    {
+        Nav.NavigateTo("/nuevo");
     }
 }
 <div class="container-fluid px-4 py-4">
@@ -53,9 +87,8 @@
     </div>
 </div>
 <ul class="list-group list-group-flush contact-list">
-    @foreach (var contacto in contactos)
+    @foreach (var contacto in Filtrados())
     {
-        @foreach (var contacto in Filtrados())
         <li class="list-group-item @(contacto == seleccionado ? "active" : "")"
             @onclick="@(() => Seleccionar(contacto))">
 
@@ -72,16 +105,6 @@
         </li>
     }
 </ul>
-private List<Contacto> Filtrados()
-{
-    if (string.IsNullOrWhiteSpace(busqueda))
-        return contactos;
-
-    return contactos.Where(c =>
-        c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-        c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
-    ).ToList();
-}
 <div class="col-md-8">
     <div class="panel p-4">
 
@@ -154,23 +177,3 @@ private List<Contacto> Filtrados()
         }
     </div>
 </div>
-private async Task EliminarSeleccionado()
-{
-    if (seleccionado is null) return;
-
-    Db.Contactos.Remove(seleccionado);
-    await Db.SaveChangesAsync();
-
-    contactos.Remove(seleccionado);
-    seleccionado = null;
-}
-private void IrAEditar()
-{
-    if (seleccionado is not null)
-        Nav.NavigateTo($"/editar/{seleccionado.Id}");
-}
-
-private void IrANuevo()
-{
-    Nav.NavigateTo("/nuevo");
-}
