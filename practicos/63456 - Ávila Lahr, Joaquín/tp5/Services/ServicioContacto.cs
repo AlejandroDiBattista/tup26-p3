@@ -41,11 +41,23 @@ public class ServicioContacto
         return contacto;
     }
 
-    public async Task ActualizarAsync(Contacto contacto)
-    {
-        _contexto.Contactos.Update(contacto);
-        await _contexto.SaveChangesAsync();
-    }
+   public async Task ActualizarAsync(Contacto contacto)
+{
+    var existente = await _contexto.Contactos.FindAsync(contacto.Id);
+    if (existente == null) return;
+
+    existente.Nombre = contacto.Nombre;
+    existente.Apellido = contacto.Apellido;
+    existente.Telefono = contacto.Telefono;
+    existente.Email = contacto.Email;
+    existente.Empresa = contacto.Empresa;
+    existente.Cargo = contacto.Cargo;
+    existente.Direccion = contacto.Direccion;
+    existente.FechaNacimiento = contacto.FechaNacimiento;
+    existente.Notas = contacto.Notas;
+
+    await _contexto.SaveChangesAsync();
+}
 
     public async Task EliminarAsync(int id)
     {

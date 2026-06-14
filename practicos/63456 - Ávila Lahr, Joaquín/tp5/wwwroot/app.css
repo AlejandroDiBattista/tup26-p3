@@ -252,3 +252,67 @@ html, body {
     gap: 10px;
     justify-content: center;
 }
+html, body {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+.agenda {
+    background-color: #121212;
+}
+
+.panel-lista {
+    background-color: #1e1e1e;
+    border-right: 1px solid #333;
+}
+
+.panel-lista input {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border: 1px solid #444;
+}
+
+.item-contacto {
+    color: #e0e0e0;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.item-contacto:hover {
+    background-color: #2a2a2a;
+}
+
+.item-contacto.seleccionado {
+    background-color: #1a3a6b;
+    border-left-color: #5b8ef8;
+}
+
+.item-contacto small {
+    color: #aaa;
+}
+
+.panel-detalle {
+    background-color: #181818;
+    color: #e0e0e0;
+}
+
+.panel-detalle h3 {
+    color: #ffffff;
+}
+
+.panel-detalle strong {
+    color: #5b8ef8;
+}
+
+.pie-lista {
+    color: #666;
+    border-top: 1px solid #333;
+}
+
+.encabezado {
+    background-color: #1a1a2e;
+}
+.panel-detalle button {
+    pointer-events: all;
+    position: relative;
+    z-index: 10;
+}
