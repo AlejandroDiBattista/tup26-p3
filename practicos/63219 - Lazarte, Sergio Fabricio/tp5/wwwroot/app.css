@@ -36,3 +36,87 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* AgendaWeb Layout */
+html, body { height: 100%; margin: 0; }
+
+.agenda-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.panel-maestro {
+    width: 300px;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #dee2e6;
+    background: #f8f9fa;
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #fff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.lista-contactos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.list-item-placeholder {
+    padding: 24px 16px;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.contacto-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.12s;
+}
+
+.contacto-item:hover { background: #e9ecef; }
+.contacto-item.activo { background: #dbeafe; border-left: 3px solid #0d6efd; }
+
+.avatar {
+    width: 40px; height: 40px;
+    background: #0d6efd;
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 0.85rem;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.info { display: flex; flex-direction: column; overflow: hidden; }
+.nombre { font-weight: 500; font-size: 0.93rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.subtitulo { font-size: 0.78rem; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.panel-footer { padding: 8px 14px; font-size: 0.78rem; color: #6c757d; border-top: 1px solid #dee2e6; background: #fff; }
+
+.panel-detalle {
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.placeholder-detalle {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; text-align: center;
+}
