@@ -44,12 +44,19 @@
         }
     </aside>
 
-    <!-- Panel Detalle (vacío por ahora) -->
+    <!-- Panel Detalle -->
     <main class="panel-detalle">
-        <div class="placeholder-detalle">
-            <i class="bi bi-person-vcard display-1 text-muted"></i>
-            <p class="text-muted mt-3">Seleccioná un contacto para ver su información</p>
-        </div>
+        @if (contactoSeleccionado is not null)
+        {
+            <DetalleContacto Contacto="contactoSeleccionado" />
+        }
+        else
+        {
+            <div class="placeholder-detalle">
+                <i class="bi bi-person-vcard display-1 text-muted"></i>
+                <p class="text-muted mt-3">Seleccioná un contacto para ver su información</p>
+            </div>
+        }
     </main>
 </div>
 

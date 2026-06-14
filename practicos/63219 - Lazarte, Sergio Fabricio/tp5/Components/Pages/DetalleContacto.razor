@@ -1,0 +1,45 @@
+@using tp5.Models
+
+<div class="detalle-contacto">
+    <div class="detalle-header">
+        <div class="avatar-lg">@Contacto.Nombre[0]@Contacto.Apellido[0]</div>
+        <div>
+            <h3 class="mb-0">@Contacto.Nombre @Contacto.Apellido</h3>
+            @if (!string.IsNullOrEmpty(Contacto.Cargo) || !string.IsNullOrEmpty(Contacto.Empresa))
+            {
+                <p class="text-muted mb-0">
+                    @Contacto.Cargo@((!string.IsNullOrEmpty(Contacto.Cargo) && !string.IsNullOrEmpty(Contacto.Empresa)) ? " · " : "")@Contacto.Empresa
+                </p>
+            }
+        </div>
+    </div>
+
+    <div class="detalle-campos mt-4">
+        <CampoDetalle Icono="bi-telephone" Etiqueta="Teléfono" Valor="@Contacto.Telefono" />
+        <CampoDetalle Icono="bi-envelope" Etiqueta="Correo electrónico" Valor="@Contacto.Email" />
+        @if (!string.IsNullOrEmpty(Contacto.Empresa))
+        {
+            <CampoDetalle Icono="bi-building" Etiqueta="Empresa" Valor="@Contacto.Empresa" />
+        }
+        @if (!string.IsNullOrEmpty(Contacto.Cargo))
+        {
+            <CampoDetalle Icono="bi-briefcase" Etiqueta="Cargo" Valor="@Contacto.Cargo" />
+        }
+        @if (!string.IsNullOrEmpty(Contacto.Direccion))
+        {
+            <CampoDetalle Icono="bi-geo-alt" Etiqueta="Dirección" Valor="@Contacto.Direccion" />
+        }
+        @if (Contacto.FechaNacimiento.HasValue)
+        {
+            <CampoDetalle Icono="bi-cake" Etiqueta="Fecha de nacimiento" Valor="@Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")" />
+        }
+        @if (!string.IsNullOrEmpty(Contacto.Notas))
+        {
+            <CampoDetalle Icono="bi-journal-text" Etiqueta="Notas" Valor="@Contacto.Notas" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Contacto Contacto { get; set; } = default!;
+}
