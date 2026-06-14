@@ -1,7 +1,60 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Services
+@inject ServicioContacto Servicio
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
+<div class="agenda">
+<div class="panel-lista">
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+        <input type="text" placeholder="Buscar..." @bind="busqueda" />
+        <button class="btn-azul" @onclick="Buscar">Buscar</button>
+        <button class="btn-azul" @onclick="NuevoContacto">+ Nuevo</button>
+
+        @foreach (var c in contactos)
+        {
+            <div class="item-contacto @(seleccionado?.Id == c.Id ? "seleccionado" : "")"
+                 @onclick="() => Seleccionar(c)">
+                <strong>@c.Apellido, @c.Nombre</strong>
+                <small>@c.Email</small>
+            </div>
+        }
+
+        <div class="pie-lista">@contactos.Count contacto(s)</div>
+    </div>
+    <div class="panel-detalle">
+        <p>Seleccioná un contacto o creá uno nuevo.</p>
+    </div>
+
 </div>
+
+@code {
+    private List<Contacto> contactos = [];
+    private Contacto? seleccionado;
+    private string busqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
+    {
+        contactos = await Servicio.ObtenerTodosAsync(busqueda);
+    }
+
+    private async Task Buscar()
+    {
+        await CargarContactos();
+    }
+
+    private void Seleccionar(Contacto c)
+    {
+        seleccionado = c;
+    }
+
+    private void NuevoContacto()
+    {
+      }
+}
