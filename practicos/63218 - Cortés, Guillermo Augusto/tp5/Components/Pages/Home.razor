@@ -6,14 +6,22 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="container mt-4">
-    <h1 class="mb-4">Agenda de Contactos</h1>
+<div class="container-fluid p-4 agenda-page">
 
-    <div class="row g-4">
+    <div class="mb-4">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-person-vcard-fill text-primary me-2"></i>
+            Agenda de Contactos
+        </h1>
+    </div>
 
-        <div class="col-12 col-md-4">
+    <div class="row g-4 agenda-layout">
+
+        <div class="col-12 col-md-4 agenda-sidebar">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h5 mb-0">Contactos</h2>
+                <h2 class="h5 fw-bold mb-0">
+                    <i class="bi bi-people me-2"></i>Contactos
+                </h2>
                 <button type="button" class="btn btn-primary btn-sm" @onclick="NuevoContacto">
                     Nuevo
                 </button>
@@ -37,26 +45,32 @@
             }
             else
             {
-                <div class="list-group">
-                    @foreach (var contacto in ContactosFiltrados)
-                    {
-                        <button
-                            type="button"
-                            class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
-                            @onclick="() => SeleccionarContacto(contacto)">
+                <div class="list-group agenda-contact-list">
+                    @foreach (var contacto in ContactosFiltrados){
+                    <button
+                        type="button"
+                        class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                        @onclick="() => SeleccionarContacto(contacto)">
 
-                            <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
-                            <small>@contacto.Telefono</small><br />
-                            <small>@contacto.Email</small>
+                        <div class="contact-item">
+                            <div class="contact-avatar-small">
+                                @($"{contacto.Nombre[0]}{contacto.Apellido[0]}")
+                            </div>
 
-                        </button>
+                            <div>
+                                <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
+                                <small>@contacto.Telefono</small><br />
+                                <small>@contacto.Email</small>
+                            </div>
+                        </div>
+
+                    </button>
                     }
                 </div>
             }
         </div>
 
-        <div class="col-12 col-md-8">
-            <h2 class="h5 mb-3">Detalle</h2>
+        <div class="col-12 col-md-8 agenda-detail">
             @if (mostrandoFormulario)
             {
                 <div class="card">
@@ -133,10 +147,22 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h3 class="card-title mb-0">
-                                @contactoSeleccionado.Nombre
-                                @contactoSeleccionado.Apellido
-                            </h3>
+                            <div class="contact-header">
+                                <div class="contact-avatar">
+                                    @($"{contactoSeleccionado.Nombre[0]}{contactoSeleccionado.Apellido[0]}")
+                                </div>
+
+                                <div>
+                                <h3 class="card-title mb-1">
+                                    @contactoSeleccionado.Nombre
+                                    @contactoSeleccionado.Apellido
+                                </h3>
+
+                                    <small class="text-muted">
+                                        @MostrarDato(contactoSeleccionado.Empresa)
+                                    </small>
+                                </div>
+                            </div>
 
                             <div>
                                 <button type="button" class="btn btn-outline-primary btn-sm" @onclick="EditarContacto">
@@ -162,25 +188,25 @@
                         }
 
                         <dl class="row mb-0">
-                            <dt class="col-sm-4">Telefono</dt>
+                            <dt class="col-sm-4"><i class="bi bi-telephone me-2"></i>Telefono</dt>
                             <dd class="col-sm-8">@contactoSeleccionado.Telefono</dd>
 
-                            <dt class="col-sm-4">Email</dt>
+                            <dt class="col-sm-4"><i class="bi bi-envelope me-2"></i>Email</dt>
                             <dd class="col-sm-8">@contactoSeleccionado.Email</dd>
 
-                            <dt class="col-sm-4">Empresa</dt>
+                            <dt class="col-sm-4"><i class="bi bi-building me-2"></i>Empresa</dt>
                             <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Empresa)</dd>
 
-                            <dt class="col-sm-4">Cargo</dt>
+                            <dt class="col-sm-4"><i class="bi bi-briefcase me-2"></i>Cargo</dt>
                             <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Cargo)</dd>
 
-                            <dt class="col-sm-4">Direccion</dt>
+                            <dt class="col-sm-4"><i class="bi bi-geo-alt me-2"></i>Direccion</dt>
                             <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Direccion)</dd>
 
-                            <dt class="col-sm-4">Fecha de nacimiento</dt>
+                            <dt class="col-sm-4"><i class="bi bi-calendar-event me-2"></i>Fecha de nacimiento</dt>
                             <dd class="col-sm-8">@MostrarFecha(contactoSeleccionado.FechaNacimiento)</dd>
 
-                            <dt class="col-sm-4">Notas</dt>
+                            <dt class="col-sm-4"><i class="bi bi-journal-text me-2"></i>Notas</dt>
                             <dd class="col-sm-8">@MostrarDato(contactoSeleccionado.Notas)</dd>
                         </dl>
                     </div>

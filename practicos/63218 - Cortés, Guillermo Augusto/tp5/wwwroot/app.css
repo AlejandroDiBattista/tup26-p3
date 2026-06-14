@@ -36,3 +36,153 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+body {
+    background: linear-gradient(135deg, #eef4ff, #f8fbff);
+}
+
+.agenda-page {
+    height: calc(100vh - 90px);
+}
+
+.agenda-layout {
+    height: 100%;
+}
+
+.agenda-sidebar {
+    height: 100%;
+    background: white;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.agenda-detail {
+    height: 100%;
+}
+
+.agenda-detail .card {
+    height: 100%;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+
+.agenda-contact-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.agenda-contact-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.agenda-contact-list::-webkit-scrollbar-thumb {
+    background: #c8c8c8;
+    border-radius: 10px;
+}
+
+.list-group-item {
+    border: none;
+    border-radius: 8px !important;
+    margin-bottom: 4px;
+    transition: all .15s ease;
+    text-align: left;
+}
+
+.list-group-item:hover {
+    background: #f1f5ff;
+}
+
+.list-group-item.active {
+    background: linear-gradient(90deg,#e7f0ff,#f4f8ff);
+    border-left: 5px solid #0d6efd;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(13,110,253,.12);
+}
+
+.list-group-item.active strong,
+.list-group-item.active small {
+    color: black !important;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.contact-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.contact-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#2563eb,#60a5fa);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+dl dt {
+    color: #6c757d;
+    font-size: .9rem;
+}
+
+dl dd {
+    border-bottom: 1px solid #f1f1f1;
+    padding-bottom: .75rem;
+    margin-bottom: .75rem;
+}
+
+.btn {
+    border-radius: 6px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.contact-avatar-small {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#2563eb,#60a5fa);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.contact-avatar,
+.contact-avatar-small {
+    box-shadow: 0 3px 10px rgba(37,99,235,.2);
+}
+
+.agenda-detail .card {
+    border-top: 4px solid #0d6efd;
+}
+
+.agenda-title {
+    color: #2563eb;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.badge {
+    padding: .6rem .9rem;
+    border-radius: 10px;
+    font-size: .8rem;
+}
