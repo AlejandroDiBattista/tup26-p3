@@ -18,6 +18,12 @@ builder.Services.AddScoped<ContactoService>();
 
 var app = builder.Build();
 
+// Crear la base de datos si no existe
+using (var scope = app.Services.CreateScope()) {
+    var db = scope.ServiceProvider.GetRequiredService<AgendaContext>();
+    db.Database.EnsureCreated();
+}
+
 if (!app.Environment.IsDevelopment()) {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
