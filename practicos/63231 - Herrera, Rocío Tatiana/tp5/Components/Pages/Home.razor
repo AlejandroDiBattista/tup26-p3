@@ -1,7 +1,18 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
-</div>
+@code {
+    private List<Contacto> contactos = new();
+    private Contacto? seleccionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos.ToListAsync();
+    }
+}
