@@ -91,11 +91,15 @@ private List<Contacto> Filtrados()
         }
         else
         {
-
-        }
-    </div>
-</div>
 <div class="d-flex justify-content-between align-items-start mb-3">
+    <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary" @onclick="IrAEditar">
+        <i class="bi bi-pencil me-1"></i>Editar
+    </button>
+    <button class="btn btn-outline-danger" @onclick="EliminarSeleccionado">
+        <i class="bi bi-trash me-1"></i>Eliminar
+    </button>
+</div>
     <div class="d-flex gap-3 align-items-center">
         <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(seleccionado.Nombre, seleccionado.Apellido)">
             @AvatarHelper.Iniciales(seleccionado.Nombre, seleccionado.Apellido)
@@ -146,4 +150,7 @@ private List<Contacto> Filtrados()
     <i class="bi bi-card-text"></i>
     <div class="detail-field-label">Notas</div>
     <div>@(string.IsNullOrEmpty(seleccionado.Notas) ? "—" : seleccionado.Notas)</div>
+</div>
+        }
+    </div>
 </div>
