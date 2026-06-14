@@ -1,0 +1,85 @@
+@using tp5.Models
+
+<EditForm Model="Contacto"
+          OnValidSubmit="OnGuardar"
+          FormName="contactoForm">
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row g-3">
+
+        <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Nombre" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Apellido</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Apellido" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Teléfono</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Telefono" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Email" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Empresa</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Empresa" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Cargo</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Cargo" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Dirección</label>
+            <InputText class="form-control"
+                       @bind-Value="Contacto.Direccion" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Fecha de nacimiento</label>
+            <InputDate class="form-control"
+                       @bind-Value="Contacto.FechaNacimiento" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Notas</label>
+            <InputTextArea class="form-control"
+                           @bind-Value="Contacto.Notas" />
+        </div>
+
+        <div class="col-12">
+            <button class="btn btn-primary"
+                    type="submit">
+                Guardar
+            </button>
+        </div>
+
+    </div>
+
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public Contacto Contacto { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnGuardar { get; set; }
+
+}

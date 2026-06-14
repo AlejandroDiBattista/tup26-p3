@@ -18,66 +18,8 @@
         <div class="card-body">
             <h4>Agregar / editar contacto</h4>
 
-            <EditForm Model="nuevoContacto"
-                      OnValidSubmit="GuardarContacto"
-                      FormName="contactoForm">
-
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Nombre</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Nombre" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Apellido</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Apellido" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Teléfono</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Telefono" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Email</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Email" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Empresa</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Empresa" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Cargo</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Cargo" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Dirección</label>
-                        <InputText class="form-control" @bind-Value="nuevoContacto.Direccion" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Fecha de nacimiento</label>
-                        <InputDate class="form-control" @bind-Value="nuevoContacto.FechaNacimiento" />
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Notas</label>
-                        <InputTextArea class="form-control" @bind-Value="nuevoContacto.Notas" />
-                    </div>
-
-                    <div class="col-12">
-                        <button class="btn btn-primary" type="submit">
-                            Guardar
-                        </button>
-                    </div>
-                </div>
-            </EditForm>
+            <FormularioContacto Contacto="nuevoContacto"
+                    OnGuardar="GuardarContacto" />
         </div>
     </div>
 
