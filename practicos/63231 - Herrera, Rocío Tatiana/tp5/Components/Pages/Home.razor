@@ -154,3 +154,13 @@ private List<Contacto> Filtrados()
         }
     </div>
 </div>
+private async Task EliminarSeleccionado()
+{
+    if (seleccionado is null) return;
+
+    Db.Contactos.Remove(seleccionado);
+    await Db.SaveChangesAsync();
+
+    contactos.Remove(seleccionado);
+    seleccionado = null;
+}
