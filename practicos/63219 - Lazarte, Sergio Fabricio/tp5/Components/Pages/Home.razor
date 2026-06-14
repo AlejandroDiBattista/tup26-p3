@@ -14,6 +14,19 @@
                 <i class="bi bi-plus-lg"></i>
             </button>
         </div>
+        <div class="search-box px-2 py-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar..."
+                       @bind="textoBusqueda" @bind:event="oninput" @bind:after="BuscarAsync" />
+                @if (!string.IsNullOrEmpty(textoBusqueda))
+                {
+                    <button class="btn btn-outline-secondary" @onclick="LimpiarBusqueda">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        </div>
         <ul class="lista-contactos">
             @if (contactos is null)
             {
@@ -21,7 +34,7 @@
             }
             else if (!contactos.Any())
             {
-                <li class="list-item-placeholder text-muted">Sin contactos</li>
+                <li class="list-item-placeholder text-muted">Sin resultados</li>
             }
             else
             {
@@ -54,7 +67,9 @@
         }
         else if (contactoSeleccionado is not null)
         {
-            <DetalleContacto Contacto="contactoSeleccionado" />
+            <DetalleContacto Contacto="contactoSeleccionado"
+                             OnEditar="EditarContacto"
+                             OnEliminar="EliminarAsync" />
         }
         else
         {
@@ -73,11 +88,24 @@
     private List<Contacto>? contactos;
     private Contacto? contactoSeleccionado;
     private Contacto contactoForm = new();
+    private string textoBusqueda = "";
     private bool modoEdicion = false;
     private bool esNuevo = false;
 
     protected override async Task OnInitializedAsync()
-        => contactos = await ContactoSvc.ObtenerTodosAsync();
+        => await CargarContactosAsync();
+
+    private async Task CargarContactosAsync()
+        => contactos = await ContactoSvc.ObtenerTodosAsync(textoBusqueda);
+
+    private async Task BuscarAsync()
+        => await CargarContactosAsync();
+
+    private async Task LimpiarBusqueda()
+    {
+        textoBusqueda = "";
+        await CargarContactosAsync();
+    }
 
     private void SeleccionarContacto(Contacto c)
     {
@@ -93,22 +121,51 @@
         contactoSeleccionado = null;
     }
 
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null) return;
+        contactoForm = new Contacto
+        {
+            Id = contactoSeleccionado.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas
+        };
+        esNuevo = false;
+        modoEdicion = true;
+    }
+
     private async Task GuardarAsync(Contacto c)
     {
         if (esNuevo)
         {
             var nuevo = await ContactoSvc.CrearAsync(c);
-            contactos = await ContactoSvc.ObtenerTodosAsync();
-            contactoSeleccionado = contactos.FirstOrDefault(x => x.Id == nuevo.Id);
+            await CargarContactosAsync();
+            contactoSeleccionado = contactos?.FirstOrDefault(x => x.Id == nuevo.Id);
         }
         else
         {
             await ContactoSvc.ActualizarAsync(c);
-            contactos = await ContactoSvc.ObtenerTodosAsync();
-            contactoSeleccionado = contactos.FirstOrDefault(x => x.Id == c.Id);
+            await CargarContactosAsync();
+            contactoSeleccionado = contactos?.FirstOrDefault(x => x.Id == c.Id);
         }
         modoEdicion = false;
     }
 
     private void CancelarEdicion() => modoEdicion = false;
+
+    private async Task EliminarAsync()
+    {
+        if (contactoSeleccionado is null) return;
+        await ContactoSvc.EliminarAsync(contactoSeleccionado.Id);
+        contactoSeleccionado = null;
+        modoEdicion = false;
+        await CargarContactosAsync();
+    }
 }
