@@ -75,3 +75,44 @@
         </div>
     </div>
 </div>
+
+@code {
+    List<Contacto> listaContactos = new();
+    Contacto? contactoActivo;
+    string textoBusqueda = "";
+
+    IEnumerable<Contacto> ContactosBuscados =>
+        listaContactos.Where(c =>
+            string.IsNullOrEmpty(textoBusqueda) ||
+            c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        listaContactos = await Db.Contactos.ToListAsync();
+    }
+
+    async Task Eliminar()
+    {
+        if (contactoActivo != null)
+        {
+            Db.Contactos.Remove(contactoActivo);
+            await Db.SaveChangesAsync();
+            listaContactos.Remove(contactoActivo);
+            contactoActivo = null;
+        }
+    }
+
+    void Editar()
+    {
+        if (contactoActivo != null)
+        {
+            Nav.NavigateTo($"/editar/{contactoActivo.Id}");
+        }
+    }
+
+    void Nuevo()
+    {
+        Nav.NavigateTo("/nuevo");
+    }
+}
