@@ -55,3 +55,36 @@
     <button type="submit" class="btn btn-success">Guardar</button>
     <button type="button" class="btn btn-secondary" @onclick="Volver">Cancelar</button>
 </EditForm>
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private Contacto modelo = new();
+
+    private string Titulo => Id.HasValue ? "Editar contacto" : "Nuevo contacto";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var encontrado = await Db.Contactos.FindAsync(Id.Value);
+            if (encontrado is not null)
+                modelo = encontrado;
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (modelo.Id == 0)
+            Db.Contactos.Add(modelo);
+        else
+            Db.Contactos.Update(modelo);
+
+        await Db.SaveChangesAsync();
+        Volver();
+    }
+
+    private void Volver()
+    {
+        Nav.NavigateTo("/");
+    }
+}
