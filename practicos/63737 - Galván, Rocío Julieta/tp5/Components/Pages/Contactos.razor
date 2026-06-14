@@ -17,8 +17,9 @@
             </div>
 
             <button class="btn btn-primary" @onclick="NuevoContacto">
-                + Nuevo contacto
-            </button>
+             <i class="bi bi-plus-lg me-1"></i>
+               Nuevo contacto
+              </button>
         </div>
     </div>
 
@@ -26,14 +27,24 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h4>Lista de contactos</h4>
+                    <h4>
+                  <i class="bi bi-person-lines-fill me-2"></i>
+                  Contactos
+                 <span class="badge bg-primary rounded-pill">
+                 @contactos.Count
+                  </span>
+                   </h4>
 
-                    <div class="mb-3">
-                        <input class="form-control"
-                               placeholder="Buscar contacto..."
-                               value="@busqueda"
-                               @oninput="Buscar" />
-                    </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text">
+                   <i class="bi bi-search"></i>
+                   </span>
+
+                     <input class="form-control"
+                    placeholder="Buscar contacto..."
+                    value="@busqueda"
+                      @oninput="Buscar" />
+</div>
 
                     @if (contactos.Count == 0)
                     {
@@ -54,7 +65,8 @@
                             @foreach (var contacto in contactos)
                             {
                                 <ItemContacto Contacto="contacto"
-                                              OnSeleccionar="() => Seleccionar(contacto)" />
+                               Activo="@(contacto.Id == contactoSeleccionado?.Id)"
+                                OnSeleccionar="() => Seleccionar(contacto)" />
                             }
                         </div>
                     }
@@ -68,7 +80,7 @@
 
                     @if (modoEdicion)
                     {
-                        <h4>Editar contacto</h4>
+                         <h4> @(esNuevoContacto ? "Nuevo contacto" : "Editar contacto") </h4>
 
                         <FormularioContacto Contacto="nuevoContacto"
                         OnGuardar="GuardarContacto"
@@ -95,6 +107,7 @@
     private Contacto? contactoSeleccionado;
     private string busqueda = "";
     private bool modoEdicion = false;
+    private bool esNuevoContacto = false;
 
     protected override void OnInitialized()
     {
@@ -116,12 +129,14 @@
             .ToList();
     }
 
-    private void NuevoContacto()
-    {
-        nuevoContacto = new Contacto();
-        contactoSeleccionado = null;
-        modoEdicion = true;
-    }
+   private void NuevoContacto()
+{
+    nuevoContacto = new Contacto();
+    contactoSeleccionado = null;
+
+    esNuevoContacto = true;
+    modoEdicion = true;
+}
 
     private void GuardarContacto()
     {
@@ -146,6 +161,7 @@
 
         busqueda = "";
         nuevoContacto = new Contacto();
+        esNuevoContacto = false;
         modoEdicion = false;
 
         CargarContactos();
@@ -159,14 +175,16 @@
         modoEdicion = false;
     }
 
-    private void EditarSeleccionado()
+   private void EditarSeleccionado()
+{
+    if (contactoSeleccionado is not null)
     {
-        if (contactoSeleccionado is not null)
-        {
-            nuevoContacto = contactoSeleccionado.Clonar();
-            modoEdicion = true;
-        }
+        nuevoContacto = contactoSeleccionado.Clonar();
+
+        esNuevoContacto = false;
+        modoEdicion = true;
     }
+}
 
     private void EliminarSeleccionado()
     {
@@ -184,12 +202,13 @@
             CargarContactos();
         }
     }
+   private void Cancelar()
+{
+    nuevoContacto = new Contacto();
 
-    private void Cancelar()
-    {
-        nuevoContacto = new Contacto();
-        modoEdicion = false;
-    }
+    esNuevoContacto = false;
+    modoEdicion = false;
+}
 
     private void Buscar(ChangeEventArgs e)
     {

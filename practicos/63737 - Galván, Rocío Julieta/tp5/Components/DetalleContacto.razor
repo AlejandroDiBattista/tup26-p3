@@ -2,23 +2,67 @@
 
 @if (Contacto is not null)
 {
-    <p><strong>Nombre:</strong> @Contacto.Nombre</p>
-    <p><strong>Apellido:</strong> @Contacto.Apellido</p>
-    <p><strong>Teléfono:</strong> @Contacto.Telefono</p>
-    <p><strong>Email:</strong> @Contacto.Email</p>
-    <p><strong>Empresa:</strong> @Contacto.Empresa</p>
-    <p><strong>Cargo:</strong> @Contacto.Cargo</p>
-    <p><strong>Dirección:</strong> @Contacto.Direccion</p>
-    <p><strong>Fecha de nacimiento:</strong> @Contacto.FechaNacimiento?.ToString("dd/MM/yyyy")</p>
-    <p><strong>Notas:</strong> @Contacto.Notas</p>
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h3 class="mb-1">
+                <i class="bi bi-person-vcard me-2"></i>
+                @Contacto.Nombre @Contacto.Apellido
+            </h3>
 
-    <button class="btn btn-outline-primary btn-sm" @onclick="OnEditar">
-        Editar
-    </button>
+            <p class="text-primary mb-0">@Contacto.Empresa</p>
+        </div>
 
-    <button class="btn btn-outline-danger btn-sm" @onclick="OnEliminar">
-        Eliminar
-    </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-warning btn-sm"
+                    @onclick="OnEditar">
+                <i class="bi bi-pencil me-1"></i>
+                Editar
+            </button>
+
+            <button class="btn btn-outline-danger btn-sm"
+                    @onclick="OnEliminar">
+                <i class="bi bi-trash me-1"></i>
+                Eliminar
+            </button>
+        </div>
+    </div>
+
+    <hr />
+
+    <p>
+        <strong><i class="bi bi-envelope me-2"></i>Email:</strong>
+        @Contacto.Email
+    </p>
+
+    <p>
+        <strong><i class="bi bi-telephone me-2"></i>Teléfono:</strong>
+        @Contacto.Telefono
+    </p>
+
+    <p>
+        <strong><i class="bi bi-building me-2"></i>Empresa:</strong>
+        @Contacto.Empresa
+    </p>
+
+    <p>
+        <strong><i class="bi bi-briefcase me-2"></i>Cargo:</strong>
+        @Contacto.Cargo
+    </p>
+
+    <p>
+        <strong><i class="bi bi-geo-alt me-2"></i>Dirección:</strong>
+        @Contacto.Direccion
+    </p>
+
+    <p>
+        <strong><i class="bi bi-calendar me-2"></i>Fecha de nacimiento:</strong>
+        @Contacto.FechaNacimiento?.ToString("dd/MM/yyyy")
+    </p>
+
+    <p>
+        <strong><i class="bi bi-journal-text me-2"></i>Notas:</strong>
+        @Contacto.Notas
+    </p>
 }
 else
 {
