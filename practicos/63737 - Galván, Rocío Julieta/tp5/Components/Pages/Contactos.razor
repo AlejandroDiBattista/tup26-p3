@@ -133,30 +133,9 @@
             <div class="card-body">
                 <h4>Detalle</h4>
 
-                @if (contactoSeleccionado is not null)
-                {
-                    <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
-                    <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
-                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
-                    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
-                    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
-                    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
-                    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
-                    <p><strong>Fecha de nacimiento:</strong> @contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy")</p>
-                    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
-
-                    <button class="btn btn-outline-primary btn-sm" @onclick="() => Editar(contactoSeleccionado)">
-                        Editar
-                    </button>
-
-                    <button class="btn btn-outline-danger btn-sm" @onclick="() => Eliminar(contactoSeleccionado)">
-                        Eliminar
-                    </button>
-                }
-                else
-                {
-                    <p class="text-muted">Seleccione un contacto.</p>
-                }
+                <DetalleContacto Contacto="contactoSeleccionado"
+                 OnEditar="EditarSeleccionado"
+                 OnEliminar="EliminarSeleccionado" />
             </div>
         </div>
     </div>
@@ -253,5 +232,21 @@ private void Buscar(ChangeEventArgs e)
 {
     busqueda = e.Value?.ToString() ?? "";
     CargarContactos();
+}
+
+private void EditarSeleccionado()
+{
+    if (contactoSeleccionado is not null)
+    {
+        Editar(contactoSeleccionado);
+    }
+}
+
+private void EliminarSeleccionado()
+{
+    if (contactoSeleccionado is not null)
+    {
+        Eliminar(contactoSeleccionado);
+    }
 }
 }

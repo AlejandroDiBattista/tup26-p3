@@ -1,0 +1,37 @@
+@using tp5.Models
+
+@if (Contacto is not null)
+{
+    <p><strong>Nombre:</strong> @Contacto.Nombre</p>
+    <p><strong>Apellido:</strong> @Contacto.Apellido</p>
+    <p><strong>Teléfono:</strong> @Contacto.Telefono</p>
+    <p><strong>Email:</strong> @Contacto.Email</p>
+    <p><strong>Empresa:</strong> @Contacto.Empresa</p>
+    <p><strong>Cargo:</strong> @Contacto.Cargo</p>
+    <p><strong>Dirección:</strong> @Contacto.Direccion</p>
+    <p><strong>Fecha de nacimiento:</strong> @Contacto.FechaNacimiento?.ToString("dd/MM/yyyy")</p>
+    <p><strong>Notas:</strong> @Contacto.Notas</p>
+
+    <button class="btn btn-outline-primary btn-sm" @onclick="OnEditar">
+        Editar
+    </button>
+
+    <button class="btn btn-outline-danger btn-sm" @onclick="OnEliminar">
+        Eliminar
+    </button>
+}
+else
+{
+    <p class="text-muted">Seleccione un contacto.</p>
+}
+
+@code {
+    [Parameter]
+    public Contacto? Contacto { get; set; }
+
+    [Parameter]
+    public EventCallback OnEditar { get; set; }
+
+    [Parameter]
+    public EventCallback OnEliminar { get; set; }
+}
