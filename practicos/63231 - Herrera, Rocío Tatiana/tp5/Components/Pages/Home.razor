@@ -8,6 +8,10 @@
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 @code {
+    private void Seleccionar(Contacto contacto)
+{
+    seleccionado = contacto;
+}
     private string busqueda = string.Empty;
     private List<Contacto> contactos = new();
     private Contacto? seleccionado;
@@ -51,6 +55,7 @@
 <ul class="list-group list-group-flush contact-list">
     @foreach (var contacto in contactos)
     {
+        @foreach (var contacto in Filtrados())
         <li class="list-group-item @(contacto == seleccionado ? "active" : "")"
             @onclick="@(() => Seleccionar(contacto))">
 
@@ -67,3 +72,13 @@
         </li>
     }
 </ul>
+private List<Contacto> Filtrados()
+{
+    if (string.IsNullOrWhiteSpace(busqueda))
+        return contactos;
+
+    return contactos.Where(c =>
+        c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+        c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+    ).ToList();
+}
