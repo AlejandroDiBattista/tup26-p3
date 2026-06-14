@@ -1,7 +1,77 @@
 @page "/"
+@rendermode InteractiveServer
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container mt-4">
+    <h3 class="mb-4">Agenda de Contactos</h3>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    Contactos
+                    <button class="btn btn-sm btn-success" @onclick="Nuevo">+ Nuevo</button>
+                </div>
+                <div class="card-body pb-0">
+                    <input class="form-control mb-2" placeholder="Buscar..." 
+                           @bind="textoBusqueda" @bind:event="oninput" />
+                </div>
+                <div class="contact-list-container">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var c in ContactosBuscados)
+                        {
+                            <li class="list-group-item list-group-item-action contact-list" 
+                                style="cursor:pointer" @onclick="() => contactoActivo = c">
+                                <div class="avatar" style="background-color: @AvatarHelper.Color(c.Nombre, c.Apellido); color: #1a1a2e;">
+                                    @AvatarHelper.Iniciales(c.Nombre, c.Apellido)
+                                </div>
+                                <div>
+                                    <p class="contact-name">@c.Nombre @c.Apellido</p>
+                                    <p class="contact-sub">@c.Empresa</p>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    @if (contactoActivo != null)
+                    {
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="avatar avatar-lg" style="background-color: @AvatarHelper.Color(contactoActivo.Nombre, contactoActivo.Apellido); color: #1a1a2e;">
+                                @AvatarHelper.Iniciales(contactoActivo.Nombre, contactoActivo.Apellido)
+                            </div>
+                            <div>
+                                <h4 class="mb-0">@contactoActivo.Nombre @contactoActivo.Apellido</h4>
+                                <small class="text-muted">@contactoActivo.Cargo — @contactoActivo.Empresa</small>
+                            </div>
+                        </div>
+
+                        <p><strong>Teléfono:</strong> @contactoActivo.Telefono</p>
+                        <p><strong>Email:</strong> @contactoActivo.Email</p>
+                        <p><strong>Empresa:</strong> @(string.IsNullOrEmpty(contactoActivo.Empresa) ? "—" : contactoActivo.Empresa)</p>
+                        <p><strong>Cargo:</strong> @(string.IsNullOrEmpty(contactoActivo.Cargo) ? "—" : contactoActivo.Cargo)</p>
+                        <p><strong>Dirección:</strong> @(string.IsNullOrEmpty(contactoActivo.Direccion) ? "—" : contactoActivo.Direccion)</p>
+                        <p><strong>Notas:</strong> @(string.IsNullOrEmpty(contactoActivo.Notas) ? "—" : contactoActivo.Notas)</p>
+
+                        <button class="btn btn-primary" @onclick="Editar">Editar</button>
+                        <button class="btn btn-danger" @onclick="Eliminar">Eliminar</button>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Seleccioná un contacto de la lista</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
