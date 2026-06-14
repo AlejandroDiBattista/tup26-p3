@@ -17,9 +17,9 @@
             </div>
 
             <button class="btn btn-primary" @onclick="NuevoContacto">
-             <i class="bi bi-plus-lg me-1"></i>
-               Nuevo contacto
-              </button>
+                <i class="bi bi-plus-lg me-1"></i>
+                Nuevo contacto
+            </button>
         </div>
     </div>
 
@@ -28,23 +28,23 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4>
-                  <i class="bi bi-person-lines-fill me-2"></i>
-                  Contactos
-                 <span class="badge bg-primary rounded-pill">
-                 @contactos.Count
-                  </span>
-                   </h4>
+                        <i class="bi bi-person-lines-fill me-2"></i>
+                        Contactos
+                        <span class="badge bg-primary rounded-pill">
+                            @contactos.Count
+                        </span>
+                    </h4>
 
-                  <div class="input-group mb-3">
-                    <span class="input-group-text">
-                   <i class="bi bi-search"></i>
-                   </span>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
 
-                     <input class="form-control"
-                    placeholder="Buscar contacto..."
-                    value="@busqueda"
-                      @oninput="Buscar" />
-</div>
+                        <input class="form-control"
+                               placeholder="Buscar contacto..."
+                               value="@busqueda"
+                               @oninput="Buscar" />
+                    </div>
 
                     @if (contactos.Count == 0)
                     {
@@ -65,8 +65,8 @@
                             @foreach (var contacto in contactos)
                             {
                                 <ItemContacto Contacto="contacto"
-                               Activo="@(contacto.Id == contactoSeleccionado?.Id)"
-                                OnSeleccionar="() => Seleccionar(contacto)" />
+                                              Activo="@(contacto.Id == contactoSeleccionado?.Id)"
+                                              OnSeleccionar="() => Seleccionar(contacto)" />
                             }
                         </div>
                     }
@@ -80,11 +80,13 @@
 
                     @if (modoEdicion)
                     {
-                         <h4> @(esNuevoContacto ? "Nuevo contacto" : "Editar contacto") </h4>
+                        <h4>
+                            @(esNuevoContacto ? "Nuevo contacto" : "Editar contacto")
+                        </h4>
 
                         <FormularioContacto Contacto="nuevoContacto"
-                        OnGuardar="GuardarContacto"
-                        OnCancelar="Cancelar" />
+                                            OnGuardar="GuardarContacto"
+                                            OnCancelar="Cancelar" />
                     }
                     else
                     {
@@ -93,6 +95,30 @@
                         <DetalleContacto Contacto="contactoSeleccionado"
                                          OnEditar="EditarSeleccionado"
                                          OnEliminar="EliminarSeleccionado" />
+
+                        @if (confirmarEliminacion)
+                        {
+                            <div class="alert alert-warning mt-3">
+                                <h5>
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    Confirmar eliminación
+                                </h5>
+
+                                <p>¿Está seguro de eliminar este contacto?</p>
+
+                                <button class="btn btn-danger me-2"
+                                        @onclick="ConfirmarEliminar">
+                                    <i class="bi bi-trash me-1"></i>
+                                    Eliminar
+                                </button>
+
+                                <button class="btn btn-secondary"
+                                        @onclick="CancelarEliminacion">
+                                    <i class="bi bi-x-lg me-1"></i>
+                                    Cancelar
+                                </button>
+                            </div>
+                        }
                     }
 
                 </div>
@@ -192,22 +218,33 @@ private void CargarContactos()
     }
 }
 
-    private void EliminarSeleccionado()
+     private void EliminarSeleccionado()
+{
+    confirmarEliminacion = true;
+}
+    
+    private void ConfirmarEliminar()
+{
+    if (contactoSeleccionado is not null)
     {
-        if (contactoSeleccionado is not null)
-        {
-            Db.ChangeTracker.Clear();
+        Db.ChangeTracker.Clear();
 
-            Db.Contactos.Remove(contactoSeleccionado);
-            Db.SaveChanges();
+        Db.Contactos.Remove(contactoSeleccionado);
+        Db.SaveChanges();
 
-            contactoSeleccionado = null;
-            nuevoContacto = new Contacto();
-            modoEdicion = false;
+        contactoSeleccionado = null;
+        nuevoContacto = new Contacto();
+        modoEdicion = false;
+        confirmarEliminacion = false;
 
-            CargarContactos();
-        }
+        CargarContactos();
     }
+}
+
+private void CancelarEliminacion()
+{
+    confirmarEliminacion = false;
+}
    private void Cancelar()
 {
     nuevoContacto = new Contacto();
@@ -220,5 +257,8 @@ private void CargarContactos()
     {
         busqueda = e.Value?.ToString() ?? "";
         CargarContactos();
+ 
     }
+
+    private bool confirmarEliminacion = false;
 }
