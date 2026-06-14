@@ -1,0 +1,122 @@
+@using tp5.Models
+
+<div class="detalle-header">
+    <div class="avatar-grande" style="background-color: @ObtenerColorAvatar(Contacto.Id)">
+        @Contacto.ObtenerIniciales()
+    </div>
+    <div class="detalle-nombre-container">
+        <h2 class="detalle-nombre">@Contacto.NombreCompleto</h2>
+        <span class="detalle-empresa">@(Contacto.Empresa ?? "")</span>
+        @if (!string.IsNullOrEmpty(Contacto.Cargo))
+        {
+            <span class="badge-cargo">@Contacto.Cargo</span>
+        }
+    </div>
+    <div class="detalle-acciones">
+        <button class="btn btn-outline-secondary btn-accion" @onclick="() => OnEditar.InvokeAsync(Contacto)">
+            ✏️ Editar
+        </button>
+        <button class="btn btn-outline-danger btn-accion" @onclick="ConfirmarEliminar">
+            🗑️ Eliminar
+        </button>
+    </div>
+</div>
+
+@if (mostrarConfirmacion)
+{
+    <div class="alert alert-warning mt-3">
+        <p>¿Estás seguro que querés eliminar a <strong>@Contacto.NombreCompleto</strong>?</p>
+        <button class="btn btn-danger btn-sm me-2" @onclick="() => OnEliminar.InvokeAsync(Contacto.Id)">
+            Sí, eliminar
+        </button>
+        <button class="btn btn-secondary btn-sm" @onclick="() => mostrarConfirmacion = false">
+            Cancelar
+        </button>
+    </div>
+}
+
+<hr class="detalle-separador" />
+
+<div class="detalle-campos">
+
+    <div class="detalle-fila">
+        <span class="detalle-icono">✉️</span>
+        <span class="detalle-etiqueta">Email</span>
+        <a href="mailto:@Contacto.Email" class="detalle-valor detalle-link">@Contacto.Email</a>
+    </div>
+
+    <div class="detalle-fila">
+        <span class="detalle-icono">📞</span>
+        <span class="detalle-etiqueta">Teléfono</span>
+        <span class="detalle-valor">@Contacto.Telefono</span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Contacto.Empresa))
+    {
+        <div class="detalle-fila">
+            <span class="detalle-icono">🏢</span>
+            <span class="detalle-etiqueta">Empresa</span>
+            <span class="detalle-valor">@Contacto.Empresa</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Contacto.Cargo))
+    {
+        <div class="detalle-fila">
+            <span class="detalle-icono">💼</span>
+            <span class="detalle-etiqueta">Cargo</span>
+            <span class="detalle-valor">@Contacto.Cargo</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Contacto.Direccion))
+    {
+        <div class="detalle-fila">
+            <span class="detalle-icono">📍</span>
+            <span class="detalle-etiqueta">Dirección</span>
+            <span class="detalle-valor">@Contacto.Direccion</span>
+        </div>
+    }
+
+    @if (Contacto.FechaNacimiento.HasValue)
+    {
+        <div class="detalle-fila">
+            <span class="detalle-icono">🎂</span>
+            <span class="detalle-etiqueta">Nacimiento</span>
+            <span class="detalle-valor">@Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Contacto.Notas))
+    {
+        <div class="detalle-fila">
+            <span class="detalle-icono">📝</span>
+            <span class="detalle-etiqueta">Notas</span>
+            <span class="detalle-valor">@Contacto.Notas</span>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public Contacto Contacto { get; set; } = null!;
+    [Parameter] public EventCallback<Contacto> OnEditar { get; set; }
+    [Parameter] public EventCallback<int> OnEliminar { get; set; }
+
+    private bool mostrarConfirmacion = false;
+
+    private void ConfirmarEliminar()
+    {
+        mostrarConfirmacion = true;
+    }
+
+    private string ObtenerColorAvatar(int id)
+    {
+        string[] colores = {
+            "#a8c4f0", "#a8e6cf", "#f0c4a8", "#c4a8f0",
+            "#f0a8c4", "#a8f0e6", "#f0e6a8", "#c4f0a8",
+            "#f0a8a8", "#a8a8f0"
+        };
+        return colores[id % colores.Length];
+    }
+}
