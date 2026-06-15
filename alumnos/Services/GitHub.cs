@@ -71,8 +71,9 @@ Servicio para interactuar con la API de GitHub mediante `gh api`.
     - `rutaDestino`: carpeta destino local.
     - `forzar`: sobrescribe archivos existentes si corresponde.
 
-- `BajarArchivosAlumno(numeroPR, forzar)`: descarga los archivos del práctico del alumno resuelto a partir del título del PR y devuelve los TP procesados.
+- `BajarArchivosAlumno(numeroPR, alumno, forzar)`: descarga los archivos del práctico buscando la carpeta remota por legajo y usando la carpeta local canónica del alumno.
     - `numeroPR`: número del pull request.
+    - `alumno`: alumno que determina el legajo remoto y el nombre normalizado de la carpeta local.
     - `forzar`: sobrescribe archivos existentes si corresponde.
 
 - `Merge(numeroPR)`: intenta mergear un PR abierto.
@@ -528,30 +529,12 @@ class GitHub {
         return archivosDescargados;
     }
 
-    public BajadaArchivosAlumnoResultado BajarArchivosAlumno(int numeroPR, bool forzar = false, int? numeroTpSolicitado = null, bool informarOmitidos = true) {
-        string? titulo = ObtenerTituloPR(numeroPR);
-        if (string.IsNullOrWhiteSpace(titulo)) {
-            return new([], []);
-        }
+    public BajadaArchivosAlumnoResultado BajarArchivosAlumno(int numeroPR, Alumno alumno, bool forzar = false, int? numeroTpSolicitado = null, bool informarOmitidos = true) {
+        string selectorCarpetaRemota = alumno.Legajo.ToString();
+        string rutaCarpetaAlumno = AppPaths.RutaCarpetaAlumnoEsperada(alumno);
+        AppPaths.AsegurarCarpetaAlumno(alumno);
 
-        int legajo = ExtraerLegajo(titulo);
-        if (legajo <= 0) {
-            if (informarOmitidos) {
-                Log.Warning($"Se omite PR #{numeroPR}: no se pudo resolver legajo desde el título '{titulo}'.");
-            }
-            return new([], []);
-        }
-
-        string? rutaCarpetaAlumno = AppPaths.ObtenerCarpetaUnicaMismoLegajo(legajo);
-        if (!AppPaths.ExisteCarpetaAlumno(rutaCarpetaAlumno)) {
-            if (informarOmitidos) {
-                Log.Warning($"Se omite PR #{numeroPR}: no se encontró carpeta única para legajo {legajo}.");
-            }
-            return new([], []);
-        }
-
-        string carpetaAlumno = Path.GetFileName(rutaCarpetaAlumno!);
-        List<int> tpsPresentados = ListarTPsPresentados(numeroPR, carpetaAlumno);
+        List<int> tpsPresentados = ListarTPsPresentados(numeroPR, selectorCarpetaRemota);
         if (numeroTpSolicitado is int tpSolicitado) {
             tpsPresentados = tpsPresentados.Where(tp => tp == tpSolicitado).ToList();
         }
@@ -561,7 +544,7 @@ class GitHub {
                 ? $"tp{tp}"
                 : "carpetas tpN";
             if (informarOmitidos) {
-                Log.Warning($"Se omite PR #{numeroPR}: no se encontraron archivos en {detalle} de '{carpetaAlumno}'.");
+                Log.Warning($"Se omite PR #{numeroPR}: no se encontraron archivos en {detalle} para el legajo {alumno.Legajo}.");
             }
             return new([], []);
         }
@@ -569,8 +552,8 @@ class GitHub {
         List<ArchivoPrDescargado> archivosDescargados = new();
         foreach (int numeroTp in tpsPresentados) {
             string carpetaTp = $"tp{numeroTp}";
-            string rutaDestino = Path.Combine(rutaCarpetaAlumno!, carpetaTp);
-            archivosDescargados.AddRange(BajarDirectorio(numeroPR, carpetaAlumno, carpetaTp, rutaDestino, forzar));
+            string rutaDestino = Path.Combine(rutaCarpetaAlumno, carpetaTp);
+            archivosDescargados.AddRange(BajarDirectorio(numeroPR, selectorCarpetaRemota, carpetaTp, rutaDestino, forzar));
         }
 
         return new(tpsPresentados, archivosDescargados);

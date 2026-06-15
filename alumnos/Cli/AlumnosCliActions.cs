@@ -162,12 +162,9 @@ static class AlumnosCliActions {
                 continue;
             }
 
-            var detallePr = gh.ObtenerEstado(pr.Numero);
             int cantidadArchivos = gh.ListarArchivos(pr.Numero).Count;
             int cantidadLineas = gh.CantidadLineas(pr.Numero);
             int cantidadCommits = gh.Commits(pr.Numero).Count;
-            string estado = detallePr.Estado == "open" ? "abierto" : detallePr.Estado == "closed" ? "cerrado" : "sin dato";
-            string mergeable = detallePr.EsMergeable ? "mergeable" : "con conflictos";
             List<int> tps = GitHub.ExtraerTPs(pr.Titulo);
             List<string> archivosTp = tps
                 .SelectMany(tp => gh.ListarArchivosDirectorio(pr.Numero, alumno.CarpetaNombre, $"tp{tp}"))
@@ -175,20 +172,17 @@ static class AlumnosCliActions {
                 .ToList();
             string etiquetaTp = tps.Count == 0 ? "?" : string.Join("", tps);
 
-            Console.ForegroundColor = detallePr.EsMergeable ? ConsoleColor.Green : ConsoleColor.Red;
-            Console.BackgroundColor = cantidadArchivos < 20 ? ConsoleColor.Black : ConsoleColor.DarkRed;
-            Log.WriteLine($" PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | {estado} | {mergeable,-15} | TP{etiquetaTp} ");
+            Log.Print($"PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | TP{etiquetaTp}");
             foreach (string archivo in archivosTp) {
-                Log.WriteLine($"  - {archivo}");
+                Log.Print($"  - {archivo}");
             }
-            Console.ResetColor();
         }
 
         return 0;
     }
 
     public static int BajarPullRequests() {
-        (_, GitHub gh) = PrepararPullRequests(prepararCarpetas: true);
+        (Alumnos alumnos, GitHub gh) = PrepararPullRequests(prepararCarpetas: true);
         List<(int Numero, string Titulo)> prs = EjecutarConIndicador(
             "Bajar PRs",
             "Consultando PRs abiertos...",
@@ -211,7 +205,19 @@ static class AlumnosCliActions {
         foreach (var pr in prs) {
             indice++;
             Log.Info($"\nRevisando PR {indice}/{prs.Count}: #{pr.Numero} | {pr.Titulo}");
-            BajadaArchivosAlumnoResultado bajada = gh.BajarArchivosAlumno(pr.Numero, forzar: true);
+            int legajo = GitHub.ExtraerLegajo(pr.Titulo);
+            if (legajo <= 0) {
+                Log.Error($"Se omite PR #{pr.Numero}: no se encontró un legajo válido en el título.");
+                continue;
+            }
+
+            Alumno? alumno = alumnos.BuscarPorLegajo(legajo);
+            if (alumno is null) {
+                Log.Error($"Se omite PR #{pr.Numero}: el legajo {legajo} no corresponde a un alumno de alumnos.md.");
+                continue;
+            }
+
+            BajadaArchivosAlumnoResultado bajada = gh.BajarArchivosAlumno(pr.Numero, alumno, forzar: true);
             if (bajada.Archivos.Count > 0) {
                 procesados++;
                 trabajosProcesados  += bajada.TrabajosPracticos.Count;
@@ -557,11 +563,38 @@ static class AlumnosCliActions {
                 hora >= new TimeSpan(8, 0, 0) && hora <= new TimeSpan(13, 0, 0);
     }
 
-    static int ContarLineasPracticoLocal(string rutaPractico) =>
-        AppPaths.ContarLineasArchivos(rutaPractico, "*.cs", SearchOption.TopDirectoryOnly);
+    static readonly HashSet<string> extensionesFuentePractico = new(StringComparer.OrdinalIgnoreCase) {
+        ".cs",
+        ".cshtml",
+        ".csproj",
+        ".css",
+        ".html",
+        ".htm",
+        ".js",
+        ".json",
+        ".razor",
+        ".sln",
+        ".slnx",
+        ".ts"
+    };
+
+    static int ContarLineasPracticoLocal(string rutaPractico) {
+        if (!Directory.Exists(rutaPractico)) {
+            return 0;
+        }
+
+        return Directory
+            .EnumerateFiles(rutaPractico, "*", SearchOption.AllDirectories)
+            .Where(EsArchivoContabilizablePractico)
+            .Sum(rutaArchivo => File.ReadLines(rutaArchivo).Count());
+    }
+
+    static bool EsArchivoContabilizablePractico(string rutaArchivo) =>
+        EsArchivoFuentePractico(rutaArchivo) &&
+        extensionesFuentePractico.Contains(Path.GetExtension(rutaArchivo));
 
     static int ObtenerLineasBaseEnunciado(int numeroTp, string carpetaTp, string rutaEnunciado, Alumnos alumnos) {
-        int lineasEnunciado = AppPaths.ContarLineasArchivos(rutaEnunciado, "*.cs");
+        int lineasEnunciado = ContarLineasPracticoLocal(rutaEnunciado);
         if (numeroTp != 3) {
             return lineasEnunciado;
         }

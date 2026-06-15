@@ -16,7 +16,7 @@ readonly record struct ConfiguracionPractico(int Numero, TipoUmbralPractico Tipo
     public string DescripcionCriterio =>
         TipoUmbral switch {
             TipoUmbralPractico.LineasTotales => $"al menos {Minimo} líneas totales",
-            TipoUmbralPractico.LineasAgregadas => $"al menos {Minimo} líneas agregadas respecto del enunciado",
+            TipoUmbralPractico.LineasAgregadas => $"al menos {Minimo} líneas fuente totales agregadas respecto del enunciado",
             _ => "criterio no definido"
         };
 }
