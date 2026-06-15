@@ -173,13 +173,11 @@ static class AlumnosCliActions {
                 .SelectMany(tp => gh.ListarArchivosDirectorio(pr.Numero, alumno.CarpetaNombre, $"tp{tp}"))
                 .OrderBy(ruta => ruta, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            string etiquetaTp = tps.Count == 0
-                ? "TP?"
-                : string.Join("", tps.Select(tp => $"TP{tp}"));
+            string etiquetaTp = tps.Count == 0 ? "?" : string.Join("", tps);
 
             Console.ForegroundColor = detallePr.EsMergeable ? ConsoleColor.Green : ConsoleColor.Red;
             Console.BackgroundColor = cantidadArchivos < 20 ? ConsoleColor.Black : ConsoleColor.DarkRed;
-            Log.WriteLine($"PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | {estado} | {mergeable,-15} | {etiquetaTp}");
+            Log.WriteLine($" PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | {estado} | {mergeable,-15} | TP{etiquetaTp} ");
             foreach (string archivo in archivosTp) {
                 Log.WriteLine($"  - {archivo}");
             }

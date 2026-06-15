@@ -64,8 +64,8 @@ static class Log {
             EscribirTexto(textoFinal);
         }
 
-        Console.WriteLine();
         Console.ResetColor();
+        Console.WriteLine();
     }
 
     public static void Debug(string mensaje)   => WriteLine($"[debug]{mensaje}");
