@@ -556,6 +556,12 @@ class GitHub {
             archivosDescargados.AddRange(BajarDirectorio(numeroPR, selectorCarpetaRemota, carpetaTp, rutaDestino, forzar));
         }
 
+        if (archivosDescargados.Count > 0) {
+            foreach (string carpetaEliminada in AppPaths.ConsolidarCarpetasAlumno(alumno)) {
+                Log.Warning($"Carpeta duplicada consolidada: {Path.GetFileName(carpetaEliminada)} -> {alumno.CarpetaNombre}");
+            }
+        }
+
         return new(tpsPresentados, archivosDescargados);
     }
 

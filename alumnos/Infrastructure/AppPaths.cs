@@ -243,6 +243,26 @@ static class AppPaths {
     public static string? ObtenerCarpetaUnicaMismoLegajo(int legajo) =>
         ObtenerCarpetaUnicaMismoLegajo(PracticosDirectory, legajo);
 
+    public static IReadOnlyList<string> ConsolidarCarpetasAlumno(Alumno alumno) {
+        string rutaCanonica = PracticoAlumnoDirectory(alumno);
+        AsegurarDirectorio(rutaCanonica);
+
+        List<string> eliminadas = new();
+        foreach (string rutaDuplicada in BuscarCarpetasMismoLegajo(alumno.Legajo)) {
+            if (string.Equals(rutaDuplicada, rutaCanonica, StringComparison.OrdinalIgnoreCase)) {
+                continue;
+            }
+
+            // La descarga ya actualizó la carpeta canónica. Solo se recuperan
+            // archivos que no existan allí antes de eliminar el duplicado.
+            CopiarCarpeta(rutaDuplicada, rutaCanonica, forzar: false);
+            Directory.Delete(rutaDuplicada, recursive: true);
+            eliminadas.Add(rutaDuplicada);
+        }
+
+        return eliminadas;
+    }
+
     public static void RenombrarCarpetaAlumno(string origen, Alumno alumno) =>
         RenombrarCarpeta(origen, PracticoAlumnoDirectory(alumno));
 
