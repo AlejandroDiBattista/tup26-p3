@@ -1,0 +1,18 @@
+<article class="info-item">
+    <i class="bi @Icon"></i>
+    <div>
+        <span>@Label</span>
+        <strong>@Value</strong>
+    </div>
+</article>
+
+@code {
+    [Parameter]
+    public string Icon { get; set; } = "";
+
+    [Parameter]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public string Value { get; set; } = "";
+}

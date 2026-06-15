@@ -1,0 +1,254 @@
+@page "/contactos"
+@rendermode InteractiveServer
+@inject IContactoService ContactosService
+
+<PageTitle>Agenda de contactos</PageTitle>
+
+<h1 class="mb-4">📒 Agenda de contactos</h1>
+
+<div class="row g-3">
+
+    @* ===================== PANEL DE LA LISTA ===================== *@
+    <div class="col-lg-4">
+        <div class="input-group mb-3">
+            <span class="input-group-text"><span class="bi bi-search"></span></span>
+            <input class="form-control" placeholder="Buscar por nombre, apellido o email..."
+                   @bind="this.filtro" @bind:event="oninput" @bind:after="Refrescar" />
+        </div>
+
+        <button class="btn btn-success w-100 mb-3" @onclick="Nuevo">
+            <span class="bi bi-plus-lg"></span> Nuevo contacto
+        </button>
+
+        @if (this.lista is null)
+        {
+            <p><em>Cargando...</em></p>
+        }
+        else if (this.lista.Count == 0)
+        {
+            <div class="alert alert-info">No hay contactos que coincidan.</div>
+        }
+        else
+        {
+            <div class="list-group">
+                @foreach (var contacto in this.lista)
+                {
+                    <button type="button"
+                            class="list-group-item list-group-item-action @(this.seleccionado?.Id == contacto.Id && !this.enEdicion ? "active" : "")"
+                            @onclick="() => Seleccionar(contacto)">
+                        <div class="fw-semibold">@contacto.Apellido, @contacto.Nombre</div>
+                        <small class="d-block text-truncate">@contacto.Email</small>
+                    </button>
+                }
+            </div>
+            <p class="text-muted small mt-2">@this.lista.Count contacto(s).</p>
+        }
+    </div>
+
+    @* ===================== PANEL DEL DETALLE ===================== *@
+    <div class="col-lg-8">
+        @if (this.enEdicion)
+        {
+            <FormularioContacto Modelo="this.modelo"
+                                EsNuevo="this.esNuevo"
+                                AlGuardar="Guardar"
+                                AlCancelar="Cancelar" />
+        }
+        else if (this.seleccionado is not null)
+        {
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h3 class="card-title mb-0">
+                            @this.seleccionado.Nombre @this.seleccionado.Apellido
+                        </h3>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="Editar">
+                                <span class="bi bi-pencil"></span> Editar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    @onclick="() => Confirmar(this.seleccionado)">
+                                <span class="bi bi-trash"></span> Eliminar
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Teléfono</dt>
+                        <dd class="col-sm-9">@this.seleccionado.Telefono</dd>
+
+                        <dt class="col-sm-3">Correo</dt>
+                        <dd class="col-sm-9">@this.seleccionado.Email</dd>
+
+                        @if (!string.IsNullOrWhiteSpace(this.seleccionado.Empresa))
+                        {
+                            <dt class="col-sm-3">Empresa</dt>
+                            <dd class="col-sm-9">@this.seleccionado.Empresa</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.seleccionado.Cargo))
+                        {
+                            <dt class="col-sm-3">Cargo</dt>
+                            <dd class="col-sm-9">@this.seleccionado.Cargo</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.seleccionado.Direccion))
+                        {
+                            <dt class="col-sm-3">Dirección</dt>
+                            <dd class="col-sm-9">@this.seleccionado.Direccion</dd>
+                        }
+                        @if (this.seleccionado.FechaNacimiento is not null)
+                        {
+                            <dt class="col-sm-3">Nacimiento</dt>
+                            <dd class="col-sm-9">
+                                @this.seleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")
+                            </dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.seleccionado.Notas))
+                        {
+                            <dt class="col-sm-3">Notas</dt>
+                            <dd class="col-sm-9" style="white-space: pre-wrap;">@this.seleccionado.Notas</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-secondary">
+                Seleccioná un contacto de la lista o creá uno nuevo para ver el detalle acá.
+            </div>
+        }
+    </div>
+</div>
+
+@* ===================== VENTANA DE CONFIRMACIÓN ===================== *@
+@if (this.aEliminar is not null)
+{
+    <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.45)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Eliminar contacto?</h5>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Vas a eliminar a
+                        <strong>@this.aEliminar.Nombre @this.aEliminar.Apellido</strong>.
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => this.aEliminar = null">
+                        Cancelar
+                    </button>
+                    <button class="btn btn-danger" @onclick="EliminarConfirmado">
+                        Sí, eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string filtro = "";
+    private List<Contacto>? lista;
+    private Contacto? seleccionado;
+    private Contacto modelo = new();
+    private bool enEdicion;
+    private bool esNuevo;
+    private Contacto? aEliminar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.Refrescar();
+    }
+
+    private async Task Refrescar()
+    {
+        this.lista = await this.ContactosService.Listar(this.filtro);
+    }
+
+    private void Seleccionar(Contacto contacto)
+    {
+        this.seleccionado = contacto;
+        this.enEdicion = false;
+    }
+
+    private void Nuevo()
+    {
+        this.modelo = new Contacto();
+        this.esNuevo = true;
+        this.enEdicion = true;
+        this.seleccionado = null;
+    }
+
+    private void Editar()
+    {
+        if (this.seleccionado is null)
+        {
+            return;
+        }
+
+        // Copiamos los datos para no tocar el original hasta confirmar.
+        this.modelo = new Contacto
+        {
+            Id = this.seleccionado.Id,
+            Nombre = this.seleccionado.Nombre,
+            Apellido = this.seleccionado.Apellido,
+            Telefono = this.seleccionado.Telefono,
+            Email = this.seleccionado.Email,
+            Empresa = this.seleccionado.Empresa,
+            Cargo = this.seleccionado.Cargo,
+            Direccion = this.seleccionado.Direccion,
+            FechaNacimiento = this.seleccionado.FechaNacimiento,
+            Notas = this.seleccionado.Notas,
+        };
+        this.esNuevo = false;
+        this.enEdicion = true;
+    }
+
+    private void Cancelar()
+    {
+        this.enEdicion = false;
+    }
+
+    private async Task Guardar(Contacto guardado)
+    {
+        if (this.esNuevo)
+        {
+            await this.ContactosService.Crear(guardado);
+        }
+        else
+        {
+            await this.ContactosService.Actualizar(guardado);
+        }
+
+        this.enEdicion = false;
+        await this.Refrescar();
+        // Volvemos a mostrar el contacto recién guardado.
+        this.seleccionado = await this.ContactosService.ObtenerPorId(guardado.Id);
+    }
+
+    private void Confirmar(Contacto contacto)
+    {
+        this.aEliminar = contacto;
+    }
+
+    private async Task EliminarConfirmado()
+    {
+        if (this.aEliminar is not null)
+        {
+            await this.ContactosService.Eliminar(this.aEliminar.Id);
+
+            if (this.seleccionado?.Id == this.aEliminar.Id)
+            {
+                this.seleccionado = null;
+            }
+
+            this.aEliminar = null;
+            await this.Refrescar();
+        }
+    }
+}

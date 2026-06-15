@@ -1,0 +1,37 @@
+@using tp5.Models
+
+<button
+    type="button"
+    class="@ClaseItem"
+    @onclick="SeleccionarAsync">
+    <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-0">@Contacto.Apellido, @Contacto.Nombre</h6>
+        <small>@Contacto.Telefono</small>
+    </div>
+    <small>@Contacto.Email</small>
+</button>
+
+@code {
+    [Parameter]
+    public Contacto Contacto { get; set; } = default!;
+
+    [Parameter]
+    public bool Activo { get; set; }
+
+    [Parameter]
+    public EventCallback<Contacto> OnSeleccionar { get; set; }
+
+    private string ClaseItem
+    {
+        get
+        {
+            string activo = Activo ? " active" : "";
+            return $"list-group-item list-group-item-action{activo}";
+        }
+    }
+
+    private async Task SeleccionarAsync()
+    {
+        await OnSeleccionar.InvokeAsync(Contacto);
+    }
+}

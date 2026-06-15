@@ -1,7 +1,179 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+@code {
+    private string busqueda = string.Empty;
+    private List<Contacto> contactos = new();
+    private Contacto? seleccionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos.ToListAsync();
+    }
+
+    private void Seleccionar(Contacto contacto)
+    {
+        seleccionado = contacto;
+    }
+
+    private List<Contacto> Filtrados()
+    {
+        if (string.IsNullOrWhiteSpace(busqueda))
+            return contactos;
+
+        return contactos.Where(c =>
+            c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+    }
+
+    private async Task EliminarSeleccionado()
+    {
+        if (seleccionado is null) return;
+
+        Db.Contactos.Remove(seleccionado);
+        await Db.SaveChangesAsync();
+
+        contactos.Remove(seleccionado);
+        seleccionado = null;
+    }
+
+    private void IrAEditar()
+    {
+        if (seleccionado is not null)
+            Nav.NavigateTo($"/editar/{seleccionado.Id}");
+    }
+
+    private void IrANuevo()
+    {
+        Nav.NavigateTo("/nuevo");
+    }
+}
+<div class="container-fluid px-4 py-4">
+
+    <div class="agenda-header">
+        <div>
+            <h1>Agenda</h1>
+            <p>Contactos personales y profesionales</p>
+        </div>
+        <button class="btn btn-primary" @onclick="IrANuevo">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo contacto
+        </button>
+    </div>
+
+    <div class="row g-3">
+
+    </div>
+</div>
+
+<div class="col-md-4">
+    <div class="panel p-3">
+        <div class="search-box mb-2">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input class="form-control border-start-0"
+                       placeholder="Buscar contacto..."
+                       @bind="busqueda" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+</div>
+<ul class="list-group list-group-flush contact-list">
+    @foreach (var contacto in Filtrados())
+    {
+        <li class="list-group-item @(contacto == seleccionado ? "active" : "")"
+            @onclick="@(() => Seleccionar(contacto))">
+
+            <div class="avatar" style="background-color:@AvatarHelper.Color(contacto.Nombre, contacto.Apellido)">
+                @AvatarHelper.Iniciales(contacto.Nombre, contacto.Apellido)
+            </div>
+
+            <div>
+                <p class="contact-name">@contacto.Nombre @contacto.Apellido</p>
+                <p class="contact-sub">
+                    @(string.IsNullOrEmpty(contacto.Empresa) ? "Independiente" : contacto.Empresa)
+                </p>
+            </div>
+        </li>
+    }
+</ul>
+<div class="col-md-8">
+    <div class="panel p-4">
+
+        @if (seleccionado == null)
+        {
+            <p class="text-muted">Seleccioná un contacto de la lista</p>
+        }
+        else
+        {
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div class="d-flex gap-2">
+    <button class="btn btn-outline-secondary" @onclick="IrAEditar">
+        <i class="bi bi-pencil me-1"></i>Editar
+    </button>
+    <button class="btn btn-outline-danger" @onclick="EliminarSeleccionado">
+        <i class="bi bi-trash me-1"></i>Eliminar
+    </button>
+</div>
+    <div class="d-flex gap-3 align-items-center">
+        <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(seleccionado.Nombre, seleccionado.Apellido)">
+            @AvatarHelper.Iniciales(seleccionado.Nombre, seleccionado.Apellido)
+        </div>
+        <div>
+            <h4 class="mb-0">@seleccionado.Nombre @seleccionado.Apellido</h4>
+            @if (!string.IsNullOrEmpty(seleccionado.Empresa))
+            {
+                <p class="text-primary mb-0">@seleccionado.Empresa</p>
+            }
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<div class="detail-field">
+    <i class="bi bi-envelope"></i>
+    <div class="detail-field-label">Email</div>
+    <div>@seleccionado.Email</div>
+</div>
+
+<div class="detail-field">
+    <i class="bi bi-telephone"></i>
+    <div class="detail-field-label">Teléfono</div>
+    <div>@seleccionado.Telefono</div>
+</div>
+
+<div class="detail-field">
+    <i class="bi bi-building"></i>
+    <div class="detail-field-label">Empresa</div>
+    <div>@(string.IsNullOrEmpty(seleccionado.Empresa) ? "—" : seleccionado.Empresa)</div>
+</div>
+
+<div class="detail-field">
+    <i class="bi bi-briefcase"></i>
+    <div class="detail-field-label">Cargo</div>
+    <div>@(string.IsNullOrEmpty(seleccionado.Cargo) ? "—" : seleccionado.Cargo)</div>
+</div>
+
+<div class="detail-field">
+    <i class="bi bi-geo-alt"></i>
+    <div class="detail-field-label">Dirección</div>
+    <div>@(string.IsNullOrEmpty(seleccionado.Direccion) ? "—" : seleccionado.Direccion)</div>
+</div>
+
+<div class="detail-field">
+    <i class="bi bi-card-text"></i>
+    <div class="detail-field-label">Notas</div>
+    <div>@(string.IsNullOrEmpty(seleccionado.Notas) ? "—" : seleccionado.Notas)</div>
+</div>
+        }
+    </div>
 </div>

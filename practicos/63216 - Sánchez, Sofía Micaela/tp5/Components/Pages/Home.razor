@@ -1,7 +1,153 @@
 @page "/"
+@using tp5.Models
+@using tp5.Data
+@using Microsoft.EntityFrameworkCore
+@inject AgendaContext Db
+@rendermode InteractiveServer
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
-
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="navbar-agenda">
+    <h1> Agenda de Contactos</h1>
 </div>
+
+<div class="container-fluid px-4">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="buscador mb-2">
+                <input class="form-control" placeholder="Buscar por nombre, apellido o empresa..."
+                       @bind="busqueda" @bind:event="oninput" />
+            </div>
+            <button class="btn-nuevo" @onclick="NuevoContacto">+ Nuevo contacto</button>
+            <div class="lista-contactos">
+                <div class="list-group">
+                    @foreach (var c in ContactosFiltrados)
+                    {
+                        <button class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
+                                @onclick="() => Seleccionar(c)">
+                            <div class="avatar-inicial">@c.Apellido[0]</div>
+                            <div>
+                                <strong>@c.Apellido, @c.Nombre</strong><br />
+                                <small>@c.Empresa</small>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            @if (modoEdicion)
+            {
+                <FormularioContacto Contacto="contactoEditando"
+                                    OnGuardar="Guardar"
+                                    OnCancelar="CancelarEdicion" />
+            }
+            else if (contactoSeleccionado != null)
+            {
+                <DetalleContacto Contacto="contactoSeleccionado"
+                                 OnEditar="EditarContacto"
+                                 OnEliminar="EliminarContacto" />
+            }
+            else
+            {
+                <div class="estado-vacio">
+                    <div class="icono-grande">&#128100;</div>
+                    <p>Seleccioná un contacto para ver el detalle.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    List<Contacto> contactos = new();
+    Contacto? contactoSeleccionado;
+    Contacto contactoEditando = new();
+    bool modoEdicion = false;
+    string busqueda = "";
+
+    IEnumerable<Contacto> ContactosFiltrados => contactos
+        .Where(c => string.IsNullOrEmpty(busqueda) ||
+            c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Empresa.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(c => c.Apellido);
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos.ToListAsync();
+    }
+
+    void Seleccionar(Contacto c) { contactoSeleccionado = c; modoEdicion = false; }
+
+    void NuevoContacto()
+    {
+        contactoEditando = new Contacto();
+        contactoSeleccionado = null;
+        modoEdicion = true;
+    }
+
+    void EditarContacto()
+    {
+        contactoEditando = new Contacto
+        {
+            Id = contactoSeleccionado!.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas
+        };
+        modoEdicion = true;
+    }
+
+   async Task Guardar()
+{
+    if (contactoEditando.Id == 0)
+    {
+        Db.Contactos.Add(contactoEditando);
+    }
+    else
+    {
+        var contactoDb = await Db.Contactos.FindAsync(contactoEditando.Id);
+
+        if (contactoDb != null)
+        {
+            contactoDb.Nombre = contactoEditando.Nombre;
+            contactoDb.Apellido = contactoEditando.Apellido;
+            contactoDb.Telefono = contactoEditando.Telefono;
+            contactoDb.Email = contactoEditando.Email;
+            contactoDb.Empresa = contactoEditando.Empresa;
+            contactoDb.Cargo = contactoEditando.Cargo;
+            contactoDb.Direccion = contactoEditando.Direccion;
+            contactoDb.FechaNacimiento = contactoEditando.FechaNacimiento;
+            contactoDb.Notas = contactoEditando.Notas;
+        }
+    }
+
+    await Db.SaveChangesAsync();
+
+    contactos = await Db.Contactos.ToListAsync();
+
+    contactoSeleccionado = contactos
+        .FirstOrDefault(c => c.Id == contactoEditando.Id);
+
+    modoEdicion = false;
+}
+
+    async Task EliminarContacto()
+    {
+        if (contactoSeleccionado != null)
+        {
+            Db.Contactos.Remove(contactoSeleccionado);
+            await Db.SaveChangesAsync();
+            contactos = await Db.Contactos.ToListAsync();
+            contactoSeleccionado = null;
+        }
+    }
+
+    void CancelarEdicion() => modoEdicion = false;
+}

@@ -12,4 +12,7 @@ public class Contacto
     public string Direccion { get; set; } = "";
     public DateOnly? FechaNacimiento { get; set; }
     public string Notas { get; set; } = "";
+
+    public string NombreCompleto => $"{Nombre} {Apellido}";
+    public string Iniciales => $"{(string.IsNullOrWhiteSpace(Nombre) ? "" : Nombre[0])}{(string.IsNullOrWhiteSpace(Apellido) ? "" : Apellido[0])}".ToUpper();
 }
