@@ -289,7 +289,7 @@ static class AppPaths {
         return rutaArchivo;
     }
 
-    public static string GuardarArchivoDescargadoRelativo(string rutaDestinoBase, string rutaRelativa, byte[] contenido, bool forzar = false) {
+    public static string RutaArchivoDescargadoRelativo(string rutaDestinoBase, string rutaRelativa) {
         string rutaNormalizada = rutaRelativa.Replace('\\', Path.DirectorySeparatorChar)
                                              .Replace('/', Path.DirectorySeparatorChar)
                                              .TrimStart(Path.DirectorySeparatorChar);
@@ -305,6 +305,11 @@ static class AppPaths {
             throw new IOException($"La ruta relativa '{rutaRelativa}' es inválida para el destino '{rutaDestinoBase}'.");
         }
 
+        return rutaCompleta;
+    }
+
+    public static string GuardarArchivoDescargadoRelativo(string rutaDestinoBase, string rutaRelativa, byte[] contenido, bool forzar = false) {
+        string rutaCompleta = RutaArchivoDescargadoRelativo(rutaDestinoBase, rutaRelativa);
         string? directorio = Path.GetDirectoryName(rutaCompleta);
         if (!string.IsNullOrWhiteSpace(directorio)) {
             AsegurarDirectorio(directorio);

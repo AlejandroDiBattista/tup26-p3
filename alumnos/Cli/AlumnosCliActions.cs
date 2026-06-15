@@ -207,13 +207,14 @@ static class AlumnosCliActions {
         int trabajosProcesados = 0;
         int archivosDescargados = 0;
         HashSet<int> trabajosParaRevisar = new();
+        Log.WriteLine("[red]Igual al existente  [green]Nuevo  [black]Modificado");
         foreach (var pr in prs) {
             indice++;
             Log.Info($"\nRevisando PR {indice}/{prs.Count}: #{pr.Numero} | {pr.Titulo}");
             BajadaArchivosAlumnoResultado bajada = gh.BajarArchivosAlumno(pr.Numero, forzar: true);
             if (bajada.Archivos.Count > 0) {
                 procesados++;
-                trabajosProcesados += bajada.TrabajosPracticos.Count;
+                trabajosProcesados  += bajada.TrabajosPracticos.Count;
                 archivosDescargados += bajada.Archivos.Count;
                 trabajosParaRevisar.UnionWith(bajada.Archivos.Select(archivo => archivo.TrabajoPractico));
             }

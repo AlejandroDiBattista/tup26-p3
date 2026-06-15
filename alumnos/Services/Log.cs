@@ -22,6 +22,7 @@ static class Log {
                 "debug" or "gray" => ConsoleColor.Gray,
                 "info" or "cyan" => ConsoleColor.Cyan,
                 "blue" => ConsoleColor.Blue,
+                "black" => ConsoleColor.Black,
                 "green" => ConsoleColor.Green,
                 "darkred" => ConsoleColor.DarkRed,
                 "darkblue" => ConsoleColor.DarkBlue,

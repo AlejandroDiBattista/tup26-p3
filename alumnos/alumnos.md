@@ -6,7 +6,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 ------  ------------------------------  -------------   -------------------------  ----------   ---   ---   ---  ---  ------------------------
 63456   Ávila Lahr, Joaquín             (381)527-6836   joacoavila9                🟢🟢🟢🟢⚪️⚪️   🟢⚪️   No    22   10
 63415   Chávez, Lucas Francisco         (381)301-3490   lucaschavez10lc-ai         🔴🔴🔴🔴⚪️⚪️   🟢⚪️   No    16    8
-63268   Condori, Karina Edith           (381)412-4723   kariiedith9315             🟢🟢🟢🔴⚪️⚪️   🟡⚪️   Sí     5    1
+63268   Condori, Karina Edith           (381)412-4723   kariiedith9315             🟢🟢🟢🟢⚪️⚪️   🟡⚪️   Sí     5    1
 63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    24   10
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    26   10
 63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    25   10
@@ -31,7 +31,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63547   Sosa Paz, José Lisandro         (381)675-3624   lisandropaz                🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    23   10
 63447   Suárez, Sofía Celeste           (381)246-3725   suarezsofia541-alt         🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    23   10
 61490   Valdez Bustamante, Tomás        (381)303-1034   tomas-valdez-bustamante    🟢🟢🔴🟢⚪️⚪️   🟢⚪️   Sí    27    6
-63397   Vercellone, Tomás               (381)676-6267   xtomi2456                  🔴🟢🟢🔴⚪️⚪️   🟢⚪️   Sí    20    9
+63397   Vercellone, Tomás               (381)676-6267   xtomi2456                  🟢🟢🟢🔴⚪️⚪️   🟢⚪️   Sí    20    9
 ```
 
 ## C9
@@ -51,7 +51,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63218   Cortés, Guillermo Augusto       (381)606-0586   guillecortes01             🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    22   10
 64016   Cura, Rocío Aylen               (381)478-8799   rocura26                   🔴🟢🟢🔴⚪️⚪️   🟢⚪️   No    13    7
 63266   Decima, Juan Cruz               (381)558-9063   devjuancruz003-com         🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    22   10
-63137   Díaz, José Simón                (381)617-9958   josesimondiaz              🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    23    6
+63137   Díaz, José Simón                (381)617-9958   josesimondiaz              🟢🟢🔴🟢⚪️⚪️   🟢⚪️   Sí    23    6
 61641   Figueroa, Nahuel Ramón          (381)353-2589   figueroanahuel16           🟢🔴🔴🔴⚪️⚪️   🟢⚪️   No    15    4
 63737   Galván, Rocío Julieta           (381)647-5597   rociogalvani               🟢🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    19   10
 63345   García, Franco Tomás            (381)207-5701   francotms                  🔴🟢🟢🟢⚪️⚪️   🟢⚪️   Sí    12   10

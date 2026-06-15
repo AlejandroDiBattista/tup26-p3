@@ -2,7 +2,13 @@ using System.IO.Enumeration;
 
 namespace Tup26.AlumnosApp;
 
-readonly record struct ArchivoPrDescargado(int TrabajoPractico, string RutaRemota, string RutaLocal, int Lineas);
+enum EstadoArchivoPr {
+    Igual,
+    Nuevo,
+    Modificado
+}
+
+readonly record struct ArchivoPrDescargado(int TrabajoPractico, string RutaRemota, string RutaLocal, int Lineas, EstadoArchivoPr Estado);
 readonly record struct BajadaArchivosAlumnoResultado(IReadOnlyList<int> TrabajosPracticos, IReadOnlyList<ArchivoPrDescargado> Archivos);
 
 /*
@@ -454,6 +460,7 @@ class GitHub {
     }
 
     public IReadOnlyList<ArchivoPrDescargado> BajarDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto, string rutaDestino, bool forzar = false) {
+        const int anchoRutaListado = 70;
         string carpetaAlumno = NormalizarRutaRemota(carpetaAlumnoRemota);
         string carpetaRemota = NormalizarRutaRemota(directorioRemoto);
         if (string.IsNullOrWhiteSpace(carpetaAlumno) || string.IsNullOrWhiteSpace(carpetaRemota)) {
@@ -495,9 +502,20 @@ class GitHub {
 
                 byte[] contenido = httpClient.GetByteArrayAsync(url).Result;
                 int cantidadLineas = ContarLineas(contenido);
+                string rutaArchivoExistente = AppPaths.RutaArchivoDescargadoRelativo(rutaDestino, rutaRelativa);
+                EstadoArchivoPr estado = !File.Exists(rutaArchivoExistente)
+                    ? EstadoArchivoPr.Nuevo
+                    : File.ReadAllBytes(rutaArchivoExistente).AsSpan().SequenceEqual(contenido)
+                        ? EstadoArchivoPr.Igual
+                        : EstadoArchivoPr.Modificado;
                 string rutaArchivo = AppPaths.GuardarArchivoDescargadoRelativo(rutaDestino, rutaRelativa, contenido, forzar);
-                Log.Print($"  - {rutaLocalRelativa,-30} | L:{cantidadLineas,4}");
-                archivosDescargados.Add(new(numeroTp, rutaLocalRelativa, rutaArchivo, cantidadLineas));
+                string color = estado switch {
+                    EstadoArchivoPr.Igual => "red",
+                    EstadoArchivoPr.Nuevo => "green",
+                    _ => "black"
+                };
+                Log.WriteLine($"[{color}]  - {rutaLocalRelativa,-anchoRutaListado} | L:{cantidadLineas,4}");
+                archivosDescargados.Add(new(numeroTp, rutaLocalRelativa, rutaArchivo, cantidadLineas, estado));
             } catch (Exception ex) {
                 Log.Error($"Error al descargar el archivo desde '{linea}': {ex.Message}");
             }
