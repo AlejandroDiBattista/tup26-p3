@@ -37,6 +37,8 @@ static class AlumnosCliApp {
                 .WithDescription("Lista grupos y participantes de WhatsApp.");
             config.AddCommand<RevisarPresentacionesCommand>("revisar-presentaciones")
                 .WithDescription("Marca TPs presentados a partir del código local.");
+            config.AddCommand<VerificarCompilacionCommand>("verificar-compilacion")
+                .WithDescription("Compila los TP entregados y marca para revisar los que tienen errores.");
             config.AddCommand<LimpiarArchivosTemporalesCommand>("limpiar-archivos-temporales")
                 .WithDescription("Elimina bin, obj, .vs y cachés de compilación dentro de prácticos.");
         });
@@ -106,6 +108,7 @@ static class AlumnosCliApp {
             "exportar-json" => "Exportar alumnos a JSON",
             "exportar-vcard" => "Exportar alumnos a vCard",
             "revisar-presentaciones" => $"Revisar presentaciones{detalle}",
+            "verificar-compilacion" => $"Verificar compilación{detalle}",
             "limpiar-archivos-temporales" => "Limpiar archivos temporales",
             "listar-grupos-whatsapp" => "Listar grupos y participantes de WhatsApp",
             _ => args[0]
@@ -135,6 +138,7 @@ static class AlumnosCliApp {
             "publicar-practico" => ConstruirArgumentosPublicarPractico(),
             "publicar-apuntes" => ["publicar-apuntes"],
             "revisar-presentaciones" => ConstruirArgumentosRevisarPresentaciones(),
+            "verificar-compilacion" => ConstruirArgumentosVerificarCompilacion(),
             "listar-practicos-faltantes" => ConstruirArgumentosPracticosFaltantes(),
             "exportar-estado" => ["exportar-estado"],
             "exportar-markdown" => ["exportar-markdown"],
@@ -162,6 +166,7 @@ static class AlumnosCliApp {
             new("bajar-prs",                      "Bajar PRs",                      "Descargar y sobrescribir todos los prácticos"),
             new("cerrar-prs",                     "Cerrar PRs",                     "Cerrar pull requests abiertos"),
             new("revisar-presentaciones",         "Revisar presentaciones",         "Marcar TP presentados desde el código local"),
+            new("verificar-compilacion",          "Verificar compilación",          "Compilar entregados y marcar los que tienen errores"),
             new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
             new("publicar-apuntes",               "Publicar apuntes",               "Ejecutar apuntes/publicar.py"),
             new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
@@ -190,6 +195,14 @@ static class AlumnosCliApp {
             : string.IsNullOrWhiteSpace(trabajoPractico)
                 ? ["revisar-presentaciones"]
                 : ["revisar-presentaciones", trabajoPractico];
+    }
+
+    static string[] ConstruirArgumentosVerificarCompilacion() {
+        string? trabajoPractico = PedirTrabajoPractico("Verificar compilación");
+
+        return trabajoPractico is null
+            ? Array.Empty<string>()
+            : ["verificar-compilacion", trabajoPractico];
     }
 
     static string[] ConstruirArgumentosPublicarPractico() {

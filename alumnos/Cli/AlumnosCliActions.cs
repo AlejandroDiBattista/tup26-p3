@@ -378,6 +378,77 @@ static class AlumnosCliActions {
         return 0;
     }
 
+    public static int VerificarCompilacion(string trabajoPractico) {
+        int numeroTp = ObtenerNumeroTP(trabajoPractico);
+        if (numeroTp <= 0) {
+            Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
+            return 1;
+        }
+
+        string carpetaTp = CarpetaTrabajoPractico(numeroTp);
+        if (!AppPaths.ExisteEnunciadoPractico(carpetaTp)) {
+            Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
+            return 1;
+        }
+
+        Alumnos alumnos = CargarAlumnos();
+        Alumno[] entregados = alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => alumno.Legajo)
+            .ToArray();
+
+        if (entregados.Length == 0) {
+            Log.Warning($"No hay trabajos entregados para verificar en TP{numeroTp}.");
+            return 0;
+        }
+
+        List<CompilacionAlumnoResultado> resultados = new();
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .Start(ctx => {
+                var tarea = ctx.AddTask($"Compilando TP{numeroTp}", maxValue: entregados.Length);
+                foreach (Alumno alumno in entregados) {
+                    tarea.Description = $"Compilando {alumno.Legajo}";
+                    string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+                    CompilacionPracticoResultado compilacion =
+                        CompilacionPracticos.Verificar(rutaPractico, numeroTp);
+
+                    if (!compilacion.Exito) {
+                        alumno.Practico(numeroTp, Estado.Revision);
+                    }
+
+                    resultados.Add(new(alumno, compilacion));
+                    tarea.Increment(1);
+                }
+            });
+
+        int correctos = resultados.Count(resultado => resultado.Compilacion.Exito);
+        int errores = resultados.Count - correctos;
+
+        if (errores > 0) {
+            AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
+        }
+
+        foreach (CompilacionAlumnoResultado resultado in resultados) {
+            if (resultado.Compilacion.Exito) {
+                string objetivos = string.Join(", ", resultado.Compilacion.Objetivos.Select(objetivo => objetivo.Objetivo));
+                Log.Success($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | compila: {objetivos} | sin cambio");
+                continue;
+            }
+
+            Log.Error($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | no compila | {Estado.Aprobado.ToEmoji()} -> {Estado.Revision.ToEmoji()}");
+            foreach (CompilacionObjetivoResultado objetivo in resultado.Compilacion.Objetivos.Where(objetivo => !objetivo.Exito)) {
+                foreach (string error in objetivo.Errores) {
+                    Log.Print($"  {objetivo.Objetivo}: {error}");
+                }
+            }
+        }
+
+        Log.Info($"Resumen TP{numeroTp}: entregados={entregados.Length}, compilan={correctos}, con errores={errores}, marcados para revisar={errores}");
+        return errores == 0 ? 0 : 1;
+    }
+
     public static int RelevarAsistencias() {
         Alumnos alumnos = CargarAlumnos();
 
@@ -850,6 +921,7 @@ static class AlumnosCliActions {
 
     sealed record TrabajoPresentadoLocal(Alumno Alumno, string RutaPractico, HashSet<string> LineasCodigo);
     sealed record PresentacionCambiada(Alumno Alumno, Estado EstadoAnterior, Estado EstadoNuevo, int LineasTotales, int LineasAgregadas);
+    sealed record CompilacionAlumnoResultado(Alumno Alumno, CompilacionPracticoResultado Compilacion);
 
     readonly record struct CopiaDetectada(int LineasComunes, int MaximoLineas, double Porcentaje);
 

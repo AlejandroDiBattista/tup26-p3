@@ -7,9 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-    builder.Services.AddDbContext<[TU_NOMBRE_DE_CONTEXTO]>(options =>
+    builder.Services.AddDbContext<AgendaContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-    builder.Services.AddScoped<ContactoService>();
+builder.Services.AddScoped<ContactoService>();
 
 var app = builder.Build();
 
