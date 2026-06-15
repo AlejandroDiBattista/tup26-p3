@@ -1,7 +1,143 @@
 @page "/"
+@rendermode InteractiveServer
+@inject ContactoService ContactoService
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<h1 class="mb-4">
+    <i class="bi bi-person-vcard me-2"></i>
+    Agenda de Contactos
+</h1>
+
+<button class="btn btn-success mb-3"
+        @onclick="NuevoContacto">
+    Nuevo Contacto
+</button>
+
+<div class="row">
+
+    <div class="col-md-4">
+
+        <input class="form-control mb-3"
+               placeholder="Buscar contacto..."
+               @bind="textoBusqueda"
+               @bind:event="oninput" />
+
+        <div class="list-group">
+
+            @foreach (var contacto in ContactosFiltrados)
+            {
+                <button class="list-group-item list-group-item-action"
+                        @onclick="() => SeleccionarContacto(contacto)">
+                    @contacto.Nombre @contacto.Apellido
+                </button>
+            }
+
+        </div>
+
+    </div>
+
+    <div class="col-md-8">
+
+        @if (contactoActual != null)
+        {
+            <div class="card">
+                <div class="card-body">
+
+                    <h3>
+                        @contactoActual.Nombre
+                        @contactoActual.Apellido
+                    </h3>
+
+                    <hr />
+
+                    <p><b>Teléfono:</b> @contactoActual.Telefono</p>
+                    <p><b>Email:</b> @contactoActual.Email</p>
+                    <p><b>Empresa:</b> @contactoActual.Empresa</p>
+                    <p><b>Cargo:</b> @contactoActual.Cargo</p>
+                    <p><b>Dirección:</b> @contactoActual.Direccion</p>
+                    <p><b>Fecha de nacimiento:</b> @contactoActual.FechaNacimiento</p>
+                    <p><b>Notas:</b> @contactoActual.Notas</p>
+
+                    <hr />
+
+                    <button class="btn btn-warning me-2"
+                            @onclick="EditarContacto">
+                        Editar
+                    </button>
+
+                    <button class="btn btn-danger"
+                            @onclick="EliminarContacto">
+                        Eliminar
+                    </button>
+
+                </div>
+            </div>
+        }
+
+    </div>
+
 </div>
+
+@code {
+
+    private List<Contacto> listaContactos = new();
+
+    private Contacto? contactoActual;
+
+    private string textoBusqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        listaContactos = await ContactoService.ListarContactos();
+    }
+
+    private IEnumerable<Contacto> ContactosFiltrados =>
+        listaContactos.Where(c =>
+            ($"{c.Nombre} {c.Apellido}")
+            .Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoActual = contacto;
+    }
+
+    private async Task NuevoContacto()
+    {
+        var nuevo = new Contacto
+        {
+            Nombre = "Nuevo",
+            Apellido = "Contacto",
+            Telefono = "000000",
+            Email = "nuevo@email.com"
+        };
+
+        await ContactoService.CrearContacto(nuevo);
+
+        listaContactos = await ContactoService.ListarContactos();
+    }
+
+    private async Task EditarContacto()
+    {
+        if (contactoActual == null)
+            return;
+
+        contactoActual.Notas = "Contacto editado";
+
+        await ContactoService.ModificarContacto(contactoActual);
+
+        listaContactos = await ContactoService.ListarContactos();
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoActual == null)
+            return;
+
+        await ContactoService.BorrarContacto(contactoActual.Id);
+
+        listaContactos = await ContactoService.ListarContactos();
+
+        contactoActual = null;
+    }
+}
