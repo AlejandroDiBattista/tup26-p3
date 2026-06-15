@@ -5,6 +5,7 @@ namespace Tup26.AlumnosApp;
 static class AlumnosCliActions {
 
     const double UmbralCopia = 0.90;
+    const int MinimoLineasCopia = 20;
     //  60% -> 91
     //  70% -> 64
     //  75% -> 56
@@ -695,7 +696,7 @@ static class AlumnosCliActions {
 
     static CopiaDetectada? CompararTrabajos(TrabajoPresentadoLocal actual, TrabajoPresentadoLocal otro) {
         int maximoLineas = Math.Min(actual.LineasCodigo.Count, otro.LineasCodigo.Count);
-        if (maximoLineas == 0) {
+        if (maximoLineas < MinimoLineasCopia) {
             return null;
         }
 
