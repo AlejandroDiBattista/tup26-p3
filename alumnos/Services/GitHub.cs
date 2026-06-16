@@ -337,7 +337,7 @@ class GitHub {
         return Lineas(salida);
     }
 
-    public List<string> ListarArchivosDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto) {
+    public List<string> ListarArchivosDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto, bool carpetaAlumnoExacta = false) {
         string carpetaAlumno = NormalizarRutaRemota(carpetaAlumnoRemota);
         string carpetaRemota = NormalizarRutaRemota(directorioRemoto);
         if (string.IsNullOrWhiteSpace(carpetaAlumno) || string.IsNullOrWhiteSpace(carpetaRemota)) {
@@ -346,7 +346,7 @@ class GitHub {
 
         return ListarArchivos(numeroPR)
             .Select(NormalizarRutaRemota)
-            .Select(nombreRemoto => TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out string rutaRelativa)
+            .Select(nombreRemoto => TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, carpetaAlumnoExacta, out string rutaRelativa)
                 ? $"{carpetaRemota}/{rutaRelativa}"
                 : string.Empty)
             .Where(rutaRelativa => !string.IsNullOrWhiteSpace(rutaRelativa))
@@ -376,7 +376,7 @@ class GitHub {
             if (partes.Length != 2) { continue; }
 
             string nombreRemoto = NormalizarRutaRemota(partes[0]);
-            if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out _)) {
+            if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, carpetaAlumnoExacta: false, out _)) {
                 continue;
             }
 
@@ -472,7 +472,7 @@ class GitHub {
         }
     }
 
-    public IReadOnlyList<ArchivoPrDescargado> BajarDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto, string rutaDestino, bool forzar = false) {
+    public IReadOnlyList<ArchivoPrDescargado> BajarDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto, string rutaDestino, bool forzar = false, bool carpetaAlumnoExacta = false) {
         const int anchoRutaListado = 70;
         string carpetaAlumno = NormalizarRutaRemota(carpetaAlumnoRemota);
         string carpetaRemota = NormalizarRutaRemota(directorioRemoto);
@@ -481,7 +481,7 @@ class GitHub {
             return [];
         }
 
-        HashSet<string> archivosDirectorio = ListarArchivosDirectorio(numeroPR, carpetaAlumno, carpetaRemota)
+        HashSet<string> archivosDirectorio = ListarArchivosDirectorio(numeroPR, carpetaAlumno, carpetaRemota, carpetaAlumnoExacta)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (archivosDirectorio.Count == 0) {
             Log.Error($"PR #{numeroPR}: no se encontraron archivos dentro de '{carpetaAlumno}/{carpetaRemota}/'.");
@@ -504,7 +504,7 @@ class GitHub {
                 string nombreRemoto = NormalizarRutaRemota(partes[0]);
                 string url = partes[1];
 
-                if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out string rutaRelativa)) {
+                if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, carpetaAlumnoExacta, out string rutaRelativa)) {
                     continue;
                 }
 
@@ -552,11 +552,12 @@ class GitHub {
     }
 
     public BajadaArchivosAlumnoResultado BajarArchivosAlumno(int numeroPR, Alumno alumno, bool forzar = false, int? numeroTpSolicitado = null, bool informarOmitidos = true) {
-        string selectorCarpetaRemota = alumno.Legajo.ToString();
+        List<string> archivosPr = ListarArchivos(numeroPR);
+        string selectorCarpetaRemota = ResolverCarpetaAlumnoRemota(archivosPr, alumno.Legajo, out bool carpetaAlumnoExacta);
         string rutaCarpetaAlumno = AppPaths.RutaCarpetaAlumnoEsperada(alumno);
         AppPaths.AsegurarCarpetaAlumno(alumno);
 
-        List<int> tpsPresentados = ListarTPsPresentados(numeroPR, selectorCarpetaRemota);
+        List<int> tpsPresentados = TPsPresentadosDesdeArchivos(archivosPr, selectorCarpetaRemota, carpetaAlumnoExacta);
         if (numeroTpSolicitado is int tpSolicitado) {
             tpsPresentados = tpsPresentados.Where(tp => tp == tpSolicitado).ToList();
         }
@@ -575,7 +576,7 @@ class GitHub {
         foreach (int numeroTp in tpsPresentados) {
             string carpetaTp = $"tp{numeroTp}";
             string rutaDestino = Path.Combine(rutaCarpetaAlumno, carpetaTp);
-            archivosDescargados.AddRange(BajarDirectorio(numeroPR, selectorCarpetaRemota, carpetaTp, rutaDestino, forzar));
+            archivosDescargados.AddRange(BajarDirectorio(numeroPR, selectorCarpetaRemota, carpetaTp, rutaDestino, forzar, carpetaAlumnoExacta));
         }
 
         if (archivosDescargados.Count > 0) {
@@ -718,7 +719,7 @@ class GitHub {
     }
 
 
-    static bool TryObtenerRutaRelativaDirectorio(string nombreRemoto, string carpetaAlumnoRemota, string directorioRemoto, out string rutaRelativa) {
+    static bool TryObtenerRutaRelativaDirectorio(string nombreRemoto, string carpetaAlumnoRemota, string directorioRemoto, bool carpetaAlumnoExacta, out string rutaRelativa) {
         rutaRelativa = string.Empty;
 
         string nombreNormalizado = NormalizarRutaRemota(nombreRemoto);
@@ -734,7 +735,7 @@ class GitHub {
         }
 
         for (int i = 0; i <= segmentos.Length - 3; i++) {
-            if (!EsCarpetaAlumnoEsperada(segmentos[i], carpetaAlumnoNormalizada)) {
+            if (!EsCarpetaAlumnoEsperada(segmentos[i], carpetaAlumnoNormalizada, carpetaAlumnoExacta)) {
                 continue;
             }
 
@@ -750,7 +751,7 @@ class GitHub {
     }
 
 
-    static List<int> TPsPresentadosDesdeArchivos(IEnumerable<string> nombresRemotos, string carpetaAlumnoRemota) {
+    static List<int> TPsPresentadosDesdeArchivos(IEnumerable<string> nombresRemotos, string carpetaAlumnoRemota, bool carpetaAlumnoExacta = false) {
         string carpetaAlumno = NormalizarRutaRemota(carpetaAlumnoRemota);
         if (string.IsNullOrWhiteSpace(carpetaAlumno)) {
             return new();
@@ -758,7 +759,7 @@ class GitHub {
 
         HashSet<int> trabajosPracticos = new();
         foreach (string nombreRemoto in nombresRemotos) {
-            if (TryObtenerTpDesdeRutaAlumno(nombreRemoto, carpetaAlumno, out int numeroTp)) {
+            if (TryObtenerTpDesdeRutaAlumno(nombreRemoto, carpetaAlumno, carpetaAlumnoExacta, out int numeroTp)) {
                 trabajosPracticos.Add(numeroTp);
             }
         }
@@ -785,7 +786,42 @@ class GitHub {
     }
 
 
-    static bool TryObtenerTpDesdeRutaAlumno(string nombreRemoto, string carpetaAlumnoRemota, out int numeroTp) {
+    static string ResolverCarpetaAlumnoRemota(IEnumerable<string> nombresRemotos, int legajo, out bool carpetaAlumnoExacta) {
+        List<string> carpetas = CarpetasAlumnoRemotasConTp(nombresRemotos, legajo)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (carpetas.Count == 0) {
+            carpetaAlumnoExacta = false;
+            return legajo.ToString();
+        }
+
+        carpetaAlumnoExacta = true;
+        return carpetas
+            .OrderBy(carpeta => carpeta.Contains(','))
+            .ThenBy(carpeta => carpeta, StringComparer.OrdinalIgnoreCase)
+            .First();
+    }
+
+    static IEnumerable<string> CarpetasAlumnoRemotasConTp(IEnumerable<string> nombresRemotos, int legajo) {
+        foreach (string nombreRemoto in nombresRemotos) {
+            string[] segmentos = NormalizarRutaRemota(nombreRemoto)
+                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i <= segmentos.Length - 3; i++) {
+                if (ExtraerLegajo(segmentos[i]) != legajo) {
+                    continue;
+                }
+
+                if (Regex.IsMatch(segmentos[i + 1], @"^tp\d+$", RegexOptions.IgnoreCase)) {
+                    yield return segmentos[i];
+                }
+            }
+        }
+    }
+
+
+    static bool TryObtenerTpDesdeRutaAlumno(string nombreRemoto, string carpetaAlumnoRemota, bool carpetaAlumnoExacta, out int numeroTp) {
         numeroTp = 0;
 
         string nombreNormalizado = NormalizarRutaRemota(nombreRemoto);
@@ -800,7 +836,7 @@ class GitHub {
         }
 
         for (int i = 0; i <= segmentos.Length - 3; i++) {
-            if (!EsCarpetaAlumnoEsperada(segmentos[i], carpetaAlumnoNormalizada)) {
+            if (!EsCarpetaAlumnoEsperada(segmentos[i], carpetaAlumnoNormalizada, carpetaAlumnoExacta)) {
                 continue;
             }
 
@@ -816,7 +852,11 @@ class GitHub {
     }
 
 
-    static bool EsCarpetaAlumnoEsperada(string segmentoRemoto, string carpetaAlumnoRemota) {
+    static bool EsCarpetaAlumnoEsperada(string segmentoRemoto, string carpetaAlumnoRemota, bool carpetaAlumnoExacta = false) {
+        if (carpetaAlumnoExacta) {
+            return string.Equals(segmentoRemoto, carpetaAlumnoRemota, StringComparison.OrdinalIgnoreCase);
+        }
+
         int legajoEsperado = ExtraerLegajo(carpetaAlumnoRemota);
         if (legajoEsperado > 0) {
             return ExtraerLegajo(segmentoRemoto) == legajoEsperado;
