@@ -1,0 +1,70 @@
+<EditForm Model="Modelo" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">@(EsNuevo ? "Nuevo contacto" : "Editar contacto")</h4>
+        <div>
+            <button type="button" class="btn btn-outline-secondary" @onclick="OnCancelar">Cancelar</button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i>Guardar
+            </button>
+        </div>
+    </div>
+
+    <ValidationSummary class="alert alert-danger" />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <InputText @bind-Value="Modelo.Nombre" class="form-control" />
+            <ValidationMessage For="() => Modelo.Nombre" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Apellido</label>
+            <InputText @bind-Value="Modelo.Apellido" class="form-control" />
+            <ValidationMessage For="() => Modelo.Apellido" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Teléfono</label>
+            <InputText @bind-Value="Modelo.Telefono" class="form-control" />
+            <ValidationMessage For="() => Modelo.Telefono" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Correo electrónico</label>
+            <InputText @bind-Value="Modelo.Email" class="form-control" />
+            <ValidationMessage For="() => Modelo.Email" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Empresa</label>
+            <InputText @bind-Value="Modelo.Empresa" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Cargo</label>
+            <InputText @bind-Value="Modelo.Cargo" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Dirección</label>
+            <InputText @bind-Value="Modelo.Direccion" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Fecha de nacimiento</label>
+            <InputDate @bind-Value="Modelo.FechaNacimiento" class="form-control" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Notas</label>
+            <InputTextArea @bind-Value="Modelo.Notas" class="form-control" rows="3" />
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired] public Contacto Modelo { get; set; } = default!;
+    [Parameter] public bool EsNuevo { get; set; }
+    [Parameter] public EventCallback<Contacto> OnGuardar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+    private Task OnSubmit() => OnGuardar.InvokeAsync(Modelo);
+}

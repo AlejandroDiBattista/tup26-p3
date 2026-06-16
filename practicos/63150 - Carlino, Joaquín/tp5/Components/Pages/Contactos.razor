@@ -1,0 +1,199 @@
+@page "/contactos"
+@rendermode InteractiveServer
+@inject IContactoService Servicio
+
+<PageTitle>Agenda de contactos</PageTitle>
+
+<div class="row mb-3 align-items-center">
+  <div class="col">
+    <h1 class="mb-0">Agenda</h1>
+    <p class="text-muted mb-0">Contactos personales y profesionales</p>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-primary" @onclick="Nuevo">
+      <i class="bi bi-plus-lg me-1"></i>Nuevo contacto
+    </button>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-4 mb-3">     @* PANEL MAESTRO *@
+    <div class="card">
+      <div class="card-body">
+        <input class="form-control mb-3" placeholder="Buscar contacto..."
+               @bind="filtro" @bind:event="oninput" @bind:after="Refrescar" />
+
+        <div class="list-group">
+          @foreach (var c in lista)
+          {
+            <button type="button"
+                    class="list-group-item list-group-item-action @(EsSeleccionado(c) ? "active" : "")"
+                    @onclick="() => Seleccionar(c)">
+              <div class="fw-bold">@c.Apellido, @c.Nombre</div>
+              @if (!string.IsNullOrWhiteSpace(c.Empresa))
+              {
+                <small>@c.Empresa</small>
+              }
+            </button>
+          }
+        </div>
+
+        @if (lista.Count == 0)
+        {
+          <p class="text-muted text-center mt-3 mb-0">No se encontraron contactos.</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">     @* PANEL DETALLE *@
+    <div class="card">
+      <div class="card-body">
+        @if (enEdicion)
+        {
+          <FormularioContacto Modelo="modelo" EsNuevo="esNuevo"
+                              OnGuardar="Guardar" OnCancelar="Cancelar" />
+        }
+        else if (seleccionado is not null)
+        {
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h3 class="mb-0">@seleccionado.Nombre @seleccionado.Apellido</h3>
+              @if (!string.IsNullOrWhiteSpace(seleccionado.Empresa))
+              {
+                <span class="text-primary">@seleccionado.Empresa</span>
+              }
+            </div>
+            <div>
+              <button class="btn btn-outline-secondary" @onclick="Editar">
+                <i class="bi bi-pencil me-1"></i>Editar
+              </button>
+              <button class="btn btn-outline-danger" @onclick="Eliminar">
+                <i class="bi bi-trash me-1"></i>Eliminar
+              </button>
+            </div>
+          </div>
+
+          <dl class="row">
+            <dt class="col-sm-3"><i class="bi bi-envelope me-2"></i>Email</dt>
+            <dd class="col-sm-9">@seleccionado.Email</dd>
+
+            <dt class="col-sm-3"><i class="bi bi-telephone me-2"></i>Teléfono</dt>
+            <dd class="col-sm-9">@seleccionado.Telefono</dd>
+
+            @if (!string.IsNullOrWhiteSpace(seleccionado.Cargo))
+            {
+              <dt class="col-sm-3"><i class="bi bi-briefcase me-2"></i>Cargo</dt>
+              <dd class="col-sm-9">@seleccionado.Cargo</dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(seleccionado.Direccion))
+            {
+              <dt class="col-sm-3"><i class="bi bi-geo-alt me-2"></i>Dirección</dt>
+              <dd class="col-sm-9">@seleccionado.Direccion</dd>
+            }
+
+            @if (seleccionado.FechaNacimiento is not null)
+            {
+              <dt class="col-sm-3"><i class="bi bi-cake2 me-2"></i>Nacimiento</dt>
+              <dd class="col-sm-9">@seleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")</dd>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(seleccionado.Notas))
+            {
+              <dt class="col-sm-3"><i class="bi bi-card-text me-2"></i>Notas</dt>
+              <dd class="col-sm-9">@seleccionado.Notas</dd>
+            }
+          </dl>
+        }
+        else
+        {
+          <p class="text-muted text-center my-5">Selecciona un contacto o crea uno nuevo.</p>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+@code {
+    private List<Contacto> lista = new();
+    private string? filtro;
+    private Contacto? seleccionado;
+    private Contacto modelo = new();
+    private bool enEdicion;
+    private bool esNuevo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refrescar();
+    }
+
+    private async Task Refrescar()
+    {
+        lista = await Servicio.ListarAsync(filtro);
+    }
+
+    private bool EsSeleccionado(Contacto c) => seleccionado is not null && seleccionado.Id == c.Id;
+
+    private void Seleccionar(Contacto c)
+    {
+        seleccionado = c;
+        enEdicion = false;
+    }
+
+    private void Nuevo()
+    {
+        modelo = new Contacto();
+        esNuevo = true;
+        enEdicion = true;
+        seleccionado = null;
+    }
+
+    private void Editar()
+    {
+        if (seleccionado is null) return;
+        modelo = new Contacto
+        {
+            Id = seleccionado.Id,
+            Nombre = seleccionado.Nombre,
+            Apellido = seleccionado.Apellido,
+            Telefono = seleccionado.Telefono,
+            Email = seleccionado.Email,
+            Empresa = seleccionado.Empresa,
+            Cargo = seleccionado.Cargo,
+            Direccion = seleccionado.Direccion,
+            FechaNacimiento = seleccionado.FechaNacimiento,
+            Notas = seleccionado.Notas,
+        };
+        esNuevo = false;
+        enEdicion = true;
+    }
+
+    private async Task Guardar(Contacto c)
+    {
+        if (esNuevo)
+        {
+            seleccionado = await Servicio.CrearAsync(c);
+        }
+        else
+        {
+            await Servicio.ActualizarAsync(c);
+            seleccionado = c;
+        }
+        enEdicion = false;
+        await Refrescar();
+    }
+
+    private void Cancelar()
+    {
+        enEdicion = false;
+    }
+
+    private async Task Eliminar()
+    {
+        if (seleccionado is null) return;
+        await Servicio.EliminarAsync(seleccionado.Id);
+        seleccionado = null;
+        await Refrescar();
+    }
+}
