@@ -6,7 +6,7 @@
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 <div class="p-4">
-    <h1 class="mb-4"><i class="bi bi-person-vcard me-2"></i>TP5: AgendaWeb</h1>
+    <h1 class="mb-4"><i class="bi bi-person-vcard me-2"></i>TP5: AgendaWeb - Contactos de Luciano Perondi</h1>
 
     @if (contactos is null)
     {
@@ -20,8 +20,12 @@
                     <i class="bi bi-plus-lg me-1"></i>Nuevo contacto
                 </button>
 
+                <input type="text" class="form-control form-control-sm mb-2"
+                       placeholder="Buscar..."
+                       @bind="filtro" @bind:event="oninput" />
+
                 <div class="list-group">
-                    @foreach (var c in contactos)
+                    @foreach (var c in ContactosFiltrados)
                     {
                         <button type="button"
                                 class="list-group-item list-group-item-action @(seleccionado?.Id == c.Id ? "active" : "")"
@@ -136,6 +140,13 @@
     Contacto? seleccionado;
     bool editando = false;
     Contacto enEdicion = new();
+    string filtro = "";
+    IEnumerable<Contacto> ContactosFiltrados =>
+        contactos is null
+            ? Enumerable.Empty<Contacto>()
+            : contactos.Where(c =>
+                  c.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+               || c.Apellido.Contains(filtro, StringComparison.OrdinalIgnoreCase));
     void Nuevo()
     {
         enEdicion = new Contacto();
