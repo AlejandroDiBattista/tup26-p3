@@ -306,14 +306,21 @@ class GitHub {
 
     public int CantidadLineas(int numeroPR) {
         string? salida = Ejecutar($"Error al contar líneas del PR #{numeroPR}",
-            $"/pulls/{numeroPR}/files", "--paginate", "--jq", @".[] | .changes");
+            $"/pulls/{numeroPR}/files", "--paginate", "--jq", @".[] | ""\(.filename)\t\(.changes)""");
 
         if (salida is null) { return 0; }
 
         int total = 0;
 
         foreach (string linea in Lineas(salida, pasarAMinusculas: false)) {
-            if (int.TryParse(linea, out int cambios)) {
+            string[] partes = linea.Split('\t', 2);
+            if (partes.Length != 2) { continue; }
+
+            if (!ArchivoTexto.EsRutaTexto(partes[0])) {
+                continue;
+            }
+
+            if (int.TryParse(partes[1], out int cambios)) {
                 total += cambios;
             }
         }
@@ -370,6 +377,10 @@ class GitHub {
 
             string nombreRemoto = NormalizarRutaRemota(partes[0]);
             if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out _)) {
+                continue;
+            }
+
+            if (!ArchivoTexto.EsRutaTexto(nombreRemoto)) {
                 continue;
             }
 
@@ -445,6 +456,7 @@ class GitHub {
                 string url = partes[1];
 
                 if (!FileSystemName.MatchesSimpleExpression(patron, nombreRemoto, ignoreCase: true)) { continue; }
+                if (!ArchivoTexto.EsRutaTexto(nombreRemoto)) { continue; }
 
                 if (!forzar && AppPaths.ExisteArchivoDescargado(rutaDestino, nombreRemoto)) {
                     // Log.Info($"Archivo '{nombreRemoto}' ya existe. Se omite descarga: {rutaArchivo}");
@@ -501,7 +513,17 @@ class GitHub {
                     continue;
                 }
 
+                if (!ArchivoTexto.EsRutaTexto(rutaLocalRelativa)) {
+                    Log.WriteLine($"[grey]  - {rutaLocalRelativa,-anchoRutaListado} | binario omitido");
+                    continue;
+                }
+
                 byte[] contenido = httpClient.GetByteArrayAsync(url).Result;
+                if (!ArchivoTexto.PareceContenidoTexto(contenido)) {
+                    Log.WriteLine($"[grey]  - {rutaLocalRelativa,-anchoRutaListado} | binario omitido");
+                    continue;
+                }
+
                 int cantidadLineas = ContarLineas(contenido);
                 string rutaArchivoExistente = AppPaths.RutaArchivoDescargadoRelativo(rutaDestino, rutaRelativa);
                 EstadoArchivoPr estado = !File.Exists(rutaArchivoExistente)

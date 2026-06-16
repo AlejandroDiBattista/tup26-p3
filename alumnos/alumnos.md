@@ -69,7 +69,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63388   López, Leandro Joel             (381)360-4566   leandro-progam             🟢🟢🔴🟢🔴⚪️   🟢⚪️   Sí    25   10
 63213   Marina Noguera, Morena Giovann  (381)354-0133   mmore-cloud                🟢🟢🟢🟢🔴⚪️   🟢⚪️   Sí    23    9  TP5
 63494   Medina, Lourdes Natalia         (381)201-7153   lumedina23                 🟢🟢🟢🟢🔴⚪️   🟢⚪️   Sí    16   10  TP5
-63418   Miranda, Gonzalo Emanuel        (381)208-1031   gonzalomiranda456          🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    22    7
+63418   Miranda, Gonzalo Emanuel        (381)208-1031   gonzalomiranda456          🟢🟢🟢🟢🟠⚪️   🟢⚪️   No    22    7
 63234   Molina, Lázaro Exequiel         (381)416-0720   lazaro2005-ml              🟢🟢🟢🟢🟢⚪️   🟢⚪️   Sí    23   10
 63412   Morán, Facundo Martín           (381)301-0206   facumoran                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   Sí    24   10
 63205   Navarro Aragón, Facundo         (381)466-6665   facundonavarroaragon       🔴🔴🔴🔴🔴⚪️   🟢⚪️   No    17   10

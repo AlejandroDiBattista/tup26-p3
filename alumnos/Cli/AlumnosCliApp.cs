@@ -40,7 +40,7 @@ static class AlumnosCliApp {
             config.AddCommand<VerificarCompilacionCommand>("verificar-compilacion")
                 .WithDescription("Compila los TP entregados y marca para revisar los que tienen errores.");
             config.AddCommand<LimpiarArchivosTemporalesCommand>("limpiar-archivos-temporales")
-                .WithDescription("Elimina bin, obj, .vs y cachés de compilación dentro de prácticos.");
+                .WithDescription("Elimina bin, obj, .vs, cachés de compilación y temporales SQLite dentro de prácticos.");
         });
 
         return app;
@@ -175,7 +175,7 @@ static class AlumnosCliApp {
             new("exportar-json",                  "Exportar como JSON",             "Exportar alumnos a alumnos.json"),
             new("exportar-vcard",                 "Exportar como vCard",            "Exportar contactos a alumnos.vcf"),
             new("listar-grupos-whatsapp",         "Listar grupos de WhatsApp",      "Listar grupos y participantes"),
-            new("limpiar-archivos-temporales",    "Limpiar archivos temporales",    "Eliminar bin, obj, .vs y cachés"),
+            new("limpiar-archivos-temporales",    "Limpiar archivos temporales",    "Eliminar bin, obj, .vs, cachés y temporales SQLite"),
             new("salir",                          "Salir",                          "Cerrar la aplicación")
         ];
 

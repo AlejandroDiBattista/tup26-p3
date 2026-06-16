@@ -9,6 +9,8 @@ static class AppPaths {
     static readonly string dataDirectory = ResolverDirectorioDatos();
     static readonly string[] directoriosCompilacionPracticos = ["bin", "obj", ".vs"];
     static readonly string[] sufijosArchivosCacheCompilacion = [".lscache", ".suo", ".userosscache", ".sln.docstates"];
+    static readonly string[] extensionesBasesSqlite = [".db", ".sqlite", ".sqlite3"];
+    static readonly string[] sufijosArchivosTemporalesSqlite = ["-wal", "-shm", "-journal"];
 
     public static string DataDirectory => dataDirectory;
     public static string RepoRoot => Directory.GetParent(DataDirectory)?.FullName ?? DataDirectory;
@@ -454,7 +456,7 @@ static class AppPaths {
 
             string nombre = Path.GetFileName(ruta);
             if (ExisteArchivo(ruta)) {
-                if (sufijosArchivosCacheCompilacion.Any(sufijo => nombre.EndsWith(sufijo, StringComparison.OrdinalIgnoreCase))) {
+                if (EsArchivoCacheCompilacion(nombre) || EsArchivoTemporalSqlite(nombre)) {
                     rutas.Add(ruta);
                 }
 
@@ -472,6 +474,23 @@ static class AppPaths {
 
             BuscarArtefactosCompilacion(ruta, rutas);
         }
+    }
+
+    static bool EsArchivoCacheCompilacion(string nombre) =>
+        sufijosArchivosCacheCompilacion.Any(sufijo => nombre.EndsWith(sufijo, StringComparison.OrdinalIgnoreCase));
+
+    static bool EsArchivoTemporalSqlite(string nombre) {
+        foreach (string sufijoTemporal in sufijosArchivosTemporalesSqlite) {
+            if (!nombre.EndsWith(sufijoTemporal, StringComparison.OrdinalIgnoreCase)) {
+                continue;
+            }
+
+            string nombreBase = nombre[..^sufijoTemporal.Length];
+            string extensionBase = Path.GetExtension(nombreBase);
+            return extensionesBasesSqlite.Contains(extensionBase, StringComparer.OrdinalIgnoreCase);
+        }
+
+        return false;
     }
 
     static bool EsEnlaceSimbolico(string ruta) {

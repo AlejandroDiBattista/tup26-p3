@@ -36,3 +36,32 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/*colores*/
+:root {
+    --bs-primary: #0d8b8b;
+    --bs-primary-rgb: 13, 139, 139;
+}
+
+.btn-primary {
+    --bs-btn-bg: #0d8b8b;
+    --bs-btn-border-color: #0d8b8b;
+    --bs-btn-hover-bg: #0a6e6e;
+    --bs-btn-hover-border-color: #0a6e6e;
+    --bs-btn-active-bg: #0a6e6e;
+    --bs-btn-active-border-color: #0a6e6e;
+}
+
+.list-group-item.active {
+    background-color: #0d8b8b;
+    border-color: #0d8b8b;
+}
+
+h1 {
+    color: #1565a0;
+}
+
+/*fondo*/
+body {
+    background-color: #e0f2f1;
+}

@@ -663,7 +663,9 @@ static class AlumnosCliActions {
 
     static bool EsArchivoContabilizablePractico(string rutaArchivo) =>
         EsArchivoFuentePractico(rutaArchivo) &&
-        extensionesFuentePractico.Contains(Path.GetExtension(rutaArchivo));
+        extensionesFuentePractico.Contains(Path.GetExtension(rutaArchivo)) &&
+        ArchivoTexto.EsRutaTexto(rutaArchivo) &&
+        ArchivoTexto.PareceArchivoTexto(rutaArchivo);
 
     static int ObtenerLineasBaseEnunciado(int numeroTp, string carpetaTp, string rutaEnunciado, Alumnos alumnos) {
         int lineasEnunciado = ContarLineasPracticoLocal(rutaEnunciado);
@@ -785,7 +787,11 @@ static class AlumnosCliActions {
             return lineas;
         }
 
-        foreach (string rutaArchivo in Directory.EnumerateFiles(rutaPractico, "*.cs", SearchOption.AllDirectories).Where(EsArchivoFuentePractico)) {
+        foreach (string rutaArchivo in Directory
+            .EnumerateFiles(rutaPractico, "*.cs", SearchOption.AllDirectories)
+            .Where(EsArchivoFuentePractico)
+            .Where(ArchivoTexto.EsRutaTexto)
+            .Where(ArchivoTexto.PareceArchivoTexto)) {
             foreach (string linea in NormalizarLineasCodigo(File.ReadLines(rutaArchivo))) {
                 lineas.Add(linea);
             }
