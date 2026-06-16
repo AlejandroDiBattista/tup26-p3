@@ -25,7 +25,7 @@ Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
 63420   Pereyra, Valentina Nazaret      🔴🟢🔴🔴⚪️   🟡⚪️     5    5
 63354   Perondi, Luciano                🟢🟢🟢🟢⚪️   🟢⚪️    15   10
 63393   Ritorto, Lucca                  🟢🟢🟢🟢⚪️   🟢⚪️    15   10
-63208   Rosconi, Ignacio Federico       🔴🟢🔴🔴⚪️   🟡⚪️     8    4
+63208   Rosconi, Ignacio Federico       🔴🟢🔴🔴⚪️   🟢⚪️     8    4
 63387   Sosa Gonella, Luca              🟢🟢🟢🟢⚪️   🟢⚪️    16    9
 63546   Sosa Paz, Jeremías              🟢🟢🟢🟢⚪️   🟢⚪️    22   10
 63547   Sosa Paz, José Lisandro         🟢🟢🟢🟢⚪️   🟢⚪️    19   10
@@ -43,8 +43,8 @@ Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
 63300   Álvarez, Hernán Fabricio        🟢🟢🟢🟢⚪️   🟢⚪️    17   10
 63313   Ávila Puntano, Benjamín         🟢🟢🟢🟢⚪️   🟢⚪️    19   10
 63222   Bajre Martínez, Julián          🟢🟢🟢🟢⚪️   🟢⚪️    18    7
-61801   Benega, Maximiliano Abraham     🔴🔴🟢🟢⚪️   🟢⚪️    15    6
-63493   Busnelli, Bruno                 🟢🟢🔴🔴⚪️   🟡⚪️     8   10
+61801   Benega, Maximiliano Abraham     🟢🟢🟢🟢⚪️   🟢⚪️    15    6
+63493   Busnelli, Bruno                 🟢🟢🔴🔴⚪️   🟢⚪️     8   10
 63150   Carlino, Joaquín                🟢🟢🟢🔴⚪️   🟡⚪️     7   10
 63341   Carrer, Juan Cruz               🟢🟢🟢🟢⚪️   🟢⚪️    15   10
 63461   Cativa, Facundo Simón           🟢🟢🔴🔴⚪️   🟢⚪️    15    8
@@ -77,5 +77,5 @@ Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
 63232   Roldan, Enzo Joaquín            🟢🟢🟢🔴⚪️   🟢⚪️    18    5
 63216   Sánchez, Sofía Micaela          🟢🟢🟢🟢⚪️   🟢⚪️    20   10
 63207   Saravia, César Nahum            🟢🟢🟢🟢⚪️   🟢⚪️    18   10
-61026   Thompson, María José            🟢🟢🟢🔴⚪️   🟢⚪️    19    9
+61026   Thompson, María José            🟢🟢🟢🟢⚪️   🟢⚪️    19    9
 ```

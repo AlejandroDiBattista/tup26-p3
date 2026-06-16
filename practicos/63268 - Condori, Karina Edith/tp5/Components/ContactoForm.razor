@@ -1,0 +1,103 @@
+<article class="contact-form-card">
+    <div class="form-heading">
+        <span class="avatar avatar-large">
+            <i class="bi @(EsNuevo ? "bi-person-plus" : "bi-person-gear")"></i>
+        </span>
+        <div>
+            <span class="detail-label">@(EsNuevo ? "Alta de contacto" : "Modificación")</span>
+            <h2>@(EsNuevo ? "Nuevo contacto" : "Editar contacto")</h2>
+            <p>Los campos marcados con * son obligatorios.</p>
+        </div>
+    </div>
+
+    <EditForm Model="Contacto" OnValidSubmit="GuardarAsync" FormName="contacto-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="alert alert-danger validation-summary" />
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="nombre">Nombre *</label>
+                <input id="nombre" class="form-control"
+                       @bind="Contacto.Nombre" @bind:event="oninput" />
+                <ValidationMessage For="() => Contacto.Nombre" />
+            </div>
+
+            <div class="form-field">
+                <label for="apellido">Apellido *</label>
+                <input id="apellido" class="form-control"
+                       @bind="Contacto.Apellido" @bind:event="oninput" />
+                <ValidationMessage For="() => Contacto.Apellido" />
+            </div>
+
+            <div class="form-field">
+                <label for="telefono">Teléfono *</label>
+                <input id="telefono" class="form-control"
+                       @bind="Contacto.Telefono" @bind:event="oninput" />
+                <ValidationMessage For="() => Contacto.Telefono" />
+            </div>
+
+            <div class="form-field">
+                <label for="email">Correo electrónico *</label>
+                <input id="email" type="email" class="form-control"
+                       @bind="Contacto.Email" @bind:event="oninput" />
+                <ValidationMessage For="() => Contacto.Email" />
+            </div>
+
+            <div class="form-field">
+                <label for="empresa">Empresa</label>
+                <input id="empresa" class="form-control"
+                       @bind="Contacto.Empresa" @bind:event="oninput" />
+            </div>
+
+            <div class="form-field">
+                <label for="cargo">Cargo</label>
+                <input id="cargo" class="form-control"
+                       @bind="Contacto.Cargo" @bind:event="oninput" />
+            </div>
+
+            <div class="form-field">
+                <label for="direccion">Dirección</label>
+                <input id="direccion" class="form-control"
+                       @bind="Contacto.Direccion" @bind:event="oninput" />
+            </div>
+
+            <div class="form-field">
+                <label for="fecha">Fecha de nacimiento</label>
+                <InputDate id="fecha" class="form-control" @bind-Value="Contacto.FechaNacimiento" />
+            </div>
+
+            <div class="form-field full-width">
+                <label for="notas">Notas</label>
+                <textarea id="notas" class="form-control notes-input"
+                          @bind="Contacto.Notas" @bind:event="oninput"></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-light" @onclick="CancelarAsync">
+                Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-floppy"></i>
+                @(EsNuevo ? "Crear contacto" : "Guardar cambios")
+            </button>
+        </div>
+    </EditForm>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public Contacto Contacto { get; set; } = new();
+
+    [Parameter]
+    public bool EsNuevo { get; set; }
+
+    [Parameter]
+    public EventCallback<Contacto> OnGuardar { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelar { get; set; }
+
+    private Task GuardarAsync() => OnGuardar.InvokeAsync(Contacto);
+    private Task CancelarAsync() => OnCancelar.InvokeAsync();
+}

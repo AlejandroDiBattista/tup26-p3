@@ -48,7 +48,7 @@ class WAppService {
 
     public WAppService(string? store = null, TimeSpan? timeout = null, bool sincronizar = true) {
         this.store = store;
-        this.timeout = timeout ?? TimeSpan.FromMinutes(1);
+        this.timeout = timeout ?? TimeSpan.FromMinutes(2);
 
         if (sincronizar) {
             Sincronizar();

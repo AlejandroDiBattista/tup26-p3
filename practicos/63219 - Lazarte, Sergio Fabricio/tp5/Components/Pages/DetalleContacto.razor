@@ -1,0 +1,71 @@
+@using tp5.Models
+
+<div class="detalle-contacto">
+    <div class="detalle-header">
+        <div class="avatar-lg">@Contacto.Nombre[0]@Contacto.Apellido[0]</div>
+        <div>
+            <h3 class="mb-0">@Contacto.Nombre @Contacto.Apellido</h3>
+            @if (!string.IsNullOrEmpty(Contacto.Cargo) || !string.IsNullOrEmpty(Contacto.Empresa))
+            {
+                <p class="text-muted mb-0">
+                    @Contacto.Cargo@((!string.IsNullOrEmpty(Contacto.Cargo) && !string.IsNullOrEmpty(Contacto.Empresa)) ? " · " : "")@Contacto.Empresa
+                </p>
+            }
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm" @onclick="OnEditar">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </button>
+            <button class="btn btn-outline-danger btn-sm" @onclick="ConfirmarEliminar">
+                <i class="bi bi-trash me-1"></i>Eliminar
+            </button>
+        </div>
+    </div>
+
+    @if (mostrarConfirmacion)
+    {
+        <div class="alert alert-danger d-flex align-items-center gap-3 mt-3">
+            <span>¿Eliminar a <strong>@Contacto.Nombre @Contacto.Apellido</strong>?</span>
+            <button class="btn btn-danger btn-sm" @onclick="OnEliminar">Sí, eliminar</button>
+            <button class="btn btn-secondary btn-sm" @onclick="() => mostrarConfirmacion = false">Cancelar</button>
+        </div>
+    }
+
+    <div class="detalle-campos mt-4">
+        <CampoDetalle Icono="bi-telephone" Etiqueta="Teléfono" Valor="@Contacto.Telefono" />
+        <CampoDetalle Icono="bi-envelope" Etiqueta="Correo electrónico" Valor="@Contacto.Email" />
+        @if (!string.IsNullOrEmpty(Contacto.Empresa))
+        {
+            <CampoDetalle Icono="bi-building" Etiqueta="Empresa" Valor="@Contacto.Empresa" />
+        }
+        @if (!string.IsNullOrEmpty(Contacto.Cargo))
+        {
+            <CampoDetalle Icono="bi-briefcase" Etiqueta="Cargo" Valor="@Contacto.Cargo" />
+        }
+        @if (!string.IsNullOrEmpty(Contacto.Direccion))
+        {
+            <CampoDetalle Icono="bi-geo-alt" Etiqueta="Dirección" Valor="@Contacto.Direccion" />
+        }
+        @if (Contacto.FechaNacimiento.HasValue)
+        {
+            <CampoDetalle Icono="bi-cake" Etiqueta="Fecha de nacimiento" Valor="@Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")" />
+        }
+        @if (!string.IsNullOrEmpty(Contacto.Notas))
+        {
+            <CampoDetalle Icono="bi-journal-text" Etiqueta="Notas" Valor="@Contacto.Notas" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Contacto Contacto { get; set; } = default!;
+    [Parameter] public EventCallback OnEditar { get; set; }
+    [Parameter] public EventCallback OnEliminar { get; set; }
+
+    private bool mostrarConfirmacion = false;
+
+    protected override void OnParametersSet()
+        => mostrarConfirmacion = false;
+
+    private void ConfirmarEliminar() => mostrarConfirmacion = true;
+}

@@ -1,0 +1,15 @@
+html, body {
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+h1:focus {
+    outline: none;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.list-group-item-action {
+    cursor: pointer;
+}

@@ -1,15 +1,21 @@
 #:sdk Microsoft.NET.Sdk.Web
 #:package Microsoft.EntityFrameworkCore.Sqlite@*
 #:property PublishAot=false
+#:property AssemblyName=tp4-servidor
 
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 
 var builder = WebApplication.CreateBuilder(args);
+var databasePath = Path.Combine(GetScriptDirectory(), "catalogo.db");
 
 builder.Services.AddDbContext<CatalogoDb>(opt =>
-    opt.UseSqlite("Data Source=catalogo.db"));
+    opt.UseSqlite($"Data Source={databasePath}"));
 
 var app = builder.Build();
+
+app.Urls.Clear();
+app.Urls.Add("http://localhost:5000");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -33,6 +39,11 @@ app.MapGet("/productos/{id:int}", async (int id, CatalogoDb db) =>
 
 app.MapPost("/productos", async (Producto producto, CatalogoDb db) =>
 {
+    if (string.IsNullOrWhiteSpace(producto.Codigo) || string.IsNullOrWhiteSpace(producto.Nombre))
+    {
+        return Results.BadRequest("Codigo y nombre son obligatorios.");
+    }
+
     db.Productos.Add(producto);
     await db.SaveChangesAsync();
 
@@ -48,6 +59,11 @@ app.MapPut("/productos/{id:int}", async (
 
     if (producto is null)
         return Results.NotFound();
+
+    if (string.IsNullOrWhiteSpace(datos.Codigo) || string.IsNullOrWhiteSpace(datos.Nombre))
+    {
+        return Results.BadRequest("Codigo y nombre son obligatorios.");
+    }
 
     producto.Codigo = datos.Codigo;
     producto.Nombre = datos.Nombre;
@@ -96,6 +112,11 @@ async (
     if (producto is null)
         return Results.NotFound();
 
+    if (request.Cantidad <= 0)
+    {
+        return Results.BadRequest("La cantidad debe ser positiva.");
+    }
+
     switch (request.Tipo)
     {
         case TipoMovimiento.Compra:
@@ -103,12 +124,20 @@ async (
             break;
 
         case TipoMovimiento.Venta:
+            if (producto.Stock < request.Cantidad)
+            {
+                return Results.BadRequest("No hay stock suficiente para registrar la venta.");
+            }
+
             producto.Stock -= request.Cantidad;
             break;
 
         case TipoMovimiento.Ajuste:
             producto.Stock = request.Cantidad;
             break;
+
+        default:
+            return Results.BadRequest("Tipo de movimiento invalido.");
     }
 
     var movimiento = new MovimientoDeProducto
@@ -127,6 +156,8 @@ async (
 });
 
 app.Run();
+
+static string GetScriptDirectory([CallerFilePath] string path = "") => Path.GetDirectoryName(path) ?? Environment.CurrentDirectory;
 
 public class Producto
 {

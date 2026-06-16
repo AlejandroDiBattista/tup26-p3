@@ -1,0 +1,292 @@
+@page "/"
+@rendermode InteractiveServer
+@inject ContactoService Contactos
+
+<PageTitle>AgendaWeb</PageTitle>
+
+<main class="agenda-page">
+    <header class="agenda-header">
+        <div>
+            <p class="eyebrow">TP5 · AgendaWeb</p>
+            <h1>Agenda de contactos</h1>
+            <p class="header-description">Contactos personales y profesionales en un solo lugar.</p>
+        </div>
+        <button class="btn btn-primary btn-lg" @onclick="NuevoContacto">
+            <i class="bi bi-person-plus-fill"></i>
+            Nuevo contacto
+        </button>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(mensajeError))
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            @mensajeError
+            <button type="button" class="btn-close" aria-label="Cerrar" @onclick="() => mensajeError = null"></button>
+        </div>
+    }
+
+    <section class="agenda-grid">
+        <aside class="contact-list-panel">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input value="@textoBusqueda"
+                       @oninput="AlBuscar"
+                       placeholder="Buscar por nombre, teléfono, email..."
+                       aria-label="Buscar contactos" />
+            </div>
+
+            <div class="contact-count">
+                <span>@contactos.Count contacto(s)</span>
+                <button class="btn btn-sm btn-link" title="Actualizar" @onclick="CargarContactosAsync">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+
+            <div class="contact-list">
+                @if (cargando)
+                {
+                    <div class="empty-state">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <span>Cargando contactos...</span>
+                    </div>
+                }
+                else if (contactos.Count == 0)
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-person-x"></i>
+                        <strong>No se encontraron contactos</strong>
+                        <span>Pruebe con otra búsqueda o agregue uno nuevo.</span>
+                    </div>
+                }
+                else
+                {
+                    @foreach (Contacto contacto in contactos)
+                    {
+                        <button class="contact-item @(contactoSeleccionado?.Id == contacto.Id ? "selected" : "")"
+                                @onclick="() => SeleccionarContacto(contacto)">
+                            <span class="avatar avatar-small">@Iniciales(contacto)</span>
+                            <span class="contact-summary">
+                                <strong>@contacto.Nombre @contacto.Apellido</strong>
+                                <small>@TextoSecundario(contacto)</small>
+                            </span>
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    }
+                }
+            </div>
+        </aside>
+
+        <section class="detail-panel">
+            @if (modoEdicion && contactoFormulario is not null)
+            {
+                <ContactoForm Contacto="contactoFormulario"
+                              EsNuevo="esNuevo"
+                              OnGuardar="GuardarContactoAsync"
+                              OnCancelar="CancelarEdicion" />
+            }
+            else if (contactoSeleccionado is not null)
+            {
+                <article class="contact-detail">
+                    <div class="detail-heading">
+                        <span class="avatar avatar-large">@Iniciales(contactoSeleccionado)</span>
+                        <div class="detail-title">
+                            <span class="detail-label">Contacto seleccionado</span>
+                            <h2>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+                            <p>@TextoSecundario(contactoSeleccionado)</p>
+                        </div>
+                        <div class="detail-actions">
+                            <button class="btn btn-outline-primary" @onclick="EditarContacto">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </button>
+                            <button class="btn btn-outline-danger" @onclick="() => confirmarEliminacion = true">
+                                <i class="bi bi-trash3"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (confirmarEliminacion)
+                    {
+                        <div class="delete-confirmation">
+                            <div>
+                                <strong>¿Eliminar este contacto?</strong>
+                                <span>Esta acción no se puede deshacer.</span>
+                            </div>
+                            <button class="btn btn-light" @onclick="() => confirmarEliminacion = false">Cancelar</button>
+                            <button class="btn btn-danger" @onclick="EliminarContactoAsync">Sí, eliminar</button>
+                        </div>
+                    }
+
+                    <div class="detail-fields">
+                        <DatoContacto Icono="bi-envelope" Etiqueta="Correo electrónico">
+                            <a href="mailto:@contactoSeleccionado.Email">@contactoSeleccionado.Email</a>
+                        </DatoContacto>
+                        <DatoContacto Icono="bi-telephone" Etiqueta="Teléfono">
+                            <a href="tel:@contactoSeleccionado.Telefono">@contactoSeleccionado.Telefono</a>
+                        </DatoContacto>
+                        <DatoContacto Icono="bi-building" Etiqueta="Empresa"
+                                      Valor="@MostrarDato(contactoSeleccionado.Empresa)" />
+                        <DatoContacto Icono="bi-briefcase" Etiqueta="Cargo"
+                                      Valor="@MostrarDato(contactoSeleccionado.Cargo)" />
+                        <DatoContacto Icono="bi-geo-alt" Etiqueta="Dirección"
+                                      Valor="@MostrarDato(contactoSeleccionado.Direccion)" />
+                        <DatoContacto Icono="bi-calendar3" Etiqueta="Fecha de nacimiento"
+                                      Valor="@FormatearFecha(contactoSeleccionado.FechaNacimiento)" />
+                        <DatoContacto Icono="bi-card-text" Etiqueta="Notas"
+                                      Valor="@MostrarDato(contactoSeleccionado.Notas)" Clase="full-width" />
+                    </div>
+                </article>
+            }
+            else
+            {
+                <div class="empty-detail">
+                    <i class="bi bi-person-vcard"></i>
+                    <h2>Seleccione un contacto</h2>
+                    <p>El detalle completo aparecerá en este panel.</p>
+                    <button class="btn btn-primary" @onclick="NuevoContacto">Agregar primer contacto</button>
+                </div>
+            }
+        </section>
+    </section>
+</main>
+
+@code {
+    private List<Contacto> contactos = [];
+    private Contacto? contactoSeleccionado;
+    private Contacto? contactoFormulario;
+    private string textoBusqueda = "";
+    private string? mensajeError;
+    private bool cargando = true;
+    private bool modoEdicion;
+    private bool esNuevo;
+    private bool confirmarEliminacion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactosAsync();
+    }
+
+    private async Task CargarContactosAsync()
+    {
+        try
+        {
+            cargando = true;
+            int? idSeleccionado = contactoSeleccionado?.Id;
+            contactos = await Contactos.BuscarAsync(textoBusqueda);
+            contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == idSeleccionado)
+                ?? contactos.FirstOrDefault();
+            mensajeError = null;
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"No se pudieron cargar los contactos: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task AlBuscar(ChangeEventArgs evento)
+    {
+        textoBusqueda = evento.Value?.ToString() ?? "";
+        await CargarContactosAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        modoEdicion = false;
+        confirmarEliminacion = false;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoFormulario = new Contacto();
+        esNuevo = true;
+        modoEdicion = true;
+        confirmarEliminacion = false;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        contactoFormulario = ContactoService.Copiar(contactoSeleccionado);
+        esNuevo = false;
+        modoEdicion = true;
+        confirmarEliminacion = false;
+    }
+
+    private async Task GuardarContactoAsync(Contacto contacto)
+    {
+        try
+        {
+            if (esNuevo)
+            {
+                contacto = await Contactos.CrearAsync(contacto);
+            }
+            else if (!await Contactos.ActualizarAsync(contacto))
+            {
+                mensajeError = "El contacto que intentó modificar ya no existe.";
+                return;
+            }
+
+            textoBusqueda = "";
+            contactoSeleccionado = contacto;
+            modoEdicion = false;
+            await CargarContactosAsync();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"No se pudo guardar el contacto: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        contactoFormulario = null;
+        modoEdicion = false;
+    }
+
+    private async Task EliminarContactoAsync()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Contactos.EliminarAsync(contactoSeleccionado.Id);
+            contactoSeleccionado = null;
+            confirmarEliminacion = false;
+            await CargarContactosAsync();
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"No se pudo eliminar el contacto: {ex.Message}";
+        }
+    }
+
+    private static string Iniciales(Contacto contacto)
+    {
+        string nombre = string.IsNullOrWhiteSpace(contacto.Nombre) ? "?" : contacto.Nombre[..1];
+        string apellido = string.IsNullOrWhiteSpace(contacto.Apellido) ? "" : contacto.Apellido[..1];
+        return (nombre + apellido).ToUpperInvariant();
+    }
+
+    private static string TextoSecundario(Contacto contacto) =>
+        !string.IsNullOrWhiteSpace(contacto.Empresa) ? contacto.Empresa :
+        !string.IsNullOrWhiteSpace(contacto.Cargo) ? contacto.Cargo :
+        contacto.Email;
+
+    private static string MostrarDato(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? "Sin información" : valor;
+
+    private static string FormatearFecha(DateOnly? fecha) =>
+        fecha?.ToString("dd/MM/yyyy") ?? "Sin información";
+}

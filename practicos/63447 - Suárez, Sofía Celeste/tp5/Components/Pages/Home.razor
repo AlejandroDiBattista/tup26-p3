@@ -1,0 +1,91 @@
+@page "/"
+
+@rendermode InteractiveServer
+
+@using tp5.Models
+@using tp5.Datos
+@using Microsoft.EntityFrameworkCore
+
+@inject NavigationManager Navigation
+
+@inject AgendaContext Db
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+<div>
+    <h1 class="bi bi-person-lines-fill"> Agenda de contactos </h1>
+</div>
+
+
+@if (contactos.Count == 0) {
+    <p>no hay contactos</p>
+} else {
+    <ul>
+        <div class="row"> 
+            <div class="col-4">
+                <h3>Contactos</h3>
+                <input class="form-control mb-2" placeholder="buscar contacto" @bind="textoBusqueda" />
+                <a href="/nuevo" class="btn btn-info w-100 mb-3"><i class="bi bi-person-plus-fill">agregar contacto</i></a>
+                <div style="height:80vh; overflow-y:auto;">
+                 <ul class="list-group"> 
+                     @foreach(var contacto in contactos.Where(c=> string.IsNullOrWhiteSpace(textoBusqueda) || c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                     {
+                         <li class="list-group-item @(seleccionado?.Id == contacto.Id ? "active" : "")" style="cursor:pointer" @onclick="() => seleccionado = contacto"> 
+
+                             @contacto.Nombre @contacto.Apellido
+                         </li>
+                     }
+                 </ul>
+                </div>
+            </div>
+
+            <div class="col-8">
+                @if(seleccionado != null){
+                    <h3>Detalle</h3>
+                    <p>Nombre: @seleccionado.Nombre</p>
+                    <p> Apellido: @seleccionado.Apellido</p>
+                    <p>Telefono: @seleccionado.Telefono</p>
+                    <p>Email: @seleccionado.Email</p>
+                    <p>Empresa: @seleccionado.Empresa</p>
+                    <p>cargo: @seleccionado.Cargo</p>
+                    <p>Direccion: @seleccionado.Direccion</p>
+                    <p>Notas: @seleccionado.Notas</p>
+
+                    <button class="btn btn-info me-2" @onclick="EditarContacto"><i class="bi bi-pencil-square">Editar</i></button>
+                    @*paso 6*@
+                    <button class="btn btn-danger" @onclick="EliminarContacto"><i class="bi bi-trash" >Eliminar</i></button>
+                } else {
+                    <p>seleccione un contacto</p>
+                }
+            </div>
+        </div>
+    </ul>
+}
+
+@code {
+    List<Contacto> contactos = new() ;
+    Contacto? seleccionado;
+    string textoBusqueda="";
+
+        protected override async Task OnInitializedAsync() {
+            contactos=await Db.Contactos.ToListAsync();
+        }
+
+
+    void EditarContacto() {
+        if (seleccionado != null) {
+            Navigation.NavigateTo($"/editar/{seleccionado.Id}");
+        }
+    }
+
+    async Task EliminarContacto(){
+        if(seleccionado==null)
+        return;
+
+        Db.Contactos.Remove(seleccionado);
+        await Db.SaveChangesAsync();
+        contactos.Remove(seleccionado);
+        seleccionado=null;
+    }
+
+}

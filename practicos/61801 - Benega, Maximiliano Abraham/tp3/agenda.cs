@@ -1,11 +1,3 @@
-#!/usr/bin/env dotnet
-#:property PublishAot=false
-
-#:package Terminal.Gui@2.0.0-v2-develop.93
-#:package Microsoft.Data.Sqlite@*
-#:package Dapper@*
-#:package Dapper.Contrib@*
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +8,6 @@ using Terminal.Gui;
 using Microsoft.Data.Sqlite;
 using Dapper;
 
-// Inicialización de la App
 string rutaBaseDatos = "agenda.db";
 try {
     Application.Init();
@@ -84,7 +75,7 @@ public static class AdministradorJson {
 }
 
 public class ContactDialog : Window {
-    public Contacto DatosResultantes { get; private set; }
+    public Contacto DatosResultantes { get; private set; } = new Contacto();
     public bool TransaccionExitosa { get; private set; }
 
     private readonly Contacto _modeloClonado;
@@ -92,7 +83,7 @@ public class ContactDialog : Window {
     private readonly List<TextField> _listaCamposTelefonos = new();
     private readonly CheckBox _casillaFavorito;
 
-    public event Action<Contacto> OnFormularioCompletado;
+    public event Action<Contacto>? OnFormularioCompletado;
 
     public ContactDialog(string encabezado, Contacto original) {
         Title = encabezado; 
@@ -100,15 +91,16 @@ public class ContactDialog : Window {
         Width = 65; Height = 18;
         Modal = true;
 
+        DatosResultantes = original;
         _modeloClonado = original;
 
-        var lblNom = new Label { Text = "Nombre (*):", X = 2, Y = 1 };
+        var lblNom = new Label("Nombre (*):") { X = 2, Y = 1 };
         _campoNombre = new TextField { X = 16, Y = 1, Width = Dim.Fill(2), Text = original.Nombre ?? "" };
 
-        var lblMail = new Label { Text = "Email:", X = 2, Y = 3 };
+        var lblMail = new Label("Email:") { X = 2, Y = 3 };
         _campoEmail = new TextField { X = 16, Y = 3, Width = Dim.Fill(2), Text = original.Email ?? "" };
 
-        var lblTels = new Label { Text = "Telefonos:", X = 2, Y = 5 };
+        var lblTels = new Label("Telefonos:") { X = 2, Y = 5 };
         var fragmentosTels = (original.Telefonos ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         
         Add(lblNom, _campoNombre, lblMail, _campoEmail, lblTels);
@@ -124,15 +116,15 @@ public class ContactDialog : Window {
             Add(campoIndividual);
         }
 
-        var lblNot = new Label { Text = "Notas:", X = 2, Y = 7 };
+        var lblNot = new Label("Notas:") { X = 2, Y = 7 };
         _campoNotas = new TextField { X = 16, Y = 7, Width = Dim.Fill(2), Text = original.Notas ?? "" };
 
-        _casillaFavorito = new CheckBox { Text = "Marcar como Favorito", X = 16, Y = 9, CheckedState = original.Favorito ? CheckState.Checked : CheckState.UnChecked };
+        _casillaFavorito = new CheckBox { Text = "Marcar como Favorito", X = 16, Y = 9, Checked = original.Favorito };
 
         var botonGuardar = new Button { Text = "Aceptar", X = 15, Y = 12, IsDefault = true };
         var botonCancelar = new Button { Text = "Cancelar", X = 35, Y = 12 };
 
-        botonGuardar.Accept += (_, _) => {
+botonGuardar.Clicked += () => {            // Evaluamos el texto de forma segura usando el operador condicional null
             string txtNombre = _campoNombre.Text?.ToString()?.Trim() ?? "";
             if (string.IsNullOrEmpty(txtNombre)) { 
                 MessageBox.ErrorQuery("Validación", "El nombre es mandatorio.", "Entendido"); 
@@ -147,9 +139,12 @@ public class ContactDialog : Window {
 
             _modeloClonado.Nombre = txtNombre;
             _modeloClonado.Email = txtEmail;
-            _modeloClonado.Notas = _campoNotas.Text?.ToString() ?? "";
-            _modeloClonado.Favorito = _casillaFavorito.CheckedState == CheckState.Checked;
-            _modeloClonado.Telefonos = string.Join(", ", _listaCamposTelefonos.Select(c => c.Text?.ToString()?.Trim()).Where(t => !string.IsNullOrEmpty(t)));
+            _modeloClonado.Notas = _campoNotas.Text?.ToString()?.Trim() ?? "";
+            _modeloClonado.Favorito = _casillaFavorito.Checked;
+            
+            _modeloClonado.Telefonos = string.Join(", ", _listaCamposTelefonos
+                .Select(c => c.Text?.ToString()?.Trim() ?? "")
+                .Where(t => !string.IsNullOrEmpty(t)));
 
             DatosResultantes = _modeloClonado;
             TransaccionExitosa = true;
@@ -157,11 +152,11 @@ public class ContactDialog : Window {
             Application.RequestStop();
         };
 
-        botonCancelar.Accept += (_, _) => {
+        botonCancelar.Clicked += () => {
+            DatosResultantes = original; 
             TransaccionExitosa = false;
             Application.RequestStop();
         };
-
         Add(lblNot, _campoNotas, _casillaFavorito, botonGuardar, botonCancelar);
     }
 }
@@ -182,20 +177,20 @@ public class AgendaWindow : Window {
 
         _memoriaContactos = _db.ObtenerTodos();
 
-        var etiquetaBuscar = new Label { Text = "Filtro rápido (F4): ", X = 2, Y = 1 };
+        var etiquetaBuscar = new Label("Filtro rápido (F4): ") { X = 2, Y = 1 };
         _barraBusqueda = new TextField { X = Pos.Right(etiquetaBuscar) + 1, Y = 1, Width = Dim.Fill(2) };
-        _barraBusqueda.TextChanged += (_, _) => ReestructurarVistaFiltrada();
+        _barraBusqueda.TextChanged += (_) => ReestructurarVistaFiltrada();
 
         var contenedorIzquierdo = new FrameView { Title = "Contactos registrados", X = 2, Y = 3, Width = Dim.Percent(40), Height = Dim.Fill(2) };
         _visorListaNombres = new ListView { Width = Dim.Fill(), Height = Dim.Fill() };
-        _visorListaNombres.SelectedItemChanged += (_, _) => SincronizarDetalleEnPantalla();
+        _visorListaNombres.SelectedItemChanged += (_) => SincronizarDetalleEnPantalla();
         contenedorIzquierdo.Add(_visorListaNombres);
 
         var contenedorDerecho = new FrameView { Title = "Datos del contacto seleccionado", X = Pos.Right(contenedorIzquierdo) + 2, Y = 3, Width = Dim.Fill(2), Height = Dim.Fill(2) };
         _bloqueFichaInformativa = new TextView { Width = Dim.Fill(), Height = Dim.Fill(), ReadOnly = true };
         contenedorDerecho.Add(_bloqueFichaInformativa);
 
-        _statusMarcador = new Label { Text = " [F2] Nuevo | [F3] Editar | [F5] Eliminar | [F6] Favoritos | [F7] Exportar | [F8] Importar ", 
+        _statusMarcador = new Label(" [F2] Nuevo | [F3] Editar | [F5] Eliminar | [F6] Favoritos | [F7] Exportar | [F8] Importar ") { 
             X = 0, 
             Y = Pos.AnchorEnd(1), 
             Width = Dim.Fill() 
@@ -203,15 +198,36 @@ public class AgendaWindow : Window {
 
         Add(etiquetaBuscar, _barraBusqueda, contenedorIzquierdo, contenedorDerecho, _statusMarcador);
 
-        KeyDown += (_, key) => {
-            if (key == Key.F2) DispararAltaContacto();
-            else if (key == Key.F3) DispararModificacionContacto();
-            else if (key == Key.F5) DispararBajaContacto();
-            else if (key == Key.F6) { _filtroFavoritoActivado = !_filtroFavoritoActivado; ReestructurarVistaFiltrada(); }
-            else if (key == Key.F7) DispararExportacion();
-            else if (key == Key.F8) DispararImportacion();
+        KeyDown += ev => {
+            switch (ev.KeyEvent.Key)
+            {
+                case Key.F2:
+                    DispararAltaContacto();
+                    ev.Handled = true;
+                    break;
+                case Key.F3:
+                    DispararModificacionContacto();
+                    ev.Handled = true;
+                    break;
+                case Key.F5:
+                    DispararBajaContacto();
+                    ev.Handled = true;
+                    break;
+                case Key.F6:
+                    _filtroFavoritoActivado = !_filtroFavoritoActivado; 
+                    ReestructurarVistaFiltrada();
+                    ev.Handled = true;
+                    break;
+                case Key.F7:
+                    DispararExportacion();
+                    ev.Handled = true;
+                    break;
+                case Key.F8:
+                    DispararImportacion();
+                    ev.Handled = true;
+                    break;
+            }
         };
-
         ReestructurarVistaFiltrada();
     }
 
@@ -302,13 +318,13 @@ public class AgendaWindow : Window {
     private string SolicitarRutaModal(string titulo, string mensajeInterno) {
         string bufferResultado = "";
         var cuadroModal = new Window { Title = titulo, X = Pos.Center(), Y = Pos.Center(), Width = 55, Height = 8, Modal = true };
-        var msg = new Label { Text = mensajeInterno, X = 1, Y = 1 };
+        var msg = new Label(mensajeInterno) { X = 1, Y = 1 };
         var input = new TextField { X = 1, Y = 3, Width = Dim.Fill(1) };
         var bOk = new Button { Text = "Aceptar", X = 10, Y = 5, IsDefault = true };
         var bCancel = new Button { Text = "Cancelar", X = 30, Y = 5 };
 
-        bOk.Accept += (_, _) => { bufferResultado = input.Text?.ToString() ?? ""; Application.RequestStop(); };
-        bCancel.Accept += (_, _) => { bufferResultado = ""; Application.RequestStop(); };
+        bOk.Clicked += () => { bufferResultado = input.Text?.ToString() ?? ""; Application.RequestStop(); };
+        bCancel.Clicked += () => { bufferResultado = ""; Application.RequestStop(); };
 
         cuadroModal.Add(msg, input, bOk, bCancel);
         Application.Run(cuadroModal);

@@ -107,6 +107,8 @@ def code_language_label(language: str) -> str:
                 "text": "texto",
                 "plaintext": "texto",
                 "cs": "csharp",
+                "cshtml": "razor",
+                "razor": "razor",
                 "shell": "bash",
                 "sh": "bash",
                 "zsh": "bash",
@@ -228,7 +230,7 @@ def render_table(header_line: str, separator_line: str, rows: list[str]) -> str:
     return f"<table>\n<thead><tr>{header_html}</tr></thead>\n<tbody>\n{''.join(rows_html)}\n</tbody>\n</table>"
 
 
-def _highlight_regex(code: str, patterns: list[tuple[str, str]], language_class: str) -> str:
+def _highlight_regex_content(code: str, patterns: list[tuple[str, str]]) -> str:
     combined = re.compile("|".join(f"(?P<{name}>{pattern})" for name, pattern in patterns), re.MULTILINE)
     pieces: list[str] = []
     last = 0
@@ -244,11 +246,75 @@ def _highlight_regex(code: str, patterns: list[tuple[str, str]], language_class:
     if last < len(code):
         pieces.append(html.escape(code[last:]))
 
-    return f'<pre><code class="{language_class}">{"".join(pieces)}</code></pre>'
+    return "".join(pieces)
+
+
+def _highlight_regex(code: str, patterns: list[tuple[str, str]], language_class: str) -> str:
+    content = _highlight_regex_content(code, patterns)
+    return f'<pre><code class="{language_class}">{content}</code></pre>'
+
+
+def _highlight_razor(code: str, code_patterns: list[tuple[str, str]]) -> str:
+    html_pattern = re.compile(r"<!--[\s\S]*?-->|</?[A-Za-z][^>]*>", re.MULTILINE)
+    html_patterns = [
+        ("tag", r"</?[A-Za-z][A-Za-z0-9:-]*"),
+        ("attr", r"\b[A-Za-z_:][A-Za-z0-9:._-]*(?=\s*=)"),
+        (
+            "expression",
+            r"@(?:await\s+)?[A-Za-z_][A-Za-z0-9_.]*(?:\s*\([^()\n]*\))?",
+        ),
+        ("string", r'"(?:\\.|[^"@\\])*"|\'(?:\\.|[^\'@\\])*\'|["\']'),
+        ("punct", r"/?>|="),
+    ]
+    pieces: list[str] = []
+    last = 0
+
+    for match in html_pattern.finditer(code):
+        start, end = match.span()
+        if start > last:
+            pieces.append(_highlight_regex_content(code[last:start], code_patterns))
+        fragment = code[start:end]
+        if fragment.startswith("<!--"):
+            pieces.append(f'<span class="tok-comment">{html.escape(fragment)}</span>')
+        else:
+            pieces.append(_highlight_regex_content(fragment, html_patterns))
+        last = end
+
+    if last < len(code):
+        pieces.append(_highlight_regex_content(code[last:], code_patterns))
+
+    return f'<pre><code class="language-razor">{"".join(pieces)}</code></pre>'
 
 
 def render_code_block(code: str, language: str) -> str:
     lang = language.lower()
+
+    if lang in {"razor", "cshtml"}:
+        csharp_keywords = (
+            "using|namespace|class|record|struct|interface|enum|public|private|protected|internal|static|"
+            "void|int|string|bool|var|new|return|if|else|switch|case|default|break|continue|for|foreach|"
+            "while|do|try|catch|finally|throw|null|true|false|this|base|out|ref|in|is|as|params|await|"
+            "async|get|set"
+        )
+        razor_directives = (
+            "page|model|using|inject|functions|code|implements|inherits|layout|namespace|attribute|"
+            "typeparam|rendermode|section"
+        )
+        razor_controls = "if|else|switch|for|foreach|while|do|try|catch|finally|lock|using|await"
+        patterns = [
+            ("comment", r"@\*[\s\S]*?\*@|//[^\n]*|/\*[\s\S]*?\*/"),
+            ("directive", rf"^[ \t]*@(?:{razor_directives})\b"),
+            ("razor", rf"@(?:{razor_controls})\b|@(?=[{{(:])"),
+            (
+                "expression",
+                r"@(?:await\s+)?[A-Za-z_][A-Za-z0-9_.]*(?:\s*\([^()\n]*\))?",
+            ),
+            ("string", r'@"(?:""|[^"])*"|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])+\''),
+            ("number", r"\b\d+(?:\.\d+)?\b"),
+            ("keyword", rf"\b(?:{csharp_keywords})\b"),
+            ("type", r"\b(?:Model|DateTime|Task|List|IEnumerable|RenderFragment|EventCallback)\b"),
+        ]
+        return wrap_code_block(_highlight_razor(code, patterns), lang)
 
     if lang in {"cs", "csharp"}:
         keywords = (
@@ -735,6 +801,16 @@ tr:last-child td { border-bottom: 0; }
   color: #8a3d20;
   color: oklch(45% 0.094 47);
   font-weight: 700;
+}
+.tok-directive, .tok-razor {
+  color: #8a3d20;
+  color: oklch(45% 0.094 47);
+  font-weight: 700;
+}
+.tok-expression {
+  color: #225f72;
+  color: oklch(43% 0.065 215);
+  font-weight: 650;
 }
 .tok-type {
   color: #225f72;

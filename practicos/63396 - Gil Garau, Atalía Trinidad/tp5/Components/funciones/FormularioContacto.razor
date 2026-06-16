@@ -1,0 +1,145 @@
+@if (Visible)
+{
+    <div class="card shadow-sm mt-4">
+        <div class="card-header fw-bold">
+            @(EsNuevo ? "Nuevo contacto" : "Editar contacto")
+        </div>
+
+        <div class="card-body">
+            @if (!string.IsNullOrWhiteSpace(error))
+            {
+                <div class="alert alert-danger">
+                    @error
+                </div>
+            }
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre *</label>
+                    <input class="form-control" @bind="Modelo.Nombre" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Apellido *</label>
+                    <input class="form-control" @bind="Modelo.Apellido" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono *</label>
+                    <input class="form-control" @bind="Modelo.Telefono" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Correo electrónico *</label>
+                    <input class="form-control" @bind="Modelo.Email" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Empresa</label>
+                    <input class="form-control" @bind="Modelo.Empresa" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Cargo</label>
+                    <input class="form-control" @bind="Modelo.Cargo" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Dirección</label>
+                    <input class="form-control" @bind="Modelo.Direccion" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Fecha de nacimiento</label>
+                    <input class="form-control" type="text" placeholder="yyyy-MM-dd" @bind="FechaNacimientoTexto" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Notas</label>
+                    <textarea class="form-control" rows="4" @bind="Modelo.Notas"></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-success" @onclick="Guardar">
+                    Guardar
+                </button>
+
+                <button class="btn btn-secondary" @onclick="Cancelar">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public bool EsNuevo { get; set; }
+    [Parameter] public Contacto Modelo { get; set; } = new();
+    [Parameter] public EventCallback<Contacto> OnGuardar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private string error = "";
+
+    private string FechaNacimientoTexto
+    {
+        get => Modelo.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                Modelo.FechaNacimiento = null;
+                return;
+            }
+
+            if (DateOnly.TryParseExact(value, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var fecha))
+            {
+                Modelo.FechaNacimiento = fecha;
+            }
+        }
+    }
+
+    private async Task Guardar()
+    {
+        error = "";
+
+        if (string.IsNullOrWhiteSpace(Modelo.Nombre))
+        {
+            error = "El nombre no puede estar vacío.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Modelo.Apellido))
+        {
+            error = "El apellido no puede estar vacío.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Modelo.Telefono))
+        {
+            error = "El teléfono no puede estar vacío.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Modelo.Email))
+        {
+            error = "El correo electrónico no puede estar vacío.";
+            return;
+        }
+
+        if (!Modelo.Email.Contains('@'))
+        {
+            error = "El correo electrónico debe contener @.";
+            return;
+        }
+
+        await OnGuardar.InvokeAsync(Modelo);
+    }
+
+    private async Task Cancelar()
+    {
+        error = "";
+        await OnCancelar.InvokeAsync();
+    }
+}

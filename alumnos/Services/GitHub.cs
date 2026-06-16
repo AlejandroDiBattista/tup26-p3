@@ -2,6 +2,15 @@ using System.IO.Enumeration;
 
 namespace Tup26.AlumnosApp;
 
+enum EstadoArchivoPr {
+    Igual,
+    Nuevo,
+    Modificado
+}
+
+readonly record struct ArchivoPrDescargado(int TrabajoPractico, string RutaRemota, string RutaLocal, int Lineas, EstadoArchivoPr Estado);
+readonly record struct BajadaArchivosAlumnoResultado(IReadOnlyList<int> TrabajosPracticos, IReadOnlyList<ArchivoPrDescargado> Archivos);
+
 /*
 # GitHub
 
@@ -62,8 +71,9 @@ Servicio para interactuar con la API de GitHub mediante `gh api`.
     - `rutaDestino`: carpeta destino local.
     - `forzar`: sobrescribe archivos existentes si corresponde.
 
-- `BajarArchivosAlumno(numeroPR, forzar)`: descarga los archivos del práctico del alumno resuelto a partir del título del PR y devuelve los TP procesados.
+- `BajarArchivosAlumno(numeroPR, alumno, forzar)`: descarga los archivos del práctico buscando la carpeta remota por legajo y usando la carpeta local canónica del alumno.
     - `numeroPR`: número del pull request.
+    - `alumno`: alumno que determina el legajo remoto y el nombre normalizado de la carpeta local.
     - `forzar`: sobrescribe archivos existentes si corresponde.
 
 - `Merge(numeroPR)`: intenta mergear un PR abierto.
@@ -88,6 +98,7 @@ Servicio para interactuar con la API de GitHub mediante `gh api`.
 */
 
 class GitHub {
+    static readonly HttpClient httpClient = new();
     readonly string owner;
     readonly string repo;
 
@@ -139,7 +150,7 @@ class GitHub {
             if (partes.Length != 2) { continue; }
             string practico = partes[0];
             string titulo = partes[1];
-            if (tp != 0 && GitHub.ExtraerTP(titulo) != tp) { continue; }
+            if (tp != 0 && !GitHub.ExtraerTPs(titulo).Contains(tp)) { continue; }
             if (!int.TryParse(practico, out int numero)) { continue; }
 
             prs.Add((numero, titulo));
@@ -295,14 +306,21 @@ class GitHub {
 
     public int CantidadLineas(int numeroPR) {
         string? salida = Ejecutar($"Error al contar líneas del PR #{numeroPR}",
-            $"/pulls/{numeroPR}/files", "--paginate", "--jq", @".[] | .changes");
+            $"/pulls/{numeroPR}/files", "--paginate", "--jq", @".[] | ""\(.filename)\t\(.changes)""");
 
         if (salida is null) { return 0; }
 
         int total = 0;
 
         foreach (string linea in Lineas(salida, pasarAMinusculas: false)) {
-            if (int.TryParse(linea, out int cambios)) {
+            string[] partes = linea.Split('\t', 2);
+            if (partes.Length != 2) { continue; }
+
+            if (!ArchivoTexto.EsRutaTexto(partes[0])) {
+                continue;
+            }
+
+            if (int.TryParse(partes[1], out int cambios)) {
                 total += cambios;
             }
         }
@@ -328,7 +346,10 @@ class GitHub {
 
         return ListarArchivos(numeroPR)
             .Select(NormalizarRutaRemota)
-            .Where(nombreRemoto => TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out _))
+            .Select(nombreRemoto => TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out string rutaRelativa)
+                ? $"{carpetaRemota}/{rutaRelativa}"
+                : string.Empty)
+            .Where(rutaRelativa => !string.IsNullOrWhiteSpace(rutaRelativa))
             .ToList();
     }
 
@@ -356,6 +377,10 @@ class GitHub {
 
             string nombreRemoto = NormalizarRutaRemota(partes[0]);
             if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out _)) {
+                continue;
+            }
+
+            if (!ArchivoTexto.EsRutaTexto(nombreRemoto)) {
                 continue;
             }
 
@@ -431,14 +456,14 @@ class GitHub {
                 string url = partes[1];
 
                 if (!FileSystemName.MatchesSimpleExpression(patron, nombreRemoto, ignoreCase: true)) { continue; }
+                if (!ArchivoTexto.EsRutaTexto(nombreRemoto)) { continue; }
 
-                using HttpClient client = new();
                 if (!forzar && AppPaths.ExisteArchivoDescargado(rutaDestino, nombreRemoto)) {
                     // Log.Info($"Archivo '{nombreRemoto}' ya existe. Se omite descarga: {rutaArchivo}");
                     continue;
                 }
 
-                byte[] contenido = client.GetByteArrayAsync(url).Result;
+                byte[] contenido = httpClient.GetByteArrayAsync(url).Result;
                 string rutaArchivo = AppPaths.GuardarArchivoDescargado(rutaDestino, nombreRemoto, contenido, forzar);
                 Log.Warning($"Archivo '{nombreRemoto}'\n      {rutaArchivo} ");
             } catch (Exception ex) {
@@ -447,26 +472,29 @@ class GitHub {
         }
     }
 
-    public void BajarDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto, string rutaDestino, bool forzar = false) {
+    public IReadOnlyList<ArchivoPrDescargado> BajarDirectorio(int numeroPR, string carpetaAlumnoRemota, string directorioRemoto, string rutaDestino, bool forzar = false) {
+        const int anchoRutaListado = 70;
         string carpetaAlumno = NormalizarRutaRemota(carpetaAlumnoRemota);
         string carpetaRemota = NormalizarRutaRemota(directorioRemoto);
         if (string.IsNullOrWhiteSpace(carpetaAlumno) || string.IsNullOrWhiteSpace(carpetaRemota)) {
             Log.Error($"Error al bajar archivos del PR #{numeroPR}: debe indicar un directorio remoto válido.");
-            return;
+            return [];
         }
 
-        List<string> archivosDirectorio = ListarArchivosDirectorio(numeroPR, carpetaAlumno, carpetaRemota);
+        HashSet<string> archivosDirectorio = ListarArchivosDirectorio(numeroPR, carpetaAlumno, carpetaRemota)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (archivosDirectorio.Count == 0) {
             Log.Error($"PR #{numeroPR}: no se encontraron archivos dentro de '{carpetaAlumno}/{carpetaRemota}/'.");
-            return;
+            return [];
         }
 
         string? salida = Ejecutar($"Error al bajar archivos del PR #{numeroPR}", $"/pulls/{numeroPR}/files", "--paginate", "--jq", ".[] | \"\\(.filename)\\t\\(.raw_url)\"");
 
-        if (salida is null) { return; }
+        if (salida is null) { return []; }
 
         List<string> urls = Lineas(salida, pasarAMinusculas: false);
-        int cantidadDescargas = 0;
+        List<ArchivoPrDescargado> archivosDescargados = new();
+        int numeroTp = ExtraerTP(carpetaRemota);
 
         foreach (string linea in urls) {
             try {
@@ -476,51 +504,59 @@ class GitHub {
                 string nombreRemoto = NormalizarRutaRemota(partes[0]);
                 string url = partes[1];
 
-                if (!archivosDirectorio.Contains(nombreRemoto, StringComparer.OrdinalIgnoreCase)) {
-                    continue;
-                }
-
                 if (!TryObtenerRutaRelativaDirectorio(nombreRemoto, carpetaAlumno, carpetaRemota, out string rutaRelativa)) {
                     continue;
                 }
 
-                using HttpClient client = new();
-                byte[] contenido = client.GetByteArrayAsync(url).Result;
-                int cantidadLineas = ContarLineas(contenido);
-                string rutaArchivo = AppPaths.GuardarArchivoDescargadoRelativo(rutaDestino, rutaRelativa, contenido, forzar);
                 string rutaLocalRelativa = $"{carpetaRemota}/{rutaRelativa}";
-                Log.Info($"  - {rutaLocalRelativa,-30} | L:{cantidadLineas,4}");
-                cantidadDescargas++;
+                if (!archivosDirectorio.Contains(rutaLocalRelativa)) {
+                    continue;
+                }
+
+                if (!ArchivoTexto.EsRutaTexto(rutaLocalRelativa)) {
+                    Log.WriteLine($"[grey]  - {rutaLocalRelativa,-anchoRutaListado} | binario omitido");
+                    continue;
+                }
+
+                byte[] contenido = httpClient.GetByteArrayAsync(url).Result;
+                if (!ArchivoTexto.PareceContenidoTexto(contenido)) {
+                    Log.WriteLine($"[grey]  - {rutaLocalRelativa,-anchoRutaListado} | binario omitido");
+                    continue;
+                }
+
+                int cantidadLineas = ContarLineas(contenido);
+                string rutaArchivoExistente = AppPaths.RutaArchivoDescargadoRelativo(rutaDestino, rutaRelativa);
+                EstadoArchivoPr estado = !File.Exists(rutaArchivoExistente)
+                    ? EstadoArchivoPr.Nuevo
+                    : File.ReadAllBytes(rutaArchivoExistente).AsSpan().SequenceEqual(contenido)
+                        ? EstadoArchivoPr.Igual
+                        : EstadoArchivoPr.Modificado;
+                string rutaArchivo = AppPaths.GuardarArchivoDescargadoRelativo(rutaDestino, rutaRelativa, contenido, forzar);
+                string color = estado switch {
+                    EstadoArchivoPr.Igual => "red",
+                    EstadoArchivoPr.Nuevo => "green",
+                    _ => "black"
+                };
+                Log.WriteLine($"[{color}]  - {rutaLocalRelativa,-anchoRutaListado} | L:{cantidadLineas,4}");
+                archivosDescargados.Add(new(numeroTp, rutaLocalRelativa, rutaArchivo, cantidadLineas, estado));
             } catch (Exception ex) {
                 Log.Error($"Error al descargar el archivo desde '{linea}': {ex.Message}");
             }
         }
+
+        if (archivosDescargados.Count == 0) {
+            Log.Warning($"PR #{numeroPR}: se detectaron {archivosDirectorio.Count} archivo(s) en '{carpetaAlumno}/{carpetaRemota}/', pero no se descargó ninguno.");
+        }
+
+        return archivosDescargados;
     }
 
-    public IReadOnlyList<int> BajarArchivosAlumno(int numeroPR, bool forzar = false, int? numeroTpSolicitado = null, bool informarOmitidos = true) {
-        string? titulo = ObtenerTituloPR(numeroPR);
-        if (string.IsNullOrWhiteSpace(titulo)) {
-            return [];
-        }
+    public BajadaArchivosAlumnoResultado BajarArchivosAlumno(int numeroPR, Alumno alumno, bool forzar = false, int? numeroTpSolicitado = null, bool informarOmitidos = true) {
+        string selectorCarpetaRemota = alumno.Legajo.ToString();
+        string rutaCarpetaAlumno = AppPaths.RutaCarpetaAlumnoEsperada(alumno);
+        AppPaths.AsegurarCarpetaAlumno(alumno);
 
-        int legajo = ExtraerLegajo(titulo);
-        if (legajo <= 0) {
-            if (informarOmitidos) {
-                Log.Warning($"Se omite PR #{numeroPR}: no se pudo resolver legajo desde el título '{titulo}'.");
-            }
-            return [];
-        }
-
-        string? rutaCarpetaAlumno = AppPaths.ObtenerCarpetaUnicaMismoLegajo(legajo);
-        if (!AppPaths.ExisteCarpetaAlumno(rutaCarpetaAlumno)) {
-            if (informarOmitidos) {
-                Log.Warning($"Se omite PR #{numeroPR}: no se encontró carpeta única para legajo {legajo}.");
-            }
-            return [];
-        }
-
-        string carpetaAlumno = Path.GetFileName(rutaCarpetaAlumno!);
-        List<int> tpsPresentados = ListarTPsPresentados(numeroPR, carpetaAlumno);
+        List<int> tpsPresentados = ListarTPsPresentados(numeroPR, selectorCarpetaRemota);
         if (numeroTpSolicitado is int tpSolicitado) {
             tpsPresentados = tpsPresentados.Where(tp => tp == tpSolicitado).ToList();
         }
@@ -530,18 +566,25 @@ class GitHub {
                 ? $"tp{tp}"
                 : "carpetas tpN";
             if (informarOmitidos) {
-                Log.Warning($"Se omite PR #{numeroPR}: no se encontraron archivos en {detalle} de '{carpetaAlumno}'.");
+                Log.Warning($"Se omite PR #{numeroPR}: no se encontraron archivos en {detalle} para el legajo {alumno.Legajo}.");
             }
-            return [];
+            return new([], []);
         }
 
+        List<ArchivoPrDescargado> archivosDescargados = new();
         foreach (int numeroTp in tpsPresentados) {
             string carpetaTp = $"tp{numeroTp}";
-            string rutaDestino = Path.Combine(rutaCarpetaAlumno!, carpetaTp);
-            BajarDirectorio(numeroPR, carpetaAlumno, carpetaTp, rutaDestino, forzar);
+            string rutaDestino = Path.Combine(rutaCarpetaAlumno, carpetaTp);
+            archivosDescargados.AddRange(BajarDirectorio(numeroPR, selectorCarpetaRemota, carpetaTp, rutaDestino, forzar));
         }
 
-        return tpsPresentados;
+        if (archivosDescargados.Count > 0) {
+            foreach (string carpetaEliminada in AppPaths.ConsolidarCarpetasAlumno(alumno)) {
+                Log.Warning($"Carpeta duplicada consolidada: {Path.GetFileName(carpetaEliminada)} -> {alumno.CarpetaNombre}");
+            }
+        }
+
+        return new(tpsPresentados, archivosDescargados);
     }
 
     public bool Merge(int numeroPR) {
@@ -566,7 +609,7 @@ class GitHub {
         }
 
         List<(int Numero, string Titulo)> prs = PullRequests(soloAbiertos: true)
-            .Where(pr => ExtraerTP(pr.Titulo) == numeroTP)
+            .Where(pr => ExtraerTPs(pr.Titulo).Contains(numeroTP))
             .ToList();
 
         if (prs.Count == 0) {
@@ -795,7 +838,26 @@ class GitHub {
 
     public static int ExtraerTP(string titulo) {
         Match match = Regex.Match(titulo, @"\bTP\s*-?\s*\d+\b", RegexOptions.IgnoreCase);
-        return match.Success ? int.Parse(match.Value[2..].Replace("-", "").Trim()) : 0;
+        return match.Success ? int.Parse(Regex.Match(match.Value, @"\d+").Value) : 0;
+    }
+
+    public static List<int> ExtraerTPs(string titulo) {
+        Match match = Regex.Match(titulo, @"\bTP\s*-?\s*(\d+)\b", RegexOptions.IgnoreCase);
+        if (!match.Success) {
+            return new();
+        }
+
+        string digitos = match.Groups[1].Value;
+        if (digitos.Length <= 1) {
+            return [int.Parse(digitos)];
+        }
+
+        return digitos
+            .Select(caracter => caracter - '0')
+            .Where(numero => numero > 0)
+            .Distinct()
+            .Order()
+            .ToList();
     }
 
 

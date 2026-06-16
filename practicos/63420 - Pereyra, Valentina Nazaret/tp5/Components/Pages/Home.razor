@@ -1,0 +1,348 @@
+@page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+@inject AgendaDbContext Context 
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-body bg-secondary bg-opacity-25 rounded">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+                <h1 class="fw-bold mb-1">
+                <i class="bi bi-person-lines-fill me-2"></i>
+                    Agenda de Contactos
+                </h1>
+
+                <small class="text-muted">
+                    Administración de contactos personales y laborales
+                </small>
+            </div>
+
+            <div>
+                <span class="badge bg-secondary">
+                    @contactos.Count contactos
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <div class="row mb-3">
+
+        <div class="col-md-8">
+            <input class="form-control"
+                   @bind="textoBusqueda"
+                   placeholder="Buscar contacto..." />
+        </div>
+
+        <div class="col-md-4 text-end">
+
+            <button class="btn btn-primary"
+                    @onclick="Buscar">
+                Buscar
+            </button>
+
+            <button class="btn btn-success ms-2"
+                    @onclick="MostrarFormularioAgregar">
+                Agregar
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="mb-3">
+        <span class="badge bg-secondary">
+            Total de contactos: @contactosFiltrados.Count()
+        </span>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                
+                <div class="card-header bg-secondary bg-opacity-25 text-dark text-center fw-bold text-uppercase">
+                Lista de Contactos
+
+                </div>
+
+                <div class="card-body" style="bg-info bg-opacity-75 text-white: 500px; overflow-y: auto;">
+
+                    @foreach (var contacto in contactosFiltrados)
+                    {
+                        <div class="@(contactoSeleccionado == contacto
+                            ? "border border-primary rounded p-2 mb-2 bg-light"
+                            : "border rounded p-2 mb-2")">
+
+                            <strong>
+                                @contacto.Nombre @contacto.Apellido
+                            </strong>
+
+                            <br />
+
+                            <small>
+                                @contacto.Telefono
+                            </small>
+
+                            <br />
+
+                            <small class="text-muted">
+                                @contacto.Empresa
+                            </small>
+
+                            <div class="mt-2">
+                                
+                                <button class="btn btn-info btn-sm me-1"
+                                        @onclick="() => SeleccionarContacto(contacto)">
+                                    Ver Detalle
+                                </button>
+
+                                <button class="btn btn-warning btn-sm me-1"
+                                        @onclick="() => EditarContacto(contacto)">
+                                    Editar
+                                 </button>
+
+                                <button class="btn btn-danger btn-sm"
+                                        @onclick="() => EliminarContacto(contacto)">
+                                    Eliminar
+                                </button>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-8">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-secondary bg-opacity-25 text-dark text-center fw-bold text-uppercase">
+                 Información del Contacto
+            </div>
+
+                <div class="card-body">
+
+                    @if (mostrandoFormulario)
+                    {
+                        <h4>Nuevo Contacto</h4>
+
+                        <hr />
+
+                        <div class="mb-3">
+                            <label>Nombre</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Nombre" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Apellido</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Apellido" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Teléfono</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Telefono" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Email" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Empresa</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Empresa" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Cargo</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Cargo" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Dirección</label>
+                            <input class="form-control"
+                                   @bind="nuevoContacto.Direccion" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Fecha de Nacimiento</label>
+                            <input type="date"
+                                   class="form-control"
+                                   @bind="nuevoContacto.FechaNacimiento" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Notas</label>
+                            <textarea class="form-control"
+                                      rows="3"
+                                      @bind="nuevoContacto.Notas">
+                            </textarea>
+                        </div>
+
+                        <button class="btn btn-success"
+                                @onclick="GuardarContacto">
+                            Guardar
+                        </button>
+                    }
+                    else if (contactoSeleccionado != null)
+                    {
+                        <h4>
+                            @contactoSeleccionado.Nombre
+                            @contactoSeleccionado.Apellido
+                        </h4>
+
+                        <hr />
+
+                        <p>
+                            <strong>Teléfono:</strong>
+                            @contactoSeleccionado.Telefono
+                        </p>
+
+                        <p>
+                            <strong>Email:</strong>
+                            @contactoSeleccionado.Email
+                        </p>
+
+                        <p>
+                            <strong>Empresa:</strong>
+                            @contactoSeleccionado.Empresa
+                        </p>
+
+                        <p>
+                            <strong>Cargo:</strong>
+                            @contactoSeleccionado.Cargo
+                        </p>
+
+                        <p>
+                            <strong>Dirección:</strong>
+                            @contactoSeleccionado.Direccion
+                        </p>
+
+                        <p>
+                            <strong>Fecha de Nacimiento:</strong>
+                            @(contactoSeleccionado.FechaNacimiento?.ToShortDateString())
+                        </p>
+
+                        <p>
+                            <strong>Notas:</strong>
+                            @contactoSeleccionado.Notas
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">
+                            Seleccione un contacto o presione Agregar.
+                        </p>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+
+    string textoBusqueda = "";
+
+    bool mostrandoFormulario = false;
+
+    Contacto? contactoSeleccionado;
+
+    Contacto nuevoContacto = new();
+
+    List<Contacto> contactos = new();
+
+    protected override void OnInitialized()
+    {
+        contactos = Context.Contactos.ToList();
+    }
+
+    IEnumerable<Contacto> contactosFiltrados =>
+        contactos.Where(c =>
+            string.IsNullOrWhiteSpace(textoBusqueda)
+            || c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+            || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+
+    void SeleccionarContacto(Contacto contacto)
+    {
+        mostrandoFormulario = false;
+        contactoSeleccionado = contacto;
+    }
+
+    void MostrarFormularioAgregar()
+    {
+        mostrandoFormulario = true;
+        contactoSeleccionado = null;
+        nuevoContacto = new Contacto();
+    }
+
+    void GuardarContacto()
+    {
+        if (nuevoContacto.Id == 0)
+        {
+            Context.Contactos.Add(nuevoContacto);
+        }
+
+        Context.SaveChanges();
+
+        contactos = Context.Contactos.ToList();
+
+        mostrandoFormulario = false;
+        nuevoContacto = new Contacto();
+    }
+
+    void EliminarContacto(Contacto contacto)
+    {
+        Context.Contactos.Remove(contacto);
+
+        Context.SaveChanges();
+
+        contactos = Context.Contactos.ToList();
+
+        if (contactoSeleccionado == contacto)
+        {
+            contactoSeleccionado = null;
+        }
+    }
+
+   void EditarContacto(Contacto contacto)
+    {
+        mostrandoFormulario = true;
+        nuevoContacto = contacto;
+        contactoSeleccionado = contacto;
+    }
+
+    void Buscar()
+    {
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,83 @@
+@using tp5.Models
+
+<div class="formulario-contacto">
+    <div class="form-header">
+        <h4>@(EsNuevo ? "Nuevo contacto" : "Editar contacto")</h4>
+    </div>
+
+    <EditForm Model="Contacto" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+
+        <div class="form-section">
+            <h6 class="section-title"><i class="bi bi-person me-2"></i>Datos personales</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                    <InputText class="form-control" @bind-Value="Contacto.Nombre" placeholder="Nombre" />
+                    <ValidationMessage For="() => Contacto.Nombre" class="text-danger small" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Apellido <span class="text-danger">*</span></label>
+                    <InputText class="form-control" @bind-Value="Contacto.Apellido" placeholder="Apellido" />
+                    <ValidationMessage For="() => Contacto.Apellido" class="text-danger small" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono <span class="text-danger">*</span></label>
+                    <InputText class="form-control" @bind-Value="Contacto.Telefono" placeholder="+54 9 ..." />
+                    <ValidationMessage For="() => Contacto.Telefono" class="text-danger small" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                    <InputText class="form-control" @bind-Value="Contacto.Email" placeholder="correo@ejemplo.com" />
+                    <ValidationMessage For="() => Contacto.Email" class="text-danger small" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Fecha de nacimiento</label>
+                    <InputDate class="form-control" @bind-Value="Contacto.FechaNacimiento" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Dirección</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Direccion" placeholder="Dirección postal" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h6 class="section-title"><i class="bi bi-building me-2"></i>Trabajo</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Empresa</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Empresa" placeholder="Empresa u organización" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cargo</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Cargo" placeholder="Puesto o función" />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h6 class="section-title"><i class="bi bi-journal-text me-2"></i>Notas</h6>
+            <InputTextArea class="form-control" @bind-Value="Contacto.Notas" rows="3" placeholder="Información adicional..." />
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" @onclick="OnCancelar">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i>Guardar
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Contacto Contacto { get; set; } = default!;
+    [Parameter] public bool EsNuevo { get; set; }
+    [Parameter] public EventCallback<Contacto> OnGuardar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    private async Task Guardar()
+        => await OnGuardar.InvokeAsync(Contacto);
+}
