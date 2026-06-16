@@ -89,7 +89,7 @@ namespace Calculadora
         {
             Console.WriteLine("calculadora [expresion valor]");
             Console.WriteLine();
-            Console.WriteLine("Opciones:");
+            Console.WriteLine("Opciones D:");
             Console.WriteLine("  -h, --help      Mostrar ayuda");
             Console.WriteLine("  -t, --test      Ejecutar pruebas");
             Console.WriteLine("  -p, --probar    Ejecutar pruebas");

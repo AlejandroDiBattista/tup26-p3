@@ -59,7 +59,6 @@ namespace Calculadora
                 Modo = Modo.Directo;
                 return;
             }
-
             Modo = Modo.Error;
         }
     }
