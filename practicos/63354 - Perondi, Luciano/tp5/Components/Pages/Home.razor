@@ -1,7 +1,32 @@
 @page "/"
+@inject AgendaDb db
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
 <div class="d-flex align-items-center justify-content-center vh-100">
     <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
 </div>
+
+@if (contactos is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <p>Hay @contactos.Count contactos en la base.</p>
+    <ul>
+        @foreach (var c in contactos)
+        {
+            <li>@c.Nombre @c.Apellido — @c.Email</li>
+        }
+    </ul>
+}
+
+@code {
+    List<Contacto>? contactos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await db.Contactos.OrderBy(c => c.Apellido).ToListAsync();
+    }
+}
