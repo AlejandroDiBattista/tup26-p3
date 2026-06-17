@@ -1,0 +1,95 @@
+<EditForm Model="Modelo" OnValidSubmit="Enviar">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="validation-summary" aria-live="polite" />
+
+    <fieldset disabled="@Guardando">
+        <legend class="visually-hidden">Datos del contacto</legend>
+        <div class="form-grid">
+            <div class="form-field">
+                <label class="form-label" for="contacto-nombre">Nombre <span aria-hidden="true">*</span></label>
+                <InputText id="contacto-nombre" class="form-control" autocomplete="given-name"
+                           maxlength="80" @bind-Value="Modelo.Nombre" />
+                <ValidationMessage For="() => Modelo.Nombre" />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="contacto-apellido">Apellido <span aria-hidden="true">*</span></label>
+                <InputText id="contacto-apellido" class="form-control" autocomplete="family-name"
+                           maxlength="80" @bind-Value="Modelo.Apellido" />
+                <ValidationMessage For="() => Modelo.Apellido" />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="contacto-telefono">Teléfono <span aria-hidden="true">*</span></label>
+                <InputText id="contacto-telefono" class="form-control" type="tel" autocomplete="tel"
+                           inputmode="tel" maxlength="40" @bind-Value="Modelo.Telefono" />
+                <ValidationMessage For="() => Modelo.Telefono" />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="contacto-email">Correo electrónico <span aria-hidden="true">*</span></label>
+                <InputText id="contacto-email" class="form-control" type="email" autocomplete="email"
+                           inputmode="email" maxlength="160" @bind-Value="Modelo.Email" />
+                <ValidationMessage For="() => Modelo.Email" />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="contacto-empresa">Empresa</label>
+                <InputText id="contacto-empresa" class="form-control" autocomplete="organization"
+                           maxlength="120" @bind-Value="Modelo.Empresa" />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="contacto-cargo">Cargo</label>
+                <InputText id="contacto-cargo" class="form-control" autocomplete="organization-title"
+                           maxlength="100" @bind-Value="Modelo.Cargo" />
+            </div>
+            <div class="form-field form-wide">
+                <label class="form-label" for="contacto-direccion">Dirección</label>
+                <InputText id="contacto-direccion" class="form-control" autocomplete="street-address"
+                           maxlength="240" @bind-Value="Modelo.Direccion" />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="contacto-fecha">Fecha de nacimiento</label>
+                <InputDate id="contacto-fecha" class="form-control" @bind-Value="Modelo.FechaNacimiento" />
+            </div>
+            <div class="form-field form-wide">
+                <label class="form-label" for="contacto-notas">Notas</label>
+                <InputTextArea id="contacto-notas" class="form-control" rows="4" maxlength="1000"
+                               @bind-Value="Modelo.Notas" />
+            </div>
+        </div>
+    </fieldset>
+
+    <p class="required-note"><span aria-hidden="true">*</span> Campos obligatorios</p>
+    <div class="modal-actions">
+        <button type="button" class="btn btn-light" @onclick="OnCancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary" disabled="@Guardando">
+            @if (Guardando)
+            {
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                <span>Guardar contacto</span>
+            }
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    /// <summary>Modelo editable administrado por el componente padre.</summary>
+    [Parameter, EditorRequired]
+    public Contacto Modelo { get; set; } = default!;
+
+    /// <summary>Impide envíos repetidos mientras se persisten los cambios.</summary>
+    [Parameter]
+    public bool Guardando { get; set; }
+
+    /// <summary>Se ejecuta después de que todas las anotaciones son válidas.</summary>
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    /// <summary>Solicita al componente padre cerrar el formulario.</summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private Task Enviar(EditContext _) => OnSubmit.InvokeAsync();
+}

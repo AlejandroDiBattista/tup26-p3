@@ -165,61 +165,10 @@
                 <button class="btn-close" aria-label="Cerrar" @onclick="CerrarFormulario"></button>
             </div>
 
-            <EditForm Model="modelo" OnValidSubmit="GuardarContacto">
-                <DataAnnotationsValidator />
-                <div class="form-grid">
-                    <div>
-                        <label class="form-label">Nombre *</label>
-                        <input class="form-control" @bind="modelo.Nombre" @bind:event="oninput" />
-                        <ValidationMessage For="() => modelo.Nombre" />
-                    </div>
-                    <div>
-                        <label class="form-label">Apellido *</label>
-                        <input class="form-control" @bind="modelo.Apellido" @bind:event="oninput" />
-                        <ValidationMessage For="() => modelo.Apellido" />
-                    </div>
-                    <div>
-                        <label class="form-label">Teléfono *</label>
-                        <input class="form-control" @bind="modelo.Telefono" @bind:event="oninput" />
-                        <ValidationMessage For="() => modelo.Telefono" />
-                    </div>
-                    <div>
-                        <label class="form-label">Correo electrónico *</label>
-                        <input class="form-control" type="email" @bind="modelo.Email" @bind:event="oninput" />
-                        <ValidationMessage For="() => modelo.Email" />
-                    </div>
-                    <div>
-                        <label class="form-label">Empresa</label>
-                        <input class="form-control" @bind="modelo.Empresa" @bind:event="oninput" />
-                    </div>
-                    <div>
-                        <label class="form-label">Cargo</label>
-                        <input class="form-control" @bind="modelo.Cargo" @bind:event="oninput" />
-                    </div>
-                    <div class="form-wide">
-                        <label class="form-label">Dirección</label>
-                        <input class="form-control" @bind="modelo.Direccion" @bind:event="oninput" />
-                    </div>
-                    <div>
-                        <label class="form-label">Fecha de nacimiento</label>
-                        <InputDate class="form-control" @bind-Value="modelo.FechaNacimiento" />
-                    </div>
-                    <div class="form-wide">
-                        <label class="form-label">Notas</label>
-                        <textarea class="form-control" rows="3" @bind="modelo.Notas" @bind:event="oninput"></textarea>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-light" @onclick="CerrarFormulario">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" disabled="@guardando">
-                        @if (guardando)
-                        {
-                            <span class="spinner-border spinner-border-sm"></span>
-                        }
-                        <i class="bi bi-check2-circle"></i> Guardar
-                    </button>
-                </div>
-            </EditForm>
+            <ContactForm Modelo="modelo"
+                         Guardando="guardando"
+                         OnSubmit="GuardarContacto"
+                         OnCancel="CerrarFormulario" />
         </div>
     </div>
 }
