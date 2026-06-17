@@ -1,44 +1,65 @@
-static class Comandos {
-    public static bool Procesar(string[] args) {
-        switch (args) {
-            case ["--help"] or ["-h"] or ["--ayuda"]:
-                Console.WriteLine("""
+using System;
 
-Uso: dotnet run -- [opciones] [<expresión> <valor>]
+namespace Calculadora
+{
+    enum Modo
+    {
+        Interactivo,
+        Directo,
+        Ayuda,
+        Pruebas,
+        Error
+    }
 
-    Este programa permite analizar y evaluar expresiones matemáticas
-    que pueden incluir la variable 'x'.
+    class Comandos
+    {
+        public Modo Modo { get; private set; }
+        public string Expresion { get; private set; } = "";
+        public int ValorX { get; private set; }
 
-    Si se proporciona una expresión junto con un valor, el programa
-    reemplaza 'x' por ese valor y muestra el resultado.
+        public Comandos(string[] args)
+        {
+            Procesar(args);
+        }
 
-    Si se ejecuta sin argumentos, inicia un modo interactivo para
-    ingresar una expresión y evaluarla con distintos valores de 'x'.
+        private void Procesar(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                Modo = Modo.Interactivo;
+                return;
+            }
 
-Expresiones válidas:
-- Pueden contener expresiones matemáticas básicas y la variable 'x'.
-- Ejemplo: (x - 1) * (x - 8/4) + 3
+            string opcion = args[0].ToLower();
 
-Opciones:
-    --help, -h, --ayuda                  Muestra esta ayuda.
-    --test, -t, --probar, --prueba, -p  Ejecuta pruebas automáticas.
+            if (opcion == "--help" || opcion == "-h")
+            {
+                Modo = Modo.Ayuda;
+                return;
+            }
 
-""");
-                return true;
+            if (opcion == "--test" || opcion == "--probar" ||
+                opcion == "-t" || opcion == "-p")
+            {
+                Modo = Modo.Pruebas;
+                return;
+            }
 
-            case ["--probar"] or ["-p"] or ["--test"] or ["-t"]:
-                Pruebas.Ejecutar();
-                return true;
+            if (args.Length == 2)
+            {
+                Expresion = args[0];
 
-            case [var expresion, var valor]:
-                var x = int.Parse(valor);
-                var funcion = Compilador.Parse(expresion);
-                Console.WriteLine(funcion.Evaluar(x));
-                return true;
+                if (!int.TryParse(args[1], out int x))
+                {
+                    Modo = Modo.Error;
+                    return;
+                }
 
-            default:
-                return false;
+                ValorX = x;
+                Modo = Modo.Directo;
+                return;
+            }
+            Modo = Modo.Error;
         }
     }
 }
-

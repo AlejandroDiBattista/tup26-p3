@@ -1,0 +1,20 @@
+@groqApiKey = {{$dotenv GROQ_API_KEY}}
+@modelId = qwen/qwen3.6-27b
+
+### Chat completions con Groq
+POST https://api.groq.com/openai/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer {{groqApiKey}}
+
+{
+  "model": "{{modelId}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "dame la version mas simple de quicksort en c#"
+    }
+  ],
+  "temperature": 0.6,
+  "max_completion_tokens": 4096,
+  "top_p": 0.95
+}
