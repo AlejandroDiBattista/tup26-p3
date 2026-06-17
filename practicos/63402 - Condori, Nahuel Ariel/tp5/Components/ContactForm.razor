@@ -7,7 +7,7 @@
         <div class="form-grid">
             <div class="form-field">
                 <label class="form-label" for="contacto-nombre">Nombre <span aria-hidden="true">*</span></label>
-                <InputText id="contacto-nombre" class="form-control" autocomplete="given-name"
+                <InputText id="contacto-nombre" class="form-control" autocomplete="given-name" autofocus
                            maxlength="80" @bind-Value="Modelo.Nombre" />
                 <ValidationMessage For="() => Modelo.Nombre" />
             </div>

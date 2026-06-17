@@ -1,6 +1,9 @@
 @page "/"
 @rendermode InteractiveServer
+@implements IDisposable
 @inject IContactoService ContactoService
+@inject IJSRuntime JS
+@inject ILogger<Home> Logger
 
 <PageTitle>AgendaWeb</PageTitle>
 
@@ -11,8 +14,8 @@
             <h1><i class="bi bi-person-vcard"></i> AgendaWeb</h1>
             <p>Todos tus contactos, organizados en un solo lugar.</p>
         </div>
-        <button class="btn btn-primary btn-lg" @onclick="NuevoContacto">
-            <i class="bi bi-person-plus-fill"></i> Nuevo contacto
+        <button type="button" class="btn btn-primary btn-lg" @onclick="NuevoContacto">
+            <i class="bi bi-person-plus-fill" aria-hidden="true"></i> Nuevo contacto
         </button>
     </header>
 
@@ -22,30 +25,35 @@
     }
 
     <section class="agenda-grid">
-        <aside class="contacts-panel">
+        <aside class="contacts-panel" aria-label="Contactos de la agenda" aria-busy="@cargando">
             <div class="search-box">
-                <i class="bi bi-search"></i>
-                <input class="form-control"
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <label class="visually-hidden" for="buscar-contactos">Buscar contactos</label>
+                <input id="buscar-contactos"
+                       class="form-control"
+                       type="search"
+                       autocomplete="off"
                        placeholder="Buscar por nombre, teléfono, email..."
                        value="@filtro"
                        @oninput="Buscar" />
                 @if (!string.IsNullOrWhiteSpace(filtro))
                 {
-                    <button class="clear-search" title="Limpiar búsqueda" @onclick="LimpiarBusqueda">
-                        <i class="bi bi-x-lg"></i>
+                    <button type="button" class="clear-search" title="Limpiar búsqueda"
+                            aria-label="Limpiar búsqueda" @onclick="LimpiarBusqueda">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
                     </button>
                 }
             </div>
 
-            <div class="contacts-summary">
+            <div class="contacts-summary" aria-live="polite">
                 <strong>@contactos.Count</strong> @(contactos.Count == 1 ? "contacto" : "contactos")
             </div>
 
             <div class="contacts-list">
                 @if (cargando)
                 {
-                    <div class="empty-state">
-                        <div class="spinner-border text-primary" role="status"></div>
+                    <div class="empty-state" role="status">
+                        <div class="spinner-border text-primary" aria-hidden="true"></div>
                         <span>Cargando agenda...</span>
                     </div>
                 }
@@ -62,13 +70,15 @@
                     @foreach (var contacto in contactos)
                     {
                         <button class="contact-card @(seleccionado?.Id == contacto.Id ? "active" : "")"
+                                type="button"
+                                aria-pressed="@(seleccionado?.Id == contacto.Id)"
                                 @onclick="() => Seleccionar(contacto)">
                             <span class="avatar">@Iniciales(contacto)</span>
                             <span class="contact-card-info">
                                 <strong>@contacto.Nombre @contacto.Apellido</strong>
                                 <small>@DatoSecundario(contacto)</small>
                             </span>
-                            <i class="bi bi-chevron-right"></i>
+                            <i class="bi bi-chevron-right" aria-hidden="true"></i>
                         </button>
                     }
                 }
@@ -100,11 +110,11 @@
                         </div>
                     </div>
                     <div class="detail-actions">
-                        <button class="btn btn-outline-primary" @onclick="EditarSeleccionado">
-                            <i class="bi bi-pencil-square"></i> Editar
+                        <button type="button" class="btn btn-outline-primary" @onclick="EditarSeleccionado">
+                            <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
                         </button>
-                        <button class="btn btn-outline-danger" @onclick="SolicitarEliminar">
-                            <i class="bi bi-trash3"></i> Eliminar
+                        <button type="button" class="btn btn-outline-danger" @onclick="SolicitarEliminar">
+                            <i class="bi bi-trash3" aria-hidden="true"></i> Eliminar
                         </button>
                     </div>
                 </div>
@@ -155,37 +165,44 @@
 
 @if (mostrarFormulario)
 {
-    <div class="modal-backdrop-custom" @onclick="CerrarFormulario">
-        <div class="contact-modal" @onclick:stopPropagation="true">
+    <dialog @ref="formularioDialog" class="contact-dialog" aria-labelledby="formulario-titulo" @onclose="CerrarFormulario">
+        <div class="contact-modal">
             <div class="modal-heading">
                 <div>
                     <span class="eyebrow">@(modelo.Id == 0 ? "Alta" : "Modificación")</span>
-                    <h2>@(modelo.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
+                    <h2 id="formulario-titulo">@(modelo.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
                 </div>
-                <button class="btn-close" aria-label="Cerrar" @onclick="CerrarFormulario"></button>
+                <button type="button" class="btn-close" aria-label="Cerrar formulario" @onclick="CerrarFormulario"></button>
             </div>
+
+            @if (!string.IsNullOrEmpty(mensajeFormulario))
+            {
+                <div class="alert alert-danger" role="alert">@mensajeFormulario</div>
+            }
 
             <ContactForm Modelo="modelo"
                          Guardando="guardando"
                          OnSubmit="GuardarContacto"
                          OnCancel="CerrarFormulario" />
         </div>
-    </div>
+    </dialog>
 }
 
 @if (mostrarConfirmacion && seleccionado is not null)
 {
-    <div class="modal-backdrop-custom" @onclick="CancelarEliminar">
-        <div class="confirm-modal" @onclick:stopPropagation="true">
-            <span class="danger-icon"><i class="bi bi-trash3"></i></span>
-            <h2>Eliminar contacto</h2>
+    <dialog @ref="confirmacionDialog" class="contact-dialog" aria-labelledby="eliminar-titulo" @onclose="CancelarEliminar">
+        <div class="confirm-modal">
+            <span class="danger-icon"><i class="bi bi-trash3" aria-hidden="true"></i></span>
+            <h2 id="eliminar-titulo">Eliminar contacto</h2>
             <p>¿Seguro que querés eliminar a <strong>@seleccionado.Nombre @seleccionado.Apellido</strong>?</p>
             <div class="modal-actions">
-                <button class="btn btn-light" @onclick="CancelarEliminar">Cancelar</button>
-                <button class="btn btn-danger" @onclick="EliminarContacto">Sí, eliminar</button>
+                <button type="button" class="btn btn-light" disabled="@eliminando" @onclick="CancelarEliminar">Cancelar</button>
+                <button type="button" class="btn btn-danger" disabled="@eliminando" @onclick="EliminarContacto">
+                    @(eliminando ? "Eliminando..." : "Sí, eliminar")
+                </button>
             </div>
         </div>
-    </div>
+    </dialog>
 }
 
 @code {
@@ -194,23 +211,47 @@
     private Contacto modelo = new();
     private string filtro = "";
     private string mensajeError = "";
+    private string mensajeFormulario = "";
     private bool cargando = true;
     private bool guardando;
+    private bool eliminando;
     private bool mostrarFormulario;
     private bool mostrarConfirmacion;
+    private bool abrirFormularioPendiente;
+    private bool abrirConfirmacionPendiente;
+    private ElementReference formularioDialog;
+    private ElementReference confirmacionDialog;
+    private CancellationTokenSource? busquedaCts;
 
     protected override async Task OnInitializedAsync()
     {
         await CargarContactos();
     }
 
-    private async Task CargarContactos(int? seleccionarId = null)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (abrirFormularioPendiente)
+        {
+            abrirFormularioPendiente = false;
+            await JS.InvokeVoidAsync("agendaDialogs.showModal", formularioDialog);
+        }
+
+        if (abrirConfirmacionPendiente)
+        {
+            abrirConfirmacionPendiente = false;
+            await JS.InvokeVoidAsync("agendaDialogs.showModal", confirmacionDialog);
+        }
+    }
+
+    private async Task CargarContactos(
+        int? seleccionarId = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             cargando = true;
             mensajeError = "";
-            contactos = await ContactoService.GetContactosAsync(filtro);
+            contactos = await ContactoService.GetContactosAsync(filtro, cancellationToken);
 
             if (seleccionarId.HasValue)
             {
@@ -221,8 +262,13 @@
                 seleccionado = contactos.FirstOrDefault(c => c.Id == seleccionado.Id);
             }
         }
-        catch (Exception)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            return;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError(exception, "No se pudo cargar la agenda");
             mensajeError = "No se pudo acceder a la agenda. Verificá la conexión con la base de datos.";
         }
         finally
@@ -234,12 +280,25 @@
     private async Task Buscar(ChangeEventArgs e)
     {
         filtro = e.Value?.ToString() ?? "";
-        await CargarContactos();
+        busquedaCts?.Cancel();
+        busquedaCts?.Dispose();
+        busquedaCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(250, busquedaCts.Token);
+            await CargarContactos(cancellationToken: busquedaCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Una pulsación más reciente reemplazó esta búsqueda.
+        }
     }
 
     private async Task LimpiarBusqueda()
     {
         filtro = "";
+        busquedaCts?.Cancel();
         await CargarContactos();
     }
 
@@ -251,7 +310,9 @@
     private void NuevoContacto()
     {
         modelo = new Contacto();
+        mensajeFormulario = "";
         mostrarFormulario = true;
+        abrirFormularioPendiente = true;
     }
 
     private void EditarSeleccionado()
@@ -262,7 +323,9 @@
         }
 
         modelo = Copiar(seleccionado);
+        mensajeFormulario = "";
         mostrarFormulario = true;
+        abrirFormularioPendiente = true;
     }
 
     private async Task GuardarContacto()
@@ -285,9 +348,10 @@
             mostrarFormulario = false;
             await CargarContactos(idGuardado);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            mensajeError = "No se pudo guardar el contacto. Intentá nuevamente.";
+            Logger.LogError(exception, "No se pudo guardar el contacto {ContactoId}", modelo.Id);
+            mensajeFormulario = "No se pudo guardar el contacto. Revisá los datos e intentá nuevamente.";
         }
         finally
         {
@@ -303,6 +367,7 @@
     private void SolicitarEliminar()
     {
         mostrarConfirmacion = true;
+        abrirConfirmacionPendiente = true;
     }
 
     private void CancelarEliminar()
@@ -317,17 +382,25 @@
             return;
         }
 
+        var contactoId = seleccionado.Id;
+
         try
         {
-            await ContactoService.DeleteContactoAsync(seleccionado.Id);
+            eliminando = true;
+            await ContactoService.DeleteContactoAsync(contactoId);
             seleccionado = null;
             mostrarConfirmacion = false;
             await CargarContactos();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Logger.LogError(exception, "No se pudo eliminar el contacto {ContactoId}", contactoId);
             mostrarConfirmacion = false;
             mensajeError = "No se pudo eliminar el contacto. Intentá nuevamente.";
+        }
+        finally
+        {
+            eliminando = false;
         }
     }
 
@@ -363,4 +436,11 @@
 
     private static string Fecha(DateOnly? fecha) =>
         fecha?.ToString("dd/MM/yyyy") ?? "Sin especificar";
+
+    /// <summary>Cancela consultas pendientes al finalizar el circuito de Blazor.</summary>
+    public void Dispose()
+    {
+        busquedaCts?.Cancel();
+        busquedaCts?.Dispose();
+    }
 }
