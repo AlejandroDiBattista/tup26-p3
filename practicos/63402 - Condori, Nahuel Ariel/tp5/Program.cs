@@ -9,8 +9,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddDbContextFactory<AgendaContext>(options =>
-    options.UseSqlite("Data Source=contactos.db"));
-builder.Services.AddScoped<ContactoService>();
+    options.UseSqlite(builder.Configuration.GetConnectionString("Agenda")));
+builder.Services.AddScoped<IContactoService, ContactoService>();
 
 var app = builder.Build();
 
