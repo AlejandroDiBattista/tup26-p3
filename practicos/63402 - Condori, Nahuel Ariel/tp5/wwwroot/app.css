@@ -8,6 +8,7 @@
     --primary-soft: #eef1ff;
 }
 
+/* Base y accesibilidad: medidas estables, foco visible y tipografía legible. */
 * {
     box-sizing: border-box;
 }
@@ -25,12 +26,13 @@ textarea {
     font: inherit;
 }
 
-h1:focus {
-    outline: none;
+:where(button, input, textarea, [tabindex]):focus-visible {
+    outline: 3px solid #1b6f68;
+    outline-offset: 2px;
 }
 
 .agenda-shell {
-    min-height: 100vh;
+    min-height: 100dvh;
     padding: 2rem clamp(1rem, 4vw, 4rem);
 }
 
@@ -45,9 +47,9 @@ h1:focus {
 
 .agenda-header h1 {
     margin: .15rem 0 .25rem;
-    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-size: 2.25rem;
     font-weight: 800;
-    letter-spacing: -.05em;
+    letter-spacing: 0;
 }
 
 .agenda-header h1 i {
@@ -64,7 +66,7 @@ h1:focus {
     color: var(--primary);
     font-size: .73rem;
     font-weight: 800;
-    letter-spacing: .13em;
+    letter-spacing: 0;
     text-transform: uppercase;
 }
 
@@ -75,6 +77,7 @@ h1:focus {
     --bs-btn-hover-border-color: #2948be;
 }
 
+/* Disposición principal maestro/detalle. */
 .agenda-grid {
     max-width: 1500px;
     min-height: 680px;
@@ -83,7 +86,7 @@ h1:focus {
     grid-template-columns: minmax(310px, 390px) 1fr;
     overflow: hidden;
     border: 1px solid var(--line);
-    border-radius: 22px;
+    border-radius: 8px;
     background: var(--surface);
     box-shadow: 0 18px 55px rgba(31, 45, 78, .08);
 }
@@ -113,7 +116,7 @@ h1:focus {
     padding-left: 2.65rem;
     padding-right: 2.5rem;
     border-color: var(--line);
-    border-radius: 13px;
+    border-radius: 8px;
     background: white;
 }
 
@@ -125,6 +128,8 @@ h1:focus {
     color: var(--muted);
     background: transparent;
     transform: translateY(-50%);
+    min-width: 40px;
+    min-height: 40px;
 }
 
 .contacts-summary {
@@ -137,6 +142,8 @@ h1:focus {
     max-height: 595px;
     padding: 0 .7rem 1rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .contact-card {
@@ -147,11 +154,12 @@ h1:focus {
     gap: .85rem;
     padding: .9rem;
     border: 0;
-    border-radius: 14px;
+    min-height: 64px;
+    border-radius: 8px;
     color: var(--ink);
     background: transparent;
     text-align: left;
-    transition: .16s ease;
+    transition: background-color .16s ease, color .16s ease;
 }
 
 .contact-card:hover {
@@ -187,7 +195,7 @@ h1:focus {
     flex: 0 0 auto;
     display: inline-grid;
     place-items: center;
-    border-radius: 13px;
+    border-radius: 8px;
     color: #2945ad;
     background: #dfe5ff;
     font-weight: 800;
@@ -196,7 +204,7 @@ h1:focus {
 .avatar-large {
     width: 76px;
     height: 76px;
-    border-radius: 22px;
+    border-radius: 8px;
     font-size: 1.45rem;
 }
 
@@ -226,7 +234,7 @@ h1:focus {
     display: grid;
     place-items: center;
     margin-bottom: 1rem;
-    border-radius: 28px;
+    border-radius: 8px;
     color: var(--primary);
     background: var(--primary-soft);
     font-size: 2.25rem;
@@ -264,9 +272,9 @@ h1:focus {
 
 .detail-heading h2 {
     margin: .15rem 0;
-    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-size: 2rem;
     font-weight: 800;
-    letter-spacing: -.035em;
+    letter-spacing: 0;
 }
 
 .detail-actions {
@@ -283,7 +291,7 @@ h1:focus {
     margin-bottom: 1rem;
     font-size: .78rem;
     font-weight: 800;
-    letter-spacing: .1em;
+    letter-spacing: 0;
     text-transform: uppercase;
 }
 
@@ -300,7 +308,7 @@ h1:focus {
     gap: .85rem;
     padding: 1rem;
     border: 1px solid var(--line);
-    border-radius: 15px;
+    border-radius: 8px;
 }
 
 .info-item > i {
@@ -332,7 +340,7 @@ h1:focus {
 .notes-section {
     margin-top: 1.5rem;
     padding: 1.15rem 1.25rem;
-    border-radius: 15px;
+    border-radius: 8px;
     background: #f7f8fb;
 }
 
@@ -342,23 +350,30 @@ h1:focus {
     white-space: pre-wrap;
 }
 
-.modal-backdrop-custom {
-    position: fixed;
-    inset: 0;
-    z-index: 1050;
-    display: grid;
-    place-items: center;
-    padding: 1rem;
-    background: rgba(16, 25, 44, .65);
-    backdrop-filter: blur(5px);
+/* Diálogos nativos: el navegador gestiona foco, Escape y capa superior. */
+.contact-dialog {
+    width: min(760px, calc(100% - 2rem));
+    max-width: none;
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+}
+
+.contact-dialog::backdrop {
+    background: rgba(16, 25, 44, .68);
+    backdrop-filter: blur(4px);
 }
 
 .contact-modal,
 .confirm-modal {
-    width: min(760px, 100%);
-    max-height: calc(100vh - 2rem);
+    width: 100%;
+    max-height: calc(100dvh - 2rem);
     overflow-y: auto;
-    border-radius: 20px;
+    border-radius: 8px;
     background: white;
     box-shadow: 0 30px 90px rgba(0, 0, 0, .25);
 }
@@ -386,6 +401,17 @@ h1:focus {
     gap: 1rem;
 }
 
+fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.form-field {
+    min-width: 0;
+}
+
 .form-wide {
     grid-column: 1 / -1;
 }
@@ -398,7 +424,9 @@ h1:focus {
 
 .form-control {
     border-color: #dce1e9;
-    border-radius: 10px;
+    min-height: 48px;
+    border-radius: 8px;
+    font-size: 1rem;
 }
 
 .form-control:focus {
@@ -411,6 +439,21 @@ h1:focus {
     margin-top: .25rem;
     color: #c83246;
     font-size: .78rem;
+}
+
+.validation-summary {
+    margin-bottom: 1rem;
+    color: #9f1d32;
+}
+
+.validation-summary:empty {
+    display: none;
+}
+
+.required-note {
+    margin: .75rem 0 0;
+    color: var(--muted);
+    font-size: .8rem;
 }
 
 .modal-actions {
@@ -432,7 +475,7 @@ h1:focus {
     display: grid;
     place-items: center;
     margin: 0 auto 1rem;
-    border-radius: 20px;
+    border-radius: 8px;
     color: #c52c42;
     background: #fff0f2;
     font-size: 1.7rem;
@@ -493,7 +536,7 @@ h1:focus {
     }
 
     .agenda-grid {
-        border-radius: 16px;
+        border-radius: 8px;
     }
 
     .detail-heading,
@@ -518,6 +561,17 @@ h1:focus {
     .avatar-large {
         width: 60px;
         height: 60px;
-        border-radius: 17px;
+        border-radius: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
     }
 }
