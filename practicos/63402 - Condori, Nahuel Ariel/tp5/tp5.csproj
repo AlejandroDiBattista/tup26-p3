@@ -15,4 +15,8 @@
     <Content Update="wwwroot\**\*" TargetPath="%(Identity)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="tp5.Tests\**\*.cs" />
+  </ItemGroup>
+
 </Project>
