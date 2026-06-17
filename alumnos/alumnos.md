@@ -23,7 +23,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63647   Paz, Valentina                  (381)599-6422   valepaz11                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    21   10
 63389   Pereyra Petroni, Nicolas        (381)332-4401   nicopereyra255-ship-it     🔴🟢🟢🔴🟢⚪️   🟢⚪️   No    14    8
 63420   Pereyra, Valentina Nazaret      (381)552-8065   valentinapereyra03         🔴🟢🔴🔴🟢⚪️   🟢⚪️   No    10    5
-63354   Perondi, Luciano                (381)350-0777   lucho-bot                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    19   10  
+63354   Perondi, Luciano                (381)350-0777   lucho-bot                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    19   10
 63393   Ritorto, Lucca                  (381)627-2271   luccardp                   🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    17   10
 63208   Rosconi, Ignacio Federico       (381)533-1344   ignaciorosconi             🔴🟢🔴🔴🟢⚪️   🟢⚪️   No    13    4
 63387   Sosa Gonella, Luca              (381)355-5126   lucasosag1                 🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    19    9
