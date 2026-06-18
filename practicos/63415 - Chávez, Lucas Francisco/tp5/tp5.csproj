@@ -11,4 +11,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
   </ItemGroup>
 
+  <!--
+    Se fija explícitamente la ruta de publicación de los recursos para que MSBuild
+    no interprete la coma del directorio del alumno como separador de argumentos.
+  -->
+  <ItemGroup>
+    <Content Update="wwwroot\**\*">
+      <TargetPath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+    </Content>
+  </ItemGroup>
+
 </Project>
