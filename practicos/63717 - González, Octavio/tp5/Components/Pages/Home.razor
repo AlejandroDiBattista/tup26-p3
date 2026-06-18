@@ -1,5 +1,4 @@
 @page "/"
-@using Microsoft.VisualBasic
 @rendermode InteractiveServer
 @inject Repositorio Repositorio
 
@@ -101,7 +100,13 @@
                         <div class="col-md-12">
                             <div class="bg-dark p-3 rounded-3">
                                 <label class="form-label text-muted small mb-1">Notas:</label>
-                                <input class="form-control bg-secondary text-white border-0" @bind="nuevoContacto.Notas" />
+                                <textarea class="form-control bg-secondary text-white border-0" rows="3" @bind="nuevoContacto.Notas"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Fecha de nacimiento:</label>
+                                <InputDate class="form-control bg-secondary text-white border-0" @bind-Value="nuevoContacto.FechaNacimiento" />
                             </div>
                         </div>
                     </div>
@@ -171,7 +176,13 @@
                         <div class="col-md-12">
                             <div class="bg-dark p-3 rounded-3">
                                 <label class="form-label text-muted small mb-1">Notas:</label>
-                                <input class="form-control bg-secondary text-white border-0" @bind="Contactoseleccionado.Notas" />
+                                <textarea class="form-control bg-secondary text-white border-0" rows="3" @bind="Contactoseleccionado.Notas"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-dark p-3 rounded-3">
+                                <label class="form-label text-muted small mb-1">Fecha de nacimiento:</label>
+                                <InputDate class="form-control bg-secondary text-white border-0" @bind-Value="Contactoseleccionado.FechaNacimiento" />
                             </div>
                         </div>
                     </div>
@@ -231,6 +242,12 @@
                                 <div class="bg-dark p-3 rounded-3">
                                     <span class="text-muted d-block small">Notas</span>
                                     <p class="mb-0">@Contactoseleccionado.Notas</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-dark p-3 rounded-3">
+                                    <span class="text-muted d-block small">Fecha de nacimiento</span>
+                                    <strong>@(Contactoseleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "Sin registrar")</strong>
                                 </div>
                             </div>
                         </div>
@@ -301,6 +318,10 @@
     {
         await Repositorio.Eliminar(id);
         contactos = await Repositorio.TraerContactos(); // Refresca la lista
+        if (Contactoseleccionado?.Id == id)
+        {
+            Contactoseleccionado = null;
+        }
     }
 
 
@@ -308,6 +329,8 @@
     void Mostrar()
     {
         agregar = true;
+        editar = false;
+        Contactoseleccionado = null;
     }
     void Ocultar()
     {
