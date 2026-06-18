@@ -4,6 +4,92 @@
     min-height: 100vh;
 }
 
+.status-toast {
+    align-items: center;
+    background: #ecfdf3;
+    border: 1px solid #abefc6;
+    border-radius: .75rem;
+    box-shadow: 0 10px 32px rgb(32 44 72 / 16%);
+    color: #05603a;
+    display: flex;
+    gap: .65rem;
+    inset: 1rem 1rem auto auto;
+    max-width: min(26rem, calc(100vw - 2rem));
+    padding: .8rem .9rem;
+    position: fixed;
+    z-index: 1100;
+}
+
+.status-toast.error {
+    background: #fff2f0;
+    border-color: #f4b9b2;
+    color: #8d1b12;
+}
+
+.status-toast button {
+    background: transparent;
+    border: 0;
+    color: currentColor;
+    margin-left: auto;
+    min-height: 36px;
+    min-width: 36px;
+}
+
+.dialog-backdrop {
+    align-items: center;
+    background: rgb(18 21 29 / 55%);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 1rem;
+    position: fixed;
+    z-index: 1050;
+}
+
+.confirm-dialog {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
+    max-width: 29rem;
+    padding: 1.75rem;
+    width: 100%;
+}
+
+.danger-icon {
+    align-items: center;
+    background: #fee4e2;
+    border-radius: 50%;
+    color: #b42318;
+    display: flex;
+    font-size: 1.25rem;
+    height: 3rem;
+    justify-content: center;
+    width: 3rem;
+}
+
+.confirm-dialog h2 {
+    color: #24272e;
+    font-size: 1.3rem;
+    margin: 1rem 0 .45rem;
+}
+
+.confirm-dialog p {
+    color: #606672;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: .65rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.dialog-actions button {
+    min-height: 48px;
+}
+
 .detail-placeholder {
     align-items: center;
     background: #f5f6f8;
@@ -36,7 +122,11 @@
         grid-template-columns: 1fr;
     }
 
-    .detail-placeholder {
-        display: none;
+    .dialog-actions {
+        flex-direction: column-reverse;
+    }
+
+    .dialog-actions button {
+        width: 100%;
     }
 }

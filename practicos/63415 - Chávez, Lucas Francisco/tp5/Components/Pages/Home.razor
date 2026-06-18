@@ -4,6 +4,17 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="status-toast @(statusIsError ? "error" : null)" role="status" aria-live="polite">
+        <i class="bi @(statusIsError ? "bi-exclamation-triangle" : "bi-check-circle")" aria-hidden="true"></i>
+        @statusMessage
+        <button type="button" aria-label="Cerrar mensaje" @onclick="DismissStatus">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+    </div>
+}
+
 <main class="agenda-shell">
     <ContactList Contacts="contacts"
                  SelectedId="selectedId"
@@ -31,6 +42,29 @@
     }
 </main>
 
+@if (showDeleteConfirmation && selectedContact is not null)
+{
+    <div class="dialog-backdrop" @onclick="CancelDelete">
+        <section class="confirm-dialog"
+                 role="alertdialog"
+                 aria-modal="true"
+                 aria-labelledby="delete-title"
+                 aria-describedby="delete-description"
+                 @onclick:stopPropagation="true">
+            <span class="danger-icon" aria-hidden="true"><i class="bi bi-trash3"></i></span>
+            <h2 id="delete-title">Eliminar contacto</h2>
+            <p id="delete-description">
+                ¿Querés eliminar a <strong>@selectedContact.Nombre @selectedContact.Apellido</strong>?
+                Esta acción no se puede deshacer.
+            </p>
+            <div class="dialog-actions">
+                <button class="btn btn-outline-secondary" type="button" @onclick="CancelDelete">Cancelar</button>
+                <button class="btn btn-danger" type="button" @onclick="DeleteAsync">Eliminar definitivamente</button>
+            </div>
+        </section>
+    </div>
+}
+
 @code {
     private IReadOnlyList<Contacto> contacts = [];
     private int? selectedId;
@@ -38,6 +72,9 @@
     private Contacto? editor;
     private string searchText = "";
     private bool isLoading = true;
+    private bool showDeleteConfirmation;
+    private bool statusIsError;
+    private string statusMessage = "";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -84,16 +121,28 @@
 
     private async Task SaveAsync(Contacto contacto)
     {
-        var isNew = contacto.Id == 0;
-        selectedId = isNew ? await ContactoService.CrearAsync(contacto) : contacto.Id;
-
-        if (!isNew && !await ContactoService.ActualizarAsync(contacto))
+        try
         {
-            selectedId = null;
-        }
+            var isNew = contacto.Id == 0;
+            selectedId = isNew ? await ContactoService.CrearAsync(contacto) : contacto.Id;
 
-        editor = null;
-        await LoadAsync();
+            if (!isNew && !await ContactoService.ActualizarAsync(contacto))
+            {
+                selectedId = null;
+                ShowStatus("El contacto ya no existe.", isError: true);
+            }
+            else
+            {
+                ShowStatus(isNew ? "Contacto creado correctamente." : "Cambios guardados correctamente.");
+            }
+
+            editor = null;
+            await LoadAsync();
+        }
+        catch (Exception)
+        {
+            ShowStatus("No se pudieron guardar los cambios. Intentá nuevamente.", isError: true);
+        }
     }
 
     private async Task CancelEdit()
@@ -107,8 +156,41 @@
 
     private void RequestDelete()
     {
-        // La confirmación se incorpora junto con la eliminación segura.
+        showDeleteConfirmation = selectedContact is not null;
     }
+
+    private void CancelDelete() => showDeleteConfirmation = false;
+
+    private async Task DeleteAsync()
+    {
+        if (selectedContact is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var deleted = await ContactoService.EliminarAsync(selectedContact.Id);
+            showDeleteConfirmation = false;
+            selectedId = null;
+            selectedContact = null;
+            ShowStatus(deleted ? "Contacto eliminado." : "El contacto ya no existía.", isError: !deleted);
+            await LoadAsync();
+        }
+        catch (Exception)
+        {
+            showDeleteConfirmation = false;
+            ShowStatus("No se pudo eliminar el contacto. Intentá nuevamente.", isError: true);
+        }
+    }
+
+    private void ShowStatus(string message, bool isError = false)
+    {
+        statusMessage = message;
+        statusIsError = isError;
+    }
+
+    private void DismissStatus() => statusMessage = "";
 
     private static Contacto CopyContact(Contacto source) => new()
     {
