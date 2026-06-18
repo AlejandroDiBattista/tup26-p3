@@ -47,6 +47,37 @@
 }
 
 body {
-  background-color: var(--background);
+  min-height: 100vh;
   color: var(--foreground);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 24%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  background-attachment: fixed;
+}
+
+main {
+  color: inherit;
+}
+
+button.card {
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+button.card:hover,
+button.card:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+}
+
+.form-control {
+  border-radius: 0.9rem;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.14);
+}
+
+.rounded-5 {
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.18);
 }
