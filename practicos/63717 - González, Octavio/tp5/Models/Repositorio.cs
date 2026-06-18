@@ -1,60 +1,88 @@
 namespace tp5.Models;
+
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using tp5.Data;
 
-class Repositorio
+/// <summary>
+/// Encapsula las operaciones de acceso a datos de la agenda.
+/// Mantiene la lógica de persistencia fuera de la UI y concentra
+/// las reglas de lectura, alta, edición y borrado en un único lugar.
+/// </summary>
+public class Repositorio
 {
-    private readonly IDbContextFactory<ContactoDb> db;
-    public Repositorio(IDbContextFactory<ContactoDb> db) => this.db = db;
+    private readonly IDbContextFactory<AgendaDbContext> dbFactory;
 
-    public void Iniciar() 
-    { 
-        using var dd =  this.db.CreateDbContext(); 
-        dd.Database.EnsureCreated();
-    } 
-
-    public async Task<List<Contacto>> TraerContactos() {
-        using var dd = await this.db.CreateDbContextAsync(); 
-        return await dd.Contactos.OrderBy(p => p.Id).ToListAsync();
+    public Repositorio(IDbContextFactory<AgendaDbContext> dbFactory)
+    {
+        this.dbFactory = dbFactory;
     }
-    public async Task<Contacto?> TraerContacto(int id) {
-    using var dd = await this.db.CreateDbContextAsync(); 
-    return await dd.Contactos.FirstOrDefaultAsync(p => p.Id == id);
 
+    public void Iniciar()
+    {
+        using var db = dbFactory.CreateDbContext();
+        db.Database.EnsureCreated();
     }
+
+    public async Task<List<Contacto>> TraerContactos()
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        return await db.Contactos
+            .AsNoTracking()
+            .OrderBy(contacto => contacto.Apellido)
+            .ThenBy(contacto => contacto.Nombre)
+            .ToListAsync();
+    }
+
+    public async Task<Contacto?> TraerContacto(int id)
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        return await db.Contactos.AsNoTracking().FirstOrDefaultAsync(contacto => contacto.Id == id);
+    }
+
     public async Task<Contacto> AgregarContacto(Contacto contacto)
     {
-        using var dd = await this.db.CreateDbContextAsync(); 
-        dd.Contactos.Add(contacto);
-        await dd.SaveChangesAsync();
+        await using var db = await dbFactory.CreateDbContextAsync();
+        db.Contactos.Add(contacto);
+        await db.SaveChangesAsync();
         return contacto;
     }
+
     public async Task<Contacto?> Actualizar(Contacto actualizacion)
     {
-    using var dd = await this.db.CreateDbContextAsync(); 
-    var cambio = dd.Contactos.FirstOrDefault(p => p.Id == actualizacion.Id);
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var contacto = await db.Contactos.FirstOrDefaultAsync(item => item.Id == actualizacion.Id);
 
-        if (cambio is null) return null;
-        cambio.Nombre = actualizacion.Nombre;
-        cambio.Apellido = actualizacion.Apellido;
-        cambio.Telefono = actualizacion.Telefono;
-        cambio.Email = actualizacion.Email;
-        cambio.Empresa = actualizacion.Empresa;
-        cambio.Cargo = actualizacion.Cargo;
-        cambio.Direccion = actualizacion.Direccion;
-        cambio.Notas = actualizacion.Notas;
-        await dd.SaveChangesAsync();
-        return cambio;
+        if (contacto is null)
+        {
+            return null;
+        }
+
+        contacto.Nombre = actualizacion.Nombre;
+        contacto.Apellido = actualizacion.Apellido;
+        contacto.Telefono = actualizacion.Telefono;
+        contacto.Email = actualizacion.Email;
+        contacto.Empresa = actualizacion.Empresa;
+        contacto.Cargo = actualizacion.Cargo;
+        contacto.Direccion = actualizacion.Direccion;
+        contacto.FechaNacimiento = actualizacion.FechaNacimiento;
+        contacto.Notas = actualizacion.Notas;
+
+        await db.SaveChangesAsync();
+        return contacto;
     }
 
     public async Task<bool> Eliminar(int id)
     {
-    using var dd = await this.db.CreateDbContextAsync(); 
-    var eliminado = dd.Contactos.FirstOrDefault(p => p.Id == id);
-    if (eliminado is null) return false;
-    dd.Contactos.Remove(eliminado);
-    await dd.SaveChangesAsync();
+        await using var db = await dbFactory.CreateDbContextAsync();
+        var contacto = await db.Contactos.FirstOrDefaultAsync(item => item.Id == id);
+
+        if (contacto is null)
+        {
+            return false;
+        }
+
+        db.Contactos.Remove(contacto);
+        await db.SaveChangesAsync();
         return true;
     }
 }
-

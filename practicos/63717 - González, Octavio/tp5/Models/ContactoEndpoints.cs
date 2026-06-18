@@ -4,36 +4,51 @@ public static class Endpoints
 {
     public static void ContactoEndpoint(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/contactos", (Repositorio repositorio) =>
+        app.MapGet("/contactos", async (Repositorio repositorio) =>
         {
-            var contactos = repositorio.TraerContactos();
-            if (contactos is null) return Results.NotFound();
+            var contactos = await repositorio.TraerContactos();
             return Results.Ok(contactos);
         });
 
-        app.MapGet("/contactos/{id:int}", (int id, Repositorio repositorio) =>
+        app.MapGet("/contactos/{id:int}", async (int id, Repositorio repositorio) =>
         {
-            var contacto = repositorio.TraerContacto(id);
-            if (contacto is null) return Results.NotFound();
+            var contacto = await repositorio.TraerContacto(id);
+            if (contacto is null)
+            {
+                return Results.NotFound();
+            }
+
             return Results.Ok(contacto);
         });
 
         app.MapPost("/contactos", async (Contacto nuevo, Repositorio repositorio) =>
         {
             await repositorio.AgregarContacto(nuevo);
-            return Results.Ok(nuevo);
+            return Results.Created($"/contactos/{nuevo.Id}", nuevo);
         });
 
         app.MapPut("/contactos/{id:int}", async (int id, Contacto actualizacion, Repositorio repositorio) =>
         {
             actualizacion.Id = id;
-            await repositorio.Actualizar(actualizacion);
+            var contacto = await repositorio.Actualizar(actualizacion);
+
+            if (contacto is null)
+            {
+                return Results.NotFound();
+            }
+
             return Results.Ok(actualizacion);
         });
 
         app.MapDelete("/contactos/{id:int}", async (int id, Repositorio repositorio) =>
         {
-            await repositorio.Eliminar(id);
+            var eliminado = await repositorio.Eliminar(id);
+
+            if (!eliminado)
+            {
+                return Results.NotFound();
+            }
+
             return Results.Ok();
         });
     }
