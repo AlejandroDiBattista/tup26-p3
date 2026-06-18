@@ -1,0 +1,158 @@
+.form-panel {
+    background: #f6f7f9;
+    min-height: 100vh;
+    padding: clamp(1.5rem, 4vw, 4rem);
+}
+
+.form-header,
+form {
+    margin-inline: auto;
+    max-width: 58rem;
+}
+
+.form-header {
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+    color: #68707e;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    margin: 0 0 .25rem;
+    text-transform: uppercase;
+}
+
+h2 {
+    color: #1d2027;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    letter-spacing: -.035em;
+    margin: 0;
+}
+
+.form-header p:last-child {
+    color: #68707e;
+    margin: .4rem 0 0;
+}
+
+fieldset {
+    background: #fff;
+    border: 1px solid #e4e7ec;
+    border-radius: 1rem;
+    box-shadow: 0 7px 24px rgb(31 38 58 / 5%);
+    margin: 0 0 1.2rem;
+    padding: 1.5rem;
+}
+
+legend {
+    color: #282b33;
+    float: none;
+    font-size: 1rem;
+    font-weight: 750;
+    margin: 0 0 1.25rem;
+    width: auto;
+}
+
+.form-grid {
+    display: grid;
+    gap: 1.2rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+    min-width: 0;
+}
+
+.field.full-width {
+    grid-column: 1 / -1;
+}
+
+.field label {
+    color: #343740;
+    display: block;
+    font-size: .88rem;
+    font-weight: 650;
+    margin-bottom: .4rem;
+}
+
+.field ::deep input,
+.field ::deep textarea {
+    background: #fff;
+    border: 1px solid #cfd3dc;
+    border-radius: .6rem;
+    box-sizing: border-box;
+    font-size: 1rem;
+    min-height: 48px;
+    padding: .7rem .8rem;
+    width: 100%;
+}
+
+.field ::deep textarea {
+    resize: vertical;
+}
+
+.field ::deep input:focus,
+.field ::deep textarea:focus {
+    border-color: #526fe3;
+    box-shadow: 0 0 0 3px rgb(82 111 227 / 15%);
+    outline: 0;
+}
+
+.field ::deep .invalid {
+    border-color: #b42318;
+}
+
+.field ::deep .validation-message {
+    color: #b42318;
+    display: block;
+    font-size: .82rem;
+    margin-top: .35rem;
+}
+
+::deep .validation-summary {
+    background: #fff2f0;
+    border: 1px solid #f4b9b2;
+    border-radius: .7rem;
+    color: #8d1b12;
+    margin-bottom: 1.2rem;
+    padding: .85rem 1rem;
+}
+
+::deep .validation-summary:empty {
+    display: none;
+}
+
+::deep .validation-summary ul {
+    margin: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: .7rem;
+    justify-content: flex-end;
+    padding-top: .5rem;
+}
+
+.form-actions button {
+    align-items: center;
+    display: inline-flex;
+    gap: .45rem;
+    min-height: 48px;
+}
+
+@media (max-width: 700px) {
+    .form-panel {
+        padding: 1.25rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .field.full-width {
+        grid-column: auto;
+    }
+}

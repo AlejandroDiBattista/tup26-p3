@@ -1,0 +1,115 @@
+@* Formulario compartido por alta y edición, validado antes de persistir. *@
+<section class="form-panel" aria-labelledby="form-title">
+    <header class="form-header">
+        <div>
+            <p class="eyebrow">@(Model.Id == 0 ? "Alta" : "Edición")</p>
+            <h2 id="form-title">@(Model.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
+            <p>Los campos marcados con <span aria-hidden="true">*</span> son obligatorios.</p>
+        </div>
+        <button class="btn-close" type="button" aria-label="Cerrar formulario" @onclick="OnCancel"></button>
+    </header>
+
+    <EditForm Model="Model" OnValidSubmit="SubmitAsync" FormName="contact-form">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="validation-summary" />
+
+        <fieldset>
+            <legend>Datos principales</legend>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="contact-name">Nombre <span aria-hidden="true">*</span></label>
+                    <InputText id="contact-name" @bind-Value="Model.Nombre" autocomplete="given-name" maxlength="80" />
+                    <ValidationMessage For="() => Model.Nombre" />
+                </div>
+                <div class="field">
+                    <label for="contact-surname">Apellido <span aria-hidden="true">*</span></label>
+                    <InputText id="contact-surname" @bind-Value="Model.Apellido" autocomplete="family-name" maxlength="80" />
+                    <ValidationMessage For="() => Model.Apellido" />
+                </div>
+                <div class="field">
+                    <label for="contact-phone">Teléfono <span aria-hidden="true">*</span></label>
+                    <InputText id="contact-phone" @bind-Value="Model.Telefono" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" />
+                    <ValidationMessage For="() => Model.Telefono" />
+                </div>
+                <div class="field">
+                    <label for="contact-email">Correo electrónico <span aria-hidden="true">*</span></label>
+                    <InputText id="contact-email" @bind-Value="Model.Email" type="email" autocomplete="email" inputmode="email" maxlength="160" />
+                    <ValidationMessage For="() => Model.Email" />
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Información adicional</legend>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="contact-company">Empresa</label>
+                    <InputText id="contact-company" @bind-Value="Model.Empresa" autocomplete="organization" maxlength="120" />
+                    <ValidationMessage For="() => Model.Empresa" />
+                </div>
+                <div class="field">
+                    <label for="contact-role">Cargo</label>
+                    <InputText id="contact-role" @bind-Value="Model.Cargo" autocomplete="organization-title" maxlength="100" />
+                    <ValidationMessage For="() => Model.Cargo" />
+                </div>
+                <div class="field full-width">
+                    <label for="contact-address">Dirección</label>
+                    <InputText id="contact-address" @bind-Value="Model.Direccion" autocomplete="street-address" maxlength="240" />
+                    <ValidationMessage For="() => Model.Direccion" />
+                </div>
+                <div class="field">
+                    <label for="contact-birth-date">Fecha de nacimiento</label>
+                    <InputDate id="contact-birth-date" @bind-Value="Model.FechaNacimiento" max="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" />
+                    <ValidationMessage For="() => Model.FechaNacimiento" />
+                </div>
+                <div class="field full-width">
+                    <label for="contact-notes">Notas</label>
+                    <InputTextArea id="contact-notes" @bind-Value="Model.Notas" rows="4" maxlength="1000" />
+                    <ValidationMessage For="() => Model.Notas" />
+                </div>
+            </div>
+        </fieldset>
+
+        <footer class="form-actions">
+            <button class="btn btn-outline-secondary" type="button" @onclick="OnCancel">Cancelar</button>
+            <button class="btn btn-primary" type="submit" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                }
+                <span>@(Model.Id == 0 ? "Crear contacto" : "Guardar cambios")</span>
+            </button>
+        </footer>
+    </EditForm>
+</section>
+
+@code {
+    private bool isSubmitting;
+
+    [Parameter, EditorRequired]
+    public Contacto Model { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<Contacto> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task SubmitAsync()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            await OnSave.InvokeAsync(Model);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

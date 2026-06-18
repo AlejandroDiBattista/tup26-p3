@@ -13,7 +13,11 @@
                  OnSearch="SearchAsync"
                  OnCreate="StartCreate" />
 
-    @if (selectedContact is not null)
+    @if (editor is not null)
+    {
+        <ContactForm Model="editor" OnSave="SaveAsync" OnCancel="CancelEdit" />
+    }
+    else if (selectedContact is not null)
     {
         <ContactDetail Contact="selectedContact" OnEdit="StartEdit" OnDelete="RequestDelete" />
     }
@@ -31,6 +35,7 @@
     private IReadOnlyList<Contacto> contacts = [];
     private int? selectedId;
     private Contacto? selectedContact;
+    private Contacto? editor;
     private string searchText = "";
     private bool isLoading = true;
 
@@ -51,6 +56,7 @@
 
     private async Task SelectContactAsync(int id)
     {
+        editor = null;
         selectedId = id;
         selectedContact = await ContactoService.ObtenerAsync(id);
     }
@@ -65,15 +71,56 @@
     {
         selectedId = null;
         selectedContact = null;
+        editor = new Contacto();
     }
 
     private void StartEdit()
     {
-        // La edición se incorpora en la siguiente etapa manteniendo este contrato.
+        if (selectedContact is not null)
+        {
+            editor = CopyContact(selectedContact);
+        }
+    }
+
+    private async Task SaveAsync(Contacto contacto)
+    {
+        var isNew = contacto.Id == 0;
+        selectedId = isNew ? await ContactoService.CrearAsync(contacto) : contacto.Id;
+
+        if (!isNew && !await ContactoService.ActualizarAsync(contacto))
+        {
+            selectedId = null;
+        }
+
+        editor = null;
+        await LoadAsync();
+    }
+
+    private async Task CancelEdit()
+    {
+        editor = null;
+        if (selectedContact is null && contacts.Count > 0)
+        {
+            await SelectContactAsync(contacts[0].Id);
+        }
     }
 
     private void RequestDelete()
     {
         // La confirmación se incorpora junto con la eliminación segura.
     }
+
+    private static Contacto CopyContact(Contacto source) => new()
+    {
+        Id = source.Id,
+        Nombre = source.Nombre,
+        Apellido = source.Apellido,
+        Telefono = source.Telefono,
+        Email = source.Email,
+        Empresa = source.Empresa,
+        Cargo = source.Cargo,
+        Direccion = source.Direccion,
+        FechaNacimiento = source.FechaNacimiento,
+        Notas = source.Notas
+    };
 }
