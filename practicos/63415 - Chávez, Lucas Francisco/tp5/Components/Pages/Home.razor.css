@@ -1,0 +1,42 @@
+.agenda-shell {
+    display: grid;
+    grid-template-columns: minmax(19rem, 25rem) minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+.detail-placeholder {
+    align-items: center;
+    background: #f5f6f8;
+    color: #747986;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.detail-placeholder i {
+    color: #a9aeba;
+    font-size: 4rem;
+}
+
+.detail-placeholder h2 {
+    color: #343740;
+    font-size: 1.4rem;
+    margin: 1rem 0 .35rem;
+}
+
+.detail-placeholder p {
+    margin: 0;
+    max-width: 26rem;
+}
+
+@media (max-width: 760px) {
+    .agenda-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-placeholder {
+        display: none;
+    }
+}

@@ -1,0 +1,96 @@
+@* Panel maestro: presenta resultados y comunica la selección al contenedor. *@
+<section class="contact-list" aria-labelledby="contact-list-title">
+    <header class="list-header">
+        <div>
+            <p class="eyebrow">Agenda personal</p>
+            <h1 id="contact-list-title">Contactos</h1>
+        </div>
+        <button class="btn btn-primary new-contact" type="button" @onclick="OnCreate">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+            <span>Nuevo</span>
+        </button>
+    </header>
+
+    <label class="visually-hidden" for="contact-search">Buscar contactos</label>
+    <div class="search-box">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input id="contact-search"
+               name="busqueda"
+               type="search"
+               value="@SearchText"
+               @oninput="HandleSearch"
+               placeholder="Nombre, empresa, teléfono…"
+               autocomplete="off" />
+    </div>
+
+    <p class="result-count" aria-live="polite">
+        @Contacts.Count @(Contacts.Count == 1 ? "contacto" : "contactos")
+    </p>
+
+    @if (IsLoading)
+    {
+        <div class="list-state" role="status">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            Cargando agenda…
+        </div>
+    }
+    else if (Contacts.Count == 0)
+    {
+        <div class="list-state">
+            <i class="bi bi-person-x" aria-hidden="true"></i>
+            <strong>Sin resultados</strong>
+            <span>Probá con otro término de búsqueda.</span>
+        </div>
+    }
+    else
+    {
+        <nav class="contacts" aria-label="Resultados de contactos">
+            @foreach (var contacto in Contacts)
+            {
+                <button type="button"
+                        class="contact-row @(contacto.Id == SelectedId ? "selected" : null)"
+                        aria-current="@(contacto.Id == SelectedId ? "true" : null)"
+                        @onclick="() => OnSelect.InvokeAsync(contacto.Id)">
+                    <span class="avatar" aria-hidden="true">@GetInitials(contacto)</span>
+                    <span class="contact-summary">
+                        <strong>@contacto.Apellido, @contacto.Nombre</strong>
+                        <small>@GetSubtitle(contacto)</small>
+                    </span>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            }
+        </nav>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Contacto> Contacts { get; set; } = [];
+
+    [Parameter]
+    public int? SelectedId { get; set; }
+
+    [Parameter]
+    public string SearchText { get; set; } = "";
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSelect { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    [Parameter]
+    public EventCallback OnCreate { get; set; }
+
+    private Task HandleSearch(ChangeEventArgs eventArgs) =>
+        OnSearch.InvokeAsync(eventArgs.Value?.ToString() ?? "");
+
+    private static string GetInitials(Contacto contacto) =>
+        $"{contacto.Nombre.FirstOrDefault()}{contacto.Apellido.FirstOrDefault()}".ToUpperInvariant();
+
+    private static string GetSubtitle(Contacto contacto) =>
+        !string.IsNullOrWhiteSpace(contacto.Empresa) ? contacto.Empresa : contacto.Telefono;
+}

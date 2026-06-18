@@ -1,7 +1,54 @@
 @page "/"
+@rendermode InteractiveServer
+@inject ContactoService ContactoService
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
-</div>
+<main class="agenda-shell">
+    <ContactList Contacts="contacts"
+                 SelectedId="selectedId"
+                 SearchText="searchText"
+                 IsLoading="isLoading"
+                 OnSelect="SelectContactAsync"
+                 OnSearch="SearchAsync"
+                 OnCreate="StartCreate" />
+
+    <section class="detail-placeholder" aria-live="polite">
+        <i class="bi bi-person-vcard" aria-hidden="true"></i>
+        <h2>Elegí un contacto</h2>
+        <p>Seleccioná una persona de la lista para consultar todos sus datos.</p>
+    </section>
+</main>
+
+@code {
+    private IReadOnlyList<Contacto> contacts = [];
+    private int? selectedId;
+    private string searchText = "";
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        contacts = await ContactoService.ListarAsync(searchText);
+        selectedId = contacts.Any(contact => contact.Id == selectedId)
+            ? selectedId
+            : contacts.FirstOrDefault()?.Id;
+        isLoading = false;
+    }
+
+    private Task SelectContactAsync(int id)
+    {
+        selectedId = id;
+        return Task.CompletedTask;
+    }
+
+    private async Task SearchAsync(string value)
+    {
+        searchText = value;
+        await LoadAsync();
+    }
+
+    private void StartCreate() => selectedId = null;
+}
