@@ -1,0 +1,165 @@
+.contact-detail {
+    background: #f6f7f9;
+    min-height: 100vh;
+    padding: clamp(1.5rem, 4vw, 4rem);
+}
+
+.detail-header {
+    align-items: center;
+    display: flex;
+    gap: 2rem;
+    justify-content: space-between;
+    margin: 0 auto 2rem;
+    max-width: 68rem;
+}
+
+.identity {
+    align-items: center;
+    display: flex;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.large-avatar {
+    align-items: center;
+    background: linear-gradient(145deg, #dfe4ff, #cbd5ff);
+    border: 4px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgb(50 63 112 / 12%);
+    color: #3a50a9;
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 1.6rem;
+    font-weight: 750;
+    height: 5rem;
+    justify-content: center;
+    width: 5rem;
+}
+
+.eyebrow {
+    color: #777d89;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    margin: 0 0 .25rem;
+    text-transform: uppercase;
+}
+
+h2 {
+    color: #1d2027;
+    font-size: clamp(1.55rem, 3vw, 2.3rem);
+    letter-spacing: -.035em;
+    margin: 0;
+}
+
+.role {
+    color: #656b77;
+    margin: .35rem 0 0;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.actions button {
+    align-items: center;
+    display: inline-flex;
+    gap: .45rem;
+    min-height: 44px;
+}
+
+.detail-grid {
+    display: grid;
+    gap: 1.2rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 auto;
+    max-width: 68rem;
+}
+
+.info-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    box-shadow: 0 7px 24px rgb(31 38 58 / 5%);
+    padding: 1.5rem;
+}
+
+.info-card h3 {
+    color: #252831;
+    font-size: 1rem;
+    font-weight: 750;
+    margin: 0 0 1.25rem;
+}
+
+.info-card dl,
+.info-card p {
+    margin: 0;
+}
+
+.info-card dl {
+    display: grid;
+    gap: 1.15rem;
+}
+
+.info-card dl > div {
+    min-width: 0;
+}
+
+.info-card dt {
+    color: #777d89;
+    font-size: .8rem;
+    font-weight: 650;
+    margin-bottom: .25rem;
+}
+
+.info-card dt i {
+    margin-right: .35rem;
+}
+
+.info-card dd {
+    color: #292c34;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.info-card a {
+    color: #405cc5;
+}
+
+.notes {
+    grid-column: 1 / -1;
+}
+
+.notes p {
+    color: #4e535e;
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 960px) {
+    .detail-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .contact-detail {
+        padding: 1.25rem;
+    }
+
+    .identity {
+        align-items: flex-start;
+    }
+
+    .large-avatar {
+        height: 3.75rem;
+        width: 3.75rem;
+    }
+}

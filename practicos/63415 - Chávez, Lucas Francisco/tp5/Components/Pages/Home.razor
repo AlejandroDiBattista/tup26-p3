@@ -13,16 +13,24 @@
                  OnSearch="SearchAsync"
                  OnCreate="StartCreate" />
 
-    <section class="detail-placeholder" aria-live="polite">
-        <i class="bi bi-person-vcard" aria-hidden="true"></i>
-        <h2>Elegí un contacto</h2>
-        <p>Seleccioná una persona de la lista para consultar todos sus datos.</p>
-    </section>
+    @if (selectedContact is not null)
+    {
+        <ContactDetail Contact="selectedContact" OnEdit="StartEdit" OnDelete="RequestDelete" />
+    }
+    else
+    {
+        <section class="detail-placeholder" aria-live="polite">
+            <i class="bi bi-person-vcard" aria-hidden="true"></i>
+            <h2>Elegí un contacto</h2>
+            <p>Seleccioná una persona de la lista para consultar todos sus datos.</p>
+        </section>
+    }
 </main>
 
 @code {
     private IReadOnlyList<Contacto> contacts = [];
     private int? selectedId;
+    private Contacto? selectedContact;
     private string searchText = "";
     private bool isLoading = true;
 
@@ -35,13 +43,16 @@
         selectedId = contacts.Any(contact => contact.Id == selectedId)
             ? selectedId
             : contacts.FirstOrDefault()?.Id;
+        selectedContact = selectedId is int id
+            ? await ContactoService.ObtenerAsync(id)
+            : null;
         isLoading = false;
     }
 
-    private Task SelectContactAsync(int id)
+    private async Task SelectContactAsync(int id)
     {
         selectedId = id;
-        return Task.CompletedTask;
+        selectedContact = await ContactoService.ObtenerAsync(id);
     }
 
     private async Task SearchAsync(string value)
@@ -50,5 +61,19 @@
         await LoadAsync();
     }
 
-    private void StartCreate() => selectedId = null;
+    private void StartCreate()
+    {
+        selectedId = null;
+        selectedContact = null;
+    }
+
+    private void StartEdit()
+    {
+        // La edición se incorpora en la siguiente etapa manteniendo este contrato.
+    }
+
+    private void RequestDelete()
+    {
+        // La confirmación se incorpora junto con la eliminación segura.
+    }
 }

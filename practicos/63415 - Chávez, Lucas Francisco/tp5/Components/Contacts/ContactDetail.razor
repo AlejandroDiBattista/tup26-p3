@@ -1,0 +1,96 @@
+@* Panel detalle: solo muestra datos; el contenedor coordina las acciones CRUD. *@
+<article class="contact-detail" aria-labelledby="contact-name">
+    <header class="detail-header">
+        <div class="identity">
+            <span class="large-avatar" aria-hidden="true">@GetInitials(Contact)</span>
+            <div>
+                <p class="eyebrow">Ficha de contacto</p>
+                <h2 id="contact-name">@Contact.Nombre @Contact.Apellido</h2>
+                @if (!string.IsNullOrWhiteSpace(Contact.Cargo) || !string.IsNullOrWhiteSpace(Contact.Empresa))
+                {
+                    <p class="role">@FormatRole(Contact)</p>
+                }
+            </div>
+        </div>
+
+        <div class="actions" aria-label="Acciones del contacto">
+            <button class="btn btn-outline-secondary" type="button" @onclick="OnEdit">
+                <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+            </button>
+            <button class="btn btn-outline-danger" type="button" @onclick="OnDelete">
+                <i class="bi bi-trash3" aria-hidden="true"></i> Eliminar
+            </button>
+        </div>
+    </header>
+
+    <div class="detail-grid">
+        <section class="info-card" aria-labelledby="contact-section">
+            <h3 id="contact-section">Contacto</h3>
+            <dl>
+                <div>
+                    <dt><i class="bi bi-telephone" aria-hidden="true"></i> Teléfono</dt>
+                    <dd><a href="tel:@Contact.Telefono">@Contact.Telefono</a></dd>
+                </div>
+                <div>
+                    <dt><i class="bi bi-envelope" aria-hidden="true"></i> Correo electrónico</dt>
+                    <dd><a href="mailto:@Contact.Email">@Contact.Email</a></dd>
+                </div>
+                <div>
+                    <dt><i class="bi bi-geo-alt" aria-hidden="true"></i> Dirección</dt>
+                    <dd>@ValueOrFallback(Contact.Direccion)</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="info-card" aria-labelledby="personal-section">
+            <h3 id="personal-section">Información personal</h3>
+            <dl>
+                <div>
+                    <dt><i class="bi bi-building" aria-hidden="true"></i> Empresa</dt>
+                    <dd>@ValueOrFallback(Contact.Empresa)</dd>
+                </div>
+                <div>
+                    <dt><i class="bi bi-briefcase" aria-hidden="true"></i> Cargo</dt>
+                    <dd>@ValueOrFallback(Contact.Cargo)</dd>
+                </div>
+                <div>
+                    <dt><i class="bi bi-calendar3" aria-hidden="true"></i> Fecha de nacimiento</dt>
+                    <dd>@FormatBirthDate(Contact.FechaNacimiento)</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="info-card notes" aria-labelledby="notes-section">
+            <h3 id="notes-section">Notas</h3>
+            <p>@ValueOrFallback(Contact.Notas)</p>
+        </section>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired]
+    public Contacto Contact { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private static string GetInitials(Contacto contacto) =>
+        $"{contacto.Nombre.FirstOrDefault()}{contacto.Apellido.FirstOrDefault()}".ToUpperInvariant();
+
+    private static string FormatRole(Contacto contacto) =>
+        (contacto.Cargo, contacto.Empresa) switch
+        {
+            ({ Length: > 0 }, { Length: > 0 }) => $"{contacto.Cargo} · {contacto.Empresa}",
+            ({ Length: > 0 }, _) => contacto.Cargo,
+            _ => contacto.Empresa
+        };
+
+    private static string ValueOrFallback(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "Sin especificar" : value;
+
+    private static string FormatBirthDate(DateOnly? date) =>
+        date?.ToString("dd/MM/yyyy") ?? "Sin especificar";
+}
