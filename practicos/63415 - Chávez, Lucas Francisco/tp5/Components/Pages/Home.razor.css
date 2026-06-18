@@ -4,6 +4,14 @@
     min-height: 100vh;
 }
 
+.detail-area {
+    min-width: 0;
+}
+
+.mobile-back {
+    display: none;
+}
+
 .status-toast {
     align-items: center;
     background: #ecfdf3;
@@ -120,6 +128,32 @@
 @media (max-width: 760px) {
     .agenda-shell {
         grid-template-columns: 1fr;
+    }
+
+    .detail-area {
+        display: none;
+    }
+
+    .mobile-detail-visible ::deep .contact-list {
+        display: none;
+    }
+
+    .mobile-detail-visible .detail-area {
+        display: block;
+    }
+
+    .mobile-back {
+        align-items: center;
+        background: #fff;
+        border: 0;
+        border-bottom: 1px solid #e4e7ec;
+        color: #405cc5;
+        display: flex;
+        font-weight: 650;
+        gap: .45rem;
+        min-height: 48px;
+        padding: .65rem 1.25rem;
+        width: 100%;
     }
 
     .dialog-actions {

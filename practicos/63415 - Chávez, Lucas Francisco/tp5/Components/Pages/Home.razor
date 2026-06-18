@@ -15,31 +15,37 @@
     </div>
 }
 
-<main class="agenda-shell">
+<main class="agenda-shell @(isMobileDetailVisible ? "mobile-detail-visible" : null)">
     <ContactList Contacts="contacts"
                  SelectedId="selectedId"
-                 SearchText="searchText"
+                 SearchText="@searchText"
                  IsLoading="isLoading"
                  OnSelect="SelectContactAsync"
                  OnSearch="SearchAsync"
                  OnCreate="StartCreate" />
 
-    @if (editor is not null)
-    {
-        <ContactForm Model="editor" OnSave="SaveAsync" OnCancel="CancelEdit" />
-    }
-    else if (selectedContact is not null)
-    {
-        <ContactDetail Contact="selectedContact" OnEdit="StartEdit" OnDelete="RequestDelete" />
-    }
-    else
-    {
-        <section class="detail-placeholder" aria-live="polite">
-            <i class="bi bi-person-vcard" aria-hidden="true"></i>
-            <h2>Elegí un contacto</h2>
-            <p>Seleccioná una persona de la lista para consultar todos sus datos.</p>
-        </section>
-    }
+    <div class="detail-area">
+        <button class="mobile-back" type="button" @onclick="ShowMobileList">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a contactos
+        </button>
+
+        @if (editor is not null)
+        {
+            <ContactForm Model="editor" OnSave="SaveAsync" OnCancel="CancelEdit" />
+        }
+        else if (selectedContact is not null)
+        {
+            <ContactDetail Contact="selectedContact" OnEdit="StartEdit" OnDelete="RequestDelete" />
+        }
+        else
+        {
+            <section class="detail-placeholder" aria-live="polite">
+                <i class="bi bi-person-vcard" aria-hidden="true"></i>
+                <h2>Elegí un contacto</h2>
+                <p>Seleccioná una persona de la lista para consultar todos sus datos.</p>
+            </section>
+        }
+    </div>
 </main>
 
 @if (showDeleteConfirmation && selectedContact is not null)
@@ -74,6 +80,7 @@
     private bool isLoading = true;
     private bool showDeleteConfirmation;
     private bool statusIsError;
+    private bool isMobileDetailVisible;
     private string statusMessage = "";
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
@@ -96,6 +103,7 @@
         editor = null;
         selectedId = id;
         selectedContact = await ContactoService.ObtenerAsync(id);
+        isMobileDetailVisible = true;
     }
 
     private async Task SearchAsync(string value)
@@ -109,6 +117,7 @@
         selectedId = null;
         selectedContact = null;
         editor = new Contacto();
+        isMobileDetailVisible = true;
     }
 
     private void StartEdit()
@@ -118,6 +127,8 @@
             editor = CopyContact(selectedContact);
         }
     }
+
+    private void ShowMobileList() => isMobileDetailVisible = false;
 
     private async Task SaveAsync(Contacto contacto)
     {
