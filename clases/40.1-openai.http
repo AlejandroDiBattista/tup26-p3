@@ -1,0 +1,69 @@
+@prompt = Factorial en C#
+@temperature = 1
+@maxTokens = 4096
+
+
+### OpenAI
+@openaiApiKey = {{$dotenv OPENAI_API_KEY}}
+@openaiModel = gpt-5.5
+@openaiUrl = https://api.openai.com/v1/chat/completions
+
+POST {{openaiUrl}}
+Content-Type: application/json
+Authorization: Bearer {{openaiApiKey}}
+
+{
+  "model": "{{openaiModel}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{{prompt}}"
+    }
+  ],
+  "temperature": {{temperature}},
+  "max_completion_tokens": {{maxTokens}}
+}
+
+
+### Gemini con formato OpenAI
+@geminiApiKey = {{$dotenv GEMINI_API_KEY}}
+@geminiModel = gemini-2.5-flash
+@geminiUrl = https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+
+POST {{geminiUrl}}
+Content-Type: application/json
+Authorization: Bearer {{geminiApiKey}}
+
+{
+  "model": "{{geminiModel}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{{prompt}}"
+    }
+  ],
+  "temperature": {{temperature}},
+  "max_completion_tokens": {{maxTokens}}
+}
+
+
+### Groq con formato OpenAI
+@groqApiKey = {{$dotenv GROQ_API_KEY}}
+@groqModel = qwen/qwen3.6-27b
+@groqUrl = https://api.groq.com/openai/v1/chat/completions
+
+POST {{groqUrl}}
+Content-Type: application/json
+Authorization: Bearer {{groqApiKey}}
+
+{
+  "model": "{{groqModel}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{{prompt}}"
+    }
+  ],
+  "temperature": {{temperature}},
+  "max_completion_tokens": {{maxTokens}}
+}

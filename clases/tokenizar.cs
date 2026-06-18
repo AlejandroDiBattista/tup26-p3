@@ -1,5 +1,50 @@
+var Textos = @"""
+ana ama a omar.
+omar ama a ana.
+omar no ama.
+ana no nada.
+omar nada.
+ana nada.
+omar anda.
+ana anda.
+dame amor.
+dame una mano.
+dame una moneda.
+omar me da amor.
+ana me da una moneda.
+omar me da una mano.
+ana me manda una moneda.
+omar manda una nota.
+ana manda una nota.
+omar demora.
+ana demora.
+dame un remo.
+omar rema.
+ana rema.
+omar nada en mar.
+ana nada en mar.
+omar anda en arena.
+ana anda en arena.
+omar ama a morena.
+morena ama a omar.
+ana ordena.
+omar ordena.
+""".Trim();
+
+
+var tokenizador = new Tokenizador();
+tokenizador.Aprender(Textos, 30);
+
+var tokens = tokenizador.Tokenizar("ana ama a omar y omar ");
+Console.WriteLine(string.Join(", ", tokens));
+
+Console.WriteLine("Tokens aprendidos:");
+foreach (var token in tokenizador.tokens) {
+    Console.WriteLine($"{token,-10} - ID: {tokenizador.tokens.IndexOf(token),3}");
+}
+
 public class Tokenizador {
-    private readonly List<string> tokens = [];
+    public readonly List<string> tokens = [];
 
     public void Aprender(string texto, int cantidad) {
         var secuencia = Secuenciar(texto);
@@ -26,7 +71,7 @@ public class Tokenizador {
     // Datos un texto me da una lista de caracteres (tokens) que lo componen 
     // Ejemplo: "hola" -> ["h", "o", "l", "a"]
     private static List<string> Secuenciar(string texto) {
-        return texto.Select(c => c.ToString()).ToList();
+        return texto.Replace("\n", " ").Select(c => c.ToString()).ToList();
     }
 
     // Dada una lista de tokens, encuentra el par de tokens adyacentes que aparece con mayor frecuencia
