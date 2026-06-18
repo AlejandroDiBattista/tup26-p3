@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using tp5.Components;
 using tp5.Data;
+using tp5.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("Agenda")
 
 builder.Services.AddDbContextFactory<AgendaContext>(options =>
     options.UseSqlite(connectionString));
+builder.Services.AddScoped<ContactoService>();
 
 var app = builder.Build();
 
