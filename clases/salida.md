@@ -1,1 +1,0 @@
-The morning is sunny in Alabama.

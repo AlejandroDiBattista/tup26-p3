@@ -6,28 +6,56 @@
 using Microsoft.Extensions.AI;
 using OpenAI.Chat;
 
-DotNetEnv.Env.TraversePath().Load();
+DotNetEnv.Env.Load();
 
 var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-var modelo = "gpt-5.5";
+var modelo = Environment.GetEnvironmentVariable("OPENAI_MODEL") ?? "gpt-5.5";
 
-if (string.IsNullOrWhiteSpace(apiKey)) {
-    throw new InvalidOperationException("Configura OPENAI_API_KEY antes de ejecutar este ejemplo.");
-}
+IChatClient chat = new ChatClient(modelo, apiKey).AsIChatClient();
 
 Console.Clear();
 var inicio = DateTime.Now;
 
-IChatClient chat = new ChatClient(modelo, apiKey).AsIChatClient();
 
 var salida = await Traducir("La mañana esta soleada en Alabama");
 Console.WriteLine(salida);
-File.WriteAllText("salida.md", salida);
+File.WriteAllText("./40.0-salida.md", salida);
 
 Console.WriteLine($"\n✦ {(DateTime.Now - inicio).TotalSeconds:N2}s");
 
-async Task<string> Traducir(string texto, string idiomaDestino = "ingles") {
-    return await Completar($"Traduce el siguiente texto al {idiomaDestino}: '{texto}'. Dame la frase traducida sin ningún comentario adicional.");
+
+async Task<string> Traducir(string texto, string idioma) {
+    return await Completar($"traduce el siguiente texto al {idioma}: {texto}");
+} 
+
+async Task<string> ExtraerNombre(string texto) {
+    return await Completar($"extrae el nombre del siguiente texto en formato <apellido>, <nombre>: {texto}");
+} 
+
+async Task<string> ExtraerFecha(string texto) {
+    return await Completar($"Hoy es {DateTime.Now:yyyy-MM-dd}. Extrae la fecha relativa del siguiente texto: {texto}");
+} 
+
+async Task<string> Resumir(string texto) {
+    return await Completar($"resume el siguiente texto en una frase: {texto}");
+}
+
+async Task<string> Consultar(string texto) {
+    var alumnos = File.ReadAllText("../alumnos/alumnos.md");
+
+    return await Completar($"Actual como un asistente de programacion y responde a la siguiente pregunta: {texto}\n\nTen en cuenta esta informacion de los alumnos:\n{alumnos}");
+}
+
+async Task<string> Programar(string texto) {
+    var resultado = await Completar($"Escribe un programa en c# que {texto}. Solo dame el codigo sin explicaciones.");
+    File.WriteAllText("./40.0-programa.cs", resultado, Encoding.UTF8);
+    return resultado;
+}
+
+async Task<string> PaginaWeb(string texto) {
+    var resultado = await Completar($"Escribe una pagina web autocontenida en html que {texto}. Solo dame el codigo sin explicaciones.");
+    File.WriteAllText("./40.0-pagina.html", resultado, Encoding.UTF8);
+    return resultado;
 }
 
 async Task<string> Completar(string indicacion) {

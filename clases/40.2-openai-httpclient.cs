@@ -5,22 +5,30 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-DotNetEnv.Env.TraversePath().Load();
+DotNetEnv.Env.Load();
 
-string proveedor = args.Length > 0 ? args[0] : "openai";
+string proveedor = (args.Length > 0 ? args[0] : "openai").ToUpper();
+
+string  URL     = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? "";
+string? API_KEY = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+string  MODELO  = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.5";
 
 var inicio = DateTime.Now;
 var salida = "";
+Console.Clear();
+Console.WriteLine($"\n- | Proveedor: {proveedor} | Modelo: {MODELO} |---------------------\n\n");
 
-// Mostrar( await Traducir("Todo lo que necesitas es atencion", "ingles"));
-// Mostrar( await ExtraerNombre("Mi nombre es Ada Lovelace"));
+// Mostrar(await Completar("No por mucho madrugar..."));
+// Mostrar(await Traducir("Todo lo que necesitas es atencion", "ingles"));
+// Mostrar( await ExtraerNombre("Mi nombre es Ada Lovelace y soy una pionera de la computación"));
 // Mostrar( await ExtraerFecha("La reunion es el proximo lunes"));
+// Mostrar( await PaginaWeb("Calculadora muy elegante con operaciones basicas y un diseño moderno"));
 // Mostrar( await Resumir(agenda));
-// Mostrar( await Programar("calcula el área de un círculo con radio 5"));
-// Mostrar( await Consultar("¿Cuántos alumnos varones y mujeres hay en total?"));
-Mostrar( await PaginaWeb("Muestre un reloj analogico en tiempo real"));
+// Mostrar( await Programar("calcule los 10 primeros números primos que sean mayores a 40. "));
+// Mostrar( await Consultar("Cuántos alumnos varones y mujeres hay en total?"));
+// Mostrar( await Consultar("que alumnos solo le solo le falta el tp5?"));
+Mostrar( await PaginaWeb("Muestre un reloj analogico en tiempo real que tenga una bola que rebote dentro de la esfera y cambie de color cada vez que rebote."));
 
-Console.WriteLine($"\n✧ {(DateTime.Now - inicio).TotalSeconds:0.0}s");
 
 async Task<string> Traducir(string texto, string idioma) {
     return await Completar($"traduce el siguiente texto al {idioma}: {texto}");
@@ -41,73 +49,63 @@ async Task<string> Resumir(string texto) {
 async Task<string> Consultar(string texto) {
     var alumnos = File.ReadAllText("../alumnos/alumnos.md");
 
-    return await Completar($"Actual como un asistente de programacion y responde a la siguiente pregunta: {texto}\n\nTen en cuenta esta informacion de los alumnos:\n{alumnos}");
+    return await Completar($"Actua como un asistente de programacion y responde a la siguiente pregunta: {texto}\n\nTen en cuenta esta informacion de los alumnos:\n{alumnos}");
 }
 
 async Task<string> Programar(string texto) {
-    return await Completar($"Escribe un programa en c# que {texto}. Solo dame el codigo sin explicaciones.");
+    var resultado = await Completar($"Escribe un programa en c# que {texto}. Solo dame el codigo sin explicaciones.");
+    File.WriteAllText("./40.0-programa.cs", resultado, Encoding.UTF8);
+    return resultado;
 }
 
 async Task<string> PaginaWeb(string texto) {
-    return await Completar($"Escribe una pagina web autocontenida en html que {texto}. Solo dame el codigo sin explicaciones.");
+    var resultado = await Completar($"Escribe una pagina web autocontenida en html que {texto}. Solo dame el codigo sin explicaciones.");
+    File.WriteAllText("./40.0-pagina.html", resultado, Encoding.UTF8);
+    return resultado;
 }
 
-
+// Muestra por consola y en `salida.md` para visualizar mejor el resultado. 
 void Mostrar(string texto) {
-    Console.WriteLine("\n---\n");
     Console.WriteLine(texto);
+    Console.WriteLine($"\n-- {(DateTime.Now - inicio).TotalSeconds:0.0}s ---------------\n");
+    inicio = DateTime.Now;
 
-    salida += $"{texto}\n";
-    File.WriteAllText("salida.md", salida);
+    salida += $"---\n{texto}\n";
+    File.WriteAllText("./40.0-salida.md", salida, Encoding.UTF8);
 }
 
+// Completa el prompt usando la API HTTP del proveedor configurado. (Compatible con OpenAI).
 async Task<string> Completar(string prompt) {
-    var config = Proveedor.Crear(proveedor);
-
-    const double temperatura = 1;
-    const int maxTokens = 8192;
+    var temperatura = 1;
+    var maxTokens = 4096;
+    var tokenLimitName = proveedor == "OPENAI" ? "max_completion_tokens" : "max_tokens";
 
     var json = $$"""
     {
-      "model": "{{Json(config.Modelo)}}",
-      "messages": [
-        {
-          "role": "user",
-          "content": "{{Json(prompt)}}"
-        }
-      ],
-      "temperature": {{temperatura}},
-      "max_completion_tokens": {{maxTokens}}
+        "model": "{{Json(MODELO)}}",
+        "messages": [
+            {
+                "role": "user",
+                "content": "{{Json(prompt)}}"
+            }
+        ],
+        "temperature": {{temperatura}},
+        "{{tokenLimitName}}": {{maxTokens}}
     }
     """;
 
     using var http = new HttpClient();
-    if (config.ApiKey is not null) {
-        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", config.ApiKey);
+    if (API_KEY is not null) {
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", API_KEY);
     }
 
     using var contenido = new StringContent(json, Encoding.UTF8, "application/json");
-    using var respuesta = await http.PostAsync(config.Url, contenido);
-    var cuerpo = await respuesta.Content.ReadAsStringAsync();
+    using var respuesta = await http.PostAsync(URL, contenido);
 
-    if (!respuesta.IsSuccessStatusCode) { return $"Error HTTP {(int)respuesta.StatusCode}\n{cuerpo}"; }
+    var cuerpo = await respuesta.Content.ReadAsStringAsync();
+    if (!respuesta.IsSuccessStatusCode) { return $"Error HTTP {respuesta.StatusCode}:{respuesta.ReasonPhrase}\n{cuerpo}"; }
 
     return JsonNode.Parse(cuerpo)?["choices"]?[0]?["message"]?["content"]?.ToString() ?? "";
 }
 
-static string Json(string texto) =>
-    JsonEncodedText.Encode(texto).ToString();
-
-record Proveedor(string Url, string Modelo, string? ApiKeyVariable = null) {
-    public string? ApiKey => Environment.GetEnvironmentVariable(ApiKeyVariable ?? "") ?? "";
-
-    public static Proveedor Crear(string proveedor) => proveedor.ToLower() switch {
-     // "openai"     => new("https://api.openai.com/v1/chat/completions",                               "gpt-5.4-mini",     "OPENAI_API_KEY"),
-        "openai"     => new("https://api.openai.com/v1/chat/completions",                               "gpt-5.5",          "OPENAI_API_KEY"),
-        "gemini"     => new("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "gemini-2.5-flash", "GEMINI_API_KEY"),
-        "groq"       => new("https://api.groq.com/openai/v1/chat/completions",                          "qwen/qwen3.6-27b", "GROQ_API_KEY"),
-        "ollama"     => new("http://localhost:11434/v1/chat/completions",                               "qwen2.5-coder:7b"),
-        "openrouter" => new("https://openrouter.ai/api/v1/chat/completions",                            "openrouter/auto",  "OPENROUTER_API_KEY"),
-        _ => throw new InvalidOperationException($"Proveedor desconocido '{proveedor}'.")
-    };
-}
+static string Json(string texto) => JsonEncodedText.Encode(texto).ToString();

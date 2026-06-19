@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reloj Analógico con Bola Rebotando</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, #1f2937, #020617);
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      width: min(90vw, 90vh);
+      height: min(90vw, 90vh);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="clock"></canvas>
+
+  <script>
+    const canvas = document.getElementById("clock");
+    const ctx = canvas.getContext("2d");
+
+    let size, dpr, cx, cy, radius;
+
+    const ball = {
+      x: 0,
+      y: 0,
+      vx: 2.4,
+      vy: 1.8,
+      r: 13,
+      color: randomColor()
+    };
+
+    function resize() {
+      dpr = window.devicePixelRatio || 1;
+      size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      canvas.style.width = size + "px";
+      canvas.style.height = size + "px";
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      cx = size / 2;
+      cy = size / 2;
+      radius = size * 0.43;
+
+      if (ball.x === 0 && ball.y === 0) {
+        ball.x = cx + radius * 0.25;
+        ball.y = cy - radius * 0.2;
+      }
+
+      ball.r = Math.max(8, size * 0.025);
+    }
+
+    function randomColor() {
+      return `hsl(${Math.floor(Math.random() * 360)}, 90%, 60%)`;
+    }
+
+    function drawClockFace() {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      const gradient = ctx.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius);
+      gradient.addColorStop(0, "#f8fafc");
+      gradient.addColorStop(1, "#cbd5e1");
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.lineWidth = radius * 0.035;
+      ctx.strokeStyle = "#0f172a";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.96, 0, Math.PI * 2);
+      ctx.lineWidth = radius * 0.01;
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.stroke();
+
+      for (let i = 0; i < 60; i++) {
+        const angle = (i * Math.PI) / 30;
+        const isHour = i % 5 === 0;
+        const inner = radius * (isHour ? 0.84 : 0.91);
+        const outer = radius * 0.95;
+
+        ctx.beginPath();
+        ctx.moveTo(Math.sin(angle) * inner, -Math.cos(angle) * inner);
+        ctx.lineTo(Math.sin(angle) * outer, -Math.cos(angle) * outer);
+        ctx.lineWidth = isHour ? radius * 0.018 : radius * 0.006;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#0f172a";
+        ctx.stroke();
+      }
+
+      ctx.font = `${radius * 0.12}px Arial`;
+      ctx.fillStyle = "#0f172a";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let n = 1; n <= 12; n++) {
+        const angle = (n * Math.PI) / 6;
+        const x = Math.sin(angle) * radius * 0.72;
+        const y = -Math.cos(angle) * radius * 0.72;
+        ctx.fillText(n, x, y);
+      }
+
+      ctx.restore();
+    }
+
+    function drawHand(angle, length, width, color) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+
+      ctx.beginPath();
+      ctx.moveTo(-width * 0.5, width);
+      ctx.lineTo(width * 0.5, width);
+      ctx.lineTo(width * 0.25, -length);
+      ctx.lineTo(-width * 0.25, -length);
+      ctx.closePath();
+
+      ctx.fillStyle = color;
+      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.shadowBlur = width * 0.8;
+      ctx.shadowOffsetX = width * 0.2;
+      ctx.shadowOffsetY = width * 0.2;
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawHands() {
+      const now = new Date();
+      const ms = now.getMilliseconds();
+      const seconds = now.getSeconds() + ms / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const secondAngle = (seconds * Math.PI) / 30;
+      const minuteAngle = (minutes * Math.PI) / 30;
+      const hourAngle = (hours * Math.PI) / 6;
+
+      drawHand(hourAngle, radius * 0.48, radius * 0.07, "#111827");
+      drawHand(minuteAngle, radius * 0.68, radius * 0.045, "#1f2937");
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(secondAngle);
+      ctx.beginPath();
+      ctx.moveTo(0, radius * 0.18);
+      ctx.lineTo(0, -radius * 0.78);
+      ctx.lineWidth = radius * 0.014;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#dc2626";
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.055, 0, Math.PI * 2);
+      ctx.fillStyle = "#dc2626";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.025, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+    }
+
+    function updateBall() {
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      const dx = ball.x - cx;
+      const dy = ball.y - cy;
+      const dist = Math.hypot(dx, dy);
+      const limit = radius - ball.r - radius * 0.02;
+
+      if (dist > limit) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        ball.x = cx + nx * limit;
+        ball.y = cy + ny * limit;
+
+        const dot = ball.vx * nx + ball.vy * ny;
+        ball.vx -= 2 * dot * nx;
+        ball.vy -= 2 * dot * ny;
+
+        ball.color = randomColor();
+      }
+    }
+
+    function drawBall() {
+      ctx.save();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - radius * 0.02, 0, Math.PI * 2);
+      ctx.clip();
+
+      const grad = ctx.createRadialGradient(
+        ball.x - ball.r * 0.35,
+        ball.y - ball.r * 0.35,
+        ball.r * 0.1,
+        ball.x,
+        ball.y,
+        ball.r
+      );
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(0.28, ball.color);
+      grad.addColorStop(1, "#111827");
+
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.shadowColor = "rgba(0,0,0,0.35)";
+      ctx.shadowBlur = ball.r * 0.7;
+      ctx.shadowOffsetX = ball.r * 0.25;
+      ctx.shadowOffsetY = ball.r * 0.25;
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, size, size);
+
+      updateBall();
+      drawClockFace();
+      drawBall();
+      drawHands();
+
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("resize", resize);
+
+    resize();
+    animate();
+  </script>
+</body>
+</html>
