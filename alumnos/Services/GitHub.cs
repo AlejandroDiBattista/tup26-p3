@@ -545,7 +545,8 @@ class GitHub {
         }
 
         if (archivosDescargados.Count == 0) {
-            Log.Warning($"PR #{numeroPR}: se detectaron {archivosDirectorio.Count} archivo(s) en '{carpetaAlumno}/{carpetaRemota}/', pero no se descargó ninguno.");
+            var cantidad = archivosDirectorio.Count;
+            Log.Warning($"PR #{numeroPR}: se detectaron {cantidad} archivo{(cantidad == 1 ? "" : "s")} en '{carpetaAlumno}/{carpetaRemota}/', pero no se descargó ninguno.");
         }
 
         return archivosDescargados;

@@ -1,26 +1,49 @@
 #:package DotNetEnv@*
-#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package OpenAI@2.9.1
 
 using Microsoft.Extensions.AI;
+using OpenAI;
+using System.ClientModel;
 using System.Text;
-
-using OpenAIChatClient = OpenAI.Chat.ChatClient;
 
 DotNetEnv.Env.TraversePath().Load();
 
-var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-var modelo = "gpt-5.5";
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 
-if (string.IsNullOrWhiteSpace(apiKey)) {
-    throw new InvalidOperationException("Configura OPENAI_API_KEY antes de ejecutar este ejemplo.");
+if (string.IsNullOrWhiteSpace(url)) {
+    throw new InvalidOperationException($"Configura {proveedor}_API_URL antes de ejecutar este ejemplo.");
+}
+
+if (string.IsNullOrWhiteSpace(modelo)) {
+    throw new InvalidOperationException($"Configura {proveedor}_MODEL antes de ejecutar este ejemplo.");
+}
+
+if (string.IsNullOrWhiteSpace(apiKey) && proveedor != "OLLAMA") {
+    throw new InvalidOperationException($"Configura {proveedor}_API_KEY antes de ejecutar este ejemplo.");
 }
 
 Console.OutputEncoding = Encoding.UTF8;
 Console.Clear();
 
-IChatClient chat = new OpenAIChatClient(modelo, apiKey).AsIChatClient();
+var baseUrl = url.TrimEnd('/');
+const string chatCompletions = "/chat/completions";
+
+if (baseUrl.EndsWith(chatCompletions, StringComparison.OrdinalIgnoreCase)) {
+    baseUrl = baseUrl[..^chatCompletions.Length];
+}
+
+var opciones = new OpenAIClientOptions {
+    Endpoint = new Uri(baseUrl)
+};
+
+IChatClient chat = new OpenAIClient(
+        new ApiKeyCredential(apiKey ?? "no-requiere-key"), opciones)
+    .GetChatClient(modelo)
+    .AsIChatClient();
 
 var mensajes = new List<ChatMessage> {
     new(ChatRole.System, """
@@ -33,7 +56,7 @@ var mensajes = new List<ChatMessage> {
 
 var transcript = new StringBuilder();
 
-Console.WriteLine($"Asistente MEAI listo ({modelo}).");
+Console.WriteLine($"Asistente MEAI listo ({proveedor} / {modelo}).");
 Console.WriteLine("Escribí /salir para terminar.\n");
 
 while (true) {
@@ -54,10 +77,8 @@ while (true) {
     mensajes.Add(new(ChatRole.User, entrada));
     transcript.AppendLine($"## Vos\n\n{entrada}\n");
 
-    var inicio = DateTime.Now;
     var respuesta = await chat.GetResponseAsync(mensajes);
     var texto = respuesta.Text ?? "";
-    var segundos = (DateTime.Now - inicio).TotalSeconds;
 
     mensajes.Add(new(ChatRole.Assistant, texto));
     transcript.AppendLine($"## Asistente\n\n{texto}\n");
@@ -67,5 +88,4 @@ while (true) {
     Console.WriteLine("\nasistente>");
     Console.ResetColor();
     Console.WriteLine($"{texto}\n");
-    Console.WriteLine($"✦ {segundos:N2}s\n");
 }

@@ -1,12 +1,11 @@
-@prompt = Factorial en C#
+@prompt = No por mucho madrugar
 @temperature = 1
-@maxTokens = 4096
 
 
 ### OpenAI
+@openaiUrl = https://api.openai.com/v1/chat/completions
 @openaiApiKey = {{$dotenv OPENAI_API_KEY}}
 @openaiModel = gpt-5.5
-@openaiUrl = https://api.openai.com/v1/chat/completions
 
 POST {{openaiUrl}}
 Content-Type: application/json
@@ -21,14 +20,13 @@ Authorization: Bearer {{openaiApiKey}}
     }
   ],
   "temperature": {{temperature}},
-  "max_completion_tokens": {{maxTokens}}
 }
 
 
 ### Gemini con formato OpenAI
+@geminiUrl = https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
 @geminiApiKey = {{$dotenv GEMINI_API_KEY}}
 @geminiModel = gemini-2.5-flash
-@geminiUrl = https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
 
 POST {{geminiUrl}}
 Content-Type: application/json
@@ -43,14 +41,13 @@ Authorization: Bearer {{geminiApiKey}}
     }
   ],
   "temperature": {{temperature}},
-  "max_completion_tokens": {{maxTokens}}
 }
 
 
 ### Groq con formato OpenAI
+@groqUrl = https://api.groq.com/openai/v1/chat/completions
 @groqApiKey = {{$dotenv GROQ_API_KEY}}
 @groqModel = qwen/qwen3.6-27b
-@groqUrl = https://api.groq.com/openai/v1/chat/completions
 
 POST {{groqUrl}}
 Content-Type: application/json
@@ -65,5 +62,4 @@ Authorization: Bearer {{groqApiKey}}
     }
   ],
   "temperature": {{temperature}},
-  "max_completion_tokens": {{maxTokens}}
 }

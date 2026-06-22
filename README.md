@@ -1,68 +1,84 @@
-﻿# TP5: AgendaWeb
-## Agenda de Contactos con Blazor, EF Core y SQLite
+﻿# TP6: AsistenteIA
+## Asistente de Chat por Terminal con Microsoft.Extensions.AI y Terminal.Gui
 
 > [!IMPORTANT]
-> Plazo para entregar el TP5: **Sábado 13 de Junio hasta las 23:59hs**
+> Plazo para entregar el TP6: **Jueves 25 de Junio hasta las 23:59hs**
 >
 > *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*
 
 ## Descripción general
 
-Desarrollar una aplicación web para gestionar una **agenda de contactos**, construida con:
+Desarrollar una aplicación de **consola interactiva** que funcione como un **asistente conversacional** apoyado en un modelo de lenguaje, construida con:
 
-- **Blazor** — Interfaz de usuario.
-- **Entity Framework Core + SQLite** — Acceso y persistencia de datos.
+- **Terminal.Gui (v2)** — Interfaz de usuario en modo texto (TUI).
+- **Microsoft.Extensions.AI (MEAI)** — Abstracción `IChatClient` para conversar con el modelo.
+- **Proveedor compatible con OpenAI** — Acceso al modelo mediante una clave configurada por variable de entorno.
 
-El sistema debe permitir administrar contactos mediante operaciones de alta, consulta, modificación y eliminación, integrando interfaz, lógica de aplicación y persistencia de datos.
+El sistema debe permitir mantener una conversación con el asistente: el usuario escribe un mensaje, lo envía, y la respuesta del modelo se va mostrando **a medida que se genera** (streaming). La conversación se conserva durante toda la sesión para dar contexto a cada nueva pregunta.
 
 ---
 
-## Modelo de datos
+## Modelo de la conversación
 
-Cada contacto representa una persona o entidad registrada en el sistema, y cuenta con un identificador interno gestionado automáticamente que lo distingue de manera unívoca. Sus datos son:
+La conversación es una secuencia de mensajes, cada uno con un **rol** que lo distingue dentro del diálogo. Los roles que intervienen son:
 
-| Campo                | Descripción                                          | Obligatorio |
-|----------------------|------------------------------------------------------|:-----------:|
-| Nombre               | Nombre de la persona o entidad                       | Sí          |
-| Apellido             | Apellido de la persona                               | Sí          |
-| Teléfono             | Número de contacto telefónico                        | Sí          |
-| Correo electrónico   | Dirección de correo para su comunicación             | Sí          |
-| Empresa              | Empresa u organización a la que pertenece            | No          |
-| Cargo                | Puesto o función que desempeña                       | No          |
-| Dirección            | Domicilio o dirección postal                         | No          |
-| Fecha de nacimiento  | Fecha de nacimiento del contacto                     | No          |
-| Notas                | Comentarios o información adicional                  | No          |
+| Rol         | Descripción                                                                 | Visible al usuario |
+|-------------|-----------------------------------------------------------------------------|:------------------:|
+| Sistema     | Instrucción inicial que define el comportamiento del asistente              | No                 |
+| Usuario     | Cada mensaje que escribe la persona                                         | Sí                 |
+| Asistente   | Cada respuesta que produce el modelo                                        | Sí                 |
 
-La información se almacena en una base de datos **SQLite**, y el acceso se realiza mediante **Entity Framework Core**. La aplicación debe definir la entidad, el contexto de base de datos (DbContext) y la lógica para consultar y modificar los datos.
+El mensaje de **sistema** se carga desde un archivo `AGENTS.md` ubicado junto a la aplicación, y fija el "carácter" del asistente (idioma, tono, preferencias de lenguaje de ejemplo, qué hacer cuando falta contexto). Mantener el prompt en un archivo aparte permite ajustarlo sin recompilar. Los mensajes de **usuario** y **asistente** se acumulan a lo largo de la sesión y se envían completos en cada consulta, de modo que el modelo recuerde lo conversado.
+
+El acceso al modelo se realiza mediante la abstracción `IChatClient` de **Microsoft.Extensions.AI**, sin acoplar la lógica de la aplicación a un proveedor concreto. La clave de la API se lee desde una **variable de entorno** (por ejemplo, cargada desde un archivo `.env`), nunca escrita en el código.
 
 ---
 
 ## Funcionalidades requeridas
 
-La aplicación debe implementar las operaciones CRUD sobre los contactos:
+La aplicación debe implementar la conversación con el asistente:
 
-- **Crear:** registrar un nuevo contacto en la agenda.
-- **Consultar:** visualizar la lista de contactos y acceder al detalle de cada uno.
-- **Modificar:** editar la información de un contacto existente.
-- **Eliminar:** quitar contactos de la agenda.
-- **Buscar:** filtrar contactos para facilitar la navegación dentro de la agenda.
+- **Enviar mensaje:** tomar el texto que escribió el usuario y agregarlo a la conversación.
+- **Recibir respuesta en streaming:** mostrar la respuesta del modelo **fragmento a fragmento**, a medida que llega, sin esperar a que termine.
+- **Mantener contexto:** conservar el historial completo de la sesión para que cada nueva pregunta tenga en cuenta lo anterior.
+- **Renderizar Markdown:** mostrar la conversación con formato (encabezados por turno, bloques de código resaltados, etc.).
+- **Salir:** cerrar la aplicación de forma limpia con la tecla **Esc**.
+
+---
+
+## Herramientas (function calling)
+
+El asistente debe poder **operar sobre el sistema de archivos** del proyecto a pedido del usuario. Para ello se exponen al modelo, mediante el mecanismo de *function calling* de **Microsoft.Extensions.AI**, las siguientes herramientas:
+
+| Herramienta        | Descripción                                              | Parámetros            |
+|--------------------|----------------------------------------------------------|-----------------------|
+| `leer-archivo`     | Devuelve el contenido de un archivo de texto             | ruta del archivo      |
+| `escribir-archivo` | Crea o sobrescribe un archivo con el contenido indicado  | ruta y contenido      |
+| `listar-archivos`  | Lista los archivos (y carpetas) de un directorio         | ruta del directorio   |
+
+El modelo decide **cuándo** invocar cada herramienta a partir de lo que pide el usuario (por ejemplo: "leé `notas.txt`", "guardá esto en `salida.md`", "qué archivos hay en esta carpeta"). La aplicación debe ejecutar la función solicitada y devolver el resultado al modelo para que continúe la respuesta.
+
+Las herramientas se definen como funciones de C# (con `AIFunctionFactory`) y se entregan al cliente a través de las `ChatOptions`, habilitando la invocación automática de funciones en el `IChatClient`.
 
 ---
 
 ## Diseño de interfaz
 
-La interfaz debe organizarse siguiendo un esquema **maestro/detalle**:
+La interfaz debe organizarse en una ventana de pantalla completa, dividida en dos zonas verticales:
 
-- **Panel maestro:** la colección de contactos disponibles.
-- **Panel de detalle:** la información completa del contacto seleccionado y sus acciones.
+- **Panel de conversación:** ocupa la mayor parte de la pantalla y muestra el historial del diálogo. Debe poder desplazarse (scroll) con mouse y teclado para releer mensajes anteriores.
+- **Panel de entrada:** un campo de texto donde el usuario escribe su mensaje, acompañado de un botón **Enviar**.
+
+![Ejemplo de la interfaz del asistente](image.png)
+
+La experiencia de teclado esperada es:
+
+- **Enter** envía el mensaje.
+- **Esc** cierra la aplicación.
+
+Mientras el asistente responde, la entrada y el botón deben deshabilitarse para evitar envíos superpuestos, y el panel de conversación debe acompañar la respuesta que se genera (auto-scroll), respetando el desplazamiento manual del usuario si éste decide leer hacia arriba.
 
 El diseño no necesita ser visualmente complejo, pero debe ser claro, ordenado y funcional.
-
-A modo de referencia, las siguientes imágenes muestran un ejemplo de cómo podría verse la aplicación: la vista de detalle de un contacto y el formulario de edición.
-
-| Vista de detalle                              | Edición de un contacto                |
-|:---------------------------------------------:|:-------------------------------------:|
-| ![Vista de detalle del contacto](detalle.jpg) | ![Edición de un contacto](editar.jpg) |
 
 ---
 
@@ -70,33 +86,25 @@ A modo de referencia, las siguientes imágenes muestran un ejemplo de cómo podr
 
 La solución debe separar responsabilidades de forma clara, con una estructura comprensible y mantenible. Se espera una separación razonable entre:
 
-- Modelo de datos.
-- Acceso a datos.
-- Lógica de aplicación.
-- Componentes de interfaz.
-- Páginas o vistas principales.
+- Configuración y arranque (lectura de la clave, creación del `IChatClient`).
+- La ventana principal y su disposición de paneles.
+- El control de entrada de texto.
+- El modelo de los mensajes que se muestran en pantalla.
+- Las herramientas de archivos expuestas al modelo (`leer-archivo`, `escribir-archivo`, `listar-archivos`).
+- La lógica de envío, streaming y actualización del historial.
 
 La estructura concreta queda a criterio del estudiante.
 
+![Vista de detalle del contacto](image.png) 
 ---
 
 ## Cómo comenzar el desarrollo
 
 El proyecto se entrega como un punto de partida mínimo que ya incluye:
 
-- Una aplicación **Blazor** básica con **Bootstrap** configurado, cuya página principal muestra el título *TP5: AgendaWeb*.
-- El **modelo de datos** `Contacto`, con los campos descriptos en este enunciado.
-- Una base de datos **SQLite** (`contactos.db`) con **20 contactos de ejemplo** ya cargados.
-- La librería de acceso a datos (**EF Core para SQLite**) ya referenciada en el proyecto.
-
-Pasos sugeridos:
-
-1. **Verificar el entorno**: tener instalado el SDK de .NET 10.
-2. **Restaurar las dependencias** (`dotnet restore`).
-3. **Ejecutar la aplicación** (`dotnet run`) y abrir en el navegador la dirección indicada en la consola. Debería verse la página inicial con el título centrado.
-4. **Configurar el acceso a datos**: definir el DbContext que exponga la colección de contactos apuntando a `contactos.db`, y registrarlo en el arranque de la aplicación.
-5. **Construir la interfaz** siguiendo el esquema maestro/detalle.
-6. **Implementar las operaciones CRUD**.
-7. **Agregar la búsqueda o filtrado** de contactos.
+- Un archivo ejecutable de **C# (file-based app)** con los paquetes necesarios declarados (`Microsoft.Extensions.AI`, `Terminal.Gui`, carga de `.env`).
+- La lectura de la **clave de API** desde la variable de entorno y la creación del cliente `IChatClient`.
+- Una **ventana base** de Terminal.Gui que abre a pantalla completa con el título del asistente.
+- El archivo **`AGENTS.md`** con el mensaje de sistema, que la aplicación carga al iniciar.
 
 Se recomienda avanzar de a poco, verificando el funcionamiento de cada parte antes de continuar con la siguiente.
