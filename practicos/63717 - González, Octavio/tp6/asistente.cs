@@ -26,16 +26,17 @@ IChatClient chat = new OpenAIClient(
         new OpenAIClientOptions { Endpoint = new Uri(url ?? "") })
     .GetChatClient(modelo)
     .AsIChatClient();
+List<ChatMessage> mensajes = [
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+];
+
+
+
 // ---------------------------------------------------------------
 
 ConfigurationManager.Enable(ConfigLocations.All);
 ConfigurationManager.Apply();
-
-Scheme entrad = new Scheme()
-{
-    Normal = new Terminal.Gui.Drawing.Attribute(Color.Black, Color.Gray)
-};
-
+Scheme entrad = new Scheme(){Normal = new Terminal.Gui.Drawing.Attribute(Color.Black, Color.Gray)};
 using Window gui = new () { };
 
 /*
@@ -58,23 +59,47 @@ var entrada = new TextField {X = 0,
 Y = Pos.Bottom(ventana), Width = Dim.Fill(), Text = "",
 Height = Dim.Fill()
 };
-
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, entrada.Text)];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
-
-
-ventana.Add(new Markdown {
-    Text = $"""
-    # ————————————————————— YO ———————————————————————————————————————
-    {entrada.Text}
-    # —————————————————————🤖 ASISTENTE————————————————————————————————
-    {respuesta.Text}
-    """,
+var visualizador = new Markdown {
     Width = Dim.Fill(), Height = Dim.Fill()
-});
+};
+ventana.Add(visualizador);
+
+entrada.KeyDown += async (sender, e) =>
+{
+    if (e.KeyCode == Key.Enter && !string.IsNullOrWhiteSpace(entrada.Text)) {
+        if (entrada.Text.Equals("/salir", StringComparison.OrdinalIgnoreCase)) 
+        {
+            cerrar = true; 
+            app.RequestStop();
+        }
+        string prompt = entrada.Text;
+        entrada.Text = "";
+        mensajes.Add(new ChatMessage(ChatRole.User, prompt));
+        e.Handled = true;
+    
+    try {
+            var respuesta = await chat.GetResponseAsync(mensajes);
+            mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+            
+            // Actualizar el historial visible
+            var textoAcumulado = new System.Text.StringBuilder();
+            foreach (var m in mensajes) {
+                if (m.Role == ChatRole.System) continue;
+                if (m.Role == ChatRole.User) {
+                    textoAcumulado.AppendLine($"# ————————————————————— YO ———————————————————————————————————————\n{m.Text}\n");
+                } else {
+                    textoAcumulado.AppendLine($"# —————————————————————🤖 ASISTENTE————————————————————————————————\n{m.Text}\n");
+                }
+            }
+            visualizador.Text = textoAcumulado.ToString();
+        }
+        catch (Exception ex) {
+            visualizador.Text += $"\n\n# Error\n\n{ex.Message}";
+        }
+        e.Handled = true;    
+    }    
+    
+};
 
 // Panel de conversación y el panel de entrada.
 
@@ -93,10 +118,13 @@ dialogosalir.AddButton(cancelar);
 
 // Funciones de Terminal Gui 
 
+
+//Para mandar texto y limpiar entrada.
+
 //para salir
 gui.KeyDown += async (sender, e) =>
 {
-    if (e.KeyCode == Key.Esc)
+    if (e.KeyCode == Key.Esc )
     {
         seguro.Text = " ¿Seguro desea salir? ";
         confirmar.Title = "Confirmar";
