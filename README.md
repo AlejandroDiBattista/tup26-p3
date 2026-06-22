@@ -1,102 +1,81 @@
-﻿# TP5: AgendaWeb
-## Agenda de Contactos con Blazor, EF Core y SQLite
+﻿# TUP 2026 - Programación III
 
-> [!IMPORTANT]
-> Plazo para entregar el TP5: **Sábado 13 de Junio hasta las 23:59hs**
->
-> *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*
+## C7
+```text
+Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
+------  ------------------------------  ----------   ---   ---  ---
+63456   Ávila Lahr, Joaquín             🟢🟢🟢🟢🟢   🟢⚪️    23   10
+63415   Chávez, Lucas Francisco         🔴🔴🔴🔴🔴   🟢⚪️    17    8
+63268   Condori, Karina Edith           🟢🟢🟢🟢🟢   🟡⚪️     7    1
+63402   Condori, Nahuel Ariel           🟢🟢🟢🟢🟢   🟢⚪️    26   10
+63419   Coronel, Tomás                  🟢🟢🟢🟢🟢   🟢⚪️    27   10
+63241   Cortez, Josías                  🟢🟢🟢🟢🟢   🟢⚪️    27   10
+63776   Fuensalida, Ulises Nahuel       🟢🟢🔴🔴🟢   🟢⚪️    14    8
+63396   Gil Garau, Atalía Trinidad      🟢🟢🟢🟢🟢   🟢⚪️    25   10
+63457   González Dupuy, Ignacio         🟢🟢🟢🟢🟢   🟢⚪️    25   10
+61577   González, Lucas Alfredo         🟢🔴🔴🔴🔴   🟢⚪️    23   10
+63174   Jerez, Luciano Germán           🟢🟢🟢🟢🟢   🟢⚪️    28    9
+63700   Jiménez, Nelson Maximiliano     🟢🟢🟢🔴🔴   🟢⚪️    23    8
+63399   Lazarte, Gonzalo Romeo          🟢🟢🟢🟢🟢   🟢⚪️    22   10
+63211   Montero, Luca                   🟢🟢🔴🔴🔴   🟢⚪️    16   10
+63350   Páez Carabajal, Santiago        🟢🟢🟢🟢🟢   🟢⚪️    18    9
+61581   Paz, Naim Federico              🟢🟢🟢🟢🟢   🟢⚪️    22   10
+63647   Paz, Valentina                  🟢🟢🟢🟢🟢   🟢⚪️    22   10
+63389   Pereyra Petroni, Nicolas        🔴🟢🟢🔴🟢   🟢⚪️    15    8
+63420   Pereyra, Valentina Nazaret      🔴🟢🔴🔴🟢   🟢⚪️    10    5
+63354   Perondi, Luciano                🟢🟢🟢🟢🟢   🟢⚪️    19   10
+63393   Ritorto, Lucca                  🟢🟢🟢🟢🟢   🟢⚪️    18   10
+63208   Rosconi, Ignacio Federico       🔴🟢🔴🔴🟢   🟢⚪️    13    4
+63387   Sosa Gonella, Luca              🟢🟢🟢🟢🟢   🟢⚪️    20    9
+63546   Sosa Paz, Jeremías              🟢🟢🟢🟢🟢   🟢⚪️    28   10
+63547   Sosa Paz, José Lisandro         🟢🟢🟢🟢🟢   🟢⚪️    25   10
+63447   Suárez, Sofía Celeste           🟢🟢🟢🟢🟢   🟢⚪️    25   10
+61490   Valdez Bustamante, Tomás        🟢🟢🔴🟢🟢   🟢⚪️    30    6
+63397   Vercellone, Tomás               🟢🟢🟢🔴🟢   🟢⚪️    21    9
+```
 
-## Descripción general
-
-Desarrollar una aplicación web para gestionar una **agenda de contactos**, construida con:
-
-- **Blazor** — Interfaz de usuario.
-- **Entity Framework Core + SQLite** — Acceso y persistencia de datos.
-
-El sistema debe permitir administrar contactos mediante operaciones de alta, consulta, modificación y eliminación, integrando interfaz, lógica de aplicación y persistencia de datos.
-
----
-
-## Modelo de datos
-
-Cada contacto representa una persona o entidad registrada en el sistema, y cuenta con un identificador interno gestionado automáticamente que lo distingue de manera unívoca. Sus datos son:
-
-| Campo                | Descripción                                          | Obligatorio |
-|----------------------|------------------------------------------------------|:-----------:|
-| Nombre               | Nombre de la persona o entidad                       | Sí          |
-| Apellido             | Apellido de la persona                               | Sí          |
-| Teléfono             | Número de contacto telefónico                        | Sí          |
-| Correo electrónico   | Dirección de correo para su comunicación             | Sí          |
-| Empresa              | Empresa u organización a la que pertenece            | No          |
-| Cargo                | Puesto o función que desempeña                       | No          |
-| Dirección            | Domicilio o dirección postal                         | No          |
-| Fecha de nacimiento  | Fecha de nacimiento del contacto                     | No          |
-| Notas                | Comentarios o información adicional                  | No          |
-
-La información se almacena en una base de datos **SQLite**, y el acceso se realiza mediante **Entity Framework Core**. La aplicación debe definir la entidad, el contexto de base de datos (DbContext) y la lógica para consultar y modificar los datos.
-
----
-
-## Funcionalidades requeridas
-
-La aplicación debe implementar las operaciones CRUD sobre los contactos:
-
-- **Crear:** registrar un nuevo contacto en la agenda.
-- **Consultar:** visualizar la lista de contactos y acceder al detalle de cada uno.
-- **Modificar:** editar la información de un contacto existente.
-- **Eliminar:** quitar contactos de la agenda.
-- **Buscar:** filtrar contactos para facilitar la navegación dentro de la agenda.
-
----
-
-## Diseño de interfaz
-
-La interfaz debe organizarse siguiendo un esquema **maestro/detalle**:
-
-- **Panel maestro:** la colección de contactos disponibles.
-- **Panel de detalle:** la información completa del contacto seleccionado y sus acciones.
-
-El diseño no necesita ser visualmente complejo, pero debe ser claro, ordenado y funcional.
-
-A modo de referencia, las siguientes imágenes muestran un ejemplo de cómo podría verse la aplicación: la vista de detalle de un contacto y el formulario de edición.
-
-| Vista de detalle                              | Edición de un contacto                |
-|:---------------------------------------------:|:-------------------------------------:|
-| ![Vista de detalle del contacto](detalle.jpg) | ![Edición de un contacto](editar.jpg) |
-
----
-
-## Organización del proyecto
-
-La solución debe separar responsabilidades de forma clara, con una estructura comprensible y mantenible. Se espera una separación razonable entre:
-
-- Modelo de datos.
-- Acceso a datos.
-- Lógica de aplicación.
-- Componentes de interfaz.
-- Páginas o vistas principales.
-
-La estructura concreta queda a criterio del estudiante.
-
----
-
-## Cómo comenzar el desarrollo
-
-El proyecto se entrega como un punto de partida mínimo que ya incluye:
-
-- Una aplicación **Blazor** básica con **Bootstrap** configurado, cuya página principal muestra el título *TP5: AgendaWeb*.
-- El **modelo de datos** `Contacto`, con los campos descriptos en este enunciado.
-- Una base de datos **SQLite** (`contactos.db`) con **20 contactos de ejemplo** ya cargados.
-- La librería de acceso a datos (**EF Core para SQLite**) ya referenciada en el proyecto.
-
-Pasos sugeridos:
-
-1. **Verificar el entorno**: tener instalado el SDK de .NET 10.
-2. **Restaurar las dependencias** (`dotnet restore`).
-3. **Ejecutar la aplicación** (`dotnet run`) y abrir en el navegador la dirección indicada en la consola. Debería verse la página inicial con el título centrado.
-4. **Configurar el acceso a datos**: definir el DbContext que exponga la colección de contactos apuntando a `contactos.db`, y registrarlo en el arranque de la aplicación.
-5. **Construir la interfaz** siguiendo el esquema maestro/detalle.
-6. **Implementar las operaciones CRUD**.
-7. **Agregar la búsqueda o filtrado** de contactos.
-
-Se recomienda avanzar de a poco, verificando el funcionamiento de cada parte antes de continuar con la siguiente.
+## C9
+```text
+Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
+------  ------------------------------  ----------   ---   ---  ---
+63385   Almaraz Sintora, Nahuel         🟢🟢🟢🟢🟢   🟢⚪️    28   10
+63217   Altamiranda Borquez, Bian       🟢🔴🔴🔴🔴   🟢⚪️    23    8
+63300   Álvarez, Hernán Fabricio        🟢🟢🟢🟢🟢   🟢⚪️    22   10
+63313   Ávila Puntano, Benjamín         🟢🟢🟢🟢🟢   🟢⚪️    24   10
+63222   Bajre Martínez, Julián          🟢🟢🟢🟢🟢   🟢⚪️    23    7
+61801   Benega, Maximiliano Abraham     🟢🟢🟢🟢🟢   🟢⚪️    20    6
+63493   Busnelli, Bruno                 🟢🟢🔴🔴🔴   🟢⚪️    11   10
+63150   Carlino, Joaquín                🟢🟢🟢🟢🟢   🟢⚪️    12   10
+63341   Carrer, Juan Cruz               🟢🟢🟢🟢🟢   🟢⚪️    20   10
+63461   Cativa, Facundo Simón           🟢🟢🔴🔴🔴   🟢⚪️    17    8
+63218   Cortés, Guillermo Augusto       🟢🟢🟢🟢🟢   🟢⚪️    25   10
+64016   Cura, Rocío Aylen               🔴🟢🟢🔴🔴   🟢⚪️    15    7
+63266   Decima, Juan Cruz               🟢🟢🟢🟢🟢   🟢⚪️    24   10
+63137   Díaz, José Simón                🟢🟢🔴🟢🟢   🟢⚪️    26    6
+61641   Figueroa, Nahuel Ramón          🟢🔴🔴🔴🔴   🟢⚪️    17    4
+63737   Galván, Rocío Julieta           🟢🟢🟢🟢🟢   🟢⚪️    22   10
+63345   García, Franco Tomás            🔴🟢🟢🟢🔴   🟢⚪️    14   10
+61057   Getar, Thomas                   🟢🟢🟢🔴🔴   🟢⚪️    20    7
+61489   Gómez, Tomás                    🟢🟢🟢🟢🟢   🟢⚪️    26    9
+63182   González Rojas, Emmanuel        🟢🟢🟢🟢🟢   🟢⚪️    28   10
+63717   González, Octavio               🟢🟢🟢🟢🟢   🟢⚪️    27    9
+61161   González, Thomas Ezequiel       🟢🟢🔴🟢🔴   🟢⚪️    18    5
+62844   Guzmán, Luciano Leonel          🔴🟢🟢🔴🔴   🟢⚪️    16   10
+63231   Herrera, Rocío Tatiana          🟢🟢🟢🟢🟢   🟢⚪️    23   10
+63425   Holmquist, Jeremy               🟢🟢🔴🔴🔴   🟢⚪️    16    6
+61907   Kargachin, Guadalupe            🔴🔴🔴🔴🔴   🔴⚪️     0    1
+63219   Lazarte, Sergio Fabricio        🟢🟢🟢🟢🟢   🟢⚪️    20   10
+63297   Lezana, Juan Ignacio            🟢🟢🟢🟢🟢   🟢⚪️    23   10
+63388   López, Leandro Joel             🟢🟢🔴🟢🔴   🟢⚪️    26   10
+63213   Marina Noguera, Morena Giovann  🟢🟢🟢🟢🟢   🟢⚪️    26    9
+63494   Medina, Lourdes Natalia         🟢🟢🟢🟢🟢   🟢⚪️    19   10
+63418   Miranda, Gonzalo Emanuel        🟢🟢🟢🟢🟢   🟢⚪️    22    7
+63234   Molina, Lázaro Exequiel         🟢🟢🟢🟢🟢   🟢⚪️    25   10
+63412   Morán, Facundo Martín           🟢🟢🟢🟢🟢   🟢⚪️    27   10
+63205   Navarro Aragón, Facundo         🔴🔴🔴🔴🔴   🟢⚪️    19   10
+63220   Pérez Del Rien, Valentina       🟢🟢🟢🟢🟢   🟢⚪️    28   10
+63232   Roldan, Enzo Joaquín            🟢🟢🟢🔴🔴   🟢⚪️    25    5
+63216   Sánchez, Sofía Micaela          🟢🟢🟢🟢🟢   🟢⚪️    26   10
+63207   Saravia, César Nahum            🟢🟢🟢🟢🟢   🟢⚪️    23   10
+61026   Thompson, María José            🟢🟢🟢🟢🟢   🟢⚪️    24    9
+```

@@ -1,259 +1,178 @@
-﻿<!DOCTYPE html>
+﻿
+<think>
+The user wants a self-contained HTML page that displays a real-time analog clock. I need to create a complete HTML file with CSS and JavaScript that draws an analog clock face with hour, minute, and second hands that update in real-time. I'll use a canvas element or CSS to create the clock.
+
+Let me go with a canvas-based approach for a clean, smooth analog clock.
+</think>
+
+```html
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reloj Analógico con Bola Rebotando</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle, #1f2937, #020617);
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-
-    canvas {
-      width: min(90vw, 90vh);
-      height: min(90vw, 90vh);
-      display: block;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reloj Analógico</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .clock-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        canvas {
+            border-radius: 50%;
+            box-shadow:
+                0 0 30px rgba(0,0,0,0.5),
+                0 0 60px rgba(100, 100, 255, 0.1),
+                inset 0 0 30px rgba(0,0,0,0.1);
+        }
+        .digital {
+            color: #e0e0e0;
+            font-size: 1.4rem;
+            letter-spacing: 4px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 10px rgba(100, 200, 255, 0.3);
+        }
+    </style>
 </head>
 <body>
-  <canvas id="clock"></canvas>
+    <div class="clock-container">
+        <canvas id="clock" width="400" height="400"></canvas>
+        <div class="digital" id="digital"></div>
+    </div>
 
-  <script>
-    const canvas = document.getElementById("clock");
-    const ctx = canvas.getContext("2d");
+    <script>
+        const canvas = document.getElementById('clock');
+        const ctx = canvas.getContext('2d');
+        const digital = document.getElementById('digital');
+        const R = canvas.width / 2;
+        const RADIUS = R - 20;
 
-    let size, dpr, cx, cy, radius;
+        function drawClock() {
+            const now = new Date();
+            const h = now.getHours() % 12;
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+            const ms = now.getMilliseconds();
 
-    const ball = {
-      x: 0,
-      y: 0,
-      vx: 2.4,
-      vy: 1.8,
-      r: 13,
-      color: randomColor()
-    };
+            const smoothS = s + ms / 1000;
+            const smoothM = m + smoothS / 60;
+            const smoothH = h + smoothM / 60;
 
-    function resize() {
-      dpr = window.devicePixelRatio || 1;
-      size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      canvas.width = size * dpr;
-      canvas.height = size * dpr;
-      canvas.style.width = size + "px";
-      canvas.style.height = size + "px";
+            // Fondo
+            const bgGrad = ctx.createRadialGradient(R, R, 0, R, R, RADIUS + 10);
+            bgGrad.addColorStop(0, '#2a2a4a');
+            bgGrad.addColorStop(0.85, '#1e1e3a');
+            bgGrad.addColorStop(1, '#12122a');
+            ctx.beginPath();
+            ctx.arc(R, R, RADIUS + 10, 0, Math.PI * 2);
+            ctx.fillStyle = bgGrad;
+            ctx.fill();
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            // Borde
+            ctx.beginPath();
+            ctx.arc(R, R, RADIUS + 10, 0, Math.PI * 2);
+            ctx.strokeStyle = '#3a3a6a';
+            ctx.lineWidth = 3;
+            ctx.stroke();
 
-      cx = size / 2;
-      cy = size / 2;
-      radius = size * 0.43;
+            // Marcas de minutos
+            for (let i = 0; i < 60; i++) {
+                const angle = (i * 6 - 90) * Math.PI / 180;
+                const isHour = i % 5 === 0;
+                const outerR = RADIUS - 5;
+                const innerR = isHour ? RADIUS - 28 : RADIUS - 15;
 
-      if (ball.x === 0 && ball.y === 0) {
-        ball.x = cx + radius * 0.25;
-        ball.y = cy - radius * 0.2;
-      }
+                ctx.beginPath();
+                ctx.moveTo(R + Math.cos(angle) * innerR, R + Math.sin(angle) * innerR);
+                ctx.lineTo(R + Math.cos(angle) * outerR, R + Math.sin(angle) * outerR);
 
-      ball.r = Math.max(8, size * 0.025);
-    }
+                if (isHour) {
+                    ctx.strokeStyle = '#c0c0e0';
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.strokeStyle = '#505080';
+                    ctx.lineWidth = 1;
+                }
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
 
-    function randomColor() {
-      return `hsl(${Math.floor(Math.random() * 360)}, 90%, 60%)`;
-    }
+            // Números
+            ctx.fillStyle = '#d0d0f0';
+            ctx.font = 'bold 22px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (let i = 1; i <= 12; i++) {
+                const angle = (i * 30 - 90) * Math.PI / 180;
+                const numR = RADIUS - 48;
+                const x = R + Math.cos(angle) * numR;
+                const y = R + Math.sin(angle) * numR;
+                ctx.fillText(i, x, y);
+            }
 
-    function drawClockFace() {
-      ctx.save();
-      ctx.translate(cx, cy);
+            // Agujas
+            function drawHand(hourFraction, length, width, color, shadowColor) {
+                const angle = (hourFraction * 30 - 90) * Math.PI / 180;
+                const endX = R + Math.cos(angle) * length;
+                const endY = R + Math.sin(angle) * length;
+                const tailX = R - Math.cos(angle) * 20;
+                const tailY = R - Math.sin(angle) * 20;
 
-      const gradient = ctx.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius);
-      gradient.addColorStop(0, "#f8fafc");
-      gradient.addColorStop(1, "#cbd5e1");
+                ctx.save();
+                ctx.shadowColor = shadowColor || 'transparent';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = width;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                ctx.restore();
+            }
 
-      ctx.beginPath();
-      ctx.arc(0, 0, radius, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.fill();
+            drawHand(smoothH, RADIUS * 0.5, 6, '#e0e0f0', 'rgba(100,100,200,0.3)');
+            drawHand(smoothM, RADIUS * 0.72, 4, '#c0c0e0', 'rgba(100,100,200,0.3)');
+            drawHand(smoothS, RADIUS * 0.82, 2, '#ff4060', 'rgba(255,60,80,0.5)');
 
-      ctx.lineWidth = radius * 0.035;
-      ctx.strokeStyle = "#0f172a";
-      ctx.stroke();
+            // Centro
+            ctx.beginPath();
+            ctx.arc(R, R, 7, 0, Math.PI * 2);
+            const ctrGrad = ctx.createRadialGradient(R - 2, R - 2, 0, R, R, 7);
+            ctrGrad.addColorStop(0, '#ff6080');
+            ctrGrad.addColorStop(1, '#cc2040');
+            ctx.fillStyle = ctrGrad;
+            ctx.fill();
 
-      ctx.beginPath();
-      ctx.arc(0, 0, radius * 0.96, 0, Math.PI * 2);
-      ctx.lineWidth = radius * 0.01;
-      ctx.strokeStyle = "rgba(255,255,255,0.7)";
-      ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(R, R, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
 
-      for (let i = 0; i < 60; i++) {
-        const angle = (i * Math.PI) / 30;
-        const isHour = i % 5 === 0;
-        const inner = radius * (isHour ? 0.84 : 0.91);
-        const outer = radius * 0.95;
+            // Digital
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            const ss = String(s).padStart(2, '0');
+            digital.textContent = `${hh} : ${mm} : ${ss}`;
 
-        ctx.beginPath();
-        ctx.moveTo(Math.sin(angle) * inner, -Math.cos(angle) * inner);
-        ctx.lineTo(Math.sin(angle) * outer, -Math.cos(angle) * outer);
-        ctx.lineWidth = isHour ? radius * 0.018 : radius * 0.006;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = "#0f172a";
-        ctx.stroke();
-      }
+            requestAnimationFrame(drawClock);
+        }
 
-      ctx.font = `${radius * 0.12}px Arial`;
-      ctx.fillStyle = "#0f172a";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      for (let n = 1; n <= 12; n++) {
-        const angle = (n * Math.PI) / 6;
-        const x = Math.sin(angle) * radius * 0.72;
-        const y = -Math.cos(angle) * radius * 0.72;
-        ctx.fillText(n, x, y);
-      }
-
-      ctx.restore();
-    }
-
-    function drawHand(angle, length, width, color) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-
-      ctx.beginPath();
-      ctx.moveTo(-width * 0.5, width);
-      ctx.lineTo(width * 0.5, width);
-      ctx.lineTo(width * 0.25, -length);
-      ctx.lineTo(-width * 0.25, -length);
-      ctx.closePath();
-
-      ctx.fillStyle = color;
-      ctx.shadowColor = "rgba(0,0,0,0.35)";
-      ctx.shadowBlur = width * 0.8;
-      ctx.shadowOffsetX = width * 0.2;
-      ctx.shadowOffsetY = width * 0.2;
-      ctx.fill();
-
-      ctx.restore();
-    }
-
-    function drawHands() {
-      const now = new Date();
-      const ms = now.getMilliseconds();
-      const seconds = now.getSeconds() + ms / 1000;
-      const minutes = now.getMinutes() + seconds / 60;
-      const hours = (now.getHours() % 12) + minutes / 60;
-
-      const secondAngle = (seconds * Math.PI) / 30;
-      const minuteAngle = (minutes * Math.PI) / 30;
-      const hourAngle = (hours * Math.PI) / 6;
-
-      drawHand(hourAngle, radius * 0.48, radius * 0.07, "#111827");
-      drawHand(minuteAngle, radius * 0.68, radius * 0.045, "#1f2937");
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(secondAngle);
-      ctx.beginPath();
-      ctx.moveTo(0, radius * 0.18);
-      ctx.lineTo(0, -radius * 0.78);
-      ctx.lineWidth = radius * 0.014;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = "#dc2626";
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.055, 0, Math.PI * 2);
-      ctx.fillStyle = "#dc2626";
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.025, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.fill();
-    }
-
-    function updateBall() {
-      ball.x += ball.vx;
-      ball.y += ball.vy;
-
-      const dx = ball.x - cx;
-      const dy = ball.y - cy;
-      const dist = Math.hypot(dx, dy);
-      const limit = radius - ball.r - radius * 0.02;
-
-      if (dist > limit) {
-        const nx = dx / dist;
-        const ny = dy / dist;
-
-        ball.x = cx + nx * limit;
-        ball.y = cy + ny * limit;
-
-        const dot = ball.vx * nx + ball.vy * ny;
-        ball.vx -= 2 * dot * nx;
-        ball.vy -= 2 * dot * ny;
-
-        ball.color = randomColor();
-      }
-    }
-
-    function drawBall() {
-      ctx.save();
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius - radius * 0.02, 0, Math.PI * 2);
-      ctx.clip();
-
-      const grad = ctx.createRadialGradient(
-        ball.x - ball.r * 0.35,
-        ball.y - ball.r * 0.35,
-        ball.r * 0.1,
-        ball.x,
-        ball.y,
-        ball.r
-      );
-      grad.addColorStop(0, "#ffffff");
-      grad.addColorStop(0.28, ball.color);
-      grad.addColorStop(1, "#111827");
-
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.shadowColor = "rgba(0,0,0,0.35)";
-      ctx.shadowBlur = ball.r * 0.7;
-      ctx.shadowOffsetX = ball.r * 0.25;
-      ctx.shadowOffsetY = ball.r * 0.25;
-      ctx.fill();
-
-      ctx.restore();
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, size, size);
-
-      updateBall();
-      drawClockFace();
-      drawBall();
-      drawHands();
-
-      requestAnimationFrame(animate);
-    }
-
-    window.addEventListener("resize", resize);
-
-    resize();
-    animate();
-  </script>
+        drawClock();
+    </script>
 </body>
 </html>
+```
