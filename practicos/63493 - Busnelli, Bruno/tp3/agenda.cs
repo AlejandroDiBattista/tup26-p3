@@ -17,11 +17,6 @@ using Dapper.Contrib.Extensions;
 using System.Text.Json;
 using System.Text;
 
-/// ====
-/// Trabajo Práctico 3 - AgendaT
-/// Aplicación de agenda TUI con persistencia SQLite e import/export JSON.
-/// ====
-
 string dbPath = args.Length > 0 ? args[0] : "agenda.db";
 
 SqliteAgendaStore store = new(dbPath);
@@ -30,8 +25,6 @@ store.Initialize();
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(store));
 
-
-// Ventana principal
 public sealed class AgendaWindow : Runnable
 {
     private readonly SqliteAgendaStore store;
@@ -43,6 +36,9 @@ public sealed class AgendaWindow : Runnable
     private TextView listView = null!;
     private TextView detailView = null!;
     private Label statusLabel = null!;
+
+    private bool soloFavoritos;
+    private int selectedIndex;
 
     public AgendaWindow(SqliteAgendaStore store)
     {
@@ -56,16 +52,13 @@ public sealed class AgendaWindow : Runnable
 
         LoadContacts();
         BuildLayout();
-        RefreshViews("Base cargada correctamente.");
+        ApplyFilters("Base cargada correctamente.");
     }
 
     private void LoadContacts()
     {
         contacts.Clear();
         contacts.AddRange(store.GetAll());
-
-        filteredContacts.Clear();
-        filteredContacts.AddRange(contacts);
     }
 
     private void BuildLayout()
@@ -84,14 +77,14 @@ public sealed class AgendaWindow : Runnable
 
                 new MenuBarItem("_Contactos",
                 [
-                    new MenuItem("_Nuevo", "F2 / Ctrl+N", AbrirDialogo),
-                    new MenuItem("_Editar", "F3 / Enter", MostrarPendiente),
-                    new MenuItem("_Eliminar", "Del / Ctrl+D", MostrarPendiente)
+                    new MenuItem("_Nuevo", "F2 / Ctrl+N", NuevoContacto),
+                    new MenuItem("_Editar", "F3 / Enter", EditarContacto),
+                    new MenuItem("_Eliminar", "Del / Ctrl+D", EliminarContacto)
                 ]),
 
                 new MenuBarItem("_Ver",
                 [
-                    new MenuItem("_Solo favoritos", null!, MostrarPendiente)
+                    new MenuItem("_Solo favoritos", null!, AlternarSoloFavoritos)
                 ]),
 
                 new MenuBarItem("_Ayuda",
@@ -115,6 +108,12 @@ public sealed class AgendaWindow : Runnable
             X = 10,
             Y = 1,
             Width = Dim.Fill(1)
+        };
+
+        searchField.TextChanged += (_, _) =>
+        {
+            selectedIndex = 0;
+            ApplyFilters("Busqueda actualizada.");
         };
 
         Add(searchField);
@@ -168,6 +167,42 @@ public sealed class AgendaWindow : Runnable
         Add(listPanel, detailPanel, statusLabel);
     }
 
+    private void ApplyFilters(string status)
+    {
+        string search = searchField?.Text.ToString() ?? "";
+
+        IEnumerable<Contacto> query = contacts;
+
+        if (soloFavoritos)
+        {
+            query = query.Where(contacto => contacto.Favorito);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(contacto =>
+                contacto.Nombre.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                contacto.Telefonos.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                contacto.Email.Contains(search, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        filteredContacts.Clear();
+
+        filteredContacts.AddRange(
+            query
+                .OrderByDescending(contacto => contacto.Favorito)
+                .ThenBy(contacto => contacto.Nombre)
+        );
+
+        if (selectedIndex >= filteredContacts.Count)
+        {
+            selectedIndex = Math.Max(0, filteredContacts.Count - 1);
+        }
+
+        RefreshViews(status);
+    }
+
     private void RefreshViews(string status)
     {
         listView.Text = BuildContactListText();
@@ -179,7 +214,7 @@ public sealed class AgendaWindow : Runnable
     {
         if (filteredContacts.Count == 0)
         {
-            return "No hay contactos cargados.";
+            return "No hay contactos para mostrar.";
         }
 
         StringBuilder builder = new();
@@ -187,9 +222,10 @@ public sealed class AgendaWindow : Runnable
         for (int i = 0; i < filteredContacts.Count; i++)
         {
             Contacto contacto = filteredContacts[i];
+            string cursor = i == selectedIndex ? "> " : "  ";
 
             builder.AppendLine(
-                $"{i + 1}. {(contacto.Favorito ? "★ " : "")}{contacto.Nombre}"
+                $"{cursor}{i + 1}. {(contacto.Favorito ? "★ " : "")}{contacto.Nombre}"
             );
         }
 
@@ -198,14 +234,15 @@ public sealed class AgendaWindow : Runnable
 
     private string BuildDetailText()
     {
-        if (filteredContacts.Count == 0)
+        Contacto? contacto = GetSelectedContact();
+
+        if (contacto is null)
         {
-            return "Seleccione o cree un contacto para ver su detalle.";
+            return "No hay contacto seleccionado.";
         }
 
-        Contacto contacto = filteredContacts[0];
-
         return $"""
+        Id: {contacto.Id}
         Nombre: {contacto.Nombre}
         Telefonos: {contacto.Telefonos}
         Email: {contacto.Email}
@@ -216,14 +253,24 @@ public sealed class AgendaWindow : Runnable
         """;
     }
 
-    private void AbrirDialogo()
+    private Contacto? GetSelectedContact()
+    {
+        if (filteredContacts.Count == 0)
+        {
+            return null;
+        }
+
+        return filteredContacts[selectedIndex];
+    }
+
+    private void NuevoContacto()
     {
         ContactDialog dialog = new();
         App!.Run(dialog);
 
         if (dialog.Contacto is null)
         {
-            RefreshViews("Operacion cancelada.");
+            ApplyFilters("Operacion cancelada.");
             return;
         }
 
@@ -231,15 +278,85 @@ public sealed class AgendaWindow : Runnable
         nuevo.Id = store.Insert(nuevo);
 
         contacts.Add(nuevo);
+        selectedIndex = 0;
 
-        filteredContacts.Clear();
-        filteredContacts.AddRange(
-            contacts
-                .OrderByDescending(contacto => contacto.Favorito)
-                .ThenBy(contacto => contacto.Nombre)
+        ApplyFilters($"Contacto '{nuevo.Nombre}' agregado correctamente.");
+    }
+
+    private void EditarContacto()
+    {
+        Contacto? seleccionado = GetSelectedContact();
+
+        if (seleccionado is null)
+        {
+            MessageBox.Query(App!, "Editar", "No hay contacto seleccionado.", "OK");
+            return;
+        }
+
+        ContactDialog dialog = new(seleccionado);
+        App!.Run(dialog);
+
+        if (dialog.Contacto is null)
+        {
+            ApplyFilters("Edicion cancelada.");
+            return;
+        }
+
+        Contacto editado = dialog.Contacto;
+
+        store.Update(editado);
+
+        int index = contacts.FindIndex(contacto => contacto.Id == editado.Id);
+
+        if (index >= 0)
+        {
+            contacts[index] = editado;
+        }
+
+        ApplyFilters($"Contacto '{editado.Nombre}' actualizado.");
+    }
+
+    private void EliminarContacto()
+    {
+        Contacto? seleccionado = GetSelectedContact();
+
+        if (seleccionado is null)
+        {
+            MessageBox.Query(App!, "Eliminar", "No hay contacto seleccionado.", "OK");
+            return;
+        }
+
+int respuesta = MessageBox.Query(
+    App!,
+    "Confirmar eliminacion",
+    $"Desea eliminar a '{seleccionado.Nombre}'?",
+    "Si",
+    "No"
+) ?? 1;
+
+        if (respuesta != 0)
+        {
+            ApplyFilters("Eliminacion cancelada.");
+            return;
+        }
+
+        store.Delete(seleccionado);
+        contacts.RemoveAll(contacto => contacto.Id == seleccionado.Id);
+        selectedIndex = 0;
+
+        ApplyFilters($"Contacto '{seleccionado.Nombre}' eliminado.");
+    }
+
+    private void AlternarSoloFavoritos()
+    {
+        soloFavoritos = !soloFavoritos;
+        selectedIndex = 0;
+
+        ApplyFilters(
+            soloFavoritos
+                ? "Filtro activado: solo favoritos."
+                : "Filtro desactivado: todos los contactos."
         );
-
-        RefreshViews($"Contacto '{nuevo.Nombre}' agregado correctamente.");
     }
 
     private void MostrarPendiente()
@@ -277,7 +394,25 @@ public sealed class AgendaWindow : Runnable
 
         if (key == Key.F2 || key == Key.N.WithCtrl)
         {
-            AbrirDialogo();
+            NuevoContacto();
+            return true;
+        }
+
+        if (key == Key.F3 || key == Key.Enter)
+        {
+            EditarContacto();
+            return true;
+        }
+
+        if (key == Key.D.WithCtrl || key == Key.Delete)
+        {
+            EliminarContacto();
+            return true;
+        }
+
+        if (key == Key.F4)
+        {
+            searchField.SetFocus();
             return true;
         }
 
