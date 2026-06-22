@@ -25,9 +25,11 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 
+const string pregunta = "Definí recursividad";
+
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, "Definí recursividad")
+    new(ChatRole.User, pregunta)
 ];
 
 var respuesta = await chat.GetResponseAsync(mensajes);
@@ -40,7 +42,7 @@ using var ventana = new Window {
 };
 
 ventana.Add(new Label {
-    Text = respuesta.Text,
+    Text = $"Vos: {pregunta}\n\nAsistente: {respuesta.Text}",
     Width = Dim.Fill(),
     Height = Dim.Fill()
 });
