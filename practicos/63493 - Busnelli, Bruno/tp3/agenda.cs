@@ -36,6 +36,14 @@ public sealed class AgendaWindow : Runnable
 {
     private readonly SqliteAgendaStore store;
 
+    private readonly List<Contacto> contacts = [];
+    private readonly List<Contacto> filteredContacts = [];
+
+    private TextField searchField = null!;
+    private TextView listView = null!;
+    private TextView detailView = null!;
+    private Label statusLabel = null!;
+
     public AgendaWindow(SqliteAgendaStore store)
     {
         this.store = store;
@@ -45,7 +53,19 @@ public sealed class AgendaWindow : Runnable
         Height = Dim.Fill();
 
         Menu.DefaultBorderStyle = LineStyle.Single;
+
+        LoadContacts();
         BuildLayout();
+        RefreshViews("Base cargada correctamente.");
+    }
+
+    private void LoadContacts()
+    {
+        contacts.Clear();
+        contacts.AddRange(store.GetAll());
+
+        filteredContacts.Clear();
+        filteredContacts.AddRange(contacts);
     }
 
     private void BuildLayout()
@@ -56,29 +76,190 @@ public sealed class AgendaWindow : Runnable
             [
                 new MenuBarItem("_Archivo",
                 [
-                    new MenuItem("_Nuevo contacto", "F2 / Ctrl+N", AbrirDialogo),
+                    new MenuItem("_Importar JSON", "Ctrl+I", MostrarPendiente),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", MostrarPendiente),
                     null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
+                ]),
+
+                new MenuBarItem("_Contactos",
+                [
+                    new MenuItem("_Nuevo", "F2 / Ctrl+N", AbrirDialogo),
+                    new MenuItem("_Editar", "F3 / Enter", MostrarPendiente),
+                    new MenuItem("_Eliminar", "Del / Ctrl+D", MostrarPendiente)
+                ]),
+
+                new MenuBarItem("_Ver",
+                [
+                    new MenuItem("_Solo favoritos", null!, MostrarPendiente)
+                ]),
+
+                new MenuBarItem("_Ayuda",
+                [
+                    new MenuItem("_Acerca de", null!, MostrarAcercaDe)
                 ])
             ]
         };
 
-        int cantidad = store.GetAll().Count;
+        Add(menu);
 
-        Label message = new()
+        Add(new Label()
         {
-            Text = $"Base cargada correctamente. Contactos guardados: {cantidad}",
-            X = Pos.Center(),
-            Y = Pos.Center()
+            Text = "Buscar:",
+            X = 1,
+            Y = 1
+        });
+
+        searchField = new TextField()
+        {
+            X = 10,
+            Y = 1,
+            Width = Dim.Fill(1)
         };
 
-        Add(menu, message);
+        Add(searchField);
+
+        FrameView listPanel = new()
+        {
+            Title = "Contactos",
+            X = 0,
+            Y = 3,
+            Width = Dim.Percent(40),
+            Height = Dim.Fill(1)
+        };
+
+        listView = new TextView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        listPanel.Add(listView);
+
+        FrameView detailPanel = new()
+        {
+            Title = "Detalle",
+            X = Pos.Right(listPanel),
+            Y = 3,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(1)
+        };
+
+        detailView = new TextView()
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
+        };
+
+        detailPanel.Add(detailView);
+
+        statusLabel = new Label()
+        {
+            Text = "Listo.",
+            X = 1,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill()
+        };
+
+        Add(listPanel, detailPanel, statusLabel);
+    }
+
+    private void RefreshViews(string status)
+    {
+        listView.Text = BuildContactListText();
+        detailView.Text = BuildDetailText();
+        statusLabel.Text = status;
+    }
+
+    private string BuildContactListText()
+    {
+        if (filteredContacts.Count == 0)
+        {
+            return "No hay contactos cargados.";
+        }
+
+        StringBuilder builder = new();
+
+        for (int i = 0; i < filteredContacts.Count; i++)
+        {
+            Contacto contacto = filteredContacts[i];
+
+            builder.AppendLine(
+                $"{i + 1}. {(contacto.Favorito ? "★ " : "")}{contacto.Nombre}"
+            );
+        }
+
+        return builder.ToString();
+    }
+
+    private string BuildDetailText()
+    {
+        if (filteredContacts.Count == 0)
+        {
+            return "Seleccione o cree un contacto para ver su detalle.";
+        }
+
+        Contacto contacto = filteredContacts[0];
+
+        return $"""
+        Nombre: {contacto.Nombre}
+        Telefonos: {contacto.Telefonos}
+        Email: {contacto.Email}
+        Favorito: {(contacto.Favorito ? "Si" : "No")}
+
+        Notas:
+        {contacto.Notas}
+        """;
     }
 
     private void AbrirDialogo()
     {
         ContactDialog dialog = new();
         App!.Run(dialog);
+
+        if (dialog.Contacto is null)
+        {
+            RefreshViews("Operacion cancelada.");
+            return;
+        }
+
+        Contacto nuevo = dialog.Contacto;
+        nuevo.Id = store.Insert(nuevo);
+
+        contacts.Add(nuevo);
+
+        filteredContacts.Clear();
+        filteredContacts.AddRange(
+            contacts
+                .OrderByDescending(contacto => contacto.Favorito)
+                .ThenBy(contacto => contacto.Nombre)
+        );
+
+        RefreshViews($"Contacto '{nuevo.Nombre}' agregado correctamente.");
+    }
+
+    private void MostrarPendiente()
+    {
+        MessageBox.Query(
+            App!,
+            "Pendiente",
+            "Esta opcion se completara en el proximo commit.",
+            "OK"
+        );
+    }
+
+    private void MostrarAcercaDe()
+    {
+        MessageBox.Query(
+            App!,
+            "Acerca de",
+            "AgendaT - Trabajo Practico 3\nAgenda TUI con SQLite y JSON.",
+            "OK"
+        );
     }
 
     private void SolicitarSalir()
@@ -86,21 +267,17 @@ public sealed class AgendaWindow : Runnable
         App!.RequestStop();
     }
 
-    private void ProbarJson()
-    {
-        var contactos = store.GetAll();
-
-        JsonAgendaIO.Export(
-            "contactos.json",
-            contactos
-        );
-    }
-
     protected override bool OnKeyDown(Key key)
     {
         if (key == Key.Q.WithCtrl)
         {
             SolicitarSalir();
+            return true;
+        }
+
+        if (key == Key.F2 || key == Key.N.WithCtrl)
+        {
+            AbrirDialogo();
             return true;
         }
 
@@ -208,12 +385,15 @@ public sealed class ContactDialog : Dialog
 
         Add(notasField);
 
-favoritoCheck = new CheckBox()
-{
-    Text = "Favorito",
-    X = 18,
-    Y = 16,
-Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked};
+        favoritoCheck = new CheckBox()
+        {
+            Text = "Favorito",
+            X = 18,
+            Y = 16,
+            Value = contacto.Favorito
+                ? CheckState.Checked
+                : CheckState.UnChecked
+        };
 
         Add(favoritoCheck);
 
@@ -251,12 +431,12 @@ Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked};
 
         if (string.IsNullOrWhiteSpace(nombre))
         {
-        MessageBox.ErrorQuery(
-    App!,
-    "Error",
-    "El nombre no puede estar vacio.",
-    "OK"
-);
+            MessageBox.ErrorQuery(
+                App!,
+                "Error",
+                "El nombre no puede estar vacio.",
+                "OK"
+            );
 
             return;
         }
@@ -264,11 +444,11 @@ Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked};
         if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@'))
         {
             MessageBox.ErrorQuery(
-    App!,
-    "Error",
-    "El email debe contener @.",
-    "OK"
-);
+                App!,
+                "Error",
+                "El email debe contener @.",
+                "OK"
+            );
 
             return;
         }
@@ -288,7 +468,9 @@ Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked};
         editado.Email = email.Trim();
         editado.Notas = notasField.Text.ToString() ?? "";
 
-editado.Favorito = favoritoCheck.Value == CheckState.Checked;
+        editado.Favorito =
+            favoritoCheck.Value == CheckState.Checked;
+
         Contacto = editado;
 
         App!.RequestStop();
