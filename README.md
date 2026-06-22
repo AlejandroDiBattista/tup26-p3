@@ -93,9 +93,6 @@ La solución debe separar responsabilidades de forma clara, con una estructura c
 - Las herramientas de archivos expuestas al modelo (`leer-archivo`, `escribir-archivo`, `listar-archivos`).
 - La lógica de envío, streaming y actualización del historial.
 
-La estructura concreta queda a criterio del estudiante.
-
-![Vista de detalle del contacto](image.png) 
 ---
 
 ## Cómo comenzar el desarrollo
