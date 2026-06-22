@@ -95,7 +95,6 @@ La solución debe separar responsabilidades de forma clara, con una estructura c
 
 La estructura concreta queda a criterio del estudiante.
 
-![Vista de detalle del contacto](image.png) 
 ---
 
 ## Cómo comenzar el desarrollo
