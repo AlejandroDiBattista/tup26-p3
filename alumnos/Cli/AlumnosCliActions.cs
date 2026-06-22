@@ -167,15 +167,16 @@ static class AlumnosCliActions {
             int cantidadLineas = gh.CantidadLineas(pr.Numero);
             int cantidadCommits = gh.Commits(pr.Numero).Count;
             List<int> tps = GitHub.ExtraerTPs(pr.Titulo);
-            List<string> archivosTp = tps
-                .SelectMany(tp => gh.ListarArchivosDirectorio(pr.Numero, alumno.CarpetaNombre, $"tp{tp}"))
-                .OrderBy(ruta => ruta, StringComparer.OrdinalIgnoreCase)
+            List<(int Tp, int CantidadArchivos)> archivosPorTp = tps
+                .Select(tp => (
+                    Tp: tp,
+                    CantidadArchivos: gh.ListarArchivosDirectorio(pr.Numero, alumno.CarpetaNombre, $"tp{tp}").Count))
                 .ToList();
             string etiquetaTp = tps.Count == 0 ? "?" : string.Join("", tps);
 
             Log.Print($"PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | TP{etiquetaTp}");
-            foreach (string archivo in archivosTp) {
-                Log.Print($"  - {archivo}");
+            foreach ((int tp, int cantidad) in archivosPorTp) {
+                Log.Print($" - TP{tp,2}: {cantidad,2} archivo{(cantidad == 1 ? "" : "s")}");
             }
         }
 
