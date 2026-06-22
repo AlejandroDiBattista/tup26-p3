@@ -22,11 +22,11 @@ El sistema debe permitir mantener una conversación con el asistente: el usuario
 
 La conversación es una secuencia de mensajes, cada uno con un **rol** que lo distingue dentro del diálogo. Los roles que intervienen son:
 
-| Rol       | Descripción                                                    | Visible |
-|-----------|----------------------------------------------------------------|:--------|
-| Sistema   | Instrucción inicial que define el comportamiento del asistente | No      |
-| Usuario   | Cada mensaje que escribe la persona                            | Sí      |
-| Asistente | Cada respuesta que produce el modelo                           | Sí      |
+| Rol         | Descripción                                                                 | Visible al usuario |
+|-------------|-----------------------------------------------------------------------------|:------------------:|
+| Sistema     | Instrucción inicial que define el comportamiento del asistente              | No                 |
+| Usuario     | Cada mensaje que escribe la persona                                         | Sí                 |
+| Asistente   | Cada respuesta que produce el modelo                                        | Sí                 |
 
 El mensaje de **sistema** se carga desde un archivo `AGENTS.md` ubicado junto a la aplicación, y fija el "carácter" del asistente (idioma, tono, preferencias de lenguaje de ejemplo, qué hacer cuando falta contexto). Mantener el prompt en un archivo aparte permite ajustarlo sin recompilar. Los mensajes de **usuario** y **asistente** se acumulan a lo largo de la sesión y se envían completos en cada consulta, de modo que el modelo recuerde lo conversado.
 
@@ -93,6 +93,9 @@ La solución debe separar responsabilidades de forma clara, con una estructura c
 - Las herramientas de archivos expuestas al modelo (`leer-archivo`, `escribir-archivo`, `listar-archivos`).
 - La lógica de envío, streaming y actualización del historial.
 
+La estructura concreta queda a criterio del estudiante.
+
+![Vista de detalle del contacto](image.png) 
 ---
 
 ## Cómo comenzar el desarrollo
@@ -104,3 +107,4 @@ El proyecto se entrega como un punto de partida mínimo que ya incluye:
 - Una **ventana base** de Terminal.Gui que abre a pantalla completa con el título del asistente.
 - El archivo **`AGENTS.md`** con el mensaje de sistema, que la aplicación carga al iniciar.
 
+Se recomienda avanzar de a poco, verificando el funcionamiento de cada parte antes de continuar con la siguiente.
