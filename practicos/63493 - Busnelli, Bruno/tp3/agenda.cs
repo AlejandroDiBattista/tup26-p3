@@ -69,8 +69,8 @@ public sealed class AgendaWindow : Runnable
             [
                 new MenuBarItem("_Archivo",
                 [
-                    new MenuItem("_Importar JSON", "Ctrl+I", MostrarPendiente),
-                    new MenuItem("_Exportar JSON", "Ctrl+E", MostrarPendiente),
+                    new MenuItem("_Importar JSON", "Ctrl+I", ImportarJson),
+                    new MenuItem("_Exportar JSON", "Ctrl+E", ExportarJson),
                     null!,
                     new MenuItem("_Salir", "Ctrl+Q", SolicitarSalir)
                 ]),
@@ -326,13 +326,13 @@ public sealed class AgendaWindow : Runnable
             return;
         }
 
-int respuesta = MessageBox.Query(
-    App!,
-    "Confirmar eliminacion",
-    $"Desea eliminar a '{seleccionado.Nombre}'?",
-    "Si",
-    "No"
-) ?? 1;
+        int respuesta = MessageBox.Query(
+            App!,
+            "Confirmar eliminacion",
+            $"Desea eliminar a '{seleccionado.Nombre}'?",
+            "Si",
+            "No"
+        ) ?? 1;
 
         if (respuesta != 0)
         {
@@ -359,14 +359,69 @@ int respuesta = MessageBox.Query(
         );
     }
 
-    private void MostrarPendiente()
+    private void ExportarJson()
     {
-        MessageBox.Query(
-            App!,
-            "Pendiente",
-            "Esta opcion se completara en el proximo commit.",
-            "OK"
-        );
+        try
+        {
+            JsonAgendaIO.Export(
+                "contactos-exportados.json",
+                contacts
+            );
+
+            ApplyFilters("Contactos exportados a contactos-exportados.json");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(
+                App!,
+                "Error",
+                ex.Message,
+                "OK"
+            );
+        }
+    }
+
+    private void ImportarJson()
+    {
+        try
+        {
+            List<Contacto> importados =
+                JsonAgendaIO.Import("contactos-exportados.json");
+
+            int respuesta = MessageBox.Query(
+                App!,
+                "Importar",
+                $"Se importaran {importados.Count} contactos.",
+                "Aceptar",
+                "Cancelar"
+            ) ?? 1;
+
+            if (respuesta != 0)
+            {
+                ApplyFilters("Importacion cancelada.");
+                return;
+            }
+
+            foreach (Contacto contacto in importados)
+            {
+                Contacto nuevo = contacto.Clone();
+                nuevo.Id = 0;
+                nuevo.Id = store.Insert(nuevo);
+                contacts.Add(nuevo);
+            }
+
+            selectedIndex = 0;
+            ApplyFilters($"{importados.Count} contactos importados.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(
+                App!,
+                "Error",
+                ex.Message,
+                "OK"
+            );
+        }
     }
 
     private void MostrarAcercaDe()
@@ -407,6 +462,18 @@ int respuesta = MessageBox.Query(
         if (key == Key.D.WithCtrl || key == Key.Delete)
         {
             EliminarContacto();
+            return true;
+        }
+
+        if (key == Key.I.WithCtrl)
+        {
+            ImportarJson();
+            return true;
+        }
+
+        if (key == Key.E.WithCtrl)
+        {
+            ExportarJson();
             return true;
         }
 
