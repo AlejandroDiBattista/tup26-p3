@@ -15,7 +15,7 @@ using Terminal.Gui.Drawing;
 using Terminal.Gui.Configuration;
 DotNetEnv.Env.Load();
 
-// ------------------config -------------------------------------
+// ------------------config y arranque -------------------------------------
 bool cerrar = false;
 var url = Environment.GetEnvironmentVariable("GEMINI_API_URL");
 var apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
@@ -30,7 +30,7 @@ List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
 
-// ---------------------------------------------------------------
+// --------------------Configuracion de terminal gui 2.0------------------------------------------
 
 ConfigurationManager.Enable(ConfigLocations.All);
 ConfigurationManager.Apply();
@@ -38,6 +38,9 @@ Scheme entrad = new Scheme() { Normal = new Terminal.Gui.Drawing.Attribute(Color
 using Window gui = new() { };
 
 using IApplication app = Application.Create().Init();
+
+// --------------------Ventanas TG ------------------------------------------
+
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
     Width = Dim.Fill(),
@@ -58,6 +61,8 @@ var visualizador = new Markdown {
 };
 ventana.Add(visualizador);
 
+
+// ----------------------------Funcion para enviar mensajes------------------------------------------
 entrada.KeyDown += async (sender, e) => {
     if (e.KeyCode == Key.Enter && !string.IsNullOrWhiteSpace(entrada.Text)) {
         if (entrada.Text.Equals("/salir", StringComparison.OrdinalIgnoreCase)) {
@@ -98,9 +103,9 @@ entrada.KeyDown += async (sender, e) => {
 
 };
 
-// Panel de conversación y el panel de entrada.
 
-// // CERRAR APP.
+
+// -----------------------------CERRAR APP------------------------.
 var dialogosalir = new Dialog { X = Pos.Center(), Y = Pos.Center(), Width = 50, Height = 10 };
 
 var seguro = new Label { Text = "", X = Pos.Center(), Y = Pos.Center() };
@@ -113,12 +118,6 @@ dialogosalir.Add(seguro);
 dialogosalir.AddButton(confirmar);
 dialogosalir.AddButton(cancelar);
 
-// Funciones de Terminal Gui 
-
-
-//Para mandar texto y limpiar entrada.
-
-//para salir
 gui.KeyDown += async (sender, e) => {
     if (e.KeyCode == Key.Esc) {
         seguro.Text = " ¿Seguro desea salir? ";
@@ -138,7 +137,6 @@ gui.KeyDown += async (sender, e) => {
     }
 };
 
-// // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 
 gui.Add(ventana, entrada);
 app.Run(gui);
