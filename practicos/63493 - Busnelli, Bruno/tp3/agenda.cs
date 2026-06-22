@@ -13,7 +13,6 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
-using System.Data.Common;
 using Dapper.Contrib.Extensions;
 
 /// ====
@@ -21,16 +20,25 @@ using Dapper.Contrib.Extensions;
 /// Aplicación de agenda TUI con persistencia SQLite e import/export JSON.
 /// ====
 
+string dbPath = args.Length > 0 ? args[0] : "agenda.db";
+
+SqliteAgendaStore store = new(dbPath);
+store.Initialize();
+
 // Punto de entrada
 using IApplication app = Application.Create().Init();
-app.Run(new AgendaWindow());
+app.Run(new AgendaWindow(store));
 
 
 // Ventana principal
 public sealed class AgendaWindow : Runnable
 {
-    public AgendaWindow()
+    private readonly SqliteAgendaStore store;
+
+    public AgendaWindow(SqliteAgendaStore store)
     {
+        this.store = store;
+
         Title = "AgendaT - Terminal.Gui";
         Width = Dim.Fill();
         Height = Dim.Fill();
@@ -54,20 +62,16 @@ public sealed class AgendaWindow : Runnable
             ]
         };
 
-        Button openButton = new()
+        int cantidad = store.GetAll().Count;
+
+        Label message = new()
         {
-            Text = "_Abrir diálogo",
+            Text = $"Base cargada correctamente. Contactos guardados: {cantidad}",
             X = Pos.Center(),
             Y = Pos.Center()
         };
 
-        openButton.Accepting += (_, e) =>
-        {
-            AbrirDialogo();
-            e.Handled = true;
-        };
-
-        Add(menu, openButton);
+        Add(menu, message);
     }
 
     private void AbrirDialogo()
@@ -129,8 +133,70 @@ public sealed class EjemploDialog : Dialog
 
 
 // Persistencia SQLite
-public class SqliteAgendaStore
+public sealed class SqliteAgendaStore
 {
+    private readonly string connectionString;
+
+    public SqliteAgendaStore(string dbPath)
+    {
+        connectionString = $"Data Source={dbPath}";
+    }
+
+    public void Initialize()
+    {
+        using SqliteConnection connection = OpenConnection();
+
+        connection.Execute("""
+            CREATE TABLE IF NOT EXISTS Contactos (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefonos TEXT NOT NULL DEFAULT '',
+                Email TEXT NOT NULL DEFAULT '',
+                Notas TEXT NOT NULL DEFAULT '',
+                Favorito INTEGER NOT NULL DEFAULT 0
+            );
+        """);
+    }
+
+    public List<Contacto> GetAll()
+    {
+        using SqliteConnection connection = OpenConnection();
+
+        return connection
+            .GetAll<Contacto>()
+            .OrderByDescending(contacto => contacto.Favorito)
+            .ThenBy(contacto => contacto.Nombre)
+            .ToList();
+    }
+
+    public int Insert(Contacto contacto)
+    {
+        using SqliteConnection connection = OpenConnection();
+
+        long id = connection.Insert(contacto);
+        return (int)id;
+    }
+
+    public bool Update(Contacto contacto)
+    {
+        using SqliteConnection connection = OpenConnection();
+
+        return connection.Update(contacto);
+    }
+
+    public bool Delete(Contacto contacto)
+    {
+        using SqliteConnection connection = OpenConnection();
+
+        return connection.Delete(contacto);
+    }
+
+    private SqliteConnection OpenConnection()
+    {
+        SqliteConnection connection = new(connectionString);
+        connection.Open();
+        return connection;
+    }
 }
 
 
