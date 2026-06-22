@@ -9,7 +9,6 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-using Terminal.Gui.Views;
 using Terminal.Gui.Input;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Configuration;
@@ -35,9 +34,8 @@ List<ChatMessage> mensajes = [
 ConfigurationManager.Enable(ConfigLocations.All);
 ConfigurationManager.Apply();
 Scheme entrad = new Scheme() { Normal = new Terminal.Gui.Drawing.Attribute(Color.Black, Color.Gray) };
-using Window gui = new() { };
-
 using IApplication app = Application.Create().Init();
+using Window gui = new() { };
 
 // --------------------Ventanas TG ------------------------------------------
 
@@ -93,7 +91,7 @@ entrada.KeyDown += async (sender, e) => {
                         textoAcumulado.AppendLine($"# —————————————————————🤖 ASISTENTE————————————————————————————————\n{m.Text}\n");
                     }
                 }
-                visualizador.Text = textoAcumulado.ToString();
+                app.Invoke(() => visualizador.Text = textoAcumulado.ToString());
             }
         } catch (Exception ex) {
             visualizador.Text += $"\n\n# Error\n\n{ex.Message}";
