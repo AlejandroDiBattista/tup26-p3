@@ -14,6 +14,8 @@ using Terminal.Gui.Views;
 using Microsoft.Data.Sqlite;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using System.Text.Json;
+using System.Text;
 
 /// ====
 /// Trabajo Práctico 3 - AgendaT
@@ -83,6 +85,16 @@ public sealed class AgendaWindow : Runnable
     private void SolicitarSalir()
     {
         App!.RequestStop();
+    }
+
+    private void ProbarJson()
+    {
+        var contactos = store.GetAll();
+
+        JsonAgendaIO.Export(
+            "contactos.json",
+            contactos
+        );
     }
 
     protected override bool OnKeyDown(Key key)
@@ -201,8 +213,44 @@ public sealed class SqliteAgendaStore
 
 
 // Interoperabilidad JSON
-public class JsonAgendaIO
+public static class JsonAgendaIO
 {
+    private static readonly JsonSerializerOptions options =
+        new()
+        {
+            WriteIndented = true
+        };
+
+    public static void Export(string filePath, IEnumerable<Contacto> contactos)
+    {
+        string json = JsonSerializer.Serialize(contactos, options);
+
+        File.WriteAllText(
+            filePath,
+            json,
+            new UTF8Encoding(false)
+        );
+    }
+
+    public static List<Contacto> Import(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException(
+                $"No existe el archivo: {filePath}"
+            );
+        }
+
+        string json = File.ReadAllText(
+            filePath,
+            Encoding.UTF8
+        );
+
+        List<Contacto>? contactos =
+            JsonSerializer.Deserialize<List<Contacto>>(json);
+
+        return contactos ?? [];
+    }
 }
 
 
