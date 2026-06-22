@@ -1,81 +1,106 @@
-﻿# TUP 2026 - Programación III
+﻿# TP6: AsistenteIA
+## Asistente de Chat por Terminal con Microsoft.Extensions.AI y Terminal.Gui
 
-## C7
-```text
-Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
-------  ------------------------------  ----------   ---   ---  ---
-63456   Ávila Lahr, Joaquín             🟢🟢🟢🟢🟢   🟢⚪️    23   10
-63415   Chávez, Lucas Francisco         🔴🔴🔴🔴🔴   🟢⚪️    17    8
-63268   Condori, Karina Edith           🟢🟢🟢🟢🟢   🟡⚪️     7    1
-63402   Condori, Nahuel Ariel           🟢🟢🟢🟢🟢   🟢⚪️    26   10
-63419   Coronel, Tomás                  🟢🟢🟢🟢🟢   🟢⚪️    27   10
-63241   Cortez, Josías                  🟢🟢🟢🟢🟢   🟢⚪️    27   10
-63776   Fuensalida, Ulises Nahuel       🟢🟢🔴🔴🟢   🟢⚪️    14    8
-63396   Gil Garau, Atalía Trinidad      🟢🟢🟢🟢🟢   🟢⚪️    25   10
-63457   González Dupuy, Ignacio         🟢🟢🟢🟢🟢   🟢⚪️    25   10
-61577   González, Lucas Alfredo         🟢🔴🔴🔴🔴   🟢⚪️    23   10
-63174   Jerez, Luciano Germán           🟢🟢🟢🟢🟢   🟢⚪️    28    9
-63700   Jiménez, Nelson Maximiliano     🟢🟢🟢🔴🔴   🟢⚪️    23    8
-63399   Lazarte, Gonzalo Romeo          🟢🟢🟢🟢🟢   🟢⚪️    22   10
-63211   Montero, Luca                   🟢🟢🔴🔴🔴   🟢⚪️    16   10
-63350   Páez Carabajal, Santiago        🟢🟢🟢🟢🟢   🟢⚪️    18    9
-61581   Paz, Naim Federico              🟢🟢🟢🟢🟢   🟢⚪️    22   10
-63647   Paz, Valentina                  🟢🟢🟢🟢🟢   🟢⚪️    22   10
-63389   Pereyra Petroni, Nicolas        🔴🟢🟢🔴🟢   🟢⚪️    15    8
-63420   Pereyra, Valentina Nazaret      🔴🟢🔴🔴🟢   🟢⚪️    10    5
-63354   Perondi, Luciano                🟢🟢🟢🟢🟢   🟢⚪️    19   10
-63393   Ritorto, Lucca                  🟢🟢🟢🟢🟢   🟢⚪️    18   10
-63208   Rosconi, Ignacio Federico       🔴🟢🔴🔴🟢   🟢⚪️    13    4
-63387   Sosa Gonella, Luca              🟢🟢🟢🟢🟢   🟢⚪️    20    9
-63546   Sosa Paz, Jeremías              🟢🟢🟢🟢🟢   🟢⚪️    28   10
-63547   Sosa Paz, José Lisandro         🟢🟢🟢🟢🟢   🟢⚪️    25   10
-63447   Suárez, Sofía Celeste           🟢🟢🟢🟢🟢   🟢⚪️    25   10
-61490   Valdez Bustamante, Tomás        🟢🟢🔴🟢🟢   🟢⚪️    30    6
-63397   Vercellone, Tomás               🟢🟢🟢🔴🟢   🟢⚪️    21    9
-```
+> [!IMPORTANT]
+> Plazo para entregar el TP6: **Jueves 25 de Junio hasta las 23:59hs**
+>
+> *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*
 
-## C9
-```text
-Legajo  Nombre y Apellido               Prácticos    Exm   Ast  Nta
-------  ------------------------------  ----------   ---   ---  ---
-63385   Almaraz Sintora, Nahuel         🟢🟢🟢🟢🟢   🟢⚪️    28   10
-63217   Altamiranda Borquez, Bian       🟢🔴🔴🔴🔴   🟢⚪️    23    8
-63300   Álvarez, Hernán Fabricio        🟢🟢🟢🟢🟢   🟢⚪️    22   10
-63313   Ávila Puntano, Benjamín         🟢🟢🟢🟢🟢   🟢⚪️    24   10
-63222   Bajre Martínez, Julián          🟢🟢🟢🟢🟢   🟢⚪️    23    7
-61801   Benega, Maximiliano Abraham     🟢🟢🟢🟢🟢   🟢⚪️    20    6
-63493   Busnelli, Bruno                 🟢🟢🔴🔴🔴   🟢⚪️    11   10
-63150   Carlino, Joaquín                🟢🟢🟢🟢🟢   🟢⚪️    12   10
-63341   Carrer, Juan Cruz               🟢🟢🟢🟢🟢   🟢⚪️    20   10
-63461   Cativa, Facundo Simón           🟢🟢🔴🔴🔴   🟢⚪️    17    8
-63218   Cortés, Guillermo Augusto       🟢🟢🟢🟢🟢   🟢⚪️    25   10
-64016   Cura, Rocío Aylen               🔴🟢🟢🔴🔴   🟢⚪️    15    7
-63266   Decima, Juan Cruz               🟢🟢🟢🟢🟢   🟢⚪️    24   10
-63137   Díaz, José Simón                🟢🟢🔴🟢🟢   🟢⚪️    26    6
-61641   Figueroa, Nahuel Ramón          🟢🔴🔴🔴🔴   🟢⚪️    17    4
-63737   Galván, Rocío Julieta           🟢🟢🟢🟢🟢   🟢⚪️    22   10
-63345   García, Franco Tomás            🔴🟢🟢🟢🔴   🟢⚪️    14   10
-61057   Getar, Thomas                   🟢🟢🟢🔴🔴   🟢⚪️    20    7
-61489   Gómez, Tomás                    🟢🟢🟢🟢🟢   🟢⚪️    26    9
-63182   González Rojas, Emmanuel        🟢🟢🟢🟢🟢   🟢⚪️    28   10
-63717   González, Octavio               🟢🟢🟢🟢🟢   🟢⚪️    27    9
-61161   González, Thomas Ezequiel       🟢🟢🔴🟢🔴   🟢⚪️    18    5
-62844   Guzmán, Luciano Leonel          🔴🟢🟢🔴🔴   🟢⚪️    16   10
-63231   Herrera, Rocío Tatiana          🟢🟢🟢🟢🟢   🟢⚪️    23   10
-63425   Holmquist, Jeremy               🟢🟢🔴🔴🔴   🟢⚪️    16    6
-61907   Kargachin, Guadalupe            🔴🔴🔴🔴🔴   🔴⚪️     0    1
-63219   Lazarte, Sergio Fabricio        🟢🟢🟢🟢🟢   🟢⚪️    20   10
-63297   Lezana, Juan Ignacio            🟢🟢🟢🟢🟢   🟢⚪️    23   10
-63388   López, Leandro Joel             🟢🟢🔴🟢🔴   🟢⚪️    26   10
-63213   Marina Noguera, Morena Giovann  🟢🟢🟢🟢🟢   🟢⚪️    26    9
-63494   Medina, Lourdes Natalia         🟢🟢🟢🟢🟢   🟢⚪️    19   10
-63418   Miranda, Gonzalo Emanuel        🟢🟢🟢🟢🟢   🟢⚪️    22    7
-63234   Molina, Lázaro Exequiel         🟢🟢🟢🟢🟢   🟢⚪️    25   10
-63412   Morán, Facundo Martín           🟢🟢🟢🟢🟢   🟢⚪️    27   10
-63205   Navarro Aragón, Facundo         🔴🔴🔴🔴🔴   🟢⚪️    19   10
-63220   Pérez Del Rien, Valentina       🟢🟢🟢🟢🟢   🟢⚪️    28   10
-63232   Roldan, Enzo Joaquín            🟢🟢🟢🔴🔴   🟢⚪️    25    5
-63216   Sánchez, Sofía Micaela          🟢🟢🟢🟢🟢   🟢⚪️    26   10
-63207   Saravia, César Nahum            🟢🟢🟢🟢🟢   🟢⚪️    23   10
-61026   Thompson, María José            🟢🟢🟢🟢🟢   🟢⚪️    24    9
-```
+## Descripción general
+
+Desarrollar una aplicación de **consola interactiva** que funcione como un **asistente conversacional** apoyado en un modelo de lenguaje, construida con:
+
+- **Terminal.Gui (v2)** — Interfaz de usuario en modo texto (TUI).
+- **Microsoft.Extensions.AI (MEAI)** — Abstracción `IChatClient` para conversar con el modelo.
+- **Proveedor compatible con OpenAI** — Acceso al modelo mediante una clave configurada por variable de entorno.
+
+El sistema debe permitir mantener una conversación con el asistente: el usuario escribe un mensaje, lo envía, y la respuesta del modelo se va mostrando **a medida que se genera** (streaming). La conversación se conserva durante toda la sesión para dar contexto a cada nueva pregunta.
+
+---
+
+## Modelo de la conversación
+
+La conversación es una secuencia de mensajes, cada uno con un **rol** que lo distingue dentro del diálogo. Los roles que intervienen son:
+
+| Rol       | Descripción                                                    | Visible |
+|-----------|----------------------------------------------------------------|:--------|
+| Sistema   | Instrucción inicial que define el comportamiento del asistente | No      |
+| Usuario   | Cada mensaje que escribe la persona                            | Sí      |
+| Asistente | Cada respuesta que produce el modelo                           | Sí      |
+
+El mensaje de **sistema** se carga desde un archivo `AGENTS.md` ubicado junto a la aplicación, y fija el "carácter" del asistente (idioma, tono, preferencias de lenguaje de ejemplo, qué hacer cuando falta contexto). Mantener el prompt en un archivo aparte permite ajustarlo sin recompilar. Los mensajes de **usuario** y **asistente** se acumulan a lo largo de la sesión y se envían completos en cada consulta, de modo que el modelo recuerde lo conversado.
+
+El acceso al modelo se realiza mediante la abstracción `IChatClient` de **Microsoft.Extensions.AI**, sin acoplar la lógica de la aplicación a un proveedor concreto. La clave de la API se lee desde una **variable de entorno** (por ejemplo, cargada desde un archivo `.env`), nunca escrita en el código.
+
+---
+
+## Funcionalidades requeridas
+
+La aplicación debe implementar la conversación con el asistente:
+
+- **Enviar mensaje:** tomar el texto que escribió el usuario y agregarlo a la conversación.
+- **Recibir respuesta en streaming:** mostrar la respuesta del modelo **fragmento a fragmento**, a medida que llega, sin esperar a que termine.
+- **Mantener contexto:** conservar el historial completo de la sesión para que cada nueva pregunta tenga en cuenta lo anterior.
+- **Renderizar Markdown:** mostrar la conversación con formato (encabezados por turno, bloques de código resaltados, etc.).
+- **Salir:** cerrar la aplicación de forma limpia con la tecla **Esc**.
+
+---
+
+## Herramientas (function calling)
+
+El asistente debe poder **operar sobre el sistema de archivos** del proyecto a pedido del usuario. Para ello se exponen al modelo, mediante el mecanismo de *function calling* de **Microsoft.Extensions.AI**, las siguientes herramientas:
+
+| Herramienta        | Descripción                                              | Parámetros            |
+|--------------------|----------------------------------------------------------|-----------------------|
+| `leer-archivo`     | Devuelve el contenido de un archivo de texto             | ruta del archivo      |
+| `escribir-archivo` | Crea o sobrescribe un archivo con el contenido indicado  | ruta y contenido      |
+| `listar-archivos`  | Lista los archivos (y carpetas) de un directorio         | ruta del directorio   |
+
+El modelo decide **cuándo** invocar cada herramienta a partir de lo que pide el usuario (por ejemplo: "leé `notas.txt`", "guardá esto en `salida.md`", "qué archivos hay en esta carpeta"). La aplicación debe ejecutar la función solicitada y devolver el resultado al modelo para que continúe la respuesta.
+
+Las herramientas se definen como funciones de C# (con `AIFunctionFactory`) y se entregan al cliente a través de las `ChatOptions`, habilitando la invocación automática de funciones en el `IChatClient`.
+
+---
+
+## Diseño de interfaz
+
+La interfaz debe organizarse en una ventana de pantalla completa, dividida en dos zonas verticales:
+
+- **Panel de conversación:** ocupa la mayor parte de la pantalla y muestra el historial del diálogo. Debe poder desplazarse (scroll) con mouse y teclado para releer mensajes anteriores.
+- **Panel de entrada:** un campo de texto donde el usuario escribe su mensaje, acompañado de un botón **Enviar**.
+
+![Ejemplo de la interfaz del asistente](image.png)
+
+La experiencia de teclado esperada es:
+
+- **Enter** envía el mensaje.
+- **Esc** cierra la aplicación.
+
+Mientras el asistente responde, la entrada y el botón deben deshabilitarse para evitar envíos superpuestos, y el panel de conversación debe acompañar la respuesta que se genera (auto-scroll), respetando el desplazamiento manual del usuario si éste decide leer hacia arriba.
+
+El diseño no necesita ser visualmente complejo, pero debe ser claro, ordenado y funcional.
+
+---
+
+## Organización del proyecto
+
+La solución debe separar responsabilidades de forma clara, con una estructura comprensible y mantenible. Se espera una separación razonable entre:
+
+- Configuración y arranque (lectura de la clave, creación del `IChatClient`).
+- La ventana principal y su disposición de paneles.
+- El control de entrada de texto.
+- El modelo de los mensajes que se muestran en pantalla.
+- Las herramientas de archivos expuestas al modelo (`leer-archivo`, `escribir-archivo`, `listar-archivos`).
+- La lógica de envío, streaming y actualización del historial.
+
+---
+
+## Cómo comenzar el desarrollo
+
+El proyecto se entrega como un punto de partida mínimo que ya incluye:
+
+- Un archivo ejecutable de **C# (file-based app)** con los paquetes necesarios declarados (`Microsoft.Extensions.AI`, `Terminal.Gui`, carga de `.env`).
+- La lectura de la **clave de API** desde la variable de entorno y la creación del cliente `IChatClient`.
+- Una **ventana base** de Terminal.Gui que abre a pantalla completa con el título del asistente.
+- El archivo **`AGENTS.md`** con el mensaje de sistema, que la aplicación carga al iniciar.
+

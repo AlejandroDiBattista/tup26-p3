@@ -14,8 +14,7 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL")
-    ?? throw new InvalidOperationException($"Falta {proveedor}_API_URL en .env");
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
@@ -37,14 +36,12 @@ var respuesta = await chat.GetResponseAsync(mensajes);
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(),
-    Height = Dim.Fill()
+    Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Label {
-    Text = $"Vos: {pregunta}\n\nAsistente: {respuesta.Text}",
-    Width = Dim.Fill(),
-    Height = Dim.Fill()
+ventana.Add(new Markdown {
+    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
+    Width = Dim.Fill(), Height = Dim.Fill()
 });
 
 // TODO: agregar el panel de conversación y el panel de entrada.

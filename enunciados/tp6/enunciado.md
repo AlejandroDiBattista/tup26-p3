@@ -2,7 +2,7 @@
 ## Asistente de Chat por Terminal con Microsoft.Extensions.AI y Terminal.Gui
 
 > [!IMPORTANT]
-> Plazo para entregar el TP6: **Sábado 27 de Junio hasta las 23:59hs**
+> Plazo para entregar el TP6: **Jueves 25 de Junio hasta las 23:59hs**
 >
 > *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*
 
@@ -69,6 +69,8 @@ La interfaz debe organizarse en una ventana de pantalla completa, dividida en do
 - **Panel de conversación:** ocupa la mayor parte de la pantalla y muestra el historial del diálogo. Debe poder desplazarse (scroll) con mouse y teclado para releer mensajes anteriores.
 - **Panel de entrada:** un campo de texto donde el usuario escribe su mensaje, acompañado de un botón **Enviar**.
 
+![Ejemplo de la interfaz del asistente](image.png)
+
 La experiencia de teclado esperada es:
 
 - **Enter** envía el mensaje.
@@ -92,6 +94,7 @@ La solución debe separar responsabilidades de forma clara, con una estructura c
 - La lógica de envío, streaming y actualización del historial.
 
 La estructura concreta queda a criterio del estudiante.
+
 
 ---
 
