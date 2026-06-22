@@ -27,7 +27,6 @@ string dbPath = args.Length > 0 ? args[0] : "agenda.db";
 SqliteAgendaStore store = new(dbPath);
 store.Initialize();
 
-// Punto de entrada
 using IApplication app = Application.Create().Init();
 app.Run(new AgendaWindow(store));
 
@@ -78,7 +77,7 @@ public sealed class AgendaWindow : Runnable
 
     private void AbrirDialogo()
     {
-        EjemploDialog dialog = new();
+        ContactDialog dialog = new();
         App!.Run(dialog);
     }
 
@@ -110,36 +109,189 @@ public sealed class AgendaWindow : Runnable
 }
 
 
-// Diálogo de ejemplo
-public sealed class EjemploDialog : Dialog
+// Diálogo de edición
+public sealed class ContactDialog : Dialog
 {
-    public EjemploDialog()
-    {
-        Title = "Diálogo de ejemplo";
-        Width = 50;
-        Height = 8;
+    public Contacto? Contacto { get; private set; }
 
-        Label message = new()
+    private readonly TextField nombreField;
+    private readonly TextField[] telefonoFields;
+    private readonly TextField emailField;
+    private readonly TextView notasField;
+    private readonly CheckBox favoritoCheck;
+
+    public ContactDialog(Contacto? contacto = null)
+    {
+        contacto ??= new Contacto();
+
+        Title = contacto.Id == 0
+            ? "Nuevo contacto"
+            : "Editar contacto";
+
+        Width = 70;
+        Height = 24;
+
+        Add(new Label()
         {
-            Text = "Este es un diálogo modal de ejemplo.",
-            X = Pos.Center(),
+            Text = "Nombre:",
+            X = 1,
             Y = 1
+        });
+
+        nombreField = new TextField()
+        {
+            X = 18,
+            Y = 1,
+            Width = 42,
+            Text = contacto.Nombre
         };
 
-        Button closeButton = new()
+        Add(nombreField);
+
+        telefonoFields = new TextField[5];
+
+        string[] telefonosCargados = contacto.Telefonos
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        for (int i = 0; i < 5; i++)
         {
-            Text = "_Cerrar",
+            Add(new Label()
+            {
+                Text = $"Telefono {i + 1}:",
+                X = 1,
+                Y = 3 + i
+            });
+
+            telefonoFields[i] = new TextField()
+            {
+                X = 18,
+                Y = 3 + i,
+                Width = 42,
+                Text = i < telefonosCargados.Length ? telefonosCargados[i] : ""
+            };
+
+            Add(telefonoFields[i]);
+        }
+
+        Add(new Label()
+        {
+            Text = "Email:",
+            X = 1,
+            Y = 9
+        });
+
+        emailField = new TextField()
+        {
+            X = 18,
+            Y = 9,
+            Width = 42,
+            Text = contacto.Email
+        };
+
+        Add(emailField);
+
+        Add(new Label()
+        {
+            Text = "Notas:",
+            X = 1,
+            Y = 11
+        });
+
+        notasField = new TextView()
+        {
+            X = 18,
+            Y = 11,
+            Width = 42,
+            Height = 4,
+            Text = contacto.Notas
+        };
+
+        Add(notasField);
+
+favoritoCheck = new CheckBox()
+{
+    Text = "Favorito",
+    X = 18,
+    Y = 16,
+Value = contacto.Favorito ? CheckState.Checked : CheckState.UnChecked};
+
+        Add(favoritoCheck);
+
+        Button guardarButton = new()
+        {
+            Text = "_Guardar",
             IsDefault = true
         };
 
-        closeButton.Accepting += (_, e) =>
+        guardarButton.Accepting += (_, e) =>
+        {
+            Guardar(contacto);
+            e.Handled = true;
+        };
+
+        Button cancelarButton = new()
+        {
+            Text = "_Cancelar"
+        };
+
+        cancelarButton.Accepting += (_, e) =>
         {
             App!.RequestStop();
             e.Handled = true;
         };
 
-        Add(message);
-        AddButton(closeButton);
+        AddButton(guardarButton);
+        AddButton(cancelarButton);
+    }
+
+    private void Guardar(Contacto original)
+    {
+        string nombre = nombreField.Text.ToString() ?? "";
+        string email = emailField.Text.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+        MessageBox.ErrorQuery(
+    App!,
+    "Error",
+    "El nombre no puede estar vacio.",
+    "OK"
+);
+
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(email) && !email.Contains('@'))
+        {
+            MessageBox.ErrorQuery(
+    App!,
+    "Error",
+    "El email debe contener @.",
+    "OK"
+);
+
+            return;
+        }
+
+        Contacto editado = original.Clone();
+
+        editado.Nombre = nombre.Trim();
+
+        editado.Telefonos = string.Join(", ",
+            telefonoFields
+                .Select(field => field.Text.ToString() ?? "")
+                .Select(text => text.Trim())
+                .Where(text => !string.IsNullOrWhiteSpace(text))
+                .Take(5)
+        );
+
+        editado.Email = email.Trim();
+        editado.Notas = notasField.Text.ToString() ?? "";
+
+editado.Favorito = favoritoCheck.Value == CheckState.Checked;
+        Contacto = editado;
+
+        App!.RequestStop();
     }
 }
 
