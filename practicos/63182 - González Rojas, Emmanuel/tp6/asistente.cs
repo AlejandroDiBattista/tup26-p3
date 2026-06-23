@@ -77,7 +77,7 @@ var historial = new List<ChatMessage> {
 
 var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
-    $"# AsistenteIA\nModelo: {modeloIA}\nFecha: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
+    $"# IAWizard\nModel: {modeloIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
 
 // ================== VENTANA PRINCIPAL ====================
 
@@ -93,32 +93,83 @@ class VentanaAsistente : Window{
     readonly ChatOptions _opciones;
     readonly string _archivoSalida;
     readonly IApplication _app;
-
 public VentanaAsistente(
-    
-IApplication app;
-        IChatClient client;
-        List<ChatMessage> historial;
-        ChatOptions options;
-        string modelo;
-        string archivoSalida;) {
+        IApplication app,
+        IChatClient cliente,
+        List<ChatMessage> historial,
+        ChatOptions opciones,
+        string modelo,
+        string archivoSalida) {
 
         _app          = app;
         _cliente       = cliente;
         _historial     = historial;
         _opciones      = opciones;
         _archivoSalida = archivoSalida;
-        
+
         Title  = $" AsistenteIA · {modelo} ";
         Width  = Dim.Fill();
         Height = Dim.Fill();
-        
+
 
         _vistaChat = new Markdown {
             X      = 0,
             Y      = 0,
             Width  = Dim.Fill(),
             Height = Dim.Fill() - 3
+        };
+
+
+        _estado = new Label {
+            Text   = " Escribí tu mensaje y presioná Enter. ESC para salir.",
+            X      = 0,
+            Y      = Pos.Bottom(_vistaChat),
+            Width  = Dim.Fill(),
+            Height = 1
+        };
+
+        _campoTexto = new TextField {
+            Text   = "",
+            X      = 0,
+            Y      = Pos.Bottom(_estado),
+            Width  = Dim.Fill() - 12,
+            Height = 1
+        };
+
+
+        var boton = new Button {
+            Text      = "ENVIAR",
+            X         = Pos.Right(_campoTexto) + 1,
+            Y         = Pos.Bottom(_estado),
+            IsDefault = true
+        };
+
+        _campoTexto.KeyDown += async (_, e) => {
+            if (e.KeyCode == KeyCode.Enter && !string.IsNullOrWhiteSpace(_campoTexto.Text)) {
+                e.Handled = true;
+                await EnviarAsync();
+            }
+        };
+
+        boton.Accepting += async (_, e) => {
+            e.Handled = true;
+            await EnviarAsync();
+        };
+
+
+        KeyDown += (_, e) => {
+            if (e.KeyCode == KeyCode.Esc) {
+                e.Handled = true;
+                _app.RequestStop();
+            }
+        };
+
+        _textoAcumulado.AppendLine(
+            "# Bienvenido al AsistenteIA de Emmanuel\n\n" +
+            "Escribí tu consulta y presioná **Enter**.\n\n");
+        _vistaChat.Text = _textoAcumulado.ToString();
+
+        Add(_vistaChat, _estado, _campoTexto, boton);
     }
 
 
