@@ -14,6 +14,7 @@ using Terminal.Gui.Views;
 using Terminal.Gui.Input;
 using System.Text;
 using System.Drawing;
+using System.ComponentModel;
 
 DotNetEnv.Env.Load();
 
@@ -26,7 +27,32 @@ IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
-    .AsIChatClient();
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
+
+var herramientas = new List<AITool>
+{
+    AIFunctionFactory.Create(
+        (Func<string, string>)LeerArchivo,
+        "leer-archivo",
+        "Devuelve el contenido de un archivo de texto del proyecto."),
+    AIFunctionFactory.Create(
+        (Func<string, string, string>)EscribirArchivo,
+        "escribir-archivo",
+        "Crea o sobrescribe un archivo de texto del proyecto."),
+    AIFunctionFactory.Create(
+        (Func<string, string>)ListarArchivos,
+        "listar-archivos",
+        "Lista los archivos y carpetas de un directorio del proyecto.")
+};
+
+var opciones = new ChatOptions
+{
+    Tools = herramientas,
+    ToolMode = ChatToolMode.Auto
+};
 
 var mensajes = new List<ChatMessage>
 {
@@ -96,7 +122,7 @@ async Task EnviarMensajeAsync()
         var respuesta = new StringBuilder();
         var actualizaciones = new List<ChatResponseUpdate>();
 
-        await foreach (var parte in chat.GetStreamingResponseAsync(mensajes))
+        await foreach (var parte in chat.GetStreamingResponseAsync(mensajes, opciones))
         {
             actualizaciones.Add(parte);
             if (!string.IsNullOrEmpty(parte.Text))
@@ -151,6 +177,41 @@ void RefrescarConversacion()
     conversacion.SetContentSize(new Size(conversacion.Viewport.Width, conversacion.LineCount));
     conversacion.ScrollVertical(conversacion.LineCount);
     conversacion.SetNeedsDraw();
+}
+
+string ResolverRuta(string ruta)
+{
+    if (string.IsNullOrWhiteSpace(ruta)) ruta = ".";
+    var completa = Path.GetFullPath(Path.Combine(raiz, ruta));
+    if (!completa.StartsWith(raiz, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("La ruta debe estar dentro de la carpeta del proyecto.");
+    return completa;
+}
+
+string LeerArchivo([Description("Ruta relativa del archivo a leer.")] string ruta)
+{
+    var archivo = ResolverRuta(ruta);
+    return File.Exists(archivo) ? File.ReadAllText(archivo) : $"No existe el archivo: {ruta}";
+}
+
+string EscribirArchivo(
+    [Description("Ruta relativa del archivo a crear o sobrescribir.")] string ruta,
+    [Description("Contenido que se guardara en el archivo.")] string contenido)
+{
+    var archivo = ResolverRuta(ruta);
+    Directory.CreateDirectory(Path.GetDirectoryName(archivo)!);
+    File.WriteAllText(archivo, contenido);
+    return $"Archivo guardado: {ruta}";
+}
+
+string ListarArchivos([Description("Ruta relativa del directorio a listar.")] string ruta)
+{
+    var directorio = ResolverRuta(ruta);
+    if (!Directory.Exists(directorio)) return $"No existe el directorio: {ruta}";
+    return string.Join(Environment.NewLine, Directory
+        .EnumerateFileSystemEntries(directorio)
+        .Select(Path.GetFileName)
+        .OrderBy(nombre => nombre));
 }
 
 app.Run(ventana);
