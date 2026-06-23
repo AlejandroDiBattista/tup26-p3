@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.7.0
 #:package Microsoft.Extensions.AI.OpenAI@10.7.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -12,6 +13,7 @@ using Terminal.Gui.Views;
 using Terminal.Gui.Input;
 using Terminal.Gui.Drawing;
 using Terminal.Gui.Configuration;
+using System.ComponentModel;
 DotNetEnv.Env.Load();
 
 // ------------------config y arranque -------------------------------------
@@ -28,6 +30,20 @@ IChatClient chat = new OpenAIClient(
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
+
+IChatClient herramientas = new ChatClientBuilder(chat)
+    .UseFunctionInvocation()
+    .Build();
+
+var opcionesHerramientas = new ChatOptions
+{
+    Tools = [
+        AIFunctionFactory.Create(LeerArchivo, "LeerArchivo"),
+        AIFunctionFactory.Create(EscribirArchivo, "EscribirArchivo"),
+        AIFunctionFactory.Create(Listar, "Listar")
+    ]
+};
+
 
 // --------------------Configuracion de terminal gui 2.0------------------------------------------
 
@@ -63,7 +79,7 @@ ventana.Add(visualizador);
 // ----------------------------Funcion para enviar mensajes------------------------------------------
 entrada.KeyDown += async (sender, e) => {
     if (e.KeyCode == Key.Enter && !string.IsNullOrWhiteSpace(entrada.Text)) {
-        if (entrada.Text.Equals("/salir", StringComparison.OrdinalIgnoreCase)) {
+        if (entrada.Text == "/salir") {
             cerrar = true;
             app.RequestStop();
         }
@@ -77,7 +93,7 @@ entrada.KeyDown += async (sender, e) => {
             var mensajeIA = new ChatMessage(ChatRole.Assistant, "");
             mensajes.Add(mensajeIA);
 
-            await foreach (var pedazo in chat.GetStreamingResponseAsync(mensajes)) {
+            await foreach (var pedazo in herramientas.GetStreamingResponseAsync(mensajes, opcionesHerramientas)) {
                 textoIA += pedazo.Text;
                 mensajes[^1] = new ChatMessage(ChatRole.Assistant, textoIA);
 
@@ -102,6 +118,32 @@ entrada.KeyDown += async (sender, e) => {
 };
 
 
+// ================== HERRAMIENTAS DEL AGENTE =================
+
+[Description("Lee el contenido completo de un archivo de texto.")]
+static string LeerArchivo(
+    [Description("Ruta relativa del archivo a leer.")] string ruta) {
+    if (!File.Exists(ruta)) return $""" {ruta} no existe. """;
+    return File.ReadAllText(ruta);
+}
+;
+
+[Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+static string EscribirArchivo(
+    [Description("Ruta del archivo a escribir.")] string ruta,
+    [Description("Contenido de texto a guardar.")] string contenido) {
+    File.WriteAllText(ruta, contenido);
+    return $"Correcto - Ruta : {ruta}";
+}
+
+[Description ("Listar archivos de una carpeta y que tiene")]
+static string Listar(
+    [Description ("Ruta del directorio")] string ruta = "")
+{
+    var elementos = Directory.GetFileSystemEntries(ruta);
+
+    return $"Elementos: {string.Join("\n", elementos)}";
+};
 
 // -----------------------------CERRAR APP------------------------.
 var dialogosalir = new Dialog { X = Pos.Center(), Y = Pos.Center(), Width = 50, Height = 10 };
