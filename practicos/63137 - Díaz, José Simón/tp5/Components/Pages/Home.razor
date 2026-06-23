@@ -1,7 +1,122 @@
 @page "/"
+@inject ContactoService Servicio
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+<PageTitle>Agenda de contactos</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="row g-3">
+    <aside class="col-4">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">
+                <i class="bi bi-search me-1"></i>Buscar contacto
+            </label>
+            <input
+                type="text"
+                class="form-control"
+                placeholder="Nombre, apellido, teléfono o email..."
+                @bind:get="textoBusqueda"
+                @bind:set="ActualizarBusquedaAsync"
+                @bind:event="oninput" />
+        </div>
+
+        <button class="btn btn-primary w-100 mb-3" @onclick="AgregarContacto">
+            <i class="bi bi-plus-circle me-1"></i>Nuevo contacto
+        </button>
+
+        <ListaContactos
+            Contactos="contactos"
+            ContactoIdSeleccionado="contactoSeleccionado?.Id"
+            OnContactoSeleccionado="SeleccionarContacto" />
+    </aside>
+
+    <section class="col-8">
+        @if (contactoEditando is not null)
+        {
+            <FormularioContacto
+                Contacto="contactoEditando"
+                OnGuardar="GuardarContactoAsync"
+                OnCancelar="CancelarEdicion" />
+        }
+        else if (contactoSeleccionado is not null)
+        {
+            <DetalleContacto
+                Contacto="contactoSeleccionado"
+                OnEditar="EditarContacto"
+                OnEliminar="EliminarContactoAsync" />
+        }
+        else
+        {
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-person-vcard fs-1 d-block mb-3"></i>
+                <span>Seleccioná un contacto o agregá uno nuevo.</span>
+            </div>
+        }
+    </section>
 </div>
+
+@code {
+    private List<Contacto> contactos = [];
+    private Contacto? contactoSeleccionado;
+    private Contacto? contactoEditando;
+    private string textoBusqueda = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactosAsync();
+    }
+
+    private async Task CargarContactosAsync()
+    {
+        string busqueda = textoBusqueda?.Trim() ?? string.Empty;
+        string? termino = string.IsNullOrWhiteSpace(busqueda) ? null : busqueda;
+
+        contactos = await Servicio.ListarAsync(termino);
+    }
+
+    private async Task ActualizarBusquedaAsync(string valor)
+    {
+        textoBusqueda = valor;
+        await CargarContactosAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        contactoEditando = null;
+    }
+
+    private void AgregarContacto()
+    {
+        contactoEditando = new Contacto();
+        contactoSeleccionado = null;
+    }
+
+    private void EditarContacto()
+    {
+        contactoEditando = contactoSeleccionado?.Clonar();
+    }
+
+    private async Task GuardarContactoAsync(Contacto contacto)
+    {
+        await Servicio.GuardarAsync(contacto);
+        await CargarContactosAsync();
+        contactoSeleccionado = contactos.Find(c => c.Id == contacto.Id);
+        contactoEditando = null;
+    }
+
+    private async Task EliminarContactoAsync()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        await Servicio.EliminarAsync(contactoSeleccionado.Id);
+        contactoSeleccionado = null;
+        await CargarContactosAsync();
+    }
+
+    private void CancelarEdicion()
+    {
+        contactoEditando = null;
+    }
+}

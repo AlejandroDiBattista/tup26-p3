@@ -20,9 +20,9 @@ h1:focus {
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
@@ -35,4 +35,96 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+body {
+    background-color: #0f0f1a;
+    color: #e0e0e0;
+}
+
+h1, h2, h3, h4, h5, h6, label, p, strong, li {
+    color: #e0e0e0;
+}
+
+.card {
+    background-color: #1a1a2e;
+    border: 2px solid #7c3aed;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 2px solid #7c3aed;
+    color: #e0e0e0;
+}
+
+.list-group-item {
+    background-color: #1a1a2e;
+    border: 1px solid #7c3aed;
+    color: #cccccc;
+}
+
+.list-group-item:hover {
+    background-color: #2a2a4e;
+    color: #ffffff;
+}
+
+.list-group-item.active {
+    background-color: #2e2e5e;
+    border-color: #7c3aed;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.form-control {
+    background-color: #0f0f1a !important;
+    border: 1px solid #7c3aed !important;
+    color: #ffffff !important;
+}
+
+.form-control:focus {
+    background-color: #1a1a2e !important;
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 5px rgba(124, 58, 237, 0.5) !important;
+    color: #ffffff !important;
+}
+
+.form-control::placeholder {
+    color: #888888 !important;
+}
+
+.text-muted {
+    color: #888888 !important;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #7c3aed;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #7c3aed;
+    margin-bottom: 15px;
+}
+
+.list-group {
+    max-height: 500px;
+    overflow-y: auto;
 }

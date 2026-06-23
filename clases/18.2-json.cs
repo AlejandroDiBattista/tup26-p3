@@ -24,7 +24,7 @@ var opcion = new JsonSerializerOptions {
 string json = JsonSerializer.Serialize(objeto, opcion);
 
 Console.WriteLine(json);
-File.WriteAllText("datos/18.2.objeto.json", json);
+File.WriteAllText("18.datos/18.2.objeto.json", json);
 
 var multilinea = $"""
     Esto es un 
@@ -52,14 +52,14 @@ var persona = $$"""
 }
 """;
 
-File.WriteAllText("datos/18.2.persona.json", persona);
+File.WriteAllText("18.datos/18.2.persona.json", persona);
 
 var personaDesdeJson = JsonSerializer.Deserialize<Persona>(persona);
 Console.WriteLine($"Nombre: {personaDesdeJson?.Nombre}, Apellido: {personaDesdeJson?.Apellido}, Edad: {personaDesdeJson?.Edad}");
 
 /// === Repositorio de Contactos (con JSON) ===
 
-var j = new Repository<Persona>("datos/18.2.contactos.json", new JsonFileSerializer<Persona>());
+var j = new Repository<Persona>("18.datos/18.2.contactos.json", new JsonFileSerializer<Persona>());
 j.Create(new() { Nombre = "María", Apellido = "González", Edad = 25 });
 j.Create(new() { Nombre = "Juan",  Apellido = "Pérez",    Edad = 40 });
 
@@ -80,7 +80,7 @@ JsonSerializerOptions Options = new() {
         PropertyNameCaseInsensitive = true
     };
 
-string filePath = "datos/18.2.contactos.json";
+string filePath = "18.datos/18.2.contactos.json";
 
 if (!File.Exists(filePath)) {
     string agendaInicial = """
@@ -108,7 +108,7 @@ foreach (JsonElement contacto in agenda.EnumerateArray()) {
 }
 
 string jsonSerializado = JsonSerializer.Serialize(agenda, Options);
-File.WriteAllText("datos/18.2.agenda-sin-clases.json", jsonSerializado);
+File.WriteAllText("18.datos/18.2.agenda-sin-clases.json", jsonSerializado);
 
 
 /// === Clases para JSON ===

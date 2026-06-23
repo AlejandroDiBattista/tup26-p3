@@ -5,7 +5,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <IncludeWebfsAssetFilesInPublish>false</IncludeWebfsAssetFilesInPublish>
+    <PublishTrimmed>false</PublishTrimmed>
+    <GeneratePublishDependencyFile>false</GeneratePublishDependencyFile>
   </PropertyGroup>
+
+  <Target Name="BeforeBuild">
+    <Message Text="Build started - disabling problematic targets for spacey paths" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />

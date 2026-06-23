@@ -1,0 +1,63 @@
+﻿@using tp5.Models
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@Contacto.Nombre @Contacto.Apellido</h5>
+        <div>
+            <button class="btn btn-sm btn-primary me-1" @onclick="OnEditar">Editar</button>
+            <button class="btn btn-sm btn-danger" @onclick="ConfirmarEliminar">Eliminar</button>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (confirmando)
+        {
+            <div class="alert alert-danger">
+                ¿Seguro que querés eliminar este contacto?
+                <button class="btn btn-danger btn-sm ms-2" @onclick="OnEliminar">Sí, eliminar</button>
+                <button class="btn btn-secondary btn-sm ms-1" @onclick="() => confirmando = false">Cancelar</button>
+            </div>
+        }
+        <dl class="row mt-2">
+            <dt class="col-sm-4">Teléfono</dt>
+            <dd class="col-sm-8">@Contacto.Telefono</dd>
+
+            <dt class="col-sm-4">Email</dt>
+            <dd class="col-sm-8">@Contacto.Email</dd>
+
+            @if (!string.IsNullOrEmpty(Contacto.Empresa))
+            {
+                <dt class="col-sm-4">Empresa</dt>
+                <dd class="col-sm-8">@Contacto.Empresa</dd>
+            }
+            @if (!string.IsNullOrEmpty(Contacto.Cargo))
+            {
+                <dt class="col-sm-4">Cargo</dt>
+                <dd class="col-sm-8">@Contacto.Cargo</dd>
+            }
+            @if (!string.IsNullOrEmpty(Contacto.Direccion))
+            {
+                <dt class="col-sm-4">Dirección</dt>
+                <dd class="col-sm-8">@Contacto.Direccion</dd>
+            }
+            @if (Contacto.FechaNacimiento.HasValue)
+            {
+                <dt class="col-sm-4">Nacimiento</dt>
+                <dd class="col-sm-8">@Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")</dd>
+            }
+            @if (!string.IsNullOrEmpty(Contacto.Notas))
+            {
+                <dt class="col-sm-4">Notas</dt>
+                <dd class="col-sm-8">@Contacto.Notas</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Contacto Contacto { get; set; } = new();
+    [Parameter] public EventCallback OnEditar { get; set; }
+    [Parameter] public EventCallback OnEliminar { get; set; }
+
+    bool confirmando = false;
+    void ConfirmarEliminar() => confirmando = true;
+}

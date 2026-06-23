@@ -1,7 +1,196 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Services
+@inject ContactoService ContactoSvc
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="agenda-layout">
+    <aside class="panel-maestro">
+        <div class="panel-header">
+            <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Agenda</h5>
+            <button class="btn btn-sm btn-primary" @onclick="NuevoContacto">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        </div>
+        <div class="search-box px-2 py-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" placeholder="Buscar..."
+                       @bind="textoBusqueda" @bind:event="oninput" @bind:after="BuscarAsync" />
+                @if (!string.IsNullOrEmpty(textoBusqueda))
+                {
+                    <button class="btn btn-outline-secondary" @onclick="LimpiarBusqueda">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+        </div>
+        <ul class="lista-contactos">
+            @if (contactos is null)
+            {
+                <li class="list-item-placeholder"><i class="bi bi-hourglass-split me-2"></i>Cargando...</li>
+            }
+            else if (!contactos.Any())
+            {
+                <li class="list-item-placeholder text-muted">Sin resultados</li>
+            }
+            else
+            {
+                @foreach (var c in contactos)
+                {
+                    <li class="contacto-item @(contactoSeleccionado?.Id == c.Id ? "activo" : "")"
+                        @onclick="() => SeleccionarContacto(c)">
+                        <div class="avatar">@c.Nombre[0]@c.Apellido[0]</div>
+                        <div class="info">
+                            <span class="nombre">@c.Nombre @c.Apellido</span>
+                            <span class="subtitulo">@(string.IsNullOrEmpty(c.Empresa) ? c.Email : c.Empresa)</span>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+        @if (contactos is not null)
+        {
+            <div class="panel-footer">@contactos.Count contacto(s)</div>
+        }
+    </aside>
+
+    <main class="panel-detalle">
+        @if (modoEdicion)
+        {
+            <FormularioContacto Contacto="contactoForm"
+                                EsNuevo="esNuevo"
+                                OnGuardar="GuardarAsync"
+                                OnCancelar="CancelarEdicion" />
+        }
+        else if (contactoSeleccionado is not null)
+        {
+            <DetalleContacto Contacto="contactoSeleccionado"
+                             OnEditar="EditarContacto"
+                             OnEliminar="EliminarAsync" />
+        }
+        else
+        {
+            <div class="placeholder-detalle">
+                <i class="bi bi-person-vcard display-1 text-muted"></i>
+                <p class="text-muted mt-3">Seleccioná un contacto para ver su información</p>
+                <button class="btn btn-primary mt-2" @onclick="NuevoContacto">
+                    <i class="bi bi-plus-circle me-2"></i>Nuevo contacto
+                </button>
+            </div>
+        }
+    </main>
+
+    @if (mensajeExito is not null)
+    {
+        <div class="toast-notif">
+            <i class="bi bi-check-circle-fill me-2 text-success"></i>@mensajeExito
+        </div>
+    }
 </div>
+
+@code {
+    private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+    private Contacto contactoForm = new();
+    private string textoBusqueda = "";
+    private bool modoEdicion = false;
+    private bool esNuevo = false;
+
+    private string? mensajeExito;
+
+    protected override async Task OnInitializedAsync()
+        => await CargarContactosAsync();
+
+    private async Task CargarContactosAsync()
+        => contactos = await ContactoSvc.ObtenerTodosAsync(textoBusqueda);
+
+    private async Task BuscarAsync()
+        => await CargarContactosAsync();
+
+    private async Task LimpiarBusqueda()
+    {
+        textoBusqueda = "";
+        await CargarContactosAsync();
+    }
+
+    private void SeleccionarContacto(Contacto c)
+    {
+        contactoSeleccionado = c;
+        modoEdicion = false;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoForm = new Contacto();
+        esNuevo = true;
+        modoEdicion = true;
+        contactoSeleccionado = null;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null) return;
+        contactoForm = new Contacto
+        {
+            Id = contactoSeleccionado.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas
+        };
+        esNuevo = false;
+        modoEdicion = true;
+    }
+
+    private async Task GuardarAsync(Contacto c)
+    {
+        if (esNuevo)
+        {
+            var nuevo = await ContactoSvc.CrearAsync(c);
+            await CargarContactosAsync();
+            contactoSeleccionado = contactos?.FirstOrDefault(x => x.Id == nuevo.Id);
+            MostrarExito("Contacto creado correctamente.");
+        }
+        else
+        {
+            await ContactoSvc.ActualizarAsync(c);
+            await CargarContactosAsync();
+            contactoSeleccionado = contactos?.FirstOrDefault(x => x.Id == c.Id);
+            MostrarExito("Contacto actualizado correctamente.");
+        }
+        modoEdicion = false;
+    }
+
+    private void CancelarEdicion() => modoEdicion = false;
+
+    private async Task EliminarAsync()
+    {
+        if (contactoSeleccionado is null) return;
+        await ContactoSvc.EliminarAsync(contactoSeleccionado.Id);
+        contactoSeleccionado = null;
+        modoEdicion = false;
+        await CargarContactosAsync();
+        MostrarExito("Contacto eliminado.");
+    }
+
+    private void MostrarExito(string msg)
+    {
+        mensajeExito = msg;
+        _ = OcultarMensajeAsync();
+    }
+
+    private async Task OcultarMensajeAsync()
+    {
+        await Task.Delay(3000);
+        mensajeExito = null;
+        StateHasChanged();
+    }
+}

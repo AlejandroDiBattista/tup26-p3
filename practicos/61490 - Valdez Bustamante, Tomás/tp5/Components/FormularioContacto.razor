@@ -1,0 +1,90 @@
+@* Formulario que sirve para crear y para editar un contacto. *@
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h4 class="card-title mb-3">
+            @(this.EsNuevo ? "➕ Nuevo contacto" : "✏️ Editar contacto")
+        </h4>
+
+        <EditForm Model="this.Modelo" OnValidSubmit="Enviar">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="alert alert-danger" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="this.Modelo.Nombre" class="form-control" />
+                    <ValidationMessage For="@(() => this.Modelo.Nombre)" class="text-danger" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Apellido <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="this.Modelo.Apellido" class="form-control" />
+                    <ValidationMessage For="@(() => this.Modelo.Apellido)" class="text-danger" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="this.Modelo.Telefono" class="form-control" />
+                    <ValidationMessage For="@(() => this.Modelo.Telefono)" class="text-danger" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                    <InputText @bind-Value="this.Modelo.Email" class="form-control" type="email" />
+                    <ValidationMessage For="@(() => this.Modelo.Email)" class="text-danger" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Empresa</label>
+                    <InputText @bind-Value="this.Modelo.Empresa" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Cargo</label>
+                    <InputText @bind-Value="this.Modelo.Cargo" class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Dirección</label>
+                    <InputText @bind-Value="this.Modelo.Direccion" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Fecha de nacimiento</label>
+                    <InputDate @bind-Value="this.Modelo.FechaNacimiento" class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Notas</label>
+                    <InputTextArea @bind-Value="this.Modelo.Notas" class="form-control" rows="3" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <span class="bi bi-save"></span> Guardar
+                </button>
+                <button type="button" class="btn btn-secondary" @onclick="AlCancelar">
+                    Cancelar
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Contacto Modelo { get; set; } = default!;
+
+    [Parameter]
+    public bool EsNuevo { get; set; }
+
+    [Parameter]
+    public EventCallback<Contacto> AlGuardar { get; set; }
+
+    [Parameter]
+    public EventCallback AlCancelar { get; set; }
+
+    private Task Enviar() => this.AlGuardar.InvokeAsync(this.Modelo);
+}

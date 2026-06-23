@@ -1,0 +1,154 @@
+@page "/contactos/nuevo"
+@page "/contactos/editar/{Id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@using tp5.Data
+@using tp5.Models
+@inject AgendaContext Contexto
+
+
+
+<PageTitle>
+    @(Id is null
+        ? "Nuevo contacto"
+        : "Editar contacto")
+</PageTitle>
+<h1>
+    @(Id is null
+        ? "Nuevo contacto"
+        : "Editar contacto")
+</h1>
+
+<EditForm Model="contacto"
+          OnValidSubmit="Guardar">
+<DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="row mb-3">
+
+    <div class="col-md-6">
+        <label>Nombre</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Nombre" />
+    </div>
+
+    <div class="col-md-6">
+        <label>Empresa</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Empresa" />
+    </div>
+
+</div>
+
+    <div class="row mb-3">
+
+    <div class="col-md-6">
+        <label>Apellido</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Apellido" />
+    </div>
+
+    <div class="col-md-6">
+        <label>Cargo</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Cargo" />
+    </div>
+
+
+</div>
+
+   <div class="row mb-3">
+
+    <div class="col-md-6">
+        <label>Teléfono</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Telefono" />
+    </div>
+
+    <div class="col-md-6">
+        <label>Email</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Email" />
+    </div>
+
+</div>
+<div class="row mb-3">
+
+    <div class="col-md-6">
+        <label>Dirección</label>
+
+        <InputText class="form-control"
+                   @bind-Value="contacto.Direccion" />
+    </div>
+
+    <div class="col-md-6">
+        <label>Fecha de nacimiento</label>
+
+        <InputDate class="form-control"
+                   @bind-Value="contacto.FechaNacimiento" />
+    </div>
+
+</div>
+<div class="mb-3">
+
+    <label>Notas</label>
+
+    <InputTextArea class="form-control"
+                    rows="5"
+                    @bind-Value="contacto.Notas" />
+
+</div>
+ <div class="d-flex justify-content-end mt-4">
+
+    <a class="btn btn-outline-secondary me-2"
+       href="/">
+
+        Cancelar
+
+    </a>
+
+    <button class="btn btn-primary">
+
+        @(Id is null ? "Guardar" : "Guardar cambios")
+
+    </button>
+
+</div>
+</EditForm>
+
+@code {
+
+    [Parameter]
+public int? Id { get; set; }
+
+ private Contacto contacto = new();
+protected override async Task OnInitializedAsync()
+{
+    if (Id is not null)
+    {
+        var contactoExistente = await Contexto.Contactos.FindAsync(Id);
+
+        if (contactoExistente is not null)
+        {
+            contacto = contactoExistente;
+        }
+    }
+}
+   private async Task Guardar()
+{
+    if (Id is null)
+    {
+        Contexto.Contactos.Add(contacto);
+    }
+
+    await Contexto.SaveChangesAsync();
+
+    Navigation.NavigateTo("/");
+}
+
+}

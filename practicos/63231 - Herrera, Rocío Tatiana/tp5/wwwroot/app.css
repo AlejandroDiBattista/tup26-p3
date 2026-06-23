@@ -36,3 +36,107 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+/* Estilos de la agenda */
+
+body {
+    background-color: #f1f3f5;
+}
+
+.agenda-header {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.agenda-header h1 {
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.agenda-header p {
+    color: #6c757d;
+    margin: 0;
+}
+
+.panel {
+    background-color: #fff;
+    border-radius: 12px;
+    border: none;
+    height: 100%;
+}
+
+.contact-list .list-group-item {
+    border: none;
+    border-bottom: 1px solid #f1f3f5;
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.contact-list .list-group-item.active {
+    background-color: #e7f1ff;
+    color: inherit;
+    border-color: transparent;
+}
+
+.contact-list .list-group-item:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.4rem;
+}
+
+.contact-name {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.contact-sub {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin: 0;
+}
+.search-box .form-control {
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.detail-field {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.detail-field i {
+    color: #6c757d;
+    font-size: 1.1rem;
+    width: 24px;
+}
+
+.detail-field-label {
+    font-weight: 600;
+    width: 110px;
+    flex-shrink: 0;
+}

@@ -14,8 +14,7 @@ builder.Services.ConfigureHttpJsonOptions(options => {
 });
 
 builder.Services.AddDbContext<TicketContext>(options =>
-	// options.UseSqlite("Data Source=tickets.db"));
-	options.UseInMemoryDatabase("TicketsDb"));
+	options.UseSqlite("Data Source=tickets.db"));
 
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();

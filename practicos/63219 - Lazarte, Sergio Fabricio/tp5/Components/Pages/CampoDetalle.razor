@@ -1,0 +1,16 @@
+@if (!string.IsNullOrEmpty(Valor))
+{
+    <div class="campo-detalle">
+        <i class="bi @Icono campo-icono"></i>
+        <div>
+            <small class="text-muted d-block">@Etiqueta</small>
+            <span>@Valor</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Icono { get; set; } = "";
+    [Parameter] public string Etiqueta { get; set; } = "";
+    [Parameter] public string? Valor { get; set; }
+}

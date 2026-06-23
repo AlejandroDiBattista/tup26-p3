@@ -1,3 +1,218 @@
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #f4f6f8;
+    color: #1f2933;
+}
+
+a, .btn-link {
+    color: #006bb7;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.agenda-header {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.agenda-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.agenda-header p {
+    color: #52606d;
+    margin: 0.25rem 0 0;
+}
+
+.agenda-shell {
+    background: #fff;
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    min-height: 640px;
+    overflow: hidden;
+}
+
+.agenda-master {
+    background: #f8fafc;
+    border-right: 1px solid #d9e2ec;
+    padding: 1rem;
+}
+.contact-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #2563eb;
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 0.15rem;
+}
+
+.contact-list-item {
+    background: #fff;
+    border: 1px solid #e4e7eb;
+    border-radius: 6px;
+    color: #1f2933;
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.75rem;
+    text-align: left;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.contact-list-item:hover {
+    border-color: #9fb3c8;
+    box-shadow: 0 2px 8px rgba(31, 41, 51, 0.08);
+}
+
+.contact-list-item.active {
+    background: #e8f3ff;
+    border-color: #1b6ec2;
+}
+
+.contact-name {
+    font-weight: 700;
+}
+
+.contact-meta {
+    color: #627d98;
+    font-size: 0.9rem;
+}
+
+.agenda-detail {
+    padding: 1.5rem;
+}
+
+.agenda-detail h2 {
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.detail-heading {
+    align-items: flex-start;
+    border-bottom: 1px solid #e4e7eb;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+}
+
+.detail-heading h2 {
+    margin-bottom: 0.2rem;
+}
+
+.detail-heading p {
+    color: #627d98;
+    margin: 0;
+}
+
+.detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.detail-heading .detail-actions {
+    margin-top: 0;
+}
+
+.detail-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.detail-grid div,
+.notes-block {
+    background: #f8fafc;
+    border: 1px solid #e4e7eb;
+    border-radius: 6px;
+    padding: 0.9rem;
+}
+
+.detail-grid dt {
+    color: #627d98;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+.detail-grid dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.notes-block {
+    margin-top: 1rem;
+}
+
+.notes-block h3 {
+    color: #627d98;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0 0 0.45rem;
+    text-transform: uppercase;
+}
+
+.notes-block p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.contact-form {
+    max-width: 920px;
+}
+
+.empty-detail {
+    align-items: center;
+    color: #627d98;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 420px;
+    text-align: center;
+}
+
+.empty-detail h2 {
+    color: #1f2933;
+}
+
 h1:focus {
     outline: none;
 }
@@ -35,4 +250,43 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+@media (max-width: 900px) {
+    .agenda-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .agenda-master {
+        border-bottom: 1px solid #d9e2ec;
+        border-right: 0;
+    }
+
+    .contact-list {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 640px) {
+    .agenda-header,
+    .detail-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .agenda-detail {
+        padding: 1rem;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-actions {
+        justify-content: stretch;
+    }
+
+    .detail-actions .btn {
+        flex: 1 1 160px;
+    }
 }

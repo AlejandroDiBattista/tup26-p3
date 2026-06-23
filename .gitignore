@@ -10,7 +10,6 @@ __pycache__/
 .Python
 .python-version
 .env
-.env.*
 .venv/
 venv/
 env/
@@ -56,3 +55,5 @@ artifacts/
 /apuntes/resumir
 clases/node_modules/debug/LICENSE
 /clases/node_modules
+/outputs
+clases/40.0-salida.md

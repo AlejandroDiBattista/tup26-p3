@@ -1,15 +1,30 @@
-namespace tp5.Models;
+using System;
+using System.ComponentModel.DataAnnotations;
 
-public class Contacto
+namespace tp5.Models
 {
-    public int Id { get; set; }
-    public string Nombre { get; set; } = "";
-    public string Apellido { get; set; } = "";
-    public string Telefono { get; set; } = "";
-    public string Email { get; set; } = "";
-    public string Empresa { get; set; } = "";
-    public string Cargo { get; set; } = "";
-    public string Direccion { get; set; } = "";
-    public DateOnly? FechaNacimiento { get; set; }
-    public string Notas { get; set; } = "";
+    public class Contacto
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El apellido es obligatorio.")]
+        public string Apellido { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El teléfono es obligatorio.")]
+        public string Telefono { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El formato de correo no es válido.")]
+        public string CorreoElectronico { get; set; } = string.Empty; 
+
+        public string? Empresa { get; set; }
+        public string? Cargo { get; set; }
+        public string? Direccion { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
+        public string? Notas { get; set; }
+    }
 }

@@ -1,0 +1,99 @@
+
+
+body {
+    background-color: #f1f3f6;
+}
+
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.avatar-grande {
+    width: 72px;
+    height: 72px;
+    font-size: 1.5rem;
+}
+
+.avatar-azul    { background-color: #dbeafe; color: #1d4ed8; }
+.avatar-verde   { background-color: #d1fae5; color: #047857; }
+.avatar-violeta { background-color: #ede9fe; color: #6d28d9; }
+.avatar-rosa    { background-color: #fce7f3; color: #be185d; }
+.avatar-naranja { background-color: #ffedd5; color: #c2410c; }
+.avatar-celeste { background-color: #cffafe; color: #0e7490; }
+
+.lista-contactos {
+    overflow-y: auto;
+    max-height: 65vh;
+    min-height: 200px;
+}
+
+.item-contacto {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid #eef0f3;
+    border-radius: 0.5rem;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.item-contacto:hover {
+    background-color: #f6f8fa;
+}
+
+.item-contacto.seleccionado {
+    background-color: #eff6ff;
+    box-shadow: inset 3px 0 0 #2563eb;
+}
+
+
+.fila-detalle {
+    display: flex;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.fila-detalle:last-child {
+    border-bottom: none;
+}
+
+.fila-etiqueta {
+    width: 170px;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #374151;
+}
+
+.fila-valor {
+    color: #1f2937;
+    overflow-wrap: anywhere;
+}
+
+.texto-notas {
+    white-space: pre-line;
+}
+
+@media (max-width: 575px) {
+    .fila-detalle {
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .fila-etiqueta {
+        width: auto;
+    }
+}

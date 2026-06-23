@@ -1,7 +1,188 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Data
 
-<PageTitle>TP5: AgendaWeb</PageTitle>
+@inject NavigationManager Navigation
+@using Microsoft.EntityFrameworkCore
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+@inject AgendaContext Contexto
+
+<PageTitle>Agenda de Contactos</PageTitle>
+<div class="card mb-4">
+
+    <div class="card-body d-flex justify-content-between align-items-center">
+
+        <div>
+
+            <h1 class="fw-bold mb-1">
+                📒 Agenda de Contactos
+            </h1>
+
+            <p class="text-muted mb-0">
+                Gestione y mantenga actualizada la información de sus contactos.
+            </p>
+
+        </div>
+
+        <a class="btn btn-primary btn-lg shadow-sm"
+           href="/contactos/nuevo">
+
+            + Nuevo contacto
+
+        </a>
+
+    </div>
+
 </div>
+@if (contactos == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="mb-3">
+    <InputText class="form-control"
+               placeholder="Buscar contacto..."
+               @bind-Value="textoBusqueda" />
+</div>
+    <div class="row">
+
+    <div class="col-4">
+        <ul class="list-group">
+
+            @foreach (var contacto in contactos.Where(c =>
+                string.IsNullOrWhiteSpace(textoBusqueda)
+                || c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+            {
+                <li class="list-group-item @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")">
+
+    <button class="btn w-100 text-start border-0"
+            @onclick="() => contactoSeleccionado = contacto">
+
+        <div class="d-flex align-items-center">
+
+            <div class="avatar-contacto me-3">
+
+    @($"{contacto.Nombre.FirstOrDefault()}{contacto.Apellido.FirstOrDefault()}")
+
+</div>
+            <div>
+
+                <div class="fw-bold">
+                    @contacto.Nombre @contacto.Apellido
+                </div>
+
+                <small class="text-muted">
+                    @(string.IsNullOrWhiteSpace(contacto.Empresa)
+                        ? "Sin empresa"
+                        : contacto.Empresa)
+                </small>
+
+            </div>
+
+        </div>
+
+    </button>
+
+</li>
+            }
+
+        </ul>
+    </div>
+
+   <div class="col-8">
+           <h2 class="fw-bold mb-3">
+    Información del contacto
+</h2>
+      <hr />
+            
+
+        @if (contactoSeleccionado is null)
+        {
+            <p>Seleccione un contacto.</p>
+        }
+        else
+        {
+           <div class="card">
+
+    <div class="card-header">
+        <h3>
+            @contactoSeleccionado.Nombre
+            @contactoSeleccionado.Apellido
+        </h3>
+    </div>
+
+    <div class="card-body">
+
+        <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
+
+        <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
+
+        <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+
+        <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+
+        <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+
+        <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+
+        <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+
+      @if (contactoSeleccionado.FechaNacimiento is not null)
+{
+    <p>
+        <strong>Fecha de nacimiento:</strong>
+        @contactoSeleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")
+    </p>
+}
+        <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+<a class="btn btn-outline-primary"
+   href="/contactos/editar/@contactoSeleccionado.Id"> 
+
+    Editar
+
+</a> 
+
+<button class="btn btn-danger ms-2"
+        @onclick="Eliminar">
+
+    Eliminar
+
+</button>
+    </div>
+
+</div>
+        }
+
+    </div>
+</div>
+        
+}
+
+@code {
+
+    private List<Contacto>? contactos;
+      private string textoBusqueda = ""; 
+       private Contacto? contactoSeleccionado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Contexto.Contactos.ToListAsync();
+    }
+ private async Task Eliminar(){
+     if (contactoSeleccionado is null)
+        return;
+
+    Contexto.Contactos.Remove(contactoSeleccionado);
+
+    await Contexto.SaveChangesAsync();
+
+    contactos = await Contexto.Contactos.ToListAsync();
+
+    contactoSeleccionado = null;
+}
+
+   
+}

@@ -89,6 +89,11 @@ sealed class RevisarPresentacionesCommand : Command<TrabajoPracticoOpcionalSetti
         AlumnosCliActions.RevisarPresentados(settings.TrabajoPractico);
 }
 
+sealed class VerificarCompilacionCommand : Command<TrabajoPracticoSettings> {
+    protected override int Execute(CommandContext context, TrabajoPracticoSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.VerificarCompilacion(settings.TrabajoPractico);
+}
+
 sealed class ContarAsistenciasCommand : Command<VacioSettings> {
     protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.RelevarAsistencias();

@@ -2,6 +2,32 @@ h1:focus {
     outline: none;
 }
 
+body {
+    background: #f6f8fb;
+}
+
+.agenda-page {
+    min-height: 100vh;
+}
+
+.agenda-list {
+    max-height: 62vh;
+    overflow-y: auto;
+}
+
+.agenda-list .list-group-item.active .badge {
+    color: #0d6efd;
+}
+
+.agenda-detail dt {
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.agenda-detail dd {
+    margin-bottom: 1rem;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

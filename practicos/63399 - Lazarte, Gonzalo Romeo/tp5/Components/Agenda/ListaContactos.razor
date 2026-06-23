@@ -1,0 +1,75 @@
+@using tp5.Models
+@* Panel maestro: buscador + lista de contactos. *@
+
+<div class="card shadow-sm h-100">
+    <div class="card-body d-flex flex-column p-3">
+
+        <div class="input-group mb-3">
+            <span class="input-group-text bg-white">
+                <i class="bi bi-search text-secondary"></i>
+            </span>
+            <input class="form-control border-start-0 ps-0"
+                   type="search"
+                   placeholder="Buscar contacto..."
+                   value="@Filtro"
+                   @oninput="AlEscribir" />
+        </div>
+
+        @if (Contactos.Count == 0)
+        {
+            <div class="text-center text-secondary py-5">
+                <i class="bi bi-person-x fs-2 d-block mb-2"></i>
+                @if (string.IsNullOrWhiteSpace(Filtro))
+                {
+                    <span>La agenda está vacía.</span>
+                }
+                else
+                {
+                    <span>No se encontraron contactos para "@Filtro".</span>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="lista-contactos flex-grow-1">
+                @foreach (var contacto in Contactos)
+                {
+                    <button type="button"
+                            class="item-contacto @(contacto.Id == SeleccionadoId ? "seleccionado" : "")"
+                            @onclick="() => OnSeleccionar.InvokeAsync(contacto)">
+                        <Avatar Contacto="contacto" />
+                        <div class="text-start overflow-hidden">
+                            <div class="fw-semibold text-truncate">@contacto.NombreCompleto</div>
+                            <div class="small text-secondary text-truncate">
+                                @(string.IsNullOrWhiteSpace(contacto.Empresa) ? contacto.Email : contacto.Empresa)
+                            </div>
+                        </div>
+                    </button>
+                }
+            </div>
+            <div class="small text-secondary text-center pt-2 border-top mt-2">
+                @Contactos.Count contacto@(Contactos.Count == 1 ? "" : "s")
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<Contacto> Contactos { get; set; } = [];
+
+    [Parameter]
+    public int? SeleccionadoId { get; set; }
+
+    [Parameter]
+    public string Filtro { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<Contacto> OnSeleccionar { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnBuscar { get; set; }
+
+    private Task AlEscribir(ChangeEventArgs e)
+        => OnBuscar.InvokeAsync(e.Value?.ToString() ?? "");
+}

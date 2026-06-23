@@ -1,7 +1,171 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Services
+@using tp5.Components.Agenda
+@inject ContactoService Servicio
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container-xxl py-3">
+
+    @* ---------- Encabezado ---------- *@
+    <div class="card shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h1 class="h2 mb-0 fw-bold">Agenda</h1>
+                <span class="text-secondary">@DescripcionEncabezado</span>
+            </div>
+            <button class="btn btn-primary" @onclick="IniciarAlta">
+                <i class="bi bi-plus-lg me-1"></i> Nuevo contacto
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        @* ---------- Panel maestro ---------- *@
+        <div class="col-lg-4">
+            <ListaContactos Contactos="contactos"
+                            SeleccionadoId="seleccionado?.Id"
+                            Filtro="@filtro"
+                            OnSeleccionar="SeleccionarContacto"
+                            OnBuscar="Buscar" />
+        </div>
+
+        @* ---------- Panel de detalle ---------- *@
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-body p-4">
+                    @switch (modo)
+                    {
+                        case Modo.Detalle when seleccionado is not null:
+                            <DetalleContacto Contacto="seleccionado"
+                                             OnEditar="IniciarEdicion"
+                                             OnEliminar="EliminarContacto" />
+                            break;
+
+                        case Modo.Editar when enEdicion is not null:
+                            <FormularioContacto Contacto="enEdicion"
+                                                Titulo="Editar contacto"
+                                                Subtitulo="@($"Modificá los datos de {seleccionado?.NombreCompleto}")"
+                                                OnGuardar="GuardarEdicion"
+                                                OnCancelar="CancelarFormulario" />
+                            break;
+
+                        case Modo.Crear when enEdicion is not null:
+                            <FormularioContacto Contacto="enEdicion"
+                                                Titulo="Nuevo contacto"
+                                                Subtitulo="Completá los datos del nuevo contacto"
+                                                OnGuardar="GuardarAlta"
+                                                OnCancelar="CancelarFormulario" />
+                            break;
+
+                        default:
+                            <div class="text-center text-secondary py-5">
+                                <i class="bi bi-person-lines-fill fs-1 d-block mb-3"></i>
+                                <p class="mb-1 fw-semibold">Ningún contacto seleccionado</p>
+                                <p class="mb-0">Elegí un contacto de la lista o creá uno nuevo.</p>
+                            </div>
+                            break;
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
+
+@code {
+    private enum Modo { Detalle, Editar, Crear }
+
+    private List<Contacto> contactos = [];
+    private Contacto? seleccionado;   
+    private Contacto? enEdicion;     
+    private string filtro = "";
+    private Modo modo = Modo.Detalle;
+
+    private string DescripcionEncabezado => modo switch
+    {
+        Modo.Editar => "Editar información de contacto",
+        Modo.Crear => "Registrar un nuevo contacto",
+        _ => "Contactos personales y profesionales"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactosAsync();
+        seleccionado = contactos.FirstOrDefault();
+    }
+
+    private async Task CargarContactosAsync()
+        => contactos = await Servicio.BuscarAsync(filtro);
+
+ 
+
+    private async Task Buscar(string texto)
+    {
+        filtro = texto;
+        await CargarContactosAsync();
+
+       
+        if (seleccionado is not null && !contactos.Any(c => c.Id == seleccionado.Id))
+            seleccionado = null;
+    }
+
+  
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        seleccionado = contacto;
+        modo = Modo.Detalle;
+    }
+
+  
+
+    private void IniciarAlta()
+    {
+        enEdicion = new Contacto();
+        modo = Modo.Crear;
+    }
+
+    private async Task GuardarAlta(Contacto contacto)
+    {
+        var creado = await Servicio.CrearAsync(contacto);
+        await CargarContactosAsync();
+        seleccionado = contactos.FirstOrDefault(c => c.Id == creado.Id) ?? creado;
+        modo = Modo.Detalle;
+    }
+
+   
+
+    private void IniciarEdicion(Contacto contacto)
+    {
+        enEdicion = contacto.Clonar(); 
+        modo = Modo.Editar;
+    }
+
+    private async Task GuardarEdicion(Contacto contacto)
+    {
+        await Servicio.ActualizarAsync(contacto);
+        await CargarContactosAsync();
+        seleccionado = contactos.FirstOrDefault(c => c.Id == contacto.Id);
+        modo = Modo.Detalle;
+    }
+
+    private void CancelarFormulario()
+    {
+        enEdicion = null;
+        modo = Modo.Detalle;
+    }
+
+   
+
+    private async Task EliminarContacto(Contacto contacto)
+    {
+        await Servicio.EliminarAsync(contacto.Id);
+        await CargarContactosAsync();
+        seleccionado = contactos.FirstOrDefault();
+        modo = Modo.Detalle;
+    }
+}

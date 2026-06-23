@@ -25,6 +25,7 @@ dotnet run -- listar-alumnos
 dotnet run -- publicar-practico TP3 --forzar
 dotnet run -- revisar-presentaciones 3
 dotnet run -- revisar-presentaciones
+dotnet run -- verificar-compilacion TP5
 ```
 
 - En los comandos que reciben un práctico, se acepta `1`, `tp1` o `TP1`.
@@ -68,7 +69,8 @@ Las carpetas de alumnos se crean o normalizan automáticamente antes de los coma
 	- `TP2`: presentado si agrega al menos 20 líneas respecto del enunciado.
 	- `TP3`: presentado si agrega al menos 50 líneas respecto del enunciado.
 	- `TP4`: presentado si agrega al menos 150 líneas respecto del enunciado.
-- `limpiar-archivos-temporales`: elimina `bin`, `obj`, `.vs` y cachés de compilación dentro de `practicos/`, `enunciados/` y `clases/`.
+- `verificar-compilacion <tp>`: compila únicamente los trabajos entregados (`Aprobado`). Los que fallan pasan a `Revision` y muestran un resumen de errores; los que compilan conservan su estado.
+- `limpiar-archivos-temporales`: elimina `bin`, `obj`, `.vs`, cachés de compilación y temporales SQLite (`-wal`, `-shm`, `-journal`) dentro de `practicos/`, `enunciados/`, `clases/` y `experimentos/`.
 
 ## Archivos de referencia
 

@@ -2,6 +2,251 @@ h1:focus {
     outline: none;
 }
 
+body {
+    background: #f4f6f8;
+    color: #17202a;
+}
+
+.agenda-page {
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+.agenda-header,
+.master-panel,
+.detail-panel {
+    background: #ffffff;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(23, 32, 42, 0.08);
+}
+
+.agenda-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1.5rem;
+}
+
+.agenda-header h1,
+.detail-heading h2 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.agenda-header p,
+.detail-heading p {
+    margin: 0.25rem 0 0;
+    color: #5d6d7e;
+}
+
+.agenda-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.master-panel,
+.detail-panel {
+    padding: 1rem;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.search-box i {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    color: #5d6d7e;
+    transform: translateY(-50%);
+}
+
+.search-box .form-control {
+    padding-left: 2.75rem;
+}
+
+.contact-list {
+    max-height: calc(100vh - 230px);
+    overflow-y: auto;
+}
+
+.contact-item {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 0;
+    border-bottom: 1px solid #e8ebef;
+    background: transparent;
+    text-align: left;
+}
+
+.contact-item:hover,
+.contact-item.active {
+    background: #eaf3ff;
+}
+
+.contact-item.active {
+    box-shadow: inset 3px 0 0 #0d6efd;
+}
+
+.contact-item strong,
+.contact-item small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.contact-item small {
+    color: #5d6d7e;
+}
+
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid #cfe2ff;
+    background: #e7f1ff;
+    color: #0d6efd;
+    font-weight: 700;
+}
+
+.avatar-lg {
+    width: 72px;
+    height: 72px;
+    font-size: 1.7rem;
+}
+
+.detail-heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e1e5ea;
+}
+
+.heading-actions,
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.contact-detail {
+    margin: 1.5rem 0 0;
+}
+
+.contact-detail div {
+    display: grid;
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e8ebef;
+}
+
+.contact-detail dt {
+    display: flex;
+    gap: 0.75rem;
+    font-weight: 700;
+}
+
+.contact-detail dd {
+    margin: 0;
+    color: #2f3a45;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.form-grid label {
+    font-weight: 700;
+}
+
+.form-grid .form-control {
+    margin-top: 0.5rem;
+    font-weight: 400;
+}
+
+.span-2 {
+    grid-column: span 2;
+}
+
+.form-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e1e5ea;
+}
+
+.empty-state {
+    margin: 1rem 0;
+    color: #5d6d7e;
+}
+
+.validation-summary-errors {
+    margin-top: 1rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+    .agenda-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-list {
+        max-height: 360px;
+    }
+}
+
+@media (max-width: 640px) {
+    .agenda-header,
+    .detail-heading,
+    .contact-detail div,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .agenda-header {
+        align-items: stretch;
+    }
+
+    .detail-heading {
+        justify-items: start;
+    }
+
+    .heading-actions,
+    .form-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .span-2 {
+        grid-column: auto;
+    }
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

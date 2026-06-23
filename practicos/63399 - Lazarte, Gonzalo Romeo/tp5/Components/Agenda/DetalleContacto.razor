@@ -1,0 +1,111 @@
+@using tp5.Models
+@* Panel de detalle: muestra la información completa del contacto seleccionado. *@
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div class="d-flex align-items-center gap-3">
+        <Avatar Contacto="Contacto" Grande="true" />
+        <div>
+            <h2 class="h3 mb-1">@Contacto.NombreCompleto</h2>
+            @if (!string.IsNullOrWhiteSpace(Contacto.Empresa))
+            {
+                <div class="text-primary">@Contacto.Empresa</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Contacto.Cargo))
+            {
+                <span class="badge rounded-pill text-bg-light border mt-1">@Contacto.Cargo</span>
+            }
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" @onclick="() => OnEditar.InvokeAsync(Contacto)">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </button>
+        <button class="btn btn-outline-danger" @onclick="() => confirmandoEliminar = true">
+            <i class="bi bi-trash me-1"></i> Eliminar
+        </button>
+    </div>
+</div>
+
+@if (confirmandoEliminar)
+{
+    <div class="alert alert-danger d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            ¿Eliminar a <strong>@Contacto.NombreCompleto</strong> de la agenda? Esta acción no se puede deshacer.
+        </span>
+        <span class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" @onclick="() => confirmandoEliminar = false">
+                Cancelar
+            </button>
+            <button class="btn btn-sm btn-danger" @onclick="ConfirmarEliminar">
+                Sí, eliminar
+            </button>
+        </span>
+    </div>
+}
+
+<hr class="mt-0" />
+
+<div class="filas-detalle">
+    <FilaDetalle Icono="bi-envelope" Etiqueta="Email">
+        <a href="mailto:@Contacto.Email">@Contacto.Email</a>
+    </FilaDetalle>
+
+    <FilaDetalle Icono="bi-telephone" Etiqueta="Teléfono">
+        @Contacto.Telefono
+    </FilaDetalle>
+
+    @if (!string.IsNullOrWhiteSpace(Contacto.Empresa))
+    {
+        <FilaDetalle Icono="bi-building" Etiqueta="Empresa">@Contacto.Empresa</FilaDetalle>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Contacto.Cargo))
+    {
+        <FilaDetalle Icono="bi-briefcase" Etiqueta="Cargo">@Contacto.Cargo</FilaDetalle>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Contacto.Direccion))
+    {
+        <FilaDetalle Icono="bi-geo-alt" Etiqueta="Dirección">@Contacto.Direccion</FilaDetalle>
+    }
+
+    @if (Contacto.FechaNacimiento is not null)
+    {
+        <FilaDetalle Icono="bi-cake2" Etiqueta="Nacimiento">
+            @Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")
+        </FilaDetalle>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Contacto.Notas))
+    {
+        <FilaDetalle Icono="bi-journal-text" Etiqueta="Notas">
+            <span class="texto-notas">@Contacto.Notas</span>
+        </FilaDetalle>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Contacto Contacto { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<Contacto> OnEditar { get; set; }
+
+    [Parameter]
+    public EventCallback<Contacto> OnEliminar { get; set; }
+
+    private bool confirmandoEliminar;
+
+    protected override void OnParametersSet()
+    {
+        // Si cambia el contacto seleccionado, se descarta la confirmación pendiente
+        confirmandoEliminar = false;
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        confirmandoEliminar = false;
+        await OnEliminar.InvokeAsync(Contacto);
+    }
+}

@@ -1,7 +1,332 @@
 @page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject AgendaContext DbContext
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="container-fluid py-4" style="max-width: 1300px; height: 100vh; display: flex; flex-direction: column;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">TP5: AgendaWeb</h2>
+            <p class="text-secondary mb-0">Contactos personales y profesionales</p>
+        </div>
+        <button class="btn btn-primary px-3" @onclick="NuevoContacto">
+            <i class="bi bi-plus"></i> Nuevo contacto
+        </button>
+    </div>
+
+    <div class="row flex-grow-1 overflow-hidden" style="min-height: 0;">
+        
+        <div class="col-4 d-flex flex-column pe-0" style="height: 100%;">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="p-3 border-bottom">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-muted border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar contacto..." 
+                               @bind="busqueda" @bind:event="oninput" @onkeyup="FiltrarLista" />
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush flex-grow-1 overflow-auto" style="border-radius: 0 0 0.375rem 0.375rem;">
+                    @foreach (var contacto in contactosFiltrados)
+                    {
+                        var isSelected = contactoSeleccionado?.Id == contacto.Id;
+                        <button type="button" class="list-group-item list-group-item-action p-3 border-bottom @(isSelected ? "bg-primary bg-opacity-10" : "")" 
+                                style="@(isSelected ? "border-left: 4px solid #0d6efd !important;" : "border-left: 4px solid transparent !important;")"
+                                @onclick="() => SeleccionarContacto(contacto)">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center me-3" 
+                                     style="width: 42px; height: 42px; background-color: #e0f0ff; color: #0d6efd; font-weight: 500; font-size: 0.9rem;">
+                                    @ObtenerIniciales(contacto.Nombre, contacto.Apellido)
+                                </div>
+                                <div class="text-start">
+                                    <h6 class="mb-0 fw-semibold @(isSelected ? "text-primary" : "text-dark")">@contacto.Nombre @contacto.Apellido</h6>
+                                    <small class="text-secondary" style="font-size: 0.8rem;">@(string.IsNullOrWhiteSpace(contacto.Empresa) ? "Independiente" : contacto.Empresa)</small>
+                                </div>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-8 h-100 ps-4">
+            <div class="card h-100 border-0 shadow-sm overflow-auto">
+                <div class="card-body p-5">
+                    
+                    @if (modoEdicion)
+                    {
+                        <EditForm Model="contactoEdicion" OnValidSubmit="GuardarContacto">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="alert alert-danger p-2 mb-4" />
+
+                            <div class="d-flex justify-content-between align-items-start mb-5 pb-4 border-bottom">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex justify-content-center align-items-center me-4" 
+                                         style="width: 70px; height: 70px; background-color: #e0f0ff; color: #0d6efd; font-weight: 500; font-size: 1.5rem;">
+                                        @ObtenerIniciales(contactoEdicion.Nombre, contactoEdicion.Apellido)
+                                    </div>
+                                    <div>
+                                        <h3 class="fw-bold mb-1">@(contactoEdicion.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h3>
+                                        <p class="text-secondary mb-0">@(contactoEdicion.Id == 0 ? "Completá los datos" : $"Modificá los datos de {contactoEdicion.Nombre} {contactoEdicion.Apellido}")</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                                    <button type="submit" class="btn btn-danger"><i class="bi bi-floppy"></i> Guardar cambios</button>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Nombre</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Nombre" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Apellido</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Apellido" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Empresa</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Empresa" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Cargo</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Cargo" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Email</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Email" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Teléfono</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Telefono" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Dirección</label>
+                                    <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Direccion" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Fecha de Nacimiento</label>
+                                    <InputDate class="form-control bg-light" @bind-Value="contactoEdicion.FechaNacimiento" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-dark">Notas</label>
+                                    <InputTextArea class="form-control bg-light" rows="4" @bind-Value="contactoEdicion.Notas" />
+                                </div>
+                                <div class="col-12 d-flex justify-content-end gap-2 mt-5">
+                                    <button type="button" class="btn btn-outline-secondary px-4" @onclick="CancelarEdicion">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-floppy"></i> Guardar cambios</button>
+                                </div>
+                            </div>
+                        </EditForm>
+                    }
+                    else if (contactoSeleccionado != null)
+                    {
+                        <div class="d-flex justify-content-between align-items-start mb-5 pb-4 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center me-4" 
+                                     style="width: 80px; height: 80px; background-color: #e0f0ff; color: #0d6efd; font-weight: 500; font-size: 2rem;">
+                                    @ObtenerIniciales(contactoSeleccionado.Nombre, contactoSeleccionado.Apellido)
+                                </div>
+                                <div>
+                                    <h3 class="fw-bold mb-1">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h3>
+                                    <p class="text-primary fw-semibold mb-2">@contactoSeleccionado.Empresa</p>
+                                    <span class="badge rounded-pill text-primary" style="background-color: #e0f0ff; font-weight: 500;">Cliente</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary" @onclick="EditarContacto">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-outline-danger" @onclick="EliminarContacto">
+                                    <i class="bi bi-trash3"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="px-2">
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-envelope fs-5"></i> Email
+                                </div>
+                                <div class="col-8 text-primary">@contactoSeleccionado.Email</div>
+                            </div>
+                            
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-telephone fs-5"></i> Teléfono
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Telefono</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-building fs-5"></i> Empresa
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Empresa</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-briefcase fs-5"></i> Cargo
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Cargo</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-geo-alt fs-5"></i> Dirección
+                                </div>
+                                <div class="col-8 text-secondary">@contactoSeleccionado.Direccion</div>
+                            </div>
+                            
+                            <div class="row mb-4 pb-3 border-bottom">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-center gap-2">
+                                    <i class="bi bi-calendar-event fs-5"></i> Nacimiento
+                                </div>
+                                <div class="col-8 text-secondary">@(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "No especificada")</div>
+                            </div>
+
+                            <div class="row mb-4 pb-3">
+                                <div class="col-4 text-dark fw-semibold d-flex align-items-start gap-2 mt-1">
+                                    <i class="bi bi-card-text fs-5"></i> Notas
+                                </div>
+                                <div class="col-8 text-secondary" style="white-space: pre-wrap;">@contactoSeleccionado.Notas</div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h-100 d-flex flex-column justify-content-center align-items-center text-secondary">
+                            <i class="bi bi-person-lines-fill mb-3" style="font-size: 4rem; opacity: 0.5;"></i>
+                            <h4>Seleccioná un contacto</h4>
+                            <p>Hacé clic en un contacto de la lista para ver sus detalles</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    body { background-color: #f4f6f8; }
+    .form-control:focus { box-shadow: none; border-color: #0d6efd; }
+</style>
+
+@code {
+    private List<Contacto> contactos = new();
+    private List<Contacto> contactosFiltrados = new();
+    private Contacto? contactoSeleccionado;
+    private Contacto contactoEdicion = new();
+    private bool modoEdicion = false;
+    private string busqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        contactos = await DbContext.Contactos.ToListAsync();
+        FiltrarLista();
+    }
+
+    private void FiltrarLista()
+    {
+        if (string.IsNullOrWhiteSpace(busqueda))
+            contactosFiltrados = contactos.ToList();
+        else
+            contactosFiltrados = contactos.Where(c => 
+                c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Empresa.Contains(busqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private void SeleccionarContacto(Contacto c)
+    {
+        contactoSeleccionado = c;
+        modoEdicion = false;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoEdicion = new Contacto();
+        modoEdicion = true;
+        contactoSeleccionado = null;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado != null)
+        {
+            contactoEdicion = new Contacto
+            {
+                Id = contactoSeleccionado.Id,
+                Nombre = contactoSeleccionado.Nombre,
+                Apellido = contactoSeleccionado.Apellido,
+                Telefono = contactoSeleccionado.Telefono,
+                Email = contactoSeleccionado.Email,
+                Empresa = contactoSeleccionado.Empresa,
+                Cargo = contactoSeleccionado.Cargo,
+                Direccion = contactoSeleccionado.Direccion,
+                FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+                Notas = contactoSeleccionado.Notas
+            };
+            modoEdicion = true;
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        modoEdicion = false;
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (contactoEdicion.Id == 0)
+        {
+            DbContext.Contactos.Add(contactoEdicion);
+        }
+        else
+        {
+            var existente = await DbContext.Contactos.FindAsync(contactoEdicion.Id);
+            if (existente != null)
+            {
+                DbContext.Entry(existente).CurrentValues.SetValues(contactoEdicion);
+            }
+        }
+        await DbContext.SaveChangesAsync();
+        await CargarDatos();
+        modoEdicion = false;
+        contactoSeleccionado = contactos.FirstOrDefault(c => c.Id == contactoEdicion.Id);
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado != null)
+        {
+            DbContext.Contactos.Remove(contactoSeleccionado);
+            await DbContext.SaveChangesAsync();
+            contactoSeleccionado = null;
+            await CargarDatos();
+        }
+    }
+
+    private string ObtenerIniciales(string nombre, string apellido)
+    {
+        string n = string.IsNullOrWhiteSpace(nombre) ? "" : nombre.Substring(0, 1).ToUpper();
+        string a = string.IsNullOrWhiteSpace(apellido) ? "" : apellido.Substring(0, 1).ToUpper();
+        return $"{n}{a}";
+    }
+}
