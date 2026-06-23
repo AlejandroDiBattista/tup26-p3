@@ -103,20 +103,34 @@ async Task EnviarAsync()
         texto
     )
 );
-    var respuesta = await chat.GetResponseAsync(mensajes);
-    turnos.Add(
-        new TurnoPantalla(
-            "Asistente",
-            respuesta.Text
-        )
-    );
+var turnoAsistente = new TurnoPantalla(
+    "Asistente",
+    ""
+);
 
-    mensajes.Add(
-        new ChatMessage(
-            ChatRole.Assistant,
-            respuesta.Text
-        )
-    );
+turnos.Add(turnoAsistente);
+
+await foreach (
+    var fragmento
+    in chat.GetStreamingResponseAsync(mensajes)
+)
+{
+    if (string.IsNullOrEmpty(fragmento.Text))
+    {
+        continue;
+    }
+
+    turnoAsistente.Contenido += fragmento.Text;
+
+    conversacion.Text = TextoConversacion();
+}
+
+mensajes.Add(
+    new ChatMessage(
+        ChatRole.Assistant,
+        turnoAsistente.Contenido
+    )
+);
 
 
     conversacion.Text = TextoConversacion();
@@ -138,4 +152,8 @@ string TextoConversacion()
 sealed record TurnoPantalla(
     string Rol,
     string Contenido
-);
+)
+{
+    public string Contenido { get; set; } = Contenido;
+}
+
