@@ -10,6 +10,7 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui.Input;
 
 DotNetEnv.Env.Load();
 
@@ -49,5 +50,23 @@ var conversacion = new Markdown
 };
 conversacion.ViewportSettings |= ViewportSettingsFlags.HasVerticalScrollBar;
 
-ventana.Add(conversacion);
+var entrada = new TextField
+{
+    X = 0,
+    Y = Pos.Bottom(conversacion),
+    Width = Dim.Fill(12),
+    Height = 1
+};
+
+var enviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(entrada) + 1,
+    Y = Pos.Top(entrada),
+    Width = 10,
+    IsDefault = true
+};
+
+ventana.Add(conversacion, entrada, enviar);
+entrada.SetFocus();
 app.Run(ventana);
