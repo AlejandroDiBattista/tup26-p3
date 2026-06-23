@@ -18,7 +18,9 @@ var proveedor = "OLLAMA";
 var url = "http://localhost:11434/v1";
 var modelo = "qwen2.5-coder:7b";
 var apiKey = "ollama";
+
 Console.WriteLine($"Proveedor: {proveedor}");
+
 OpenAIClientOptions options = new OpenAIClientOptions
 {
     Endpoint = new Uri(url)
@@ -29,7 +31,7 @@ OpenAIClient client;
 if (proveedor == "OLLAMA")
 {
     client = new OpenAIClient(
-        new ApiKeyCredential("ollama"), // cualquier string
+        new ApiKeyCredential("ollama"),
         options);
 }
 else
@@ -43,77 +45,116 @@ IChatClient chat = client
     .GetChatClient(modelo)
     .AsIChatClient();
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-];
+List<ChatMessage> mensajes = new()
+{
+    new ChatMessage(ChatRole.System, File.Exists("AGENTS.md") ? File.ReadAllText("AGENTS.md") : "Sos un asistente útil")
+};
 
 using IApplication app = Application.Create().Init();
 
-var ventana = new Window {
+var ventana = new Window
+{
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), 
+    Width = Dim.Fill(),
     Height = Dim.Fill()
 };
 
-
-// TODO: agregar el panel de conversación y el panel de entrada.
-var chatView = new Markdown {
-Width = Dim.Fill(),
-Height = Dim.Fill() - 3,
-Text = "# Asistente listo\n"
+var chatView = new Markdown
+{
+    Width = Dim.Fill(),
+    Height = Dim.Fill() - 3,
+    Text = "# Asistente listo\n"
 };
 
-var input = new TextField {
-X = 0,
-Y = Pos.Bottom(chatView),
-Width = Dim.Fill() - 10
+var input = new TextField
+{
+    X = 0,
+    Y = Pos.Bottom(chatView),
+    Width = Dim.Fill() - 10
 };
 
-var boton = new Button {
-Text = "Enviar",
-X = Pos.Right(input),
-Y = Pos.Bottom(chatView),
-Width = 10
+var boton = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(input),
+    Y = Pos.Bottom(chatView),
+    Width = 10
 };
 
 ventana.Add(chatView, input, boton);
 
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
 async void Enviar()
 {
-var texto = input.Text.ToString();
-if (string.IsNullOrWhiteSpace(texto)) return;
+    var texto = input.Text.ToString();
+    if (string.IsNullOrWhiteSpace(texto)) return;
 
-input.Text = "";
+    input.Text = "";
 
-mensajes.Add(new ChatMessage(ChatRole.User, texto));
-chatView.Text += $"\n# Vos\n\n{texto}\n\n# Asistente\n\n";
+    chatView.Text += $"\n# Vos\n\n{texto}\n\n# Asistente\n\n";
 
-string respuestaCompleta = "";
+    input.Enabled = false;
+    boton.Enabled = false;
 
-input.Enabled = false;
-boton.Enabled = false;
-
-await foreach (var chunk in chat.GetStreamingResponseAsync(mensajes))
-{
-    if (chunk.Text != null)
+    if (texto.StartsWith("leer-archivo"))
     {
-        respuestaCompleta += chunk.Text;
+        var ruta = texto.Replace("leer-archivo", "").Trim();
+        var contenido = File.Exists(ruta) ? File.ReadAllText(ruta) : "Archivo no encontrado";
 
-        app.Invoke(() => {
-            chatView.Text += chunk.Text;
-        });
+        chatView.Text += contenido;
+        input.Enabled = true;
+        boton.Enabled = true;
+        return;
     }
+
+    if (texto.StartsWith("listar-archivos"))
+    {
+        var ruta = texto.Replace("listar-archivos", "").Trim();
+        if (string.IsNullOrWhiteSpace(ruta)) ruta = ".";
+
+        var lista = Directory.Exists(ruta)
+            ? string.Join("\n", Directory.GetFileSystemEntries(ruta))
+            : "Directorio no existe";
+
+        chatView.Text += lista;
+        input.Enabled = true;
+        boton.Enabled = true;
+        return;
+    }
+
+    if (texto.StartsWith("escribir-archivo"))
+    {
+        // formato: escribir-archivo|ruta|contenido
+        var partes = texto.Split('|');
+
+        if (partes.Length == 3)
+        {
+            File.WriteAllText(partes[1], partes[2]);
+            chatView.Text += "Archivo guardado correctamente";
+        }
+        else
+        {
+            chatView.Text += "Formato inválido. Usar: escribir-archivo|ruta|contenido";
+        }
+
+        input.Enabled = true;
+        boton.Enabled = true;
+        return;
+    }
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    var response = await chat.GetResponseAsync(mensajes);
+
+    var textoFinal = response.Text ?? "";
+
+    chatView.Text += textoFinal;
+
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, textoFinal));
+
+    input.Enabled = true;
+    boton.Enabled = true;
 }
 
-
-mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
-
-input.Enabled = true;
-boton.Enabled = true;
-
-}
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 boton.Accepted += (s, e) => Enviar();
 
 input.Accepting += (s, e) =>
@@ -121,6 +162,7 @@ input.Accepting += (s, e) =>
     Enviar();
     e.Handled = true;
 };
+
 ventana.KeyDown += (s, key) =>
 {
     if (key.ToString() == "Esc")
@@ -128,4 +170,5 @@ ventana.KeyDown += (s, key) =>
         app.RequestStop();
     }
 };
+
 app.Run(ventana);
