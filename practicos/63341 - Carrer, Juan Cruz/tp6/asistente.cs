@@ -70,6 +70,16 @@ var escribirArchivo = AIFunctionFactory.Create(
     "Escribe o sobrescribe un archivo"
 );
 
+var chatOptions = new ChatOptions
+{
+    Tools =
+    [
+        listarArchivos,
+        leerArchivo,
+        escribirArchivo
+    ]
+};
+
 using IApplication app = Application.Create().Init();
 
 using var ventana = new Window
@@ -134,7 +144,8 @@ async Task EnviarMensaje()
 
         historialMarkdown += "# Asistente\n\n";
 
-        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes))
+        await foreach (var fragmento in chat.GetStreamingResponseAsync(
+            mensajes, chatOptions))
         {
             var t = fragmento?.Text;
             if (string.IsNullOrEmpty(t))
