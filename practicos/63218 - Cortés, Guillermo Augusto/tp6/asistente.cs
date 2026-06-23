@@ -17,6 +17,7 @@ DotNetEnv.Env.Load();
 var configuracion = CargarConfiguracion(args);
 var promptSistema = CargarPromptSistema();
 IChatClient chat = CrearCliente(configuracion);
+bool respondiendo = false;
 
 List<ChatMessage> mensajes = [
     new(ChatRole.System, promptSistema)
@@ -74,6 +75,11 @@ app.Run(ventana);
 
 async Task EnviarMensajeAsync()
 {
+    if (respondiendo)
+    {
+        return;
+    }
+
     var textoUsuario = entrada.Text?.ToString()?.Trim();
 
     if (string.IsNullOrWhiteSpace(textoUsuario))
@@ -81,13 +87,30 @@ async Task EnviarMensajeAsync()
         return;
     }
 
+    respondiendo = true;
     entrada.Text = string.Empty;
+    entrada.Enabled = false;
+    botonEnviar.Enabled = false;
+    ayuda.Text = "El asistente esta respondiendo...";
+
     mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
     conversacion.Text = RenderizarConversacion(mensajes, "Pensando...");
 
-    var respuesta = await chat.GetResponseAsync(mensajes);
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+    var respuesta = new StringBuilder();
+
+    await foreach (var actualizacion in chat.GetStreamingResponseAsync(mensajes))
+    {
+        respuesta.Append(actualizacion.Text);
+        conversacion.Text = RenderizarConversacion(mensajes, "Asistente\n\n" + respuesta);
+    }
+
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.ToString()));
     conversacion.Text = RenderizarConversacion(mensajes);
+
+    entrada.Enabled = true;
+    botonEnviar.Enabled = true;
+    ayuda.Text = "Enter: enviar | Esc: salir | La respuesta aparecera en el panel superior";
+    respondiendo = false;
 }
 
 static string RenderizarConversacion(IEnumerable<ChatMessage> mensajes, string? estado = null)
@@ -124,7 +147,7 @@ static string RenderizarConversacion(IEnumerable<ChatMessage> mensajes, string? 
     if (!string.IsNullOrWhiteSpace(estado))
     {
         markdown.AppendLine();
-        markdown.AppendLine($"## {estado}");
+        markdown.AppendLine($"# {estado}");
     }
 
     return markdown.ToString();
