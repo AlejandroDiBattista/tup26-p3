@@ -96,6 +96,10 @@ async Task EnviarAsync()
     enviar.Enabled = false;
 
     entrada.Text = "";
+    var turnoAsistente = new TurnoPantalla(
+    "Asistente",
+    ""
+);
 try {
 
     turnos.Add(
@@ -111,10 +115,7 @@ try {
         texto
     )
 );
-var turnoAsistente = new TurnoPantalla(
-    "Asistente",
-    ""
-);
+
 
 turnos.Add(turnoAsistente);
 
@@ -130,7 +131,7 @@ await foreach (
 
     turnoAsistente.Contenido += fragmento.Text;
 
-    conversacion.Text = TextoConversacion();
+    RefrescarConversacion();
 }
 
 mensajes.Add(
@@ -141,7 +142,14 @@ mensajes.Add(
 );
 
 
-    conversacion.Text = TextoConversacion();
+    RefrescarConversacion();
+}
+catch (Exception ex)
+{
+    turnoAsistente.Contenido =
+        $"Error al consultar el modelo: `{ex.Message}`";
+
+    RefrescarConversacion();
 }
 finally
 {
@@ -151,6 +159,14 @@ finally
     enviar.Enabled = true;
 
     entrada.SetFocus();
+}
+void RefrescarConversacion()
+{
+    app.Invoke(() =>
+    {
+        conversacion.Text = TextoConversacion();
+        conversacion.SetNeedsDraw();
+    });
 }
 string TextoConversacion()
 {
