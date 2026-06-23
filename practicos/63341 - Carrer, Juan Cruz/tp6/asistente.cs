@@ -24,11 +24,8 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
 
 using IApplication app = Application.Create().Init();
@@ -61,6 +58,44 @@ var botonEnviar = new Button
     X = Pos.Right(entrada) + 1,
     Y = Pos.Bottom(conversacion),
     Text = "Enviar"
+};
+
+string historialMarkdown = "# Asistente IA\n\n";
+
+async Task EnviarMensaje()
+{
+    var texto = entrada.Text?.ToString()?.Trim();
+
+    if (string.IsNullOrWhiteSpace(texto))
+        return;
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    historialMarkdown += $"# Vos\n\n{texto}\n\n";
+
+    conversacion.Text = historialMarkdown;
+
+    entrada.Text = "";
+
+    try
+    {
+        var respuesta = await chat.GetResponseAsync(mensajes);
+
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+
+        historialMarkdown += $"# Asistente\n\n{respuesta.Text}\n\n";
+
+        conversacion.Text = historialMarkdown;
+    }
+    catch (Exception ex)
+    {
+        conversacion.Text = ex.ToString();
+    }
+}
+
+botonEnviar.Accepting += async (sender, e) =>
+{
+    await EnviarMensaje();
 };
 
 ventana.Add(conversacion);
