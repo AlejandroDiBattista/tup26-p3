@@ -10,7 +10,6 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
-
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
@@ -23,6 +22,11 @@ IChatClient chat = new OpenAIClient(
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
+var mensajes = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+};
+var turnos = new List<TurnoPantalla>();   
 
 const string pregunta = "Definí recursividad";
 
@@ -34,7 +38,7 @@ using var ventana = new Window {
 
 var conversacion = new Markdown
 {
-    Text = "# Asistente IA",
+    Text = TextoConversacion(),
     X = 0,
     Y = 0,
     Width = Dim.Fill(),
@@ -70,3 +74,21 @@ ventana.Add(conversacion, separador, entrada, enviar);
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 
 app.Run(ventana);
+string TextoConversacion()
+{
+    if (turnos.Count == 0)
+    {
+        return "# Asistente IA\n\nEscribí tu mensaje y presioná Enter para comenzar.";
+    }
+
+    return string.Join(
+        "\n\n",
+        turnos.Select(
+            t => $"# {t.Rol}\n\n{t.Contenido}"
+        )
+    );
+}
+sealed record TurnoPantalla(
+    string Rol,
+    string Contenido
+);
