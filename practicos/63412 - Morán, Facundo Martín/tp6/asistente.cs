@@ -10,6 +10,7 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui.Input;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "groq").ToUpperInvariant();
@@ -27,8 +28,6 @@ var mensajes = new List<ChatMessage>
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 };
 var turnos = new List<TurnoPantalla>();   
-
-const string pregunta = "Definí recursividad";
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -73,7 +72,7 @@ enviar.Accepted += (_, _) => _ = EnviarAsync();
 
 entrada.KeyDown += (_, e) =>
 {
-    if (e.KeyCode == KeyCode.Enter)
+    if (e.KeyCode == Key.Enter)
     {
         _ = EnviarAsync();
         e.Handled = true;
@@ -96,7 +95,29 @@ async Task EnviarAsync()
             "Vos",
             texto
         )
+        
     );
+    mensajes.Add(
+    new ChatMessage(
+        ChatRole.User,
+        texto
+    )
+);
+    var respuesta = await chat.GetResponseAsync(mensajes);
+    turnos.Add(
+        new TurnoPantalla(
+            "Asistente",
+            respuesta.Text
+        )
+    );
+
+    mensajes.Add(
+        new ChatMessage(
+            ChatRole.Assistant,
+            respuesta.Text
+        )
+    );
+
 
     conversacion.Text = TextoConversacion();
 }
