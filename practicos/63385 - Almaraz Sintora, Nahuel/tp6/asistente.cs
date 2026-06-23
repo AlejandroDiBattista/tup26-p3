@@ -69,7 +69,52 @@ var enviar = new Button
 }; 
 
 ventana.Add(conversacion, entrada, enviar);
+bool ocupado = false;
+entrada.Accepted += (_, _) => _ = EnviarMensajeAsync();
+enviar.Accepted += (_, _) => _ = EnviarMensajeAsync();
 entrada.SetFocus();
+
+async Task EnviarMensajeAsync()
+{
+    if (ocupado) return;
+
+    var texto = entrada.Text?.ToString()?.Trim();
+    if (string.IsNullOrWhiteSpace(texto)) return;
+
+    ocupado = true;
+    entrada.Text = "";
+    entrada.Enabled = false;
+    enviar.Enabled = false;
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+    turnos.Add(new TurnoPantalla("Vos", texto));
+    turnos.Add(new TurnoPantalla("Asistente", ""));
+    RefrescarConversacion();
+
+    try
+    {
+        var respuesta = await chat.GetResponseAsync(mensajes);
+        mensajes.AddMessages(respuesta);
+        turnos[^1] = turnos[^1] with { Texto = respuesta.Text };
+    }
+    catch (Exception ex)
+    {
+        var error = $"No pude obtener respuesta: {ex.Message}";
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, error));
+        turnos[^1] = turnos[^1] with { Texto = error };
+    }
+    finally
+    {
+        app.Invoke(() =>
+        {
+            ocupado = false;
+            entrada.Enabled = true;
+            enviar.Enabled = true;
+            RefrescarConversacion();
+            entrada.SetFocus();
+        });
+    }
+}
 
 string RenderizarTurnos()
 {
