@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI.Abstractions@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -31,6 +32,43 @@ IChatClient chat = new OpenAIClient(
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
+
+var listarArchivos = AIFunctionFactory.Create(
+    (string ruta) =>
+    {
+        if (!Directory.Exists(ruta))
+            return "El directorio no existe.";
+
+        return string.Join(
+            "\n",
+            Directory.EnumerateFileSystemEntries(ruta)
+        );
+    },
+    "listar-archivos",
+    "Lista archivos y carpetas de un directorio"
+);
+
+var leerArchivo = AIFunctionFactory.Create(
+    (string ruta) =>
+    {
+        if (!File.Exists(ruta))
+            return "El archivo no existe.";
+
+        return File.ReadAllText(ruta);
+    },
+    "leer-archivo",
+    "Lee el contenido de un archivo de texto"
+);
+
+var escribirArchivo = AIFunctionFactory.Create(
+    (string ruta, string contenido) =>
+    {
+        File.WriteAllText(ruta, contenido);
+        return "Archivo guardado correctamente.";
+    },
+    "escribir-archivo",
+    "Escribe o sobrescribe un archivo"
+);
 
 using IApplication app = Application.Create().Init();
 
@@ -64,51 +102,69 @@ var botonEnviar = new Button
     Text = "Enviar"
 };
 
+bool enProceso = false;
+
 string historialMarkdown = "# Asistente IA\n\n";
 
 async Task EnviarMensaje()
 {
-    var texto = entrada.Text?.ToString()?.Trim();
-
-    Console.WriteLine($"Enviando: {texto}");
-
-    if (string.IsNullOrWhiteSpace(texto))
+    if (enProceso)
         return;
 
-    mensajes.Add(new ChatMessage(ChatRole.User, texto));
-
-    historialMarkdown += $"# Vos\n\n{texto}\n\n";
-
-    conversacion.Text = historialMarkdown;
-
-    entrada.Text = "";
+    enProceso = true;
 
     try
     {
+        var texto = entrada.Text?.ToString()?.Trim();
+
+        if (string.IsNullOrWhiteSpace(texto))
+            return;
+
+        mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+        historialMarkdown += $"# Vos\n\n{texto}\n\n";
+
+        app.Invoke(() =>
+        {
+            conversacion.Text = historialMarkdown;
+            entrada.Text = "";
+        });
+
         string respuestaCompleta = "";
 
         historialMarkdown += "# Asistente\n\n";
 
         await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes))
         {
-            respuestaCompleta += fragmento.Text;
+            var t = fragmento?.Text;
+            if (string.IsNullOrEmpty(t))
+                continue;
 
-            conversacion.Text = historialMarkdown + respuestaCompleta;
+            respuestaCompleta += t;
+
+            app.Invoke(() =>
+            {
+                conversacion.Text = historialMarkdown + respuestaCompleta;
+            });
         }
 
         historialMarkdown += respuestaCompleta + "\n\n";
 
         mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
 
-        conversacion.Text = historialMarkdown;
+        app.Invoke(() =>
+        {
+            conversacion.Text = historialMarkdown;
+        });
     }
     catch (Exception ex)
     {
-        File.WriteAllText("error.txt", ex.ToString());
         Console.WriteLine(ex);
-
-        // IMPORTANTE: no dejar que cierre la app silenciosamente
-        conversacion.Text = "ERROR:\n\n" + ex.Message;
+        File.WriteAllText("error.txt", ex.ToString());
+    }
+    finally
+    {
+        enProceso = false;
     }
 }
 
@@ -120,10 +176,7 @@ botonEnviar.Accepting += async (sender, e) =>
     }
     catch (Exception ex)
     {
-        Console.Clear();
         Console.WriteLine(ex);
-        Console.WriteLine("\nPresione ENTER...");
-        Console.ReadLine();
     }
 };
 
