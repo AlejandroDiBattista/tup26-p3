@@ -228,7 +228,15 @@ sealed class ChatWindow : Window {
         };
 
         conversacion = new Markdown {
-            Text = "# Asistente IA\n\nEscribi una pregunta para comenzar.",
+            Text = $"""
+            # Asistente IA
+
+            Proveedor: `{proveedor}`
+
+            Modelo: `{modelo}`
+
+            Escribi una pregunta y presiona Enter para comenzar. Presiona Esc para salir.
+            """,
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
