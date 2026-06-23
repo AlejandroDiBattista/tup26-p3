@@ -16,16 +16,28 @@ using System.Text;
 using System.Drawing;
 using System.ComponentModel;
 
-DotNetEnv.Env.Load();
+var raiz = EncontrarRaizAplicacion(Directory.GetCurrentDirectory());
+DotNetEnv.Env.Load(Path.Combine(raiz, ".env"));
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+ConfiguracionApi configuracion;
+try
+{
+    configuracion = CargarConfiguracion(args);
+}
+catch (InvalidOperationException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return;
+}
+
+var proveedor = configuracion.Proveedor;
+var url = configuracion.Url;
+var apiKey = configuracion.ApiKey;
+var modelo = configuracion.Modelo;
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new OpenAIClientOptions { Endpoint = NormalizarEndpoint(url) })
     .GetChatClient(modelo)
     .AsIChatClient()
     .AsBuilder()
@@ -56,7 +68,7 @@ var opciones = new ChatOptions
 
 var mensajes = new List<ChatMessage>
 {
-    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+    new(ChatRole.System, File.ReadAllText(Path.Combine(raiz, "AGENTS.md")))
 };
 
 var turnos = new List<TurnoPantalla>();
@@ -214,5 +226,67 @@ string ListarArchivos([Description("Ruta relativa del directorio a listar.")] st
         .OrderBy(nombre => nombre));
 }
 
+string EncontrarRaizAplicacion(string directorioActual)
+{
+    if (File.Exists(Path.Combine(directorioActual, "AGENTS.md"))) return directorioActual;
+    var subcarpetaTp6 = Path.Combine(directorioActual, "tp6");
+    if (File.Exists(Path.Combine(subcarpetaTp6, "AGENTS.md"))) return subcarpetaTp6;
+    return directorioActual;
+}
+
+ConfiguracionApi CargarConfiguracion(string[] argumentos)
+{
+    var proveedorElegido = (argumentos.Length > 0
+            ? argumentos[0]
+            : Environment.GetEnvironmentVariable("ASISTENTE_PROVIDER") ?? DetectarProveedorDisponible())
+        .Trim().ToUpperInvariant();
+
+    var apiUrl = ObtenerVariableRequerida($"{proveedorElegido}_API_URL");
+    var apiKeyConfigurada = Environment.GetEnvironmentVariable($"{proveedorElegido}_API_KEY");
+    var modeloElegido = Environment.GetEnvironmentVariable($"{proveedorElegido}_MODEL") ?? "gpt-4o-mini";
+
+    if (proveedorElegido == "OLLAMA")
+        apiKeyConfigurada = string.IsNullOrWhiteSpace(apiKeyConfigurada) ? "ollama" : apiKeyConfigurada;
+    else if (!TieneValorReal(apiKeyConfigurada))
+        throw new InvalidOperationException(
+            $"Falta configurar {proveedorElegido}_API_KEY en .env. " +
+            "Pegala sin signos < >, por ejemplo: GROQ_API_KEY=gsk_...");
+
+    return new ConfiguracionApi(proveedorElegido, apiUrl, apiKeyConfigurada!, modeloElegido);
+}
+
+string DetectarProveedorDisponible()
+{
+    var proveedores = new[] { "OPENAI", "GROQ", "GEMINI", "OPENROUTER", "FIREWORK", "GROK", "HHGG", "OLLAMA" };
+    return proveedores.FirstOrDefault(p => TieneValorReal(Environment.GetEnvironmentVariable($"{p}_API_KEY")))
+        ?? "OPENAI";
+}
+
+string ObtenerVariableRequerida(string nombre)
+{
+    var valor = Environment.GetEnvironmentVariable(nombre);
+    if (!TieneValorReal(valor))
+        throw new InvalidOperationException($"Falta configurar {nombre} en .env.");
+    return valor!;
+}
+
+bool TieneValorReal(string? valor)
+{
+    if (string.IsNullOrWhiteSpace(valor)) return false;
+    var limpio = valor.Trim();
+    return !(limpio.StartsWith('<') && limpio.EndsWith('>'))
+        && !limpio.Contains("tu_clave_api_aqui", StringComparison.OrdinalIgnoreCase);
+}
+
+Uri NormalizarEndpoint(string endpoint)
+{
+    var limpio = endpoint.TrimEnd('/');
+    if (limpio.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+        limpio = limpio[..^"/chat/completions".Length];
+    return new Uri(limpio);
+} 
+
+
 app.Run(ventana);
 record TurnoPantalla(string Autor, string Texto);
+record ConfiguracionApi(string Proveedor, string Url, string ApiKey, string Modelo);
