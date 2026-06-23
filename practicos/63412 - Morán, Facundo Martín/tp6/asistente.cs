@@ -28,7 +28,7 @@ var mensajes = new List<ChatMessage>
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 };
 var turnos = new List<TurnoPantalla>();   
-
+var enviando = false;
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
@@ -81,14 +81,22 @@ entrada.KeyDown += (_, e) =>
 app.Run(ventana);
 async Task EnviarAsync()
 {
+    if (enviando)
+{
+    return;
+}
     var texto = entrada.Text?.ToString()?.Trim();
 
     if (string.IsNullOrWhiteSpace(texto))
     {
         return;
     }
+    enviando = true;
+    entrada.Enabled = false;
+    enviar.Enabled = false;
 
     entrada.Text = "";
+try {
 
     turnos.Add(
         new TurnoPantalla(
@@ -135,6 +143,15 @@ mensajes.Add(
 
     conversacion.Text = TextoConversacion();
 }
+finally
+{
+    enviando = false;
+
+    entrada.Enabled = true;
+    enviar.Enabled = true;
+
+    entrada.SetFocus();
+}
 string TextoConversacion()
 {
     if (turnos.Count == 0)
@@ -149,11 +166,14 @@ string TextoConversacion()
         )
     );
 }
-sealed record TurnoPantalla(
-    string Rol,
-    string Contenido
-)
+sealed class TurnoPantalla
 {
-    public string Contenido { get; set; } = Contenido;
-}
+    public string Rol { get; set; }
+    public string Contenido { get; set; }
 
+    public TurnoPantalla(string rol, string contenido)
+    {
+        Rol = rol;
+        Contenido = contenido;
+    }
+}
