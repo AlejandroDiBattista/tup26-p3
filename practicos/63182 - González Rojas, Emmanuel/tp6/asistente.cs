@@ -87,19 +87,20 @@ app.Run(new VentanaAsistente(app, cliente, historial, opciones, modeloIA, archiv
 
 // ================== VENTANA PRINCIPAL ====================
 
-class VentanaAsistente : Window{
-    
+class VentanaAsistente : Window {
+
     Markdown _vistaChat;
     TextField _campoTexto;
     Label _estado;
     StringBuilder _textoAcumulado = new();
 
-     readonly IChatClient _cliente;
+    readonly IChatClient _cliente;
     readonly List<ChatMessage> _historial;
     readonly ChatOptions _opciones;
     readonly string _archivoSalida;
     readonly IApplication _app;
-public VentanaAsistente(
+
+    public VentanaAsistente(
         IApplication app,
         IChatClient cliente,
         List<ChatMessage> historial,
@@ -122,10 +123,10 @@ public VentanaAsistente(
             X      = 0,
             Y      = 0,
             Width  = Dim.Fill(),
-            Height = Dim.Fill() - 3
+            Height = Dim.Fill() - 6
         };
 
-
+    
         _estado = new Label {
             Text   = " Escribí tu mensaje y presioná Enter. ESC para salir.",
             X      = 0,
@@ -134,14 +135,14 @@ public VentanaAsistente(
             Height = 1
         };
 
+
         _campoTexto = new TextField {
             Text   = "",
             X      = 0,
             Y      = Pos.Bottom(_estado),
-            Width  = Dim.Fill() - 12,
-            Height = 1
+            Width  = Dim.Fill() - 2,
+            Height = 3
         };
-
 
         var boton = new Button {
             Text      = "ENVIAR",
@@ -157,6 +158,7 @@ public VentanaAsistente(
             }
         };
 
+    
         boton.Accepting += async (_, e) => {
             e.Handled = true;
             await EnviarAsync();
@@ -171,24 +173,23 @@ public VentanaAsistente(
         };
 
         _textoAcumulado.AppendLine(
-            "# Bienvenido al AsistenteIA de Emmanuel\n\n" +
+            "# BIENVENIDO AL ASISTENTE IA DE EMMANUEL\n\n" +
             "Escribí tu consulta y presioná **Enter**.\n\n");
         _vistaChat.Text = _textoAcumulado.ToString();
 
         Add(_vistaChat, _estado, _campoTexto, boton);
+        _campoTexto.SetFocus();
     }
 
 
-
-// PROCESAR ENVIO DEL MENSAJE
-async Task EnviarAsync() {
+    async Task EnviarAsync() {
         var texto = _campoTexto.Text?.ToString()?.Trim() ?? "";
         if (string.IsNullOrEmpty(texto)) return;
 
         _campoTexto.Text    = "";
         _campoTexto.Enabled = false;
 
-        // MUESTRO EL MENSAJE DEL USUARIO EN LA VISTA Y LO GUARDO EN EL ARCHIVO SALIDA.MD
+        // MOSTRAR MENSAJE DEL USUARIO
         _textoAcumulado.AppendLine($"# ── YO\n{texto}\n");
         _app.Invoke(() => _vistaChat.Text = _textoAcumulado.ToString());
         File.AppendAllText(_archivoSalida, $"[ YO | {DateTime.Now:HH:mm:ss} ]\n{texto}\n\n");
@@ -203,7 +204,7 @@ async Task EnviarAsync() {
         var respuesta = new StringBuilder();
 
         try {
-            // MUESTRO CADA PARTE DEL MENSAJE A MEDIDA QUE LLEGA
+            // MOSTRAR CADA PARTE DEL MENSAJE QUE LLEGA
             await foreach (var parte in _cliente.GetStreamingResponseAsync(_historial, _opciones)) {
                 var fragmento = parte.Text ?? "";
                 if (!string.IsNullOrEmpty(fragmento)) {
@@ -213,7 +214,7 @@ async Task EnviarAsync() {
                 }
             }
 
-            // FIJO LA RESPUESTA EN EL ACUMULADOR
+            // FIJO LA RESPUESTA COMPLETA EN EL ACUMULADOR
             _textoAcumulado.Append(respuesta);
             _textoAcumulado.AppendLine("\n---\n");
             _app.Invoke(() => _vistaChat.Text = _textoAcumulado.ToString());
@@ -222,7 +223,7 @@ async Task EnviarAsync() {
             File.AppendAllText(_archivoSalida, $"[ ASISTENTE | {DateTime.Now:HH:mm:ss} ]\n{final}\n\n");
             _historial.Add(new(ChatRole.Assistant, final));
 
-            _app.Invoke(() => _estado.Text = $"Listo — se guardado en: {_archivoSalida}");
+            _app.Invoke(() => _estado.Text = $" Historial guardado en: {_archivoSalida}");
 
         } catch (Exception ex) {
             var errorMessage = ObtenerMensajeError(ex);
@@ -237,7 +238,8 @@ async Task EnviarAsync() {
             _campoTexto.SetFocus();
         });
     }
-static string ObtenerMensajeError(Exception error) {
+
+    static string ObtenerMensajeError(Exception error) {
         var builder = new StringBuilder();
         builder.Append(error.GetType().Name).Append(": ").Append(error.Message);
 
@@ -253,7 +255,5 @@ static string ObtenerMensajeError(Exception error) {
         return builder.ToString();
     }
 
-
 }
-
 
