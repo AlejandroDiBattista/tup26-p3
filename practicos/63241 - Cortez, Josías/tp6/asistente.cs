@@ -16,6 +16,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 const string ChatCompletionsPath = "/chat/completions";
+const long MaximoBytesLectura = 1024 * 1024;
 
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
@@ -135,6 +136,15 @@ string LeerArchivo(
             return $"No existe el archivo: {ruta}";
         }
 
+        var info = new FileInfo(rutaCompleta);
+        if (info.Length > MaximoBytesLectura) {
+            return $"El archivo '{ruta}' es demasiado grande para leerlo completo.";
+        }
+
+        if (PareceArchivoBinario(rutaCompleta)) {
+            return $"El archivo '{ruta}' no parece ser un archivo de texto.";
+        }
+
         return File.ReadAllText(rutaCompleta, Encoding.UTF8);
     }
     catch (Exception ex) {
@@ -173,6 +183,14 @@ string ResolverRutaSegura(string ruta) {
 static string FormatearEntrada(string ruta) {
     var nombre = Path.GetFileName(ruta);
     return Directory.Exists(ruta) ? $"[dir] {nombre}" : $"[archivo] {nombre}";
+}
+
+static bool PareceArchivoBinario(string ruta) {
+    Span<byte> buffer = stackalloc byte[512];
+    using var archivo = File.OpenRead(ruta);
+    var leidos = archivo.Read(buffer);
+
+    return buffer[..leidos].Contains((byte)0);
 }
 
 sealed class ChatWindow : Window {
