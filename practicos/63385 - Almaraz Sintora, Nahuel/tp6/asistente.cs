@@ -87,5 +87,13 @@ string RenderizarTurnos()
     return md.ToString();
 }   
 
+void RefrescarConversacion()
+{
+    conversacion.Text = RenderizarTurnos();
+    conversacion.SetContentSize(new Size(conversacion.Viewport.Width, conversacion.LineCount));
+    conversacion.ScrollVertical(conversacion.LineCount);
+    conversacion.SetNeedsDraw();
+}
+
 app.Run(ventana);
 record TurnoPantalla(string Autor, string Texto);
