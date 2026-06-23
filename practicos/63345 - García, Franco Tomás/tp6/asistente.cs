@@ -4,6 +4,7 @@
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
+using Terminal.Gui;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
@@ -13,39 +14,118 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var proveedor = "OLLAMA";
+var url = "http://localhost:11434/v1";
+var modelo = "qwen2.5-coder:7b";
+var apiKey = "ollama";
+Console.WriteLine($"Proveedor: {proveedor}");
+OpenAIClientOptions options = new OpenAIClientOptions
+{
+    Endpoint = new Uri(url)
+};
 
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+OpenAIClient client;
+
+if (proveedor == "OLLAMA")
+{
+    client = new OpenAIClient(
+        new ApiKeyCredential("ollama"), // cualquier string
+        options);
+}
+else
+{
+    client = new OpenAIClient(
+        new ApiKeyCredential(apiKey ?? ""),
+        options);
+}
+
+IChatClient chat = client
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
 ];
 
-var respuesta = await chat.GetResponseAsync(mensajes);
-
 using IApplication app = Application.Create().Init();
-using var ventana = new Window {
+
+var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+    Width = Dim.Fill(), 
+    Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
 
 // TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+var chatView = new Markdown {
+Width = Dim.Fill(),
+Height = Dim.Fill() - 3,
+Text = "# Asistente listo\n"
+};
 
+var input = new TextField {
+X = 0,
+Y = Pos.Bottom(chatView),
+Width = Dim.Fill() - 10
+};
+
+var boton = new Button {
+Text = "Enviar",
+X = Pos.Right(input),
+Y = Pos.Bottom(chatView),
+Width = 10
+};
+
+ventana.Add(chatView, input, boton);
+
+// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
+async void Enviar()
+{
+var texto = input.Text.ToString();
+if (string.IsNullOrWhiteSpace(texto)) return;
+
+input.Text = "";
+
+mensajes.Add(new ChatMessage(ChatRole.User, texto));
+chatView.Text += $"\n# Vos\n\n{texto}\n\n# Asistente\n\n";
+
+string respuestaCompleta = "";
+
+input.Enabled = false;
+boton.Enabled = false;
+
+await foreach (var chunk in chat.GetStreamingResponseAsync(mensajes))
+{
+    if (chunk.Text != null)
+    {
+        respuestaCompleta += chunk.Text;
+
+        app.Invoke(() => {
+            chatView.Text += chunk.Text;
+        });
+    }
+}
+
+
+mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
+
+input.Enabled = true;
+boton.Enabled = true;
+
+}
+// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+boton.Accepted += (s, e) => Enviar();
+
+input.Accepting += (s, e) =>
+{
+    Enviar();
+    e.Handled = true;
+};
+ventana.KeyDown += (s, key) =>
+{
+    if (key.ToString() == "Esc")
+    {
+        app.RequestStop();
+    }
+};
 app.Run(ventana);
