@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -11,6 +12,8 @@ using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Terminal.Gui.Input;
+using System.Text;
+using System.Drawing;
 
 DotNetEnv.Env.Load();
 
@@ -25,14 +28,12 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
+var mensajes = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+};
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
+var turnos = new List<TurnoPantalla>();
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -65,8 +66,26 @@ var enviar = new Button
     Y = Pos.Top(entrada),
     Width = 10,
     IsDefault = true
-};
+}; 
 
 ventana.Add(conversacion, entrada, enviar);
 entrada.SetFocus();
+
+string RenderizarTurnos()
+{
+    if (turnos.Count == 0)
+        return "# Asistente IA\n\nEscribi un mensaje y presiona Enter.";
+
+    var md = new StringBuilder();
+    foreach (var turno in turnos)
+    {
+        md.AppendLine($"# {turno.Autor}");
+        md.AppendLine();
+        md.AppendLine(string.IsNullOrWhiteSpace(turno.Texto) ? "_Pensando..._" : turno.Texto);
+        md.AppendLine();
+    }
+    return md.ToString();
+}   
+
 app.Run(ventana);
+record TurnoPantalla(string Autor, string Texto);
