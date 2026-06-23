@@ -31,21 +31,40 @@ List<ChatMessage> mensajes = [
     new(ChatRole.User, pregunta)
 ];
 
-var respuesta = await chat.GetResponseAsync(mensajes);
-
 using IApplication app = Application.Create().Init();
-using var ventana = new Window {
+
+using var ventana = new Window
+{
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var conversacion = new Markdown
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    Text = "# Asistente IA\n\nListo para conversar."
+};
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+var entrada = new TextField
+{
+    X = 0,
+    Y = Pos.Bottom(conversacion),
+    Width = Dim.Fill(12)
+};
+
+var botonEnviar = new Button
+{
+    X = Pos.Right(entrada) + 1,
+    Y = Pos.Bottom(conversacion),
+    Text = "Enviar"
+};
+
+ventana.Add(conversacion);
+ventana.Add(entrada);
+ventana.Add(botonEnviar);
 
 app.Run(ventana);
