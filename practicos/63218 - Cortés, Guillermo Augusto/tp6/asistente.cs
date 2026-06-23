@@ -17,14 +17,9 @@ var configuracion = CargarConfiguracion(args);
 var promptSistema = CargarPromptSistema();
 IChatClient chat = CrearCliente(configuracion);
 
-const string pregunta = "Defini recursividad";
-
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, promptSistema),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, promptSistema)
 ];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -32,12 +27,45 @@ using var ventana = new Window {
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var panelConversacion = new FrameView {
+    Title = " Conversacion ",
+    X = 0, Y = 0,
+    Width = Dim.Fill(), Height = Dim.Fill(6)
+};
 
-// TODO: agregar el panel de conversación y el panel de entrada.
+var conversacion = new Markdown {
+    Text = "# Asistente IA\n\nBienvenido. Escribi una consulta en el panel inferior para iniciar la conversacion.\n\n## Estado\n\nEsperando tu primer mensaje...",
+    X = 0, Y = 0,
+    Width = Dim.Fill(), Height = Dim.Fill()
+};
+
+var panelEntrada = new FrameView {
+    Title = " Nuevo mensaje ",
+    X = 0, Y = Pos.AnchorEnd(6),
+    Width = Dim.Fill(), Height = 6
+};
+
+var entrada = new TextField {
+    X = 1, Y = 0,
+    Width = Dim.Fill(15)
+};
+
+var botonEnviar = new Button {
+    Text = "Enviar",
+    X = Pos.AnchorEnd(12), Y = 0,
+    Width = 11
+};
+
+var ayuda = new Label {
+    Text = "Enter: enviar | Esc: salir | La respuesta aparecera en el panel superior",
+    X = 1, Y = 2,
+    Width = Dim.Fill(2), Height = 1
+};
+
+panelConversacion.Add(conversacion);
+panelEntrada.Add(entrada, botonEnviar, ayuda);
+ventana.Add(panelConversacion, panelEntrada);
+
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 
