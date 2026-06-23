@@ -28,7 +28,8 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+    new(ChatRole.System, File.ReadAllText("AGENTS.md") + 
+    $"\n\nDirectorio de trabajo actual: {Directory.GetCurrentDirectory()}")
 ];
 
 IChatClient herramientas = new ChatClientBuilder(chat)
