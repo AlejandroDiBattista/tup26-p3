@@ -1,48 +1,46 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
-#:package Microsoft.Extensions.AI.OpenAI@10.4.0
+#:package Microsoft.Extensions.AI@10.7.0
+#:package Microsoft.Extensions.AI.OpenAI@10.7.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
+using System.ComponentModel;
+using System.Text;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using Terminal.Gui.App;
+using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
+
+// =================== CONFIGURACION ====================
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var urlApi   = Environment.GetEnvironmentVariable("GEMINI_API_URL") ?? "";
+var clave    = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? "";
+var modeloIA = Environment.GetEnvironmentVariable("GEMINI_MODEL")   ?? "gemini-2.5-flash";
 
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
+if (string.IsNullOrEmpty(clave)) {
+    Console.Error.WriteLine("Falta GEMINI_API_KEY en .env ");
+    Environment.Exit(1);
+}
+
+
+// ================== CLIENTE DE IA ====================
+
+IChatClient clienteBase = new OpenAIClient(
+        new ApiKeyCredential(clave),
+        new OpenAIClientOptions { Endpoint = new Uri(urlApi) })
+    .GetChatClient(modeloIA)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
-
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
-};
-
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+IChatClient cliente = new ChatClientBuilder(clienteBase)
+    .UseFunctionInvocation()
+    .Build();
 
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
