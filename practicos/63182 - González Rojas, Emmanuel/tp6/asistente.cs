@@ -69,3 +69,12 @@ var opciones = new ChatOptions {
         AIFunctionFactory.Create(ListarArchivos,   "listar-archivos")
     ]
 };
+
+// ================== HISTORIAL Y GUARDADO DE CONVERSACION ====================
+var historial = new List<ChatMessage> {
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+};
+
+var archivoSalida = "salida.md";
+File.WriteAllText(archivoSalida,
+    $"# AsistenteIA\nModelo: {modeloIA}\nFecha: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
