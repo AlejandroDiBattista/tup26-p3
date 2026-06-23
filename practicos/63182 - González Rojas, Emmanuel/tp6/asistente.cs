@@ -77,7 +77,7 @@ var historial = new List<ChatMessage> {
 
 var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
-    $"# IAWizard\nModel: {modeloIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
+    $"# IAWizard\nModel: {modelIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
 
 // ================== VENTANA PRINCIPAL ====================
 
@@ -171,6 +171,67 @@ public VentanaAsistente(
 
         Add(_vistaChat, _estado, _campoTexto, boton);
     }
+
+
+
+// PROCESAR ENVIO DEL MENSAJE
+async Task EnviarAsync() {
+        var texto = _campoTexto.Text?.ToString()?.Trim() ?? "";
+        if (string.IsNullOrEmpty(texto)) return;
+
+        _campoTexto.Text    = "";
+        _campoTexto.Enabled = false;
+
+        // MUESTRO EL MENSAJE DEL USUARIO EN LA VISTA Y LO GUARDO EN EL ARCHIVO SALIDA.MD
+        _textoAcumulado.AppendLine($"# ── YO\n{texto}\n");
+        _app.Invoke(() => _vistaChat.Text = _textoAcumulado.ToString());
+        File.AppendAllText(_archivoSalida, $"[ YO | {DateTime.Now:HH:mm:ss} ]\n{texto}\n\n");
+
+        _historial.Add(new(ChatRole.User, texto));
+        _textoAcumulado.AppendLine("# ── ASISTENTE\n");
+        _app.Invoke(() => {
+            _vistaChat.Text = _textoAcumulado.ToString();
+            _estado.Text    = "Escribiendo...";
+        });
+
+        var respuesta = new StringBuilder();
+
+        try {
+            // MUESTRO CADA PARTE DEL MENSAJE A MEDIDA QUE LLEGA
+            await foreach (var parte in _cliente.GetStreamingResponseAsync(_historial, _opciones)) {
+                var fragmento = parte.Text ?? "";
+                if (!string.IsNullOrEmpty(fragmento)) {
+                    respuesta.Append(fragmento);
+                    var parcial = _textoAcumulado + respuesta.ToString();
+                    _app.Invoke(() => _vistaChat.Text = parcial);
+                }
+            }
+
+            // FIJO LA RESPUESTA EN EL ACUMULADOR
+            _textoAcumulado.Append(respuesta);
+            _textoAcumulado.AppendLine("\n---\n");
+            _app.Invoke(() => _vistaChat.Text = _textoAcumulado.ToString());
+
+            var final = respuesta.ToString();
+            File.AppendAllText(_archivoSalida, $"[ ASISTENTE | {DateTime.Now:HH:mm:ss} ]\n{final}\n\n");
+            _historial.Add(new(ChatRole.Assistant, final));
+
+            _app.Invoke(() => _estado.Text = $"Listo — se guardado en: {_archivoSalida}");
+
+        } catch (Exception ex) {
+            var errorMessage = ObtenerMensajeError(ex);
+            _textoAcumulado.AppendLine($"\n**Error:** {errorMessage}\n");
+            _app.Invoke(() => _vistaChat.Text = _textoAcumulado.ToString());
+            _app.Invoke(() => _estado.Text    = $" ✗ {errorMessage}");
+            File.AppendAllText(_archivoSalida, $"[ ERROR | {DateTime.Now:HH:mm:ss} ]\n{errorMessage}\n\n");
+        }
+
+        _app.Invoke(() => {
+            _campoTexto.Enabled = true;
+            _campoTexto.SetFocus();
+        });
+    }
+
 
 
 }
