@@ -93,9 +93,22 @@ async Task EnviarMensajeAsync()
 
     try
     {
-        var respuesta = await chat.GetResponseAsync(mensajes);
-        mensajes.AddMessages(respuesta);
-        turnos[^1] = turnos[^1] with { Texto = respuesta.Text };
+        var respuesta = new StringBuilder();
+        var actualizaciones = new List<ChatResponseUpdate>();
+
+        await foreach (var parte in chat.GetStreamingResponseAsync(mensajes))
+        {
+            actualizaciones.Add(parte);
+            if (!string.IsNullOrEmpty(parte.Text))
+            {
+                respuesta.Append(parte.Text);
+                turnos[^1] = turnos[^1] with { Texto = respuesta.ToString() };
+                app.Invoke(RefrescarConversacion);
+            }
+        }
+        var respuestaCompleta = actualizaciones.ToChatResponse();
+        mensajes.AddMessages(respuestaCompleta);
+        turnos[^1] = turnos[^1] with { Texto = respuestaCompleta.Text };
     }
     catch (Exception ex)
     {
