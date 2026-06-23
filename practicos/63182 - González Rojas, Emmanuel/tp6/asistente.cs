@@ -79,6 +79,12 @@ var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
     $"# IAWizard\nModel: {modeloIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
 
+
+// =============================================
+using IApplication app = Application.Create().Init();
+app.Run(new VentanaAsistente(app, cliente, historial, opciones, modeloIA, archivoSalida));
+
+
 // ================== VENTANA PRINCIPAL ====================
 
 class VentanaAsistente : Window{
@@ -249,3 +255,5 @@ static string ObtenerMensajeError(Exception error) {
 
 
 }
+
+
