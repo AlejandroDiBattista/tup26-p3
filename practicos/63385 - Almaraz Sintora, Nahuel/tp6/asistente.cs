@@ -39,13 +39,15 @@ using var ventana = new Window {
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var conversacion = new Markdown
+{
+    X = 0, Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    CanFocus = true,
+    Text = "# Asistente IA\n\nEscribi un mensaje y presiona Enter."
+};
+conversacion.ViewportSettings |= ViewportSettingsFlags.HasVerticalScrollBar;
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
-
+ventana.Add(conversacion);
 app.Run(ventana);
