@@ -78,3 +78,48 @@ var historial = new List<ChatMessage> {
 var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
     $"# AsistenteIA\nModelo: {modeloIA}\nFecha: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
+
+// ================== VENTANA PRINCIPAL ====================
+
+class VentanaAsistente : Window{
+    
+    Markdown _vistaChat;
+    TextField _campoTexto;
+    Label _estado;
+    StringBuilder _textoAcumulado = new();
+
+     readonly IChatClient _cliente;
+    readonly List<ChatMessage> _historial;
+    readonly ChatOptions _opciones;
+    readonly string _archivoSalida;
+    readonly IApplication _app;
+
+public VentanaAsistente(
+    
+IApplication app;
+        IChatClient client;
+        List<ChatMessage> historial;
+        ChatOptions options;
+        string modelo;
+        string archivoSalida;) {
+
+        _app          = app;
+        _cliente       = cliente;
+        _historial     = historial;
+        _opciones      = opciones;
+        _archivoSalida = archivoSalida;
+        
+        Title  = $" AsistenteIA · {modelo} ";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+        
+
+        _vistaChat = new Markdown {
+            X      = 0,
+            Y      = 0,
+            Width  = Dim.Fill(),
+            Height = Dim.Fill() - 3
+    }
+
+
+}
