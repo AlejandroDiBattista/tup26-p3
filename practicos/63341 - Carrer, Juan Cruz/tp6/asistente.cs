@@ -118,13 +118,16 @@ string historialMarkdown = "# Asistente IA\n\n";
 
 async Task EnviarMensaje()
 {
-    if (enProceso)
-        return;
-
-    enProceso = true;
-
     try
     {
+        if (enProceso)
+            return;
+
+        enProceso = true;
+
+        entrada.Enabled = false;
+        botonEnviar.Enabled = false;
+
         var texto = entrada.Text?.ToString()?.Trim();
 
         if (string.IsNullOrWhiteSpace(texto))
@@ -145,7 +148,8 @@ async Task EnviarMensaje()
         historialMarkdown += "# Asistente\n\n";
 
         await foreach (var fragmento in chat.GetStreamingResponseAsync(
-            mensajes, chatOptions))
+            mensajes,
+            chatOptions))
         {
             var t = fragmento?.Text;
             if (string.IsNullOrEmpty(t))
@@ -172,13 +176,19 @@ async Task EnviarMensaje()
     {
         Console.WriteLine(ex);
         File.WriteAllText("error.txt", ex.ToString());
+
+        app.Invoke(() =>
+        {
+            conversacion.Text = "ERROR:\n\n" + ex.Message;
+        });
     }
     finally
     {
+        entrada.Enabled = true;
+        botonEnviar.Enabled = true;
         enProceso = false;
     }
 }
-
 botonEnviar.Accepting += async (sender, e) =>
 {
     try
