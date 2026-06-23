@@ -69,11 +69,37 @@ var enviar = new Button
 };
 
 ventana.Add(conversacion, separador, entrada, enviar);
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+enviar.Accepted += (_, _) => _ = EnviarAsync();
 
+entrada.KeyDown += (_, e) =>
+{
+    if (e.KeyCode == KeyCode.Enter)
+    {
+        _ = EnviarAsync();
+        e.Handled = true;
+    }
+};
 app.Run(ventana);
+async Task EnviarAsync()
+{
+    var texto = entrada.Text?.ToString()?.Trim();
+
+    if (string.IsNullOrWhiteSpace(texto))
+    {
+        return;
+    }
+
+    entrada.Text = "";
+
+    turnos.Add(
+        new TurnoPantalla(
+            "Vos",
+            texto
+        )
+    );
+
+    conversacion.Text = TextoConversacion();
+}
 string TextoConversacion()
 {
     if (turnos.Count == 0)
