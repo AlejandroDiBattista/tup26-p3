@@ -7,6 +7,7 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -34,7 +35,7 @@ var panelConversacion = new FrameView {
 };
 
 var conversacion = new Markdown {
-    Text = "# Asistente IA\n\nBienvenido. Escribi una consulta en el panel inferior para iniciar la conversacion.\n\n## Estado\n\nEsperando tu primer mensaje...",
+    Text = RenderizarConversacion(mensajes),
     X = 0, Y = 0,
     Width = Dim.Fill(), Height = Dim.Fill()
 };
@@ -53,7 +54,8 @@ var entrada = new TextField {
 var botonEnviar = new Button {
     Text = "Enviar",
     X = Pos.AnchorEnd(12), Y = 0,
-    Width = 11
+    Width = 11,
+    IsDefault = true
 };
 
 var ayuda = new Label {
@@ -62,14 +64,71 @@ var ayuda = new Label {
     Width = Dim.Fill(2), Height = 1
 };
 
+botonEnviar.Accepted += async (_, _) => await EnviarMensajeAsync();
+
 panelConversacion.Add(conversacion);
 panelEntrada.Add(entrada, botonEnviar, ayuda);
 ventana.Add(panelConversacion, panelEntrada);
 
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
-
 app.Run(ventana);
+
+async Task EnviarMensajeAsync()
+{
+    var textoUsuario = entrada.Text?.ToString()?.Trim();
+
+    if (string.IsNullOrWhiteSpace(textoUsuario))
+    {
+        return;
+    }
+
+    entrada.Text = string.Empty;
+    mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
+    conversacion.Text = RenderizarConversacion(mensajes, "Pensando...");
+
+    var respuesta = await chat.GetResponseAsync(mensajes);
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+    conversacion.Text = RenderizarConversacion(mensajes);
+}
+
+static string RenderizarConversacion(IEnumerable<ChatMessage> mensajes, string? estado = null)
+{
+    var markdown = new StringBuilder();
+    var hayMensajesVisibles = false;
+
+    foreach (var mensaje in mensajes)
+    {
+        if (mensaje.Role == ChatRole.System)
+        {
+            continue;
+        }
+
+        hayMensajesVisibles = true;
+        var titulo = mensaje.Role == ChatRole.User ? "Vos" : "Asistente";
+        markdown.AppendLine($"# {titulo}");
+        markdown.AppendLine();
+        markdown.AppendLine(mensaje.Text);
+        markdown.AppendLine();
+    }
+
+    if (!hayMensajesVisibles)
+    {
+        markdown.AppendLine("# Asistente IA");
+        markdown.AppendLine();
+        markdown.AppendLine("Bienvenido. Escribi una consulta en el panel inferior para iniciar la conversacion.");
+        markdown.AppendLine();
+        markdown.AppendLine("## Estado");
+        markdown.AppendLine();
+        markdown.AppendLine("Esperando tu primer mensaje...");
+    }
+
+    if (!string.IsNullOrWhiteSpace(estado))
+    {
+        markdown.AppendLine();
+        markdown.AppendLine($"## {estado}");
+    }
+
+    return markdown.ToString();
+}
 
 static ConfiguracionIA CargarConfiguracion(string[] args)
 {
