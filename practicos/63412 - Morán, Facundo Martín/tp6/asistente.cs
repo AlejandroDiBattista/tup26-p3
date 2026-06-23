@@ -26,24 +26,45 @@ IChatClient chat = new OpenAIClient(
 
 const string pregunta = "Definí recursividad";
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
-
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var conversacion = new Markdown
+{
+    Text = "# Asistente IA",
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3)
+};
 
+var separador = new Line
+{
+    X = 0,
+    Y = Pos.AnchorEnd(3),
+    Width = Dim.Fill()
+};
+
+var entrada = new TextField
+{
+    X = 1,
+    Y = Pos.AnchorEnd(2),
+    Width = Dim.Fill(12),
+    Text = ""
+};
+
+var enviar = new Button
+{
+    X = Pos.AnchorEnd(10),
+    Y = Pos.AnchorEnd(2),
+    Width = 9,
+    Text = "Enviar"
+};
+
+ventana.Add(conversacion, separador, entrada, enviar);
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
