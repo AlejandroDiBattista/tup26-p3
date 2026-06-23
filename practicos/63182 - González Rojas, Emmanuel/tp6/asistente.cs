@@ -42,8 +42,30 @@ IChatClient cliente = new ChatClientBuilder(clienteBase)
     .UseFunctionInvocation()
     .Build();
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+// ================== HERRAMIENTAS PARA ARCHIVOS ====================
+[Description("Lee el contenido de un archivo")]
+static string LeerArchivo([Description("Ruta del archivo")] string ruta) =>
+    File.Exists(ruta) ? File.ReadAllText(ruta) : $"No existe: {ruta}";
 
-app.Run(ventana);
+[Description("Crea o sobreescribe un archivo con el texto dado")]
+static string EscribirArchivo(
+    [Description("Ruta")] string ruta,
+    [Description("Contenido")] string contenido) {
+    File.WriteAllText(ruta, contenido);
+    return $"Guardado: {ruta}";
+}
+
+[Description("Lista archivos y carpetas de un directorio")]
+static string ListarArchivos([Description("Ruta (vacío = actual)")] string ruta = "") {
+    var carpeta = string.IsNullOrEmpty(ruta) ? "." : ruta;
+    var items   = Directory.GetFileSystemEntries(carpeta);
+    return items.Length == 0 ? "Vacío." : string.Join("\n", items);
+}
+
+var opciones = new ChatOptions {
+    Tools = [
+        AIFunctionFactory.Create(LeerArchivo,      "leer-archivo"),
+        AIFunctionFactory.Create(EscribirArchivo,  "escribir-archivo"),
+        AIFunctionFactory.Create(ListarArchivos,   "listar-archivos")
+    ]
+};
