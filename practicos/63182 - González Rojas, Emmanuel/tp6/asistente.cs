@@ -77,7 +77,7 @@ var historial = new List<ChatMessage> {
 
 var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
-    $"# IAWizard\nModel: {modelIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
+    $"# IAWizard\nModel: {modeloIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
 
 // ================== VENTANA PRINCIPAL ====================
 
@@ -231,7 +231,21 @@ async Task EnviarAsync() {
             _campoTexto.SetFocus();
         });
     }
+static string ObtenerMensajeError(Exception error) {
+        var builder = new StringBuilder();
+        builder.Append(error.GetType().Name).Append(": ").Append(error.Message);
 
+        var inner = error.InnerException;
+        while (inner != null) {
+            builder.Append(" -> ")
+                   .Append(inner.GetType().Name)
+                   .Append(": ")
+                   .Append(inner.Message);
+            inner = inner.InnerException;
+        }
+
+        return builder.ToString();
+    }
 
 
 }
