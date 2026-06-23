@@ -18,6 +18,10 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
+Console.WriteLine($"Proveedor: {proveedor}");
+Console.WriteLine($"URL: {url}");
+Console.WriteLine($"Modelo: {modelo}");
+
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
@@ -66,6 +70,8 @@ async Task EnviarMensaje()
 {
     var texto = entrada.Text?.ToString()?.Trim();
 
+    Console.WriteLine($"Enviando: {texto}");
+
     if (string.IsNullOrWhiteSpace(texto))
         return;
 
@@ -79,23 +85,46 @@ async Task EnviarMensaje()
 
     try
     {
-        var respuesta = await chat.GetResponseAsync(mensajes);
+        string respuestaCompleta = "";
 
-        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+        historialMarkdown += "# Asistente\n\n";
 
-        historialMarkdown += $"# Asistente\n\n{respuesta.Text}\n\n";
+        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes))
+        {
+            respuestaCompleta += fragmento.Text;
+
+            conversacion.Text = historialMarkdown + respuestaCompleta;
+        }
+
+        historialMarkdown += respuestaCompleta + "\n\n";
+
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
 
         conversacion.Text = historialMarkdown;
     }
     catch (Exception ex)
     {
-        conversacion.Text = ex.ToString();
+        File.WriteAllText("error.txt", ex.ToString());
+        Console.WriteLine(ex);
+
+        // IMPORTANTE: no dejar que cierre la app silenciosamente
+        conversacion.Text = "ERROR:\n\n" + ex.Message;
     }
 }
 
 botonEnviar.Accepting += async (sender, e) =>
 {
-    await EnviarMensaje();
+    try
+    {
+        await EnviarMensaje();
+    }
+    catch (Exception ex)
+    {
+        Console.Clear();
+        Console.WriteLine(ex);
+        Console.WriteLine("\nPresione ENTER...");
+        Console.ReadLine();
+    }
 };
 
 ventana.Add(conversacion);
