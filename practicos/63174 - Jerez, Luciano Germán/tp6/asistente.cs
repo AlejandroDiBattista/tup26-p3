@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.ClientModel;
 using System.Text;
 using Terminal.Gui.App;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
@@ -59,16 +60,173 @@ using var ventana = new Window {
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = "# Asistente IA\n\nEscribí un mensaje y presioná Enter para conversar.",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var panelConversacion = new FrameView
+{
+    Title = " Conversación ",
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(4)
+};
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+var markdown = new Markdown
+{
+    Text = RenderConversation(conversacion),
+    Width = Dim.Fill(),
+    Height = Dim.Fill(),
+    ShowCopyButtons = true
+};
+
+var panelEntrada = new FrameView
+{
+    Title = " Mensaje ",
+    X = 0,
+    Y = Pos.AnchorEnd(4),
+    Width = Dim.Fill(),
+    Height = 4
+};
+
+var entrada = new TextField
+{
+    X = 1,
+    Y = 1,
+    Width = Dim.Fill(14),
+    Height = 1
+};
+
+var enviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.AnchorEnd(12),
+    Y = 1,
+    Width = 10,
+    IsDefault = true
+};
+
+panelConversacion.Add(markdown);
+panelEntrada.Add(entrada, enviar);
+ventana.Add(panelConversacion, panelEntrada);
+
+enviar.Accepting += (_, _) => _ = EnviarMensajeAsync();
+ventana.KeyDown += (_, key) =>
+{
+    if (key == Key.Esc)
+    {
+        app.RequestStop();
+    }
+};
+
+entrada.SetFocus();
 
 app.Run(ventana);
+
+async Task EnviarMensajeAsync()
+{
+    var textoUsuario = entrada.Text?.ToString()?.Trim();
+    if (string.IsNullOrWhiteSpace(textoUsuario) || !entrada.Enabled)
+    {
+        return;
+    }
+
+    SetInputEnabled(false);
+    entrada.Text = string.Empty;
+
+    conversacion.Add(new VisibleMessage("Vos", textoUsuario));
+    conversacion.Add(new VisibleMessage("Asistente", string.Empty));
+    mensajes.Add(new(ChatRole.User, textoUsuario));
+    UpdateConversation(autoScroll: true);
+
+    try
+    {
+        await StreamAssistantResponseAsync(conversacion[^1]);
+    }
+    catch (Exception ex)
+    {
+        conversacion[^1] = conversacion[^1] with
+        {
+            Markdown = $"No pude completar la respuesta.\n\n`{ex.Message}`"
+        };
+        UpdateConversation(autoScroll: true);
+    }
+    finally
+    {
+        SetInputEnabled(true);
+    }
+}
+
+async Task StreamAssistantResponseAsync(VisibleMessage respuestaVisible)
+{
+    var builder = new StringBuilder();
+    await foreach (var update in chat.GetStreamingResponseAsync(mensajes, opciones))
+    {
+        if (string.IsNullOrEmpty(update.Text))
+        {
+            continue;
+        }
+
+        builder.Append(update.Text);
+        var parcial = builder.ToString();
+        app.Invoke(() =>
+        {
+            var index = conversacion.IndexOf(respuestaVisible);
+            if (index >= 0)
+            {
+                respuestaVisible = respuestaVisible with { Markdown = parcial };
+                conversacion[index] = respuestaVisible;
+                UpdateConversation(autoScroll: true);
+            }
+        });
+    }
+
+    var textoFinal = builder.ToString();
+    if (string.IsNullOrWhiteSpace(textoFinal))
+    {
+        textoFinal = "_El modelo no devolvió contenido visible._";
+    }
+
+    mensajes.Add(new(ChatRole.Assistant, textoFinal));
+    var finalIndex = conversacion.IndexOf(respuestaVisible);
+    if (finalIndex >= 0)
+    {
+        conversacion[finalIndex] = respuestaVisible with { Markdown = textoFinal };
+    }
+}
+
+void SetInputEnabled(bool enabled)
+{
+    entrada.Enabled = enabled;
+    enviar.Enabled = enabled;
+    if (enabled)
+    {
+        entrada.SetFocus();
+    }
+}
+
+void UpdateConversation(bool autoScroll)
+{
+    markdown.Text = RenderConversation(conversacion);
+    if (autoScroll)
+    {
+        markdown.Viewport = markdown.Viewport with { Y = Math.Max(0, markdown.LineCount - 1) };
+    }
+    markdown.SetNeedsDraw();
+}
+
+static string RenderConversation(IEnumerable<VisibleMessage> mensajes)
+{
+    var builder = new StringBuilder();
+    foreach (var mensaje in mensajes)
+    {
+        builder.Append("## ").AppendLine(mensaje.Author);
+        builder.AppendLine();
+        builder.AppendLine(string.IsNullOrWhiteSpace(mensaje.Markdown) ? "_Escribiendo..._" : mensaje.Markdown);
+        builder.AppendLine();
+    }
+
+    return builder.Length == 0
+        ? "# Asistente IA\n\nEscribí un mensaje y presioná Enter para conversar."
+        : builder.ToString();
+}
 
 /// <summary>
 /// Representa un turno visible del diálogo. Se mantiene separado de
