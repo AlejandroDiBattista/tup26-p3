@@ -22,22 +22,27 @@ var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/q
 
 if(url == null){
     Console.WriteLine("falta la API url");
-    return; }
+    return;
+}
 
 IChatClient chat = new OpenAIClient(
-new ApiKeyCredential(apiKey ?? "no-key"),
-  new OpenAIClientOptions {
-    Endpoint = new Uri(url)
-  })
-.GetChatClient(modelo)
-.AsIChatClient();
+    new ApiKeyCredential(apiKey ?? "no-key"),
+    new OpenAIClientOptions {
+        Endpoint = new Uri(url)
+    })
+    .GetChatClient(modelo)
+    .AsIChatClient();
 
 var mensajes = new List<ChatMessage> {
-  new(ChatRole.System , "responde en español.")
+    new(ChatRole.System , "responde en español.")
 };
 
 var logFile = File.AppendText("chat.log");
-void Log(string texto) { logFile.WriteLine(texto); logFile.Flush(); }
+
+void Log(string texto) {
+    logFile.WriteLine(texto);
+    logFile.Flush();
+}
 
 using IApplication app = Application.Create().Init();
 
@@ -56,7 +61,7 @@ var chatBox = new TextView {
     Height = Dim.Fill(3),
     ReadOnly = true,
     WordWrap = true,
-    Text = "Asistente IA\n\n"
+    Text = "🤖 Asistente IA \n\n"
 };
 
 var entrada = new TextField {
@@ -92,30 +97,56 @@ async Task Enviar()
     if(string.IsNullOrWhiteSpace(texto))
         return;
 
-    
     ocupado = true;
-    
+
     entrada.Text = "";
 
-    Agregar($"Vos:\n{texto}\n\n");
+    Agregar($"👤 Vos:\n{texto}\n\n");
+
     Log($"Vos: {texto}");
 
-    
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
-   
-    Agregar("IA:\n");
+    Agregar("🤖 IA:\n");
 
     try {
+
         var respuesta = await chat.GetResponseAsync(mensajes);
+
         Agregar(respuesta.Text + "\n\n");
+
         Log($"IA: {respuesta.Text}");
+
         mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+
     }
     catch(Exception e) {
+
         Agregar($"error: {e.Message}");
+
         Log($"error: {e.Message}");
+
     }
 
     ocupado = false;
 }
+
+boton.Accepting += (s, e) => {
+
+    _ = Enviar();
+
+};
+
+entrada.KeyDown += (s, e) => {
+
+    if(e == Key.Enter)
+        _ = Enviar();
+
+    if(e == Key.Esc)
+        Application.RequestStop();
+
+};
+
+app.Run(ventana);
+
+logFile.Close();
