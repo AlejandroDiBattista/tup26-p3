@@ -7,7 +7,9 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using Terminal.Gui;
 using Terminal.Gui.App;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
@@ -23,13 +25,10 @@ if(url == null){
     return; }
 
 IChatClient chat = new OpenAIClient(
-new ApiKeyCredential(
- apiKey ?? "no-key"),
-
+new ApiKeyCredential(apiKey ?? "no-key"),
   new OpenAIClientOptions {
     Endpoint = new Uri(url)
-  }
-  )
+  })
 .GetChatClient(modelo)
 .AsIChatClient();
 
@@ -37,57 +36,86 @@ var mensajes = new List<ChatMessage> {
   new(ChatRole.System , "responde en español.")
 };
 
-using IApplication app = Application.Create().Init();
-using var ventana = new Window { 
+var logFile = File.AppendText("chat.log");
+void Log(string texto) { logFile.WriteLine(texto); logFile.Flush(); }
 
- Title = $" Asistente IA · {modelo} ", Width = Dim.Fill(), Height = Dim.Fill()
+using IApplication app = Application.Create().Init();
+
+var ventana = new Window {
+    Title = $" Asistente IA · {modelo} ",
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
 };
 
-var chatBox = new TextView { Width = Dim.Fill(), Height = Dim.Fill(3), ReadOnly = true, WordWrap = true,
-Text = """ASISTENTE GROQ"""
+var chatBox = new TextView {
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    ReadOnly = true,
+    WordWrap = true,
+    Text = "Asistente IA\n\n"
 };
 
 var entrada = new TextField {
-    Y = Pos.Bottom(chatBox), 
+    X = 0,
+    Y = Pos.Bottom(chatBox),
     Width = Dim.Fill(10)
 };
 
 var boton = new Button {
     X = Pos.Right(entrada),
     Y = Pos.Bottom(chatBox),
-    Text = "enviar"
+    Text = "Enviar"
 };
 
-ventana.Add(chatBox,entrada,boton);
+ventana.Add(chatBox, entrada, boton);
 
 void Agregar(string texto)
-{ Application.Invoke(() =>
-    {chatBox.Text += texto;
+{
+    chatBox.Text += texto;
     chatBox.MoveEnd();
-});
+    chatBox.SetNeedsDraw();
 }
+
 bool ocupado = false;
 
-async Task Enviar(){
+async Task Enviar()
+{
     if(ocupado)
-    return;
+        return;
 
-var texto = entrada.Text?.Trim();
+    var texto = entrada.Text?.Trim();
 
-if(string.IsNullOrWhiteSpace(texto))
+    if(string.IsNullOrWhiteSpace(texto))
+        return;
 
-return;
+    
+    ocupado = true;
+    
+    entrada.Text = "";
 
-ocupado = true;
-entrada.Text="";
+    Agregar($"Vos:\n{texto}\n\n");
+    Log($"Vos: {texto}");
 
+    
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
-Agregar(
-$"Vos:\n{texto}\n\n"
-);
+   
+    Agregar("IA:\n");
 
+    try {
+        var respuesta = await chat.GetResponseAsync(mensajes);
+        Agregar(respuesta.Text + "\n\n");
+        Log($"IA: {respuesta.Text}");
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+    }
+    catch(Exception e) {
+        Agregar($"error: {e.Message}");
+        Log($"error: {e.Message}");
+    }
+
+    ocupado = false;
 }
-
-
-
-
