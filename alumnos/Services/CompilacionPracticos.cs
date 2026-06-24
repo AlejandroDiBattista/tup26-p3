@@ -13,7 +13,8 @@ static class CompilacionPracticos {
         new Dictionary<int, string[]> {
             [1] = ["sortx.cs"],
             [3] = ["agenda.cs"],
-            [4] = ["servidor.cs", "catalogo.cs"]
+            [4] = ["servidor.cs", "catalogo.cs"],
+            [6] = ["asistente.cs"]
         };
 
     public static CompilacionPracticoResultado Verificar(string rutaPractico, int numeroTp) {

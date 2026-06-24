@@ -69,6 +69,8 @@ Las carpetas de alumnos se crean o normalizan automáticamente antes de los coma
 	- `TP2`: presentado si agrega al menos 20 líneas respecto del enunciado.
 	- `TP3`: presentado si agrega al menos 50 líneas respecto del enunciado.
 	- `TP4`: presentado si agrega al menos 150 líneas respecto del enunciado.
+	- `TP5`: presentado si agrega al menos 200 líneas respecto del enunciado.
+	- `TP6`: presentado si agrega al menos 50 líneas respecto del enunciado.
 - `verificar-compilacion <tp>`: compila únicamente los trabajos entregados (`Aprobado`). Los que fallan pasan a `Revision` y muestran un resumen de errores; los que compilan conservan su estado.
 - `limpiar-archivos-temporales`: elimina `bin`, `obj`, `.vs`, cachés de compilación y temporales SQLite (`-wal`, `-shm`, `-journal`) dentro de `practicos/`, `enunciados/`, `clases/` y `experimentos/`.
 

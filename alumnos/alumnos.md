@@ -9,7 +9,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63268   Condori, Karina Edith           (381)412-4723   kariiedith9315             🟢🟢🟢🟢🟢⚪️   🟢⚪️   No     8    1
 63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    27   10
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    28   10
-63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    27   10
+63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢🟢   🟢⚪️   No    27   10
 63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🔴🔴🟢⚪️   🟢⚪️   No    15    8
 63396   Gil Garau, Atalía Trinidad      (381)456-4405   ataliagg                   🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    26   10
 63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    26   10
@@ -27,8 +27,8 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63393   Ritorto, Lucca                  (381)627-2271   luccardp                   🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    19   10
 63208   Rosconi, Ignacio Federico       (381)533-1344   ignaciorosconi             🔴🟢🔴🔴🟢⚪️   🟢⚪️   No    14    4
 63387   Sosa Gonella, Luca              (381)355-5126   lucasosag1                 🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    21    9
-63546   Sosa Paz, Jeremías              (381)200-7473   jeerepazz                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    29   10
-63547   Sosa Paz, José Lisandro         (381)675-3624   lisandropaz                🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    26   10
+63546   Sosa Paz, Jeremías              (381)200-7473   jeerepazz                  🟢🟢🟢🟢🟢🟢   🟢⚪️   No    29   10
+63547   Sosa Paz, José Lisandro         (381)675-3624   lisandropaz                🟢🟢🟢🟢🟢🟢   🟢⚪️   No    26   10
 63447   Suárez, Sofía Celeste           (381)246-3725   suarezsofia541-alt         🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    26   10
 61490   Valdez Bustamante, Tomás        (381)303-1034   tomas-valdez-bustamante    🟢🟢🔴🟢🟢⚪️   🟢⚪️   No    31    6
 63397   Vercellone, Tomás               (381)676-6267   xtomi2456                  🟢🟢🟢🔴🟢⚪️   🟢⚪️   No    22    9
@@ -38,7 +38,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 ```text
 Legajo  Nombre y Apellido               Teléfono        GitHub                     Prácticos    Exm   Prs   Ast  Nta  Observaciones
 ------  ------------------------------  -------------   -------------------------  ----------   ---   ---   ---  ---  ------------------------
-63385   Almaraz Sintora, Nahuel         (381)502-5082   nahuelalmaraz957-ops       🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    29   10
+63385   Almaraz Sintora, Nahuel         (381)502-5082   nahuelalmaraz957-ops       🟢🟢🟢🟢🟢🟢   🟢⚪️   No    29   10
 63217   Altamiranda Borquez, Bian       (381)581-3104   sofiaaltamiranda22         🟢🔴🔴🔴🔴⚪️   🟢⚪️   No    24    8
 63300   Álvarez, Hernán Fabricio        (381)581-4086   hernancarpalvarez28        🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    23   10
 63313   Ávila Puntano, Benjamín         (381)329-6643   santiagobnj-avila-pun      🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    25   10
@@ -46,7 +46,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 61801   Benega, Maximiliano Abraham     (381)505-9048   abrahambenega              🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    21    6
 63493   Busnelli, Bruno                 (381)366-0607   brunobusnelli              🟢🟢🟢🔴🔴⚪️   🟢⚪️   No    12   10
 63150   Carlino, Joaquín                (381)605-7383   vincent-coffe              🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    12   10
-63341   Carrer, Juan Cruz               (381)632-5727   juancarrer11               🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    20   10
+63341   Carrer, Juan Cruz               (381)632-5727   juancarrer11               🟢🟢🟢🟢🟢🟢   🟢⚪️   No    20   10
 63461   Cativa, Facundo Simón           (381)391-4222   cativafacundo9-gif         🟢🟢🔴🔴🔴⚪️   🟢⚪️   No    17    8
 63218   Cortés, Guillermo Augusto       (381)606-0586   guillecortes01             🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    26   10
 64016   Cura, Rocío Aylen               (381)478-8799   rocura26                   🔴🟢🟢🔴🔴⚪️   🟢⚪️   No    16    7
@@ -54,11 +54,11 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63137   Díaz, José Simón                (381)617-9958   josesimondiaz              🟢🟢🔴🟢🟢⚪️   🟢⚪️   No    27    6
 61641   Figueroa, Nahuel Ramón          (381)353-2589   figueroanahuel16           🟢🔴🔴🔴🔴⚪️   🟢⚪️   No    17    4
 63737   Galván, Rocío Julieta           (381)647-5597   rociogalvani               🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    22   10
-63345   García, Franco Tomás            (381)207-5701   francotms                  🔴🟢🟢🟢🔴⚪️   🟢⚪️   No    15   10
+63345   García, Franco Tomás            (381)207-5701   francotms                  🔴🟢🟢🟢🔴🟢   🟢⚪️   No    15   10
 61057   Getar, Thomas                   (381)336-2147   thomasgetar                🟢🟢🟢🔴🔴⚪️   🟢⚪️   No    21    7
 61489   Gómez, Tomás                    (381)390-5024   tomasgomez18               🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    27    9
-63182   González Rojas, Emmanuel        (381)612-5571   emmanuelgr-web             🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    29   10
-63717   González, Octavio               (381)604-1868   owning01                   🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    28    9
+63182   González Rojas, Emmanuel        (381)612-5571   emmanuelgr-web             🟢🟢🟢🟢🟢🟢   🟢⚪️   No    29   10
+63717   González, Octavio               (381)604-1868   owning01                   🟢🟢🟢🟢🟢🟢   🟢⚪️   No    28    9
 61161   González, Thomas Ezequiel       (381)369-9891   kobinee                    🟢🟢🔴🟢🔴⚪️   🟢⚪️   No    19    5
 62844   Guzmán, Luciano Leonel          (388)665-1248   lucianoleonelguzman        🔴🟢🟢🔴🔴⚪️   🟢⚪️   No    16   10
 63231   Herrera, Rocío Tatiana          (381)208-9907   tatianaherrera-commits     🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    24   10
@@ -71,7 +71,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63494   Medina, Lourdes Natalia         (381)201-7153   lumedina23                 🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    20   10
 63418   Miranda, Gonzalo Emanuel        (381)208-1031   gonzalomiranda456          🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    23    7
 63234   Molina, Lázaro Exequiel         (381)416-0720   lazaro2005-ml              🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    26   10
-63412   Morán, Facundo Martín           (381)301-0206   facumoran                  🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    28   10
+63412   Morán, Facundo Martín           (381)301-0206   facumoran                  🟢🟢🟢🟢🟢🟢   🟢⚪️   No    28   10
 63205   Navarro Aragón, Facundo         (381)466-6665   facundonavarroaragon       🔴🔴🔴🔴🔴⚪️   🟢⚪️   No    20   10
 63220   Pérez Del Rien, Valentina       (381)360-2873   vall19-git                 🟢🟢🟢🟢🟢⚪️   🟢⚪️   No    29   10
 63232   Roldan, Enzo Joaquín            (381)565-4292   roldanebzo                 🟢🟢🟢🔴🔴⚪️   🟢⚪️   No    25    5
