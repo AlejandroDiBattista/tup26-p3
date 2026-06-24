@@ -42,9 +42,15 @@ ChatOptions opciones = new()
 {
     Tools =
     [
-        AIFunctionFactory.Create(herramientas.LeerArchivo),
-        AIFunctionFactory.Create(herramientas.EscribirArchivo),
-        AIFunctionFactory.Create(herramientas.ListarArchivos)
+        AIFunctionFactory.Create(
+            herramientas.LeerArchivo,
+            new AIFunctionFactoryOptions { Name = "leer-archivo" }),
+        AIFunctionFactory.Create(
+            herramientas.EscribirArchivo,
+            new AIFunctionFactoryOptions { Name = "escribir-archivo" }),
+        AIFunctionFactory.Create(
+            herramientas.ListarArchivos,
+            new AIFunctionFactoryOptions { Name = "listar-archivos" })
     ]
 };
 
@@ -53,6 +59,7 @@ List<ChatMessage> mensajes = [
 ];
 
 List<VisibleMessage> conversacion = [];
+var respuestaEnCurso = false;
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -123,7 +130,7 @@ app.Run(ventana);
 async Task EnviarMensajeAsync()
 {
     var textoUsuario = entrada.Text?.ToString()?.Trim();
-    if (string.IsNullOrWhiteSpace(textoUsuario) || !entrada.Enabled)
+    if (string.IsNullOrWhiteSpace(textoUsuario) || respuestaEnCurso)
     {
         return;
     }
@@ -142,15 +149,18 @@ async Task EnviarMensajeAsync()
     }
     catch (Exception ex)
     {
-        conversacion[^1] = conversacion[^1] with
+        app.Invoke(() =>
         {
-            Markdown = $"No pude completar la respuesta.\n\n`{ex.Message}`"
-        };
-        UpdateConversation(autoScroll: true);
+            conversacion[^1] = conversacion[^1] with
+            {
+                Markdown = $"No pude completar la respuesta.\n\n`{ex.Message}`"
+            };
+            UpdateConversation(autoScroll: true);
+        });
     }
     finally
     {
-        SetInputEnabled(true);
+        app.Invoke(() => SetInputEnabled(true));
     }
 }
 
@@ -168,12 +178,13 @@ async Task StreamAssistantResponseAsync(VisibleMessage respuestaVisible)
         var parcial = builder.ToString();
         app.Invoke(() =>
         {
+            var mantenerAbajo = IsScrolledNearBottom();
             var index = conversacion.IndexOf(respuestaVisible);
             if (index >= 0)
             {
                 respuestaVisible = respuestaVisible with { Markdown = parcial };
                 conversacion[index] = respuestaVisible;
-                UpdateConversation(autoScroll: true);
+                UpdateConversation(autoScroll: mantenerAbajo);
             }
         });
     }
@@ -184,16 +195,22 @@ async Task StreamAssistantResponseAsync(VisibleMessage respuestaVisible)
         textoFinal = "_El modelo no devolvió contenido visible._";
     }
 
-    mensajes.Add(new(ChatRole.Assistant, textoFinal));
-    var finalIndex = conversacion.IndexOf(respuestaVisible);
-    if (finalIndex >= 0)
+    app.Invoke(() =>
     {
-        conversacion[finalIndex] = respuestaVisible with { Markdown = textoFinal };
-    }
+        var mantenerAbajo = IsScrolledNearBottom();
+        mensajes.Add(new(ChatRole.Assistant, textoFinal));
+        var finalIndex = conversacion.IndexOf(respuestaVisible);
+        if (finalIndex >= 0)
+        {
+            conversacion[finalIndex] = respuestaVisible with { Markdown = textoFinal };
+            UpdateConversation(autoScroll: mantenerAbajo);
+        }
+    });
 }
 
 void SetInputEnabled(bool enabled)
 {
+    respuestaEnCurso = !enabled;
     entrada.Enabled = enabled;
     enviar.Enabled = enabled;
     if (enabled)
@@ -210,6 +227,12 @@ void UpdateConversation(bool autoScroll)
         markdown.Viewport = markdown.Viewport with { Y = Math.Max(0, markdown.LineCount - 1) };
     }
     markdown.SetNeedsDraw();
+}
+
+bool IsScrolledNearBottom()
+{
+    var ultimaLineaVisible = markdown.Viewport.Y + markdown.Viewport.Height;
+    return ultimaLineaVisible >= Math.Max(0, markdown.LineCount - 2);
 }
 
 static string RenderConversation(IEnumerable<VisibleMessage> mensajes)
@@ -301,7 +324,11 @@ sealed class FileSystemTools
         }
 
         var fullPath = Path.GetFullPath(Path.Combine(root, ruta));
-        if (!fullPath.StartsWith(root, StringComparison.Ordinal))
+        var relative = Path.GetRelativePath(root, fullPath);
+        if (Path.IsPathRooted(ruta)
+            || relative == ".."
+            || relative.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+            || relative.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal))
         {
             throw new UnauthorizedAccessException("La ruta solicitada está fuera del proyecto.");
         }
