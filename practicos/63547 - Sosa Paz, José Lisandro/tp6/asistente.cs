@@ -12,9 +12,11 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using TextMateSharp.Grammars;
 
 DotNetEnv.Env.Load();
 
@@ -177,7 +179,7 @@ sealed class VentanaPrincipal : Window
         this.chat = chat;
         this.opciones = opciones;
 
-        Title = $" AsistenteIA · {modelo} ";
+        Title = $" AsistenteIA - {modelo} ";
         Width = Dim.Fill();
         Height = Dim.Fill();
 
@@ -194,6 +196,7 @@ sealed class VentanaPrincipal : Window
             Width = Dim.Fill(),
             Height = Dim.Fill(),
             CanFocus = true,
+            SyntaxHighlighter = new TextMateSyntaxHighlighter(ThemeName.DarkPlus),
             ViewportSettings = ViewportSettingsFlags.HasVerticalScrollBar
         };
 
