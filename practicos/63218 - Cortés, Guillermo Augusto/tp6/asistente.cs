@@ -1,6 +1,7 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
@@ -17,6 +18,7 @@ DotNetEnv.Env.Load();
 var configuracion = CargarConfiguracion(args);
 var promptSistema = CargarPromptSistema();
 IChatClient chat = CrearCliente(configuracion);
+var opcionesChat = CrearOpcionesChat();
 bool respondiendo = false;
 
 List<ChatMessage> mensajes = [
@@ -98,7 +100,7 @@ async Task EnviarMensajeAsync()
 
     var respuesta = new StringBuilder();
 
-    await foreach (var actualizacion in chat.GetStreamingResponseAsync(mensajes))
+    await foreach (var actualizacion in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
     {
         respuesta.Append(actualizacion.Text);
         conversacion.Text = RenderizarConversacion(mensajes, "Asistente\n\n" + respuesta);
@@ -192,11 +194,88 @@ static string CargarPromptSistema()
 
 static IChatClient CrearCliente(ConfiguracionIA configuracion)
 {
-    return new OpenAIClient(
+    var clienteBase = new OpenAIClient(
             new ApiKeyCredential(configuracion.ApiKey),
             new OpenAIClientOptions { Endpoint = configuracion.Endpoint })
         .GetChatClient(configuracion.Modelo)
         .AsIChatClient();
+
+    return clienteBase
+        .AsBuilder()
+        .UseFunctionInvocation()
+        .Build();
+}
+
+static ChatOptions CrearOpcionesChat()
+{
+    return new ChatOptions {
+        ToolMode = ChatToolMode.Auto,
+        Tools = [
+            AIFunctionFactory.Create((string ruta) => LeerArchivo(ruta), "leer-archivo", "Devuelve el contenido de un archivo de texto."),
+            AIFunctionFactory.Create((string ruta, string contenido) => EscribirArchivo(ruta, contenido), "escribir-archivo", "Crea o sobrescribe un archivo con el contenido indicado."),
+            AIFunctionFactory.Create((string ruta) => ListarArchivos(ruta), "listar-archivos", "Lista los archivos y carpetas de un directorio.")
+        ]
+    };
+}
+
+static string LeerArchivo(string ruta)
+{
+    var rutaCompleta = ResolverRutaProyecto(ruta);
+
+    if (!File.Exists(rutaCompleta))
+    {
+        return $"No se encontro el archivo: {ruta}";
+    }
+
+    return File.ReadAllText(rutaCompleta);
+}
+
+static string EscribirArchivo(string ruta, string contenido)
+{
+    var rutaCompleta = ResolverRutaProyecto(ruta);
+    var directorio = Path.GetDirectoryName(rutaCompleta);
+
+    if (!string.IsNullOrWhiteSpace(directorio))
+    {
+        Directory.CreateDirectory(directorio);
+    }
+
+    File.WriteAllText(rutaCompleta, contenido);
+    return $"Archivo escrito correctamente: {ruta}";
+}
+
+static string ListarArchivos(string ruta)
+{
+    var rutaCompleta = ResolverRutaProyecto(ruta);
+
+    if (!Directory.Exists(rutaCompleta))
+    {
+        return $"No se encontro el directorio: {ruta}";
+    }
+
+    var entradas = Directory.EnumerateFileSystemEntries(rutaCompleta)
+        .Select(entrada => Directory.Exists(entrada)
+            ? $"[DIR] {Path.GetFileName(entrada)}"
+            : $"[ARCHIVO] {Path.GetFileName(entrada)}");
+
+    return string.Join(Environment.NewLine, entradas);
+}
+
+static string ResolverRutaProyecto(string ruta)
+{
+    var baseProyecto = Directory.GetCurrentDirectory();
+    var rutaCombinada = Path.IsPathRooted(ruta)
+        ? ruta
+        : Path.Combine(baseProyecto, ruta);
+
+    var rutaCompleta = Path.GetFullPath(rutaCombinada);
+
+    if (!rutaCompleta.StartsWith(baseProyecto, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException("La ruta debe estar dentro del directorio del proyecto.");
+    }
+
+    return rutaCompleta;
 }
 
 record ConfiguracionIA(string Proveedor, Uri Endpoint, string ApiKey, string Modelo);
