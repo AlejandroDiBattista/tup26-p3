@@ -34,5 +34,15 @@ new ApiKeyCredential(
 .AsIChatClient();
 
 var mensajes = new List<ChatMessage> {
-  new(ChatRole.System"responde en español.")
+  new(ChatRole.System , "responde en español.")
+};
+
+using IApplication app = Application.Create().Init();
+using var ventana = new Window { 
+
+ Title = $" Asistente IA · {modelo} ", Width = Dim.Fill(), Height = Dim.Fill()
+};
+
+var chatBox = new TextView { Width = Dim.Fill(), Height = Dim.Fill(3), ReadOnly = true, WordWrap = true,
+Text = """ASISTENTE GROQ"""
 };
