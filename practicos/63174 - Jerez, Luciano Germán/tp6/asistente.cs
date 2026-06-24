@@ -38,7 +38,7 @@ if (string.IsNullOrWhiteSpace(url))
 
 IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new OpenAIClientOptions { Endpoint = NormalizeOpenAIEndpoint(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
 
@@ -242,6 +242,25 @@ bool IsScrolledNearBottom()
 {
     var ultimaLineaVisible = markdown.Viewport.Y + markdown.Viewport.Height;
     return ultimaLineaVisible >= Math.Max(0, markdown.LineCount - 2);
+}
+
+static Uri NormalizeOpenAIEndpoint(string configuredUrl)
+{
+    var endpoint = new Uri(configuredUrl, UriKind.Absolute);
+    const string chatCompletionsSuffix = "/chat/completions";
+    if (!endpoint.AbsolutePath.EndsWith(chatCompletionsSuffix, StringComparison.OrdinalIgnoreCase))
+    {
+        return endpoint;
+    }
+
+    // OpenAIClientOptions.Endpoint espera el endpoint base del servicio. El
+    // .env de la cátedra usa rutas compatibles con Chat Completions, por eso se
+    // recorta solo ese sufijo conocido y se conserva el resto del host/base path.
+    var builder = new UriBuilder(endpoint);
+    builder.Path = endpoint.AbsolutePath[..^chatCompletionsSuffix.Length].TrimEnd('/');
+    builder.Query = string.Empty;
+    builder.Fragment = string.Empty;
+    return builder.Uri;
 }
 
 static string RenderConversation(IEnumerable<VisibleMessage> mensajes)
