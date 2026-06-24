@@ -59,3 +59,12 @@ var boton = new Button {
 };
 
 ventana.Add(chatBox,entrada,boton);
+
+void Agregar(string texto)
+{ Application.Invoke(() =>
+    {chatBox.Text += texto;
+    chatBox.MoveEnd();
+});
+
+}
+
