@@ -9,7 +9,7 @@ using System.ComponentModel;
 using System.Text;
 
 // Carga las variables de entorno desde el archivo .env.
-DotNetEnv.Env.TraversePath().Load();
+DotNetEnv.Env.Load();
 
 // Define el proveedor. De manera predeterminada, usa OpenAI.
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
@@ -129,7 +129,7 @@ class Agente {
     }
 
     static string ResolverRuta(string ruta) {
-        var workspace = Path.GetFullPath("src");
+        var workspace = Path.GetFullPath("./40.src");
         Directory.CreateDirectory(workspace);
 
         var rutaCompleta  = Path.GetFullPath(Path.Combine(workspace, ruta));

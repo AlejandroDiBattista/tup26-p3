@@ -10,14 +10,11 @@ using System.ClientModel;
 using System.Text;
 
 DotNetEnv.Env.Load();
-
 string proveedor = (args.Length > 0 ? args[0] : "openai").ToUpper();
 
 var inicio = DateTime.Now;
 var salida = "";
 
-// Console.InputEncoding  = Encoding.UTF16;
-// Console.OutputEncoding = Encoding.UTF16;
 Console.Clear();
 
 var historia = """

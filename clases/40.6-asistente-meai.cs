@@ -7,7 +7,7 @@ using System.ClientModel;
 using System.Text;
 
 // Carga las variables de entorno desde el archivo .env.
-DotNetEnv.Env.TraversePath().Load();
+DotNetEnv.Env.Load();
 
 // Usa OpenAI como proveedor predeterminado.
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
