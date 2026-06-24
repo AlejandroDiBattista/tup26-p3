@@ -106,16 +106,16 @@ var entrada = new TextField
 {
     X = 1,
     Y = 1,
-    Width = Dim.Fill(14),
+    Width = Dim.Fill(18),
     Height = 1
 };
 
 var enviar = new Button
 {
     Text = "Enviar",
-    X = Pos.AnchorEnd(12),
+    X = Pos.AnchorEnd(16),
     Y = 1,
-    Width = 10,
+    Width = 14,
     IsDefault = true
 };
 
