@@ -59,23 +59,38 @@ var btnEnviar = new Button {
     IsDefault = true
 };
 
-btnEnviar.Accepting += (s, e) => {
+btnEnviar.Accepting += async (s, e) => {
     var texto = inputTexto.Text;
     if (string.IsNullOrWhiteSpace(texto)) {
         e.Handled = true;
         return;
     }
 
-    // 1. Guardamos el mensaje del usuario en la memoria de la IA
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
-    
-    // 2. Limpiamos la caja de texto
     inputTexto.Text = "";
-    
-    // 3. Redibujamos la pantalla
     ActualizarPantalla();
+
+    inputTexto.Enabled = false;
+    btnEnviar.Enabled = false;
+    historialView.Text += "### Asistente\n*Pensando...*\n\n";
     
     e.Handled = true;
+    
+    try {
+        var respuesta = await chat.GetResponseAsync(mensajes);
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+    }
+    catch (Exception ex) {
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, $"**Error:** {ex.Message}"));
+    }
+
+    // 4. Volvemos al hilo de la interfaz para actualizar y desbloquear
+    Application.Invoke(() => {
+        ActualizarPantalla();
+        inputTexto.Enabled = true;
+        btnEnviar.Enabled = true;
+        inputTexto.SetFocus(); // Devolvemos el cursor a la caja de texto
+    });
 };
 
 panelInferior.Add(inputTexto, btnEnviar);
