@@ -18,4 +18,21 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/qwen3-32b";
 
+if(url == null){
+    Console.WriteLine("falta la API url");
+    return; }
 
+IChatClient chat = new OpenAIClient(
+new ApiKeyCredential(
+ apiKey ?? "no-key"),
+
+  new OpenAIClientOptions {
+    Endpoint = new Uri(url)
+  }
+  )
+.GetChatClient(modelo)
+.AsIChatClient();
+
+var mensajes = new List<ChatMessage> {
+  new(ChatRole.System"responde en español.")
+};
