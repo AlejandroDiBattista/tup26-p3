@@ -68,11 +68,6 @@ ventana.Add(historial);
 ventana.Add(entrada);
 ventana.Add(botonEnviar);
 
-ventana.KeyDown += (_, e) =>
-{
-    Console.WriteLine($"Tecla: {e.KeyCode}");
-};
-
 async Task EnviarMensaje()
 {
     var texto = entrada.Text?.ToString()?.Trim();
@@ -89,18 +84,27 @@ async Task EnviarMensaje()
     botonEnviar.Enabled = false;
     entrada.Enabled = false;
 
-    try
+  try
+{
+    historial.Text += "\n# Asistente\n\n";
+
+    string respuestaCompleta = "";
+
+    await foreach (var update in chat.GetStreamingResponseAsync(mensajes))
     {
-        var respuesta = await chat.GetResponseAsync(mensajes);
+        respuestaCompleta += update.Text;
 
-        mensajes.Add(
-            new ChatMessage(
-                ChatRole.Assistant,
-                respuesta.Text));
-
-        historial.Text +=
-            $"\n# Asistente\n\n{respuesta.Text}\n";
+        historial.Text =
+            historial.Text.ToString() + update.Text;
     }
+
+    historial.Text += "\n";
+
+    mensajes.Add(
+        new ChatMessage(
+            ChatRole.Assistant,
+            respuestaCompleta));
+}
     catch(Exception ex)
     {
         historial.Text +=
