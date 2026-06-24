@@ -49,7 +49,7 @@ List<ChatMessage> mensajes = [
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
-    Title = $" Asistente IA · Búnker Local ({modelo}) ",
+    Title = $" TP6: Asistente IA - 63546 - Jeremías Sosa Paz ({modelo}) ",
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
