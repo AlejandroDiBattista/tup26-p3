@@ -8,6 +8,7 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using System.ComponentModel;
 using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
@@ -61,7 +62,6 @@ async Task EnviarAsync()
     if (texto == "")
         return;
 
-    // Bloquea la entrada mientras responde.
     ocupada = true;
     entrada.Enabled = false;
     enviar.Enabled = false;
@@ -71,7 +71,6 @@ async Task EnviarAsync()
     conversacion += $"\n\n# Vos\n\n{texto}\n\n# Asistente\n\n";
     markdown.Text = conversacion;
 
-    // Respuesta completa, sin streaming por ahora.
     var respuesta = await chat.ResponderAsync();
     chat.Registrar(ChatRole.Assistant, respuesta);
 
@@ -84,16 +83,16 @@ async Task EnviarAsync()
     entrada.SetFocus();
 }
 
-entrada.KeyDown += (_, key) =>
+entrada.KeyDown += async (_, key) =>
 {
     if (key == Key.Enter)
-        _ = EnviarAsync();
+        await EnviarAsync();
 };
 
-enviar.Accepting += (_, e) =>
+enviar.Accepting += async (_, e) =>
 {
     e.Handled = true;
-    _ = EnviarAsync();
+    await EnviarAsync();
 };
 
 ventana.Add(markdown, entrada, enviar);
@@ -102,8 +101,11 @@ app.Run(ventana);
 public sealed class Agente
 {
     readonly IChatClient cliente;
+    readonly ChatOptions opciones;
     readonly List<ChatMessage> historia = [];
     public string Modelo { get; }
+
+    static readonly string Workspace = Path.GetFullPath(".");
 
     public Agente(string proveedor)
     {
@@ -111,11 +113,31 @@ public sealed class Agente
         var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "";
         Modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.5";
 
+        opciones = new ChatOptions
+        {
+            Tools =
+            [
+                AIFunctionFactory.Create(LeerArchivo, new()
+                {
+                    Name = "leer-archivo",
+                    Description = "Devuelve el contenido de un archivo de texto."
+                }),
+                AIFunctionFactory.Create(ListarArchivos, new()
+                {
+                    Name = "listar-archivos",
+                    Description = "Lista los archivos y carpetas de un directorio."
+                })
+            ]
+        };
+
         cliente = new OpenAIClient(
                 new ApiKeyCredential(apiKey),
                 new OpenAIClientOptions { Endpoint = new Uri(apiUrl) })
             .GetChatClient(Modelo)
-            .AsIChatClient();
+            .AsIChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation()
+            .Build();
     }
 
     public void Registrar(ChatRole rol, string texto)
@@ -125,7 +147,44 @@ public sealed class Agente
 
     public async Task<string> ResponderAsync()
     {
-        var respuesta = await cliente.GetResponseAsync(historia);
+        var respuesta = await cliente.GetResponseAsync(historia, opciones);
         return respuesta.Text ?? "";
+    }
+
+    static string LeerArchivo(
+        [Description("Ruta relativa del archivo a leer.")]
+        string ruta)
+    {
+        var file = ResolverRuta(ruta);
+
+        return File.Exists(file)
+            ? File.ReadAllText(file)
+            : $"No se encontró el archivo: {ruta}";
+    }
+
+    static string ListarArchivos(
+        [Description("Ruta relativa del directorio. Usá '.' para la raíz.")]
+        string ruta = ".")
+    {
+        var dir = ResolverRuta(ruta);
+
+        if (!Directory.Exists(dir))
+            return $"No se encontró el directorio: {ruta}";
+
+        return string.Join(
+            Environment.NewLine,
+            Directory.EnumerateFileSystemEntries(dir).Select(Path.GetFileName));
+    }
+
+    static string ResolverRuta(string ruta)
+    {
+        var workspace = Workspace;
+        var rutaCompleta = Path.GetFullPath(Path.Combine(workspace, ruta));
+        var prefijo = workspace.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        if (rutaCompleta != workspace && !rutaCompleta.StartsWith(prefijo, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("No se puede acceder a rutas fuera del espacio de trabajo.");
+
+        return rutaCompleta;
     }
 }
