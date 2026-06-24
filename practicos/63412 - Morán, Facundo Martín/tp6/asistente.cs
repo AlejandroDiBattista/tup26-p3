@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -23,9 +24,36 @@ IChatClient chat = new OpenAIClient(
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
+    chat = new ChatClientBuilder(chat)
+    .UseFunctionInvocation()
+    .Build();
+var proyecto = Directory.GetCurrentDirectory();
 var mensajes = new List<ChatMessage>
 {
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+};
+var opciones = new ChatOptions
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(
+            LeerArchivo,
+            "leer-archivo",
+            "Devuelve el contenido de un archivo."
+        ),
+
+        AIFunctionFactory.Create(
+            EscribirArchivo,
+            "escribir-archivo",
+            "Crea o sobrescribe un archivo."
+        ),
+
+        AIFunctionFactory.Create(
+            ListarArchivos,
+            "listar-archivos",
+            "Lista archivos y carpetas."
+        )
+    ]
 };
 var turnos = new List<TurnoPantalla>();   
 var enviando = false;
@@ -121,7 +149,10 @@ turnos.Add(turnoAsistente);
 
 await foreach (
     var fragmento
-    in chat.GetStreamingResponseAsync(mensajes)
+    in chat.GetStreamingResponseAsync(
+    mensajes,
+    opciones
+)
 )
 {
     if (string.IsNullOrEmpty(fragmento.Text))
@@ -160,6 +191,8 @@ finally
 
     entrada.SetFocus();
 }
+
+}
 void RefrescarConversacion()
 {
     app.Invoke(() =>
@@ -181,6 +214,46 @@ string TextoConversacion()
             t => $"# {t.Rol}\n\n{t.Contenido}"
         )
     );
+}
+string LeerArchivo(string ruta)
+{
+    var path = ResolverRutaProyecto(ruta);
+
+    return File.ReadAllText(path);
+}
+string EscribirArchivo(
+    string ruta,
+    string contenido
+)
+{
+    var path = ResolverRutaProyecto(ruta);
+
+    Directory.CreateDirectory(
+        Path.GetDirectoryName(path)!
+    );
+
+    File.WriteAllText(
+        path,
+        contenido
+    );
+
+    return $"Archivo escrito: {ruta}";
+}
+string ListarArchivos(string ruta)
+{
+    var path = ResolverRutaProyecto(ruta);
+
+    return string.Join(
+        Environment.NewLine,
+        Directory.EnumerateFileSystemEntries(path)
+    );
+}
+string ResolverRutaProyecto(string ruta)
+{
+    var combinada =
+        Path.Combine(proyecto, ruta);
+
+    return Path.GetFullPath(combinada);
 }
 sealed class TurnoPantalla
 {
