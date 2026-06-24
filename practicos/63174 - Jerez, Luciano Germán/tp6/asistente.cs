@@ -1,12 +1,15 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
 using Microsoft.Extensions.AI;
 using OpenAI;
+using System.ComponentModel;
 using System.ClientModel;
+using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -18,20 +21,37 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
-IChatClient chat = new OpenAIClient(
+if (string.IsNullOrWhiteSpace(url))
+{
+    throw new InvalidOperationException($"Falta configurar {proveedor}_API_URL en el entorno o en .env.");
+}
+
+IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
+
+var herramientas = new FileSystemTools(AppContext.BaseDirectory);
+ChatOptions opciones = new()
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(herramientas.LeerArchivo),
+        AIFunctionFactory.Create(herramientas.EscribirArchivo),
+        AIFunctionFactory.Create(herramientas.ListarArchivos)
+    ]
+};
 
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "AGENTS.md")))
 ];
 
-var respuesta = await chat.GetResponseAsync(mensajes);
+List<VisibleMessage> conversacion = [];
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -40,7 +60,7 @@ using var ventana = new Window {
 };
 
 ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
+    Text = "# Asistente IA\n\nEscribí un mensaje y presioná Enter para conversar.",
     Width = Dim.Fill(), Height = Dim.Fill()
 });
 
@@ -49,3 +69,85 @@ ventana.Add(new Markdown {
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 
 app.Run(ventana);
+
+/// <summary>
+/// Representa un turno visible del diálogo. Se mantiene separado de
+/// <see cref="ChatMessage"/> porque el mensaje de sistema no debe renderizarse.
+/// </summary>
+sealed record VisibleMessage(string Author, string Markdown);
+
+/// <summary>
+/// Herramientas expuestas al modelo para operar únicamente dentro de la carpeta
+/// del trabajo práctico. Todas las rutas relativas se resuelven contra ese
+/// directorio y se rechazan los intentos de escapar mediante rutas absolutas o
+/// segmentos "..".
+/// </summary>
+sealed class FileSystemTools
+{
+    private readonly string root;
+
+    public FileSystemTools(string root)
+    {
+        this.root = Path.GetFullPath(root);
+    }
+
+    [Description("Devuelve el contenido de un archivo de texto dentro del proyecto.")]
+    public async Task<string> LeerArchivo(
+        [Description("Ruta relativa del archivo a leer.")] string ruta)
+    {
+        var path = ResolveInsideRoot(ruta);
+        if (!File.Exists(path))
+        {
+            return $"No existe el archivo: {ruta}";
+        }
+
+        return await File.ReadAllTextAsync(path);
+    }
+
+    [Description("Crea o sobrescribe un archivo de texto dentro del proyecto.")]
+    public async Task<string> EscribirArchivo(
+        [Description("Ruta relativa del archivo a crear o sobrescribir.")] string ruta,
+        [Description("Contenido textual que debe guardarse.")] string contenido)
+    {
+        var path = ResolveInsideRoot(ruta);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await File.WriteAllTextAsync(path, contenido);
+        return $"Archivo escrito: {ruta}";
+    }
+
+    [Description("Lista archivos y carpetas de un directorio dentro del proyecto.")]
+    public string ListarArchivos(
+        [Description("Ruta relativa del directorio a listar. Usar punto para la carpeta raíz.")] string ruta)
+    {
+        var path = ResolveInsideRoot(ruta);
+        if (!Directory.Exists(path))
+        {
+            return $"No existe el directorio: {ruta}";
+        }
+
+        var builder = new StringBuilder();
+        foreach (var item in Directory.EnumerateFileSystemEntries(path).OrderBy(Path.GetFileName))
+        {
+            var name = Path.GetFileName(item);
+            builder.AppendLine(Directory.Exists(item) ? $"{name}/" : name);
+        }
+
+        return builder.Length == 0 ? "El directorio está vacío." : builder.ToString();
+    }
+
+    private string ResolveInsideRoot(string ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta))
+        {
+            throw new ArgumentException("La ruta no puede estar vacía.", nameof(ruta));
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(root, ruta));
+        if (!fullPath.StartsWith(root, StringComparison.Ordinal))
+        {
+            throw new UnauthorizedAccessException("La ruta solicitada está fuera del proyecto.");
+        }
+
+        return fullPath;
+    }
+}
