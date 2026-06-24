@@ -17,35 +17,99 @@ var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+Console.WriteLine($"Proveedor: {proveedor}");
+Console.WriteLine($"URL: {url}");
+Console.WriteLine($"Modelo: {modelo}");
+Console.WriteLine($"API Key cargada: {!string.IsNullOrWhiteSpace(apiKey)}");
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new OpenAIClientOptions { Endpoint = new Uri(url!) })
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
-
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+var mensajes = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+using IApplication app = Application.Create().Init();
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+using var ventana = new Window
+{
+    Title = $" Asistente IA · {modelo} ",
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
+};
+
+var historial = new Markdown
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3)
+};
+
+var entrada = new TextField
+{
+    X = 0,
+    Y = Pos.AnchorEnd(1),
+    Width = Dim.Fill(12)
+};
+
+var botonEnviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(entrada),
+    Y = Pos.AnchorEnd(1)
+};
+
+ventana.Add(historial);
+ventana.Add(entrada);
+ventana.Add(botonEnviar);
+
+async Task EnviarMensaje()
+{
+    var texto = entrada.Text?.ToString()?.Trim();
+
+    if (string.IsNullOrWhiteSpace(texto))
+        return;
+
+    entrada.Text = "";
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    historial.Text += $"\n# Vos\n\n{texto}\n";
+
+    botonEnviar.Enabled = false;
+    entrada.Enabled = false;
+
+    try
+    {
+        var respuesta = await chat.GetResponseAsync(mensajes);
+
+        mensajes.Add(
+            new ChatMessage(
+                ChatRole.Assistant,
+                respuesta.Text));
+
+        historial.Text +=
+            $"\n# Asistente\n\n{respuesta.Text}\n";
+    }
+    catch(Exception ex)
+    {
+        historial.Text +=
+            $"\n# Error\n\n{ex.Message}\n";
+    }
+
+    botonEnviar.Enabled = true;
+    entrada.Enabled = true;
+}
+
+botonEnviar.Accepting += async (_, _) =>
+{
+    await EnviarMensaje();
+};
 
 app.Run(ventana);
+
