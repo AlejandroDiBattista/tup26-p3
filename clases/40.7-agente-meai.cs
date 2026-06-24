@@ -18,13 +18,7 @@ var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var chat = new Agente(proveedor);
 
 chat.Registrar(ChatRole.System, $"""
-    Sos un asistente util.
-    Respondé en español claro, directo y técnico.
-    Priorizá ejemplos en C# cuando el usuario no indique lenguaje.
-    Si falta contexto, pedí solo el dato mínimo necesario.
-    
-    Usá las herramientas disponibles para listar, leer y escribir archivos.
-    Cuando te pidan generar código, guardalo en un archivo dentro del espacio de trabajo.
+    Leer 'instrucciones.md' y hacelo.
 """);
 
 Console.OutputEncoding = Encoding.UTF8;
@@ -108,7 +102,14 @@ class Agente {
         return string.Join(Environment.NewLine, elementos);
     }
 
+    static void Log(string mensaje){
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"<<{mensaje}>>");
+        Console.ForegroundColor = ConsoleColor.Black;
+    }
+    
     static string Leer( [Description("Ruta relativa del archivo que se va a leer.")] string ruta ) {
+        Log($"Leer de {ruta}");
         var rutaCompleta = ResolverRuta(ruta);
         return File.Exists(rutaCompleta)
             ? File.ReadAllText(rutaCompleta)
@@ -119,6 +120,7 @@ class Agente {
         [Description("Ruta relativa del archivo que se va a crear o reemplazar.")] string ruta,
         [Description("Contenido completo que se guardará en el archivo.")] string contenido) {
         
+        Log($"Escribir en {ruta}");
         var rutaCompleta = ResolverRuta(ruta);
         Directory.CreateDirectory(Path.GetDirectoryName(rutaCompleta)!);
         File.WriteAllText(rutaCompleta, contenido);
