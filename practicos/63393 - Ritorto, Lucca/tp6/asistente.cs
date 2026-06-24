@@ -24,26 +24,67 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
-
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
     Width = Dim.Fill(), Height = Dim.Fill()
 };
+var conversacion = new Markdown
+{
+    Text = "# Asistente IA\n\nEscribí un mensaje para comenzar.",
+    Width = Dim.Fill(),
+ Height = Dim.Fill(2)
+};
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+ventana.Add(conversacion);
 
+var entrada = new TextField
+{
+    X = 0,
+    Y = Pos.Bottom(conversacion),
+    Width = Dim.Fill(12),
+    Height = 1
+};
+
+ventana.Add(entrada);
+var botonEnviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(entrada) + 1,
+    Y = Pos.Bottom(conversacion)
+};
+
+ventana.Add(botonEnviar);
+botonEnviar.Accepting += async (s, e) =>
+{
+    var texto = entrada.Text.ToString();
+
+    if (string.IsNullOrWhiteSpace(texto))
+        return;
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    conversacion.Text += "\n\n# Asistente\n\n";
+
+var respuesta = await chat.GetResponseAsync(mensajes);
+
+var textoRespuesta = respuesta.Text;
+
+if (textoRespuesta.Contains("<think>") && textoRespuesta.Contains("</think>"))
+{
+    var inicio = textoRespuesta.IndexOf("<think>");
+    var fin = textoRespuesta.IndexOf("</think>") + "</think>".Length;
+
+    textoRespuesta = textoRespuesta.Remove(inicio, fin - inicio).Trim();
+}
+
+mensajes.Add(new ChatMessage(ChatRole.Assistant, textoRespuesta));
+
+conversacion.Text += textoRespuesta;
+};
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
