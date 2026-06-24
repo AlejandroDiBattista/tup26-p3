@@ -68,6 +68,11 @@ ventana.Add(historial);
 ventana.Add(entrada);
 ventana.Add(botonEnviar);
 
+ventana.KeyDown += (_, e) =>
+{
+    Console.WriteLine($"Tecla: {e.KeyCode}");
+};
+
 async Task EnviarMensaje()
 {
     var texto = entrada.Text?.ToString()?.Trim();
@@ -105,6 +110,10 @@ async Task EnviarMensaje()
     botonEnviar.Enabled = true;
     entrada.Enabled = true;
 }
+entrada.Accepting += async (_, _) =>
+{
+    await EnviarMensaje();
+};
 
 botonEnviar.Accepting += async (_, _) =>
 {
