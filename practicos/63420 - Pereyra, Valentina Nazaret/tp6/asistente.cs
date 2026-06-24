@@ -111,14 +111,14 @@ using IApplication app = Application.Create().Init();
 
 using var ventana = new Window
 {
-    Title = $" Asistente AI · {modelo} · Esc para salir ",
+    Title = $" ◆ Asistente AI · {modelo} · [Esc] para salir ",
     Width = Dim.Fill(),
     Height = Dim.Fill()
 };
 
 var marcoConversacion = new FrameView
 {
-    Title = " ▶ Iniciar Conversación ", 
+    Title = " 💬 Conversacion ",
     X = 0, Y = 0,
     Width = Dim.Fill(),
     Height = Dim.Fill() - 3
@@ -130,10 +130,12 @@ var panelConversacion = new Markdown
     Height = Dim.Fill(),
     Text = "_Escribi un mensaje para comenzar._\n"
 };
+
 marcoConversacion.Add(panelConversacion);
 
-var marcoEntrada = new FrameView {
-    Title = " ⌨️ Mensaje ",
+var marcoEntrada = new FrameView
+{
+    Title = " ✎ Mensaje  [Enter] enviar  [Esc] salir ",
     X = 0,
     Y = Pos.Bottom(marcoConversacion),
     Width = Dim.Fill(),
@@ -146,8 +148,9 @@ var panelEntrada = new TextField
     Width = Dim.Fill() - 12
 };
 
-var btnEnviar = new Button {
-    Title = " ▶ Enviar ", // Usando un carácter de flecha Unicode
+var btnEnviar = new Button
+{
+    Title = " ➤ Enviar",
     X = Pos.Right(panelEntrada) + 1,
     Y = 0
 };
@@ -164,7 +167,7 @@ string ConstruirHistorial(string respuestaActual = "")
     var sb = new System.Text.StringBuilder();
     foreach (var msg in mensajes.Where(m => m.Role != ChatRole.System))
     {
-        var nombre = msg.Role == ChatRole.User ? "## Vos" : "## Asistente";
+        var nombre = msg.Role == ChatRole.User ? "## ▶ Vos" : "## ◆ Asistente";
         sb.AppendLine(nombre);
         sb.AppendLine();
         sb.AppendLine(msg.Text);
@@ -174,12 +177,19 @@ string ConstruirHistorial(string respuestaActual = "")
     }
     if (!string.IsNullOrEmpty(respuestaActual))
     {
-        sb.AppendLine("## Asistente");
+        sb.AppendLine("## ◆ Asistente");
         sb.AppendLine();
         sb.AppendLine(respuestaActual);
     }
     return sb.ToString();
 }
+
+void ActualizarPanel(string texto)
+{
+    panelConversacion.Text = texto;
+    panelConversacion.SetNeedsDraw();
+}
+
 
 async Task EnviarMensajeAsync()
 {
@@ -192,47 +202,48 @@ async Task EnviarMensajeAsync()
 
     mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
 
-    app.Invoke(() =>
-    {
-        panelConversacion.Text = ConstruirHistorial("_Pensando..._");
-    });
+    app.Invoke(() => ActualizarPanel(ConstruirHistorial("_Pensando..._")));
 
     string textoAsistente = "";
 
     try
     {
-        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, chatOptions))
-        {
-            if (fragmento.Text != null)
-            {
-                textoAsistente += fragmento.Text;
-                var snapshot = textoAsistente;
-                app.Invoke(() =>
-                {
-                    panelConversacion.Text = ConstruirHistorial(snapshot);
-                });
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        textoAsistente += $"\n\n**Error de conexión:** {ex.Message}";
-        app.Invoke(() =>
-        {
-            panelConversacion.Text = ConstruirHistorial(textoAsistente);
-        });
-    }
+      
 
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, textoAsistente));
+await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, chatOptions))
+{
+    if (fragmento.Text is null)
+        continue;
+
+    textoAsistente += fragmento.Text;
+
+    var snapshot = textoAsistente;
 
     app.Invoke(() =>
     {
-        panelConversacion.Text = ConstruirHistorial();
+        ActualizarPanel(ConstruirHistorial(snapshot));
     });
+}
 
-    panelEntrada.Enabled = true;
-    btnEnviar.Enabled    = true;
-    panelEntrada.SetFocus();
+    }
+    catch (Exception ex)
+    {
+        textoAsistente = $"**Error al conectar:** {ex.Message}\n\n_Podés intentar de nuevo._";
+        app.Invoke(() => ActualizarPanel(ConstruirHistorial(textoAsistente)));
+    }
+    finally
+    {
+        if (!string.IsNullOrWhiteSpace(textoAsistente))
+            mensajes.Add(new ChatMessage(ChatRole.Assistant, textoAsistente));
+
+        app.Invoke(() =>
+        {
+            ActualizarPanel(ConstruirHistorial());
+            panelEntrada.Enabled = true;
+            btnEnviar.Enabled    = true;
+            panelEntrada.SetFocus();
+        });
+    }
 }
 
 #endregion
@@ -246,22 +257,27 @@ btnEnviar.Accepting += (s, e) =>
 
 panelEntrada.KeyDown += (s, e) =>
 {
+    // Usamos ToString() como tenías al principio, que es 100% seguro
     if (e.KeyCode.ToString() == "Enter" && panelEntrada.Enabled)
     {
         e.Handled = true;
         _ = EnviarMensajeAsync();
     }
+    
     if (e.KeyCode.ToString() == "Esc")
+    {
         app.RequestStop();
+    }
 };
 
 ventana.KeyDown += (s, e) =>
 {
     if (e.KeyCode.ToString() == "Esc")
+    {
         app.RequestStop();
+    }
 };
 
 #endregion
 
 app.Run(ventana);
-
