@@ -759,7 +759,7 @@
     }
 
     function extraerEstados(texto) {
-      return (texto.match(/[🟢🟡🟠🔴⚪🟤]/gu) || []).map(emoji => emoji === '⚪' ? '⚪️' : emoji);
+      return texto.match(/[🟢🟡🟠🔴⚪🟤]/gu) || [];
     }
 
     function contarEstados(texto) {
@@ -775,7 +775,7 @@
       }
 
       for (let indice = 0; indice < maxEstados; indice++) {
-        const columnaVacia = estadosPorAlumno.every(estados => (estados[indice] || '⚪️') === '⚪️');
+        const columnaVacia = estadosPorAlumno.every(estados => (estados[indice] || '⚪') === '⚪');
 
         if (columnaVacia) {
           return indice;
@@ -789,7 +789,7 @@
       const estados = extraerEstados(texto);
 
       while (estados.length < total) {
-        estados.push('⚪️');
+        estados.push('⚪');
       }
 
       return estados.slice(0, total);
@@ -802,7 +802,7 @@
         case '🟠': return 'Revisión';
         case '🔴': return 'Desaprobado';
         case '⚫️': return 'Mal';
-        case '⚪️': return 'Sin estado';
+        case '⚪': return 'Sin estado';
         default: return 'Sin estado';
       }
     }
@@ -841,7 +841,7 @@
         case 'sin_estado':
         case 'vacio':
         case 'vacia':
-          return '⚪️';
+          return '⚪';
         default:
           return null;
       }

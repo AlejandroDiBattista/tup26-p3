@@ -653,9 +653,9 @@ static class AlumnosManager {
 
     static string ToEmojis(this List<Estado> estados, int minimo = 0, int maximo = 0) {
         string valor = string.Join(string.Empty, estados.Select(e => e.ToEmoji()));
-        valor = valor.Replace(" ", "⚪️");
+        valor = valor.Replace(" ", "⚪");
         while (StringInfo.ParseCombiningCharacters(valor).Length < minimo) {
-            valor += "⚪️";
+            valor += "⚪";
         }
         return maximo > 0 ? TomarElementosTexto(valor, maximo) : valor;
     }
@@ -700,7 +700,7 @@ static class AlumnosManager {
     }
 
     static bool EsEstadoVacio(string texto) =>
-        texto is "⚪" or "⚪️" or " ";
+        texto is "⚪" or " ";
 
     static void AppendVCardContacto(StringBuilder sb, Alumno alumno) {
         string apellido = FormatearTextoVcard(alumno.Apellido);

@@ -344,7 +344,7 @@ static class AlumnosCliActions {
                     // alumno.Observaciones = string.Empty;
 
                     Estado estadoAnterior = alumno.EstadoPractico(numeroTp);
-                    Estado estado = Estado.Desaprobado;
+                    Estado estado = estadoAnterior;
                     if (configuracion.ParecePresentado(lineasTotales, lineasAgregadas)) {
                         estado = Estado.Aprobado;
                         HashSet<string> lineasCodigo = ObtenerLineasCodigoNormalizadas(rutaPractico);
@@ -352,8 +352,8 @@ static class AlumnosCliActions {
                         trabajosPresentados.Add(new(alumno, rutaPractico, lineasCodigo));
                     }
 
-                    alumno.Practico(numeroTp, estado);
                     if (estadoAnterior != estado) {
+                        alumno.Practico(numeroTp, estado);
                         presentacionesCambiadas.Add(new(alumno, estadoAnterior, estado, lineasTotales, lineasAgregadas));
                     }
                     tarea.Increment(1);

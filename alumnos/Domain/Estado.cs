@@ -18,7 +18,7 @@ static class EstadoExtensions {
             Estado.Pendiente   => "🟡",
             Estado.Aprobado    => "🟢",
             Estado.Mal         => "🟤",
-            Estado.Vacio       => "⚪️",
+            Estado.Vacio       => "⚪",
             _ => string.Empty
         };
     }
