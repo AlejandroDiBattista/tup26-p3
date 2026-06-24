@@ -26,7 +26,7 @@ var chat = configuracion.CrearCliente()
 
 var mensajes = new List<ChatMessage>
 {
-    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+    new(ChatRole.System, File.ReadAllText(Rutas.ArchivoDelProyecto("AGENTS.md")))
 };
 
 var opciones = new ChatOptions
@@ -58,7 +58,7 @@ sealed record Configuracion(string Proveedor, string Url, string ApiKey, string 
             apiKey = "no-requiere-key";
         }
 
-        return new Configuracion(proveedor, url, apiKey, modelo);
+        return new Configuracion(proveedor, NormalizarUrl(url), apiKey, modelo);
     }
 
     public IChatClient CrearCliente()
@@ -68,6 +68,30 @@ sealed record Configuracion(string Proveedor, string Url, string ApiKey, string 
                 new OpenAIClientOptions { Endpoint = new Uri(Url) })
             .GetChatClient(Modelo)
             .AsIChatClient();
+    }
+
+    static string NormalizarUrl(string url)
+    {
+        const string chatCompletions = "/chat/completions";
+        var sinBarraFinal = url.TrimEnd('/');
+
+        return sinBarraFinal.EndsWith(chatCompletions, StringComparison.OrdinalIgnoreCase)
+            ? sinBarraFinal[..^chatCompletions.Length]
+            : sinBarraFinal;
+    }
+}
+
+static class Rutas
+{
+    public static string ArchivoDelProyecto(string nombre)
+    {
+        var desdeDirectorioActual = Path.GetFullPath(nombre);
+        if (File.Exists(desdeDirectorioActual))
+        {
+            return desdeDirectorioActual;
+        }
+
+        return Path.Combine(AppContext.BaseDirectory, nombre);
     }
 }
 
