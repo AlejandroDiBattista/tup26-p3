@@ -65,6 +65,29 @@ void Agregar(string texto)
     {chatBox.Text += texto;
     chatBox.MoveEnd();
 });
+}
+bool ocupado = false;
+
+async Task Enviar(){
+    if(ocupado)
+    return;
+
+var texto = entrada.Text?.Trim();
+
+if(string.IsNullOrWhiteSpace(texto))
+
+return;
+
+ocupado = true;
+entrada.Text="";
+
+
+Agregar(
+$"Vos:\n{texto}\n\n"
+);
 
 }
+
+
+
 
