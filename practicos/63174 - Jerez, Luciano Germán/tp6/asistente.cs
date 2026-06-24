@@ -17,6 +17,15 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
+var directorioProyecto = Directory.GetCurrentDirectory();
+var rutaAgentes = Path.Combine(directorioProyecto, "AGENTS.md");
+if (!File.Exists(rutaAgentes))
+{
+    throw new FileNotFoundException(
+        "No se encontró AGENTS.md. Ejecutá la aplicación desde la carpeta del TP6.",
+        rutaAgentes);
+}
+
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
@@ -37,7 +46,7 @@ IChatClient chat = new ChatClientBuilder(chatBase)
     .UseFunctionInvocation()
     .Build();
 
-var herramientas = new FileSystemTools(AppContext.BaseDirectory);
+var herramientas = new FileSystemTools(directorioProyecto);
 ChatOptions opciones = new()
 {
     Tools =
@@ -55,7 +64,7 @@ ChatOptions opciones = new()
 };
 
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "AGENTS.md")))
+    new(ChatRole.System, File.ReadAllText(rutaAgentes))
 ];
 
 List<VisibleMessage> conversacion = [];
