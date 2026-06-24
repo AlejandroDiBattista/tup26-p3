@@ -14,7 +14,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63396   Gil Garau, Atalía Trinidad      (381)456-4405   ataliagg                   🟢🟢🟢🟢🟢🔴   🟢⚪️   No    26   10
 63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🔴   🟢⚪️   No    26   10
 61577   González, Lucas Alfredo         (381)669-4386   lucasgonzaa                🟢🔴🔴🔴🔴🔴   🟢⚪️   No    24   10
-63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🟢   🟢⚪️   No    29    9
+63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🔴   🟢⚪️   No    29    9
 63700   Jiménez, Nelson Maximiliano     (381)639-2861   maximilianojimnez          🟢🟢🟢🔴🔴🔴   🟢⚪️   No    24    8
 63399   Lazarte, Gonzalo Romeo          (381)576-0069   tutu-04                    🟢🟢🟢🟢🟢🔴   🟢⚪️   No    23   10
 63211   Montero, Luca                   (381)528-7848   monteroluca007             🟢🟢🔴🔴🔴🔴   🟢⚪️   No    17   10
