@@ -1,9 +1,14 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="layout-wrapper">
+    <nav class="navbar navbar-dark bg-primary px-3 py-2 shadow-sm">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+            <i class="bi bi-person-lines-fill fs-5"></i>
+            <span class="fw-semibold">TP5: AgendaWeb</span>
+        </a>
+    </nav>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <main class="main-content">
+        @Body
+    </main>
 </div>

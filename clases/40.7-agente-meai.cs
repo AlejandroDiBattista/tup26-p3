@@ -22,6 +22,7 @@ chat.Registrar(ChatRole.System, $"""
     Respondé en español claro, directo y técnico.
     Priorizá ejemplos en C# cuando el usuario no indique lenguaje.
     Si falta contexto, pedí solo el dato mínimo necesario.
+    
     Usá las herramientas disponibles para listar, leer y escribir archivos.
     Cuando te pidan generar código, guardalo en un archivo dentro del espacio de trabajo.
 """);
@@ -65,15 +66,15 @@ class Agente {
 
         herramientas = new ChatOptions {
             Tools = [
-                AIFunctionFactory.Create(Listar, new() {
+                AIFunctionFactory.Create(Agente.Listar, new() {
                     Name        = "listar-archivos",
                     Description = "Lista los archivos y directorios de una ruta dentro del espacio de trabajo."
                 }),
-                AIFunctionFactory.Create(Leer, new() {
+                AIFunctionFactory.Create(Agente.Leer, new() {
                     Name        = "leer-archivo",
                     Description = "Lee el contenido completo de un archivo dentro del espacio de trabajo."
                 }),
-                AIFunctionFactory.Create(Escribir, new() {
+                AIFunctionFactory.Create(Agente.Escribir, new() {
                     Name        = "escribir-archivo",
                     Description = "Crea o reemplaza un archivo de texto dentro del espacio de trabajo."
                 })
@@ -107,7 +108,7 @@ class Agente {
         return string.Join(Environment.NewLine, elementos);
     }
 
-    static string Leer([Description("Ruta relativa del archivo que se va a leer.")] string ruta) {
+    static string Leer( [Description("Ruta relativa del archivo que se va a leer.")] string ruta ) {
         var rutaCompleta = ResolverRuta(ruta);
         return File.Exists(rutaCompleta)
             ? File.ReadAllText(rutaCompleta)

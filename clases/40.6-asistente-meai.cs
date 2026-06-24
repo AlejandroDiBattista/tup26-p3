@@ -15,14 +15,17 @@ var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 Asistente chat = new Asistente(proveedor);
 
 // Define el comportamiento inicial del asistente.
-chat.Registrar(ChatRole.System, """
-    Sos un asistente de programación.
-    Respondé en español claro, directo y técnico.
-    Priorizá ejemplos en C# cuando el usuario no indique lenguaje.
-    Si falta contexto, pedí solo el dato mínimo necesario.
+var alumnos = File.ReadAllText("../alumnos/alumnos.md");
+// Console.WriteLine(alumnos);
+
+chat.Registrar(ChatRole.System, $"""
+    Eres el ayudante de programacion III.
+    Responde pregunta solo los alumnos. 
+    En base a esta informacion:
+    {alumnos}
 """);
 
-Console.Clear();
+// Console.Clear();
 Console.OutputEncoding = Encoding.UTF8;
 Console.WriteLine("Asistente de programación");
 

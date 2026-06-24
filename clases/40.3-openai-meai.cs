@@ -29,7 +29,7 @@ Console.OutputEncoding = Encoding.UTF8;
 // Console.Clear();
 Console.WriteLine($"\n- | Proveedor: {proveedor} | Modelo: {MODELO} |---------------------\n\n");
 
-// Mostrar( await Completar("No por mucho madrugar..."));
+Mostrar( await Completar("No por mucho madrugar..."));
 // Mostrar( await Traducir("Todo lo que necesitas es atencion", "ingles"));
 // Mostrar( await ExtraerNombre("Mi nombre es Ada Lovelace y soy una pionera de la computación"));
 // Mostrar( await ExtraerFecha("La reunion es el proximo lunes"));

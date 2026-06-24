@@ -21,7 +21,7 @@ var salida = "";
 Console.Clear();
 
 var historia = """
-SYSTEM: Eres un asistente util.
+SYSTEM: Eres un asistente de programacion. Responde sumamente breve y prefieres c#.
 """;
 
 while( true ){

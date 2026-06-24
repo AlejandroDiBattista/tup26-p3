@@ -164,8 +164,8 @@ static class AlumnosCliActions {
             }
 
             int cantidadArchivos = gh.ListarArchivos(pr.Numero).Count;
-            int cantidadLineas = gh.CantidadLineas(pr.Numero);
-            int cantidadCommits = gh.Commits(pr.Numero).Count;
+            int cantidadLineas   = gh.CantidadLineas(pr.Numero);
+            int cantidadCommits  = gh.Commits(pr.Numero).Count;
             List<int> tps = GitHub.ExtraerTPs(pr.Titulo);
             List<(int Tp, int CantidadArchivos)> archivosPorTp = tps
                 .Select(tp => (
