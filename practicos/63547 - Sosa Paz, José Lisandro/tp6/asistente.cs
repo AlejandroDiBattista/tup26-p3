@@ -159,6 +159,8 @@ sealed class VentanaPrincipal : Window
     readonly List<MensajePantalla> historial = [];
     readonly IChatClient chat;
     readonly ChatOptions opciones;
+    readonly FrameView panelConversacion;
+    readonly FrameView panelEntrada;
     readonly Markdown conversacion;
     readonly TextField entrada;
     readonly Button enviar;
@@ -178,32 +180,50 @@ sealed class VentanaPrincipal : Window
         Width = Dim.Fill();
         Height = Dim.Fill();
 
+        panelConversacion = new FrameView
+        {
+            Title = "Conversacion",
+            Width = Dim.Fill(),
+            Height = Dim.Fill(5)
+        };
+
         conversacion = new Markdown
         {
             Text = "# Asistente MEAI\n\nEscribi un mensaje para comenzar.",
             Width = Dim.Fill(),
-            Height = Dim.Fill(4),
-            CanFocus = true
+            Height = Dim.Fill(),
+            CanFocus = true,
+            ViewportSettings = ViewportSettingsFlags.HasVerticalScrollBar
+        };
+
+        panelEntrada = new FrameView
+        {
+            Title = "Entrada",
+            Y = Pos.AnchorEnd(5),
+            Width = Dim.Fill(),
+            Height = 5
         };
 
         entrada = new TextField
         {
             X = 0,
-            Y = Pos.AnchorEnd(3),
+            Y = 0,
             Width = Dim.Fill(12),
-            Height = 3
+            Height = 1
         };
 
         enviar = new Button
         {
             Text = "Enviar",
             X = Pos.AnchorEnd(11),
-            Y = Pos.AnchorEnd(3),
+            Y = 0,
             Width = 11,
-            Height = 3
+            Height = 1
         };
 
-        Add(conversacion, entrada, enviar);
+        panelConversacion.Add(conversacion);
+        panelEntrada.Add(entrada, enviar);
+        Add(panelConversacion, panelEntrada);
 
         enviar.Accepting += async (_, args) =>
         {
