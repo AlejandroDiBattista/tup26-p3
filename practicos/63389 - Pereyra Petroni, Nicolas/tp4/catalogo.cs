@@ -335,6 +335,42 @@ if (e.KeyCode == Key.F8)
         """;
     }
 }
+if (e.KeyCode == Key.F9)
+{
+    using BuscarProductoDialog dialog = new();
+
+    app.Run(dialog);
+
+   if (dialog.Buscar)
+{
+    var filtrados = productos
+        .Where(p =>
+            p.Codigo.Contains(
+                dialog.Texto,
+                StringComparison.OrdinalIgnoreCase)
+            ||
+            p.Nombre.Contains(
+                dialog.Texto,
+                StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    items.Clear();
+
+    foreach (var p in filtrados)
+    {
+        items.Add($"{p.Codigo} - {p.Nombre}");
+    }
+
+    listaProductos.SetSource(items);
+
+    detalleProducto.Text =
+    $"""
+    RESULTADOS
+
+    Encontrados: {filtrados.Count}
+    """;
+}
+}
 };
 
 ventana.Add(detalleProducto);
@@ -572,4 +608,61 @@ class MovimientoDialog : Dialog
         AddButton(btnCancelar);
         AddButton(btnGuardar);
     }
+}
+class BuscarProductoDialog : Dialog
+{
+    public TextField TxtBusqueda;
+
+    public bool Buscar { get; private set; }
+
+    public string Texto =>
+        TxtBusqueda.Text?.ToString() ?? "";
+
+   public BuscarProductoDialog()
+{
+    Title = "Buscar Producto";
+
+    Width = 60;
+    Height = 14;
+
+    Add(new Label()
+    {
+        Text = "Código o nombre:",
+        X = 2,
+        Y = 2
+    });
+
+    TxtBusqueda = new TextField()
+    {
+        X = 2,
+        Y = 5,
+        Width = 40
+    };
+
+    Add(TxtBusqueda);
+
+    var btnCancelar = new Button()
+    {
+        Title = "Cancelar"
+    };
+
+    btnCancelar.Accepting += (_, _) =>
+    {
+        RequestStop();
+    };
+
+    var btnBuscar = new Button()
+    {
+        Title = "Buscar"
+    };
+
+    btnBuscar.Accepting += (_, _) =>
+    {
+        Buscar = true;
+        RequestStop();
+    };
+
+    AddButton(btnCancelar);
+    AddButton(btnBuscar);
+}
 }
