@@ -46,3 +46,16 @@ using var ventana = new Window {
 var chatBox = new TextView { Width = Dim.Fill(), Height = Dim.Fill(3), ReadOnly = true, WordWrap = true,
 Text = """ASISTENTE GROQ"""
 };
+
+var entrada = new TextField {
+    Y = Pos.Bottom(chatBox), 
+    Width = Dim.Fill(10)
+};
+
+var boton = new Button {
+    X = Pos.Right(entrada),
+    Y = Pos.Bottom(chatBox),
+    Text = "enviar"
+};
+
+ventana.Add(chatBox,entrada,boton);
