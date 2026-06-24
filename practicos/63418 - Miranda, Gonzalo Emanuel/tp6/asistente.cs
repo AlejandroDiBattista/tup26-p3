@@ -60,7 +60,22 @@ var btnEnviar = new Button {
 };
 
 btnEnviar.Accepting += (s, e) => {
+    var texto = inputTexto.Text;
+    if (string.IsNullOrWhiteSpace(texto)) {
+        e.Handled = true;
+        return;
+    }
+
+    // 1. Guardamos el mensaje del usuario en la memoria de la IA
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+    
+    // 2. Limpiamos la caja de texto
     inputTexto.Text = "";
+    
+    // 3. Redibujamos la pantalla
+    ActualizarPantalla();
+    
+    e.Handled = true;
 };
 
 panelInferior.Add(inputTexto, btnEnviar);
@@ -70,5 +85,24 @@ ventana.Add(historialView, panelInferior);
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+
+void ActualizarPantalla()
+{
+    var textoPantalla = "";
+    
+    foreach (var msg in mensajes)
+    {
+        if (msg.Role == ChatRole.System) continue;
+
+        var nombre = msg.Role == ChatRole.User ? "Vos" : "Asistente";
+        textoPantalla += $"### {nombre}\n{msg.Text}\n\n";
+    }
+
+    if (string.IsNullOrWhiteSpace(textoPantalla)) {
+        textoPantalla = "### Asistente MEAI\n\nEscribí un mensaje para comenzar.";
+    }
+    
+    historialView.Text = textoPantalla;
+}
 
 app.Run(ventana);
