@@ -31,7 +31,7 @@ using var ventana = new Window
 
 var markdown = new Markdown
 {
-    Text = "# Vos\n\nEscribí un mensaje para empezar.",
+    Text = "\n\n 🤖Asistente >\n\nEn que puedo ayudarte hoy?",
     Width = Dim.Fill(),
     Height = Dim.Fill(5)
 };
@@ -68,7 +68,7 @@ async Task EnviarAsync()
     entrada.Text = "";
 
     chat.Registrar(ChatRole.User, texto);
-    conversacion += $"\n\n# Vos\n\n{texto}\n\n# Asistente\n\n";
+    conversacion += $"\n\n👤Vos >\n\n{texto}\n\n🤖Asistente >\n\n";
     markdown.Text = conversacion;
 
     var respuesta = await chat.ResponderAsync();
@@ -126,7 +126,13 @@ public sealed class Agente
                 {
                     Name = "listar-archivos",
                     Description = "Lista los archivos y carpetas de un directorio."
+                }),
+                AIFunctionFactory.Create(EscribirArchivo, new()
+                {
+                    Name = "escribir-archivo",
+                    Description = "Crea o sobrescribe un archivo con el contenido indicado."
                 })
+
             ]
         };
 
@@ -174,6 +180,21 @@ public sealed class Agente
         return string.Join(
             Environment.NewLine,
             Directory.EnumerateFileSystemEntries(dir).Select(Path.GetFileName));
+    }
+    static string EscribirArchivo(
+        [Description("Ruta relativa del archivo a crear o sobrescribir.")]
+        string ruta,
+        [Description("Contenido completo a guardar.")]
+        string contenido)
+    {
+        var file = ResolverRuta(ruta);
+        var dir = Path.GetDirectoryName(file);
+
+        if (!string.IsNullOrWhiteSpace(dir))
+            Directory.CreateDirectory(dir);
+
+        File.WriteAllText(file, contenido);
+        return $"Archivo guardado: {ruta}";
     }
 
     static string ResolverRuta(string ruta)
