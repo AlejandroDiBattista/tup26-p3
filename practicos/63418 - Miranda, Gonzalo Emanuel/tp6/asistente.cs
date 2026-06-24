@@ -10,6 +10,7 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui;
 
 DotNetEnv.Env.Load();
 
@@ -24,25 +25,47 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
 ];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+    Width = Dim.Fill(), 
+    Height = Dim.Fill()
+};
+var historialView = new Markdown {
+    Text = "### Asistente MEAI\n\nEscribí un mensaje para comenzar.",
+    Width = Dim.Fill(),
+    Height = Dim.Fill() - 3
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var panelInferior = new View {
+    Y = Pos.AnchorEnd(3),
+    Width = Dim.Fill(),
+    Height = 3,
+    BorderStyle = Terminal.Gui.Drawing.LineStyle.Single 
+};
+var inputTexto = new TextField {
+    Width = Dim.Fill() - 14, 
+    Height = 1
+};
+
+var btnEnviar = new Button {
+    Title = "Enviar",
+    X = Pos.AnchorEnd(12),
+    Y = 0,
+    IsDefault = true
+};
+
+btnEnviar.Accepting += (s, e) => {
+    inputTexto.Text = "";
+};
+
+panelInferior.Add(inputTexto, btnEnviar);
+ventana.Add(historialView, panelInferior);
+
 
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
