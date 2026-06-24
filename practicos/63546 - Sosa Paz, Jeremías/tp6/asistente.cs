@@ -137,10 +137,19 @@ void Enviar()
 {
     if (procesando || string.IsNullOrWhiteSpace(input.Text)) return;
     
-    procesando = true;
     string pregunta = input.Text;
     input.Text = "";
     
+    // --- NUEVO: Comando para limpiar el chat ---
+    if (pregunta.Trim().ToLower() == "/limpiar")
+    {
+        vistaChat.Text = "# Asistente\nHistorial de la sesión borrado. El búnker está limpio. ¿En qué te ayudo ahora?\n\n";
+        mensajes.Clear();
+        mensajes.Add(new ChatMessage(ChatRole.System, File.ReadAllText("AGENTS.md")));
+        return;
+    }
+    
+    procesando = true;
     input.Enabled = false;
     btnEnviar.Enabled = false;
     
