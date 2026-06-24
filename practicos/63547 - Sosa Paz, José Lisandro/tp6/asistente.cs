@@ -9,6 +9,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.Input;
@@ -311,6 +312,7 @@ sealed class VentanaPrincipal : Window
 
     void Renderizar()
     {
+        var estabaAbajo = EstaAlFinal();
         var markdown = new StringBuilder();
 
         foreach (var mensaje in historial)
@@ -329,6 +331,25 @@ sealed class VentanaPrincipal : Window
         }
 
         conversacion.Text = markdown.ToString();
+        if (estabaAbajo)
+        {
+            MoverAlFinal();
+        }
+
         conversacion.SetNeedsDraw();
+    }
+
+    bool EstaAlFinal()
+    {
+        var viewport = conversacion.Viewport;
+        var ultimaLineaVisible = viewport.Y + viewport.Height;
+        return ultimaLineaVisible >= conversacion.LineCount - 1;
+    }
+
+    void MoverAlFinal()
+    {
+        var viewport = conversacion.Viewport;
+        var y = Math.Max(0, conversacion.LineCount - viewport.Height);
+        conversacion.Viewport = new Rectangle(viewport.X, y, viewport.Width, viewport.Height);
     }
 }
