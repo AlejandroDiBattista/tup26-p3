@@ -22,13 +22,18 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
-IChatClient chat = new OpenAIClient(
+// 1. Cliente Base
+IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
 
-// 1. Inyecto las herramientas que cree en el 1er archivo Herramientas.cs
+// 2. PILOTO AUTOMÁTICO: Invocación automática de funciones
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
+
 var opciones = new ChatOptions
 {
     Tools = [
@@ -42,9 +47,6 @@ List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
 
-// ==========================================
-// 2. CONFIGURACIÓN DE LA INTERFAZ (Terminal.Gui)
-// ==========================================
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · Búnker Local ({modelo}) ",
@@ -53,7 +55,7 @@ using var ventana = new Window {
 
 var vistaChat = new Markdown {
     Width = Dim.Fill(),
-    Height = Dim.Fill() - 2, // Dejo 2 líneas libres abajo
+    Height = Dim.Fill() - 2,
     Text = "# Asistente\n¡Hola! Soy el asistente del sistema. Escribí tu mensaje abajo.\n\n",
     CanFocus = true
 };
@@ -66,7 +68,7 @@ var separador = new LineView {
 
 var input = new TextField {
     Y = Pos.Bottom(vistaChat) + 1,
-    Width = Dim.Fill() - 10,
+    Width = Dim.Fill() - 35, // Achico un poco para que entre el estado
 };
 
 var btnEnviar = new Button {
@@ -75,20 +77,24 @@ var btnEnviar = new Button {
     Y = Pos.Bottom(vistaChat) + 1,
 };
 
-ventana.Add(vistaChat, separador, input, btnEnviar);
+// 3. NUEVO: Etiqueta de estado para mejorar la UX
+var lblEstado = new Label {
+    Text = "🟢 Listo",
+    X = Pos.Right(btnEnviar) + 2,
+    Y = Pos.Bottom(vistaChat) + 1,
+};
 
-// ==========================================
-// 3. LÓGICA DE EVENTOS Y STREAMING
-// ==========================================
+ventana.Add(vistaChat, separador, input, btnEnviar, lblEstado);
+
 bool procesando = false;
 
 async Task ProcesarMensajeAsync(string pregunta)
 {
     mensajes.Add(new ChatMessage(ChatRole.User, pregunta));
     
-    // Actualizo la UI desde el hilo principal
     Application.Invoke(() => {
         vistaChat.Text += $"\n\n# Vos\n\n{pregunta}\n\n# Asistente\n\n";
+        lblEstado.Text = "🟡 Pensando y ejecutando..."; // Avisa que está trabajando
     });
     
     try 
@@ -101,7 +107,7 @@ async Task ProcesarMensajeAsync(string pregunta)
             if (fragmento.Text != null)
             {
                 respuestaActual += fragmento.Text;
-                var txt = fragmento.Text; // Clono para evitar problemas de closure
+                var txt = fragmento.Text; 
                 Application.Invoke(() => {
                     vistaChat.Text += txt;
                 });
@@ -121,9 +127,8 @@ async Task ProcesarMensajeAsync(string pregunta)
             procesando = false;
             input.Enabled = true;
             btnEnviar.Enabled = true;
-            input.SetFocus(); // Devuelve el cursor a la caja de texto 
-
-            
+            lblEstado.Text = "🟢 Listo"; // vuelve a la normalidad 
+            input.SetFocus(); 
         });
     }
 }
@@ -136,17 +141,14 @@ void Enviar()
     string pregunta = input.Text;
     input.Text = "";
     
-    // Bloqueo controles para evitar envíos superpuestos
     input.Enabled = false;
     btnEnviar.Enabled = false;
     
-    // Lanzo la tarea en segundo plano
     _ = ProcesarMensajeAsync(pregunta);
 }
 
-// 4. Atajos de teclado
 btnEnviar.Accept += (s, e) => Enviar();
-input.Accept += (s, e) => Enviar(); // El Enter en el TextField envía el mensaje automáticamente
+input.Accept += (s, e) => Enviar(); 
 
 ventana.KeyDown += (s, e) => {
     if (e.Key == Key.Esc) {
