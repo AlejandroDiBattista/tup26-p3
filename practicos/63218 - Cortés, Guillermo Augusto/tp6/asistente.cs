@@ -10,16 +10,31 @@ using OpenAI;
 using System.ClientModel;
 using System.Text;
 using Terminal.Gui.App;
+using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var configuracion = CargarConfiguracion(args);
-var promptSistema = CargarPromptSistema();
-IChatClient chat = CrearCliente(configuracion);
+ConfiguracionIA configuracion;
+string promptSistema;
+IChatClient chat;
 var opcionesChat = CrearOpcionesChat();
 bool respondiendo = false;
+
+try
+{
+    configuracion = CargarConfiguracion(args);
+    promptSistema = CargarPromptSistema();
+    chat = CrearCliente(configuracion);
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error de configuracion: {ex.Message}");
+    Console.Error.WriteLine("Verifica tu archivo .env y las variables de entorno.");
+    return;
+}
 
 List<ChatMessage> mensajes = [
     new(ChatRole.System, promptSistema)
@@ -69,6 +84,24 @@ var ayuda = new Label {
 
 botonEnviar.Accepted += async (_, _) => await EnviarMensajeAsync();
 
+entrada.KeyDown += async (_, args) =>
+{
+    if (args.KeyCode == KeyCode.Enter && !respondiendo)
+    {
+        await EnviarMensajeAsync();
+        args.Handled = true;
+    }
+};
+
+ventana.KeyDown += (_, args) =>
+{
+    if (args.KeyCode == KeyCode.Esc)
+    {
+        app.RequestStop();
+        args.Handled = true;
+    }
+};
+
 panelConversacion.Add(conversacion);
 panelEntrada.Add(entrada, botonEnviar, ayuda);
 ventana.Add(panelConversacion, panelEntrada);
@@ -100,19 +133,39 @@ async Task EnviarMensajeAsync()
 
     var respuesta = new StringBuilder();
 
-    await foreach (var actualizacion in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
+    try
     {
-        respuesta.Append(actualizacion.Text);
-        conversacion.Text = RenderizarConversacion(mensajes, "Asistente\n\n" + respuesta);
+        await foreach (var actualizacion in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
+        {
+            respuesta.Append(actualizacion.Text);
+            conversacion.Text = RenderizarConversacion(mensajes, "Asistente\n\n" + respuesta);
+        }
+
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.ToString()));
+        conversacion.Text = RenderizarConversacion(mensajes);
     }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"[DEBUG] Excepcion completa: {ex}");
 
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.ToString()));
-    conversacion.Text = RenderizarConversacion(mensajes);
+        var errorDetalle = ex switch
+        {
+            InvalidOperationException => $"Error de configuracion: {ex.Message}",
+            HttpRequestException => "No se pudo conectar con la API. Verifica tu conexion y la URL.",
+            TaskCanceledException => "La consulta tardo demasiado. Intenta de nuevo.",
+            _ => $"Error inesperado: {ex.Message}"
+        };
 
-    entrada.Enabled = true;
-    botonEnviar.Enabled = true;
-    ayuda.Text = "Enter: enviar | Esc: salir | La respuesta aparecera en el panel superior";
-    respondiendo = false;
+        mensajes.RemoveAt(mensajes.Count - 1);
+        conversacion.Text = RenderizarConversacion(mensajes, $"[ERROR] {errorDetalle}");
+        ayuda.Text = "Ocurrio un error. Intenta de nuevo.";
+    }
+    finally
+    {
+        entrada.Enabled = true;
+        botonEnviar.Enabled = true;
+        respondiendo = false;
+    }
 }
 
 static string RenderizarConversacion(IEnumerable<ChatMessage> mensajes, string? estado = null)
@@ -157,7 +210,7 @@ static string RenderizarConversacion(IEnumerable<ChatMessage> mensajes, string? 
 
 static ConfiguracionIA CargarConfiguracion(string[] args)
 {
-    var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+    var proveedor = (args.Length > 0 ? args[0] : "gemini").ToUpperInvariant();
     var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
     var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "no-requiere-key";
     var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
@@ -220,45 +273,66 @@ static ChatOptions CrearOpcionesChat()
 
 static string LeerArchivo(string ruta)
 {
-    var rutaCompleta = ResolverRutaProyecto(ruta);
-
-    if (!File.Exists(rutaCompleta))
+    try
     {
-        return $"No se encontro el archivo: {ruta}";
-    }
+        var rutaCompleta = ResolverRutaProyecto(ruta);
 
-    return File.ReadAllText(rutaCompleta);
+        if (!File.Exists(rutaCompleta))
+        {
+            return $"No se encontro el archivo: {ruta}";
+        }
+
+        return File.ReadAllText(rutaCompleta);
+    }
+    catch (Exception ex)
+    {
+        return $"Error al leer el archivo '{ruta}': {ex.Message}";
+    }
 }
 
 static string EscribirArchivo(string ruta, string contenido)
 {
-    var rutaCompleta = ResolverRutaProyecto(ruta);
-    var directorio = Path.GetDirectoryName(rutaCompleta);
-
-    if (!string.IsNullOrWhiteSpace(directorio))
+    try
     {
-        Directory.CreateDirectory(directorio);
-    }
+        var rutaCompleta = ResolverRutaProyecto(ruta);
+        var directorio = Path.GetDirectoryName(rutaCompleta);
 
-    File.WriteAllText(rutaCompleta, contenido);
-    return $"Archivo escrito correctamente: {ruta}";
+        if (!string.IsNullOrWhiteSpace(directorio))
+        {
+            Directory.CreateDirectory(directorio);
+        }
+
+        File.WriteAllText(rutaCompleta, contenido);
+        return $"Archivo escrito correctamente: {ruta}";
+    }
+    catch (Exception ex)
+    {
+        return $"Error al escribir el archivo '{ruta}': {ex.Message}";
+    }
 }
 
 static string ListarArchivos(string ruta)
 {
-    var rutaCompleta = ResolverRutaProyecto(ruta);
-
-    if (!Directory.Exists(rutaCompleta))
+    try
     {
-        return $"No se encontro el directorio: {ruta}";
+        var rutaCompleta = ResolverRutaProyecto(ruta);
+
+        if (!Directory.Exists(rutaCompleta))
+        {
+            return $"No se encontro el directorio: {ruta}";
+        }
+
+        var entradas = Directory.EnumerateFileSystemEntries(rutaCompleta)
+            .Select(entrada => Directory.Exists(entrada)
+                ? $"[DIR] {Path.GetFileName(entrada)}"
+                : $"[ARCHIVO] {Path.GetFileName(entrada)}");
+
+        return string.Join(Environment.NewLine, entradas);
     }
-
-    var entradas = Directory.EnumerateFileSystemEntries(rutaCompleta)
-        .Select(entrada => Directory.Exists(entrada)
-            ? $"[DIR] {Path.GetFileName(entrada)}"
-            : $"[ARCHIVO] {Path.GetFileName(entrada)}");
-
-    return string.Join(Environment.NewLine, entradas);
+    catch (Exception ex)
+    {
+        return $"Error al listar el directorio '{ruta}': {ex.Message}";
+    }
 }
 
 static string ResolverRutaProyecto(string ruta)
