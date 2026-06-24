@@ -41,6 +41,25 @@ static async Task AgregarProductoAsync(NuevoProductoDto producto)
         producto
     );
 }
+static async Task EliminarProductoAsync(int productoId)
+{
+    using var http = new HttpClient();
+
+    await http.DeleteAsync(
+        $"http://localhost:5050/productos/{productoId}"
+    );
+}
+static async Task ActualizarProductoAsync(
+    int id,
+    NuevoProductoDto producto)
+{
+    using var http = new HttpClient();
+
+    await http.PutAsJsonAsync(
+        $"http://localhost:5050/productos/{id}",
+        producto
+    );
+}
 static async Task RegistrarMovimientoAsync(
     int productoId,
     int tipo,
@@ -86,7 +105,7 @@ using IApplication app = Application.Create().Init();
 
 using Window ventana = new()
 {
-    Title = " Catalogo REST — Producto (ESC para salir) "
+    Title = " Catalogo REST — F2 Agregar | F4 Movimiento | ESC Salir "
 };
 
 var items = new ObservableCollection<string>(
@@ -115,16 +134,47 @@ var detalleProducto = new Label()
     Width = 40,
     Height = Dim.Fill()
 };
-
-listaProductos.KeyDown += async (_, e) =>
+listaProductos.ValueChanged += async (_, _) =>
 {
-  
-    if (e.KeyCode == Key.A)
+    int indice = listaProductos.SelectedItem ?? 0;
+
+    if (indice < 0 || indice >= productos.Count)
+        return;
+
+    var producto = productos[indice];
+
+    using var http = new HttpClient();
+
+    var movimientos =
+        await CargarMovimientosAsync(http, producto.Id);
+
+    detalleProducto.Text =
+    $"""
+    PRODUCTO
+
+    {producto.Nombre}
+
+    Código: {producto.Codigo}
+
+    Precio: ${producto.Precio}
+
+    Stock: {producto.Stock}
+
+    MOVIMIENTOS
+
+    {FormatearMovimientos(movimientos)}
+    """;
+};
+
+ventana.KeyDown += async (_, e) =>
+{
+ detalleProducto.Text = $"Tecla: {e.KeyCode}";
+    if (e.KeyCode == Key.F2)
     {
         using AgregarProductoDialog dialog = new();
 
         app.Run(dialog);
-
+    listaProductos.SetFocus();
         if (dialog.Guardado)
         {
             await AgregarProductoAsync(
@@ -156,7 +206,7 @@ listaProductos.KeyDown += async (_, e) =>
         }
     }
 
-    if (e.KeyCode == Key.M)
+    if (e.KeyCode == Key.F4 )
     {
         int indice = listaProductos.SelectedItem ?? 0;
 
@@ -168,7 +218,7 @@ listaProductos.KeyDown += async (_, e) =>
         using MovimientoDialog dialog = new();
 
         app.Run(dialog);
-
+    listaProductos.SetFocus();
         if (dialog.Guardado)
 {
     if (dialog.Cantidad <= 0)
@@ -207,10 +257,92 @@ listaProductos.KeyDown += async (_, e) =>
     }
 }
     }
+    if (e.KeyCode == Key.F7)
+{
+    int indice = listaProductos.SelectedItem ?? 0;
+
+    if (indice < 0 || indice >= productos.Count)
+        return;
+
+    var producto = productos[indice];
+
+    await EliminarProductoAsync(producto.Id);
+
+    using var http = new HttpClient();
+
+    productos = await CargarProductosAsync(http);
+
+    items.Clear();
+
+    foreach (var p in productos)
+    {
+        items.Add($"{p.Codigo} - {p.Nombre}");
+    }
+
+    listaProductos.SetSource(items);
+
+    detalleProducto.Text =
+    """
+    PRODUCTO ELIMINADO
+    """;
+}
+if (e.KeyCode == Key.F8)
+{
+    int indice = listaProductos.SelectedItem ?? 0;
+
+    if (indice < 0 || indice >= productos.Count)
+        return;
+
+    var producto = productos[indice];
+
+    using AgregarProductoDialog dialog = new(
+        producto.Codigo,
+        producto.Nombre,
+        producto.Precio,
+        producto.Stock
+    );
+
+    app.Run(dialog);
+
+    if (dialog.Guardado)
+    {
+        await ActualizarProductoAsync(
+            producto.Id,
+            new NuevoProductoDto(
+                dialog.Codigo,
+                dialog.Nombre,
+                dialog.Precio,
+                dialog.Stock
+            )
+        );
+
+        using var http = new HttpClient();
+
+        productos = await CargarProductosAsync(http);
+
+        items.Clear();
+
+        foreach (var p in productos)
+        {
+            items.Add($"{p.Codigo} - {p.Nombre}");
+        }
+
+        listaProductos.SetSource(items);
+
+        detalleProducto.Text =
+        """
+        PRODUCTO ACTUALIZADO
+        """;
+    }
+}
 };
 
 ventana.Add(detalleProducto);
 ventana.Add(listaProductos);
+if (productos.Count > 0)
+{
+    listaProductos.SelectedItem = 0;
+}
 
 app.Run(ventana);
 // ── API ───────────────────────────────────────────────────────────────────
@@ -263,7 +395,14 @@ class AgregarProductoDialog : Dialog
     public int Stock =>
     int.TryParse(TxtStock.Text?.ToString(), out var s) ? s : 0;
     
-    public AgregarProductoDialog(){
+    public AgregarProductoDialog
+        (
+        string codigo = "",
+        string nombre = "",
+        decimal precio = 0,
+        int stock = 0)
+        {
+        
         Title = "Agregar Producto";
         Width = 60;
         Height = 18;
@@ -277,6 +416,7 @@ class AgregarProductoDialog : Dialog
 
         TxtCodigo = new TextField()
         {
+           Text = codigo,
             X = 15,
             Y = 2,
             Width = 25
@@ -291,6 +431,7 @@ class AgregarProductoDialog : Dialog
 
         TxtNombre = new TextField()
         {
+           Text = nombre,
             X = 15,
             Y = 4,
             Width = 25
@@ -305,6 +446,7 @@ class AgregarProductoDialog : Dialog
 
     TxtPrecio = new TextField()
         {
+            Text = precio.ToString(),
             X = 15,
             Y = 6,
             Width = 25
@@ -319,6 +461,7 @@ class AgregarProductoDialog : Dialog
 
         TxtStock = new TextField()
         {
+            Text = stock.ToString(),
             X = 15,
             Y = 8,
             Width = 25
