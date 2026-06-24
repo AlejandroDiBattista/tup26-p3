@@ -88,7 +88,7 @@ static class AlumnosManager {
 
     public static void Escribir(IEnumerable<Alumno> alumnos, string rutaArchivo) {
         string[] etiquetas = ["Legajo", "Nombre y Apellido", "Teléfono", "GitHub", "Prácticos", "Exm", "Prs", "Ast", "Nta", "Observaciones"];
-        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "---", "---", "---", "---", "------------------------"];
+        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "----", "---", "---", "---", "------------------------"];
         try {
             List<Alumno> alumnosOrdenados = new(alumnos);
             alumnosOrdenados.Sort(Alumno.Comparar);
@@ -112,7 +112,7 @@ static class AlumnosManager {
                     sb.AppendLine($"## {comisionActual}");
                     sb.AppendLine("```text");
                     sb.AppendLine(FormatearFilaTabla(etiquetas));
-                    sb.AppendLine(FormatearFilaTabla(guiones));
+                    sb.AppendLine(FormatearSeparadorTabla(guiones));
                 }
 
                 sb.AppendLine(FormatearFila(alumno));
@@ -131,7 +131,7 @@ static class AlumnosManager {
 
     public static void EscribirEstadoInformer(IEnumerable<Alumno> alumnos, string rutaArchivo) {
         string[] etiquetas = ["Legajo", "Nombre y Apellido", "Prácticos", "Exm", "Ast", "Nta"];
-        string[] guiones = ["------", "------------------------------", "----------", "---", "---", "---"];
+        string[] guiones = ["------", "------------------------------", "----------", "----", "---", "---"];
 
         try {
             List<Alumno> alumnosOrdenados = new(alumnos);
@@ -175,7 +175,7 @@ static class AlumnosManager {
 
     public static void Listar(IEnumerable<Alumno> alumnos, string titulo = "Listado de Alumnos") {
         string[] campos = ["Legajo", "Nombre y Apellido", "Teléfono", "GitHub", "Prácticos", "Exm", "Prs", "Ast", "Nta"];
-        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "---", "---", "---", "---"];
+        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "----", "---", "---", "---"];
 
         string comision = "";
         if (!alumnos.Any()) {
@@ -440,8 +440,8 @@ static class AlumnosManager {
         string observaciones = LimpiarCampo(columnas[indiceObservaciones]);
 
         Alumno alumno = new(legajo, comisionActual, nombre, apellido, ExtraerTelefono(columnas[2]), ExtraerGitHub(columnas[indiceGitHub]), tieneColumnaFoto && ExtraerBool(columnas[3]), ExtraerBool(columnas[indicePresente]), ExtraerInt(columnas[indiceAsistencias]), nota, observaciones);
-        CargarEstados(alumno.practicos, columnas[indicePracticos]);
-        CargarEstados(alumno.examenes,  columnas[indiceExamenes]);
+        CargarEstados(alumno.practicos, columnas[indicePracticos], quitarVaciosFinales: false);
+        CargarEstados(alumno.examenes, columnas[indiceExamenes], quitarVaciosFinales: false);
 
         return alumno;
     }
@@ -449,6 +449,12 @@ static class AlumnosManager {
     static string FormatearFilaTabla(params string?[] columnas) {
         int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 0];
         string[] separadores = ["  ", "  ", "   ", "  ", "   ", "   ", "   ", "  ", "  "];
+        return FormatearFilaConAnchos(anchos, separadores, columnas).TrimEnd();
+    }
+
+    static string FormatearSeparadorTabla(params string?[] columnas) {
+        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 0];
+        string[] separadores = ["  ", "  ", "   ", "  ", "   ", "  ", "   ", "  ", "  "];
         return FormatearFilaConAnchos(anchos, separadores, columnas).TrimEnd();
     }
 
@@ -559,15 +565,15 @@ static class AlumnosManager {
     static string ToSiNo(this bool valor) => valor ? "Sí" : "No";
 
     static string FormatearFila(Alumno a) {
-        return FormatearFilaTabla(a.Legajo.ToString(), a.NombreCompleto, a.Telefono, a.GitHub, a.practicos.ToString(12), a.examenes.ToString(4), a.Presente.ToSiNo(), a.Asistencias.ToString(), a.Nota.ToString(), a.Observaciones);
+        return FormatearFilaTabla(a.Legajo.ToString(), a.NombreCompleto, a.Telefono, a.GitHub, a.practicos.ToEmojis(), a.examenes.ToEmojis(minimo: 2), a.Presente.ToSiNo(), a.Asistencias.ToString(), a.Nota.ToString(), a.Observaciones);
     }
 
     static string FormatearFilaListado(Alumno a) {
-        return FormatearFilaTablaListado(a.Legajo.ToString(), a.NombreCompleto, a.Telefono, a.GitHub, a.practicos.ToString(10), a.examenes.ToString(4), a.Presente.ToSiNo(), a.Asistencias.ToString(), a.Nota.ToString());
+        return FormatearFilaTablaListado(a.Legajo.ToString(), a.NombreCompleto, a.Telefono, a.GitHub, a.practicos.ToEmojis(), a.examenes.ToEmojis(minimo: 2), a.Presente.ToSiNo(), a.Asistencias.ToString(), a.Nota.ToString());
     }
 
     static string FormatearFilaEstadoInformer(Alumno alumno) {
-        return FormatearFilaTablaEstadoInformer(alumno.Legajo.ToString(), alumno.NombreCompleto, alumno.practicos.ToString(10), alumno.examenes.ToString(4), alumno.Asistencias.ToString(), alumno.Nota.ToString());
+        return FormatearFilaTablaEstadoInformer(alumno.Legajo.ToString(), alumno.NombreCompleto, alumno.practicos.ToEmojis(), alumno.examenes.ToEmojis(minimo: 2), alumno.Asistencias.ToString(), alumno.Nota.ToString());
     }
 
 
@@ -578,8 +584,23 @@ static class AlumnosManager {
 
         bool derecha = ancho < 0;
         ancho = Math.Abs(ancho);
-        if (valor.Length > ancho) { return valor; }
-        return derecha ? valor.PadLeft(ancho) : valor.PadRight(ancho);
+        int anchoVisible = AnchoVisible(valor);
+        if (anchoVisible >= ancho) { return valor; }
+
+        string relleno = new(' ', ancho - anchoVisible);
+        return derecha ? relleno + valor : valor + relleno;
+    }
+
+    static int AnchoVisible(string texto) {
+        int ancho = 0;
+        TextElementEnumerator enumerador = StringInfo.GetTextElementEnumerator(texto);
+        while (enumerador.MoveNext()) {
+            string elemento = enumerador.GetTextElement();
+            UnicodeCategory categoria = CharUnicodeInfo.GetUnicodeCategory(elemento, 0);
+            ancho += categoria == UnicodeCategory.OtherSymbol ? 2 : 1;
+        }
+
+        return ancho;
     }
 
     static string FormatearTexto(string texto) {
@@ -630,13 +651,26 @@ static class AlumnosManager {
         return string.IsNullOrWhiteSpace(gitHub) ? "-" : gitHub;
     }
 
-    static string ToString(this List<Estado> estados, int ancho = 10) {
+    static string ToEmojis(this List<Estado> estados, int minimo = 0, int maximo = 0) {
         string valor = string.Join(string.Empty, estados.Select(e => e.ToEmoji()));
         valor = valor.Replace(" ", "⚪️");
-        while (StringInfo.ParseCombiningCharacters(valor).Length < ancho) {
+        while (StringInfo.ParseCombiningCharacters(valor).Length < minimo) {
             valor += "⚪️";
         }
-        return valor[..ancho];
+        return maximo > 0 ? TomarElementosTexto(valor, maximo) : valor;
+    }
+
+    static string TomarElementosTexto(string texto, int cantidad) {
+        if (cantidad <= 0) {
+            return string.Empty;
+        }
+
+        int[] indices = StringInfo.ParseCombiningCharacters(texto);
+        if (indices.Length <= cantidad) {
+            return texto;
+        }
+
+        return texto[..indices[cantidad]];
     }
 
     static bool ExtraerBool(string texto) {
@@ -644,7 +678,7 @@ static class AlumnosManager {
         return texto is "si" or "sí" or "true" or "yes";
     }
 
-    static void CargarEstados(List<Estado> destino, string texto) {
+    static void CargarEstados(List<Estado> destino, string texto, bool quitarVaciosFinales = true) {
         destino.Clear();
 
         TextElementEnumerator enumerador = StringInfo.GetTextElementEnumerator(texto);
@@ -660,13 +694,13 @@ static class AlumnosManager {
             }
         }
 
-        while (destino.Count > 0 && destino[^1] == Estado.Vacio) {
+        while (quitarVaciosFinales && destino.Count > 0 && destino[^1] == Estado.Vacio) {
             destino.RemoveAt(destino.Count - 1);
         }
     }
 
     static bool EsEstadoVacio(string texto) =>
-        texto is "⚪" or " ";
+        texto is "⚪" or "⚪️" or " ";
 
     static void AppendVCardContacto(StringBuilder sb, Alumno alumno) {
         string apellido = FormatearTextoVcard(alumno.Apellido);

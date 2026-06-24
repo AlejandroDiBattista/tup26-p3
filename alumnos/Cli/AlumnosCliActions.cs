@@ -361,7 +361,11 @@ static class AlumnosCliActions {
             });
 
         int copias = RevisarCopiasTrabajosPresentados(numeroTp, trabajosPresentados);
-        int marcados = alumnos.Count(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado);
+        Alumno[] alumnosPresentados = alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => alumno.Legajo)
+            .ToArray();
+        int marcados = alumnosPresentados.Length;
 
         if (presentacionesCambiadas.Count > 0 || trabajosPresentados.Count > 0 || habiaObservaciones) {
             AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
@@ -375,6 +379,7 @@ static class AlumnosCliActions {
             }
         }
 
+        AlumnosManager.Listar(alumnosPresentados, $"Alumnos con TP{numeroTp} presentado");
         Log.Success($"Resumen TP{numeroTp}: marcados={marcados}, copias={copias}, total={alumnos.Count()}, porcentaje={marcados * 100.0 / alumnos.Count():F2}%");
         return 0;
     }
