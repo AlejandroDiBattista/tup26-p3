@@ -75,3 +75,11 @@ Window CrearInterfaz(IApplication aplicacionActiva, out TextField campoTextoOut)
         Width = Dim.Fill(),
         Height = Dim.Percent(82)
     };
+        var vistaChat = new Markdown {
+        Text = textoConsolaAcumulado,
+        Width = Dim.Fill(),
+        Height = Dim.Fill(),
+        CanFocus = true
+    };
+
+    marcoChat.Add(vistaChat);
