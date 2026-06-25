@@ -31,3 +31,79 @@ IChatClient chat = new ChatClientBuilder(
             .AsIChatClient())
     .UseFunctionInvocation()
     .Build();
+
+
+var opciones = new ChatOptions
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo de texto del proyecto."),
+        AIFunctionFactory.Create(EscribirArchivo, "escribir-archivo", "Crea o sobrescribe un archivo de texto dentro del proyecto."),
+        AIFunctionFactory.Create(ListarArchivos, "listar-archivos", "Lista los archivos y carpetas de un directorio del proyecto.")
+    ]
+};
+
+List<ChatMessage> mensajes =
+[
+    new(ChatRole.System, CargarPromptSistema())
+];
+
+var turnos = new List<TurnoVisible>();
+var respondiendo = false;
+var autoScroll = true;
+
+using IApplication app = Application.Create().Init();
+
+using var ventana = new Window
+{
+    Title = $" AsistenteIA - {modelo} ",
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
+};
+
+var panelConversacion = new FrameView
+{
+    X = 1,
+    Y = 1,
+    Width = Dim.Fill(2),
+    Height = Dim.Fill(5)
+};
+
+var conversacion = new Markdown
+{
+    Text = errorConfiguracion is null
+        ? RenderizarConversacion(turnos)
+        : $"# Configuracion\n\n{errorConfiguracion}",
+    X = 1,
+    Y = 0,
+    Width = Dim.Fill(2),
+    Height = Dim.Fill(),
+    ShowHeadingPrefix = false
+};
+
+var panelEntrada = new FrameView
+{
+    X = 1,
+    Y = Pos.AnchorEnd(4),
+    Width = Dim.Fill(),
+    Height = 4
+};
+
+var entrada = new TextField
+{
+    X = 1,
+    Y = 1,
+    Width = Dim.Fill(14)
+};
+
+var enviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.AnchorEnd(12),
+    Y = 1,
+    Width = 10
+};
+
+panelConversacion.Add(conversacion);
+panelEntrada.Add(entrada, enviar);
+ventana.Add(panelConversacion, panelEntrada);
