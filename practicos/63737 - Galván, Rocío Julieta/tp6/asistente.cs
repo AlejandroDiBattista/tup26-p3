@@ -1,9 +1,11 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
+using System.ComponentModel;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
@@ -14,19 +16,68 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
-
-var urlBase = url!.EndsWith("/chat/completions") ? url[..^"/chat/completions".Length] : url;
+var urlBase = url!.EndsWith("/chat/completions")
+    ? url[..^"/chat/completions".Length]
+    : url;
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(urlBase) })
     .GetChatClient(modelo)
-    .AsIChatClient();
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 
+[Description("Lee el contenido de un archivo de texto.")]
+string LeerArchivo([Description("Ruta del archivo a leer.")] string ruta)
+{
+    if (!File.Exists(ruta))
+        return "El archivo no existe.";
+
+    return File.ReadAllText(ruta);
+}
+
+[Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+string EscribirArchivo(
+    [Description("Ruta del archivo a escribir.")] string ruta,
+    [Description("Contenido que se va a guardar.")] string contenido)
+{
+    File.WriteAllText(ruta, contenido);
+    return "Archivo guardado correctamente.";
+}
+
+[Description("Lista los archivos y carpetas de un directorio.")]
+string ListarArchivos([Description("Ruta del directorio a listar.")] string ruta = ".")
+{
+    if (!Directory.Exists(ruta))
+        return "El directorio no existe.";
+
+    return string.Join(Environment.NewLine, Directory.GetFileSystemEntries(ruta));
+}
+
+ChatOptions opciones = new()
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(LeerArchivo, new() {
+            Name = "leer-archivo",
+            Description = "Lee el contenido de un archivo de texto."
+        }),
+        AIFunctionFactory.Create(EscribirArchivo, new() {
+            Name = "escribir-archivo",
+            Description = "Crea o sobrescribe un archivo con el contenido indicado."
+        }),
+        AIFunctionFactory.Create(ListarArchivos, new() {
+            Name = "listar-archivos",
+            Description = "Lista los archivos y carpetas de un directorio."
+        })
+    ]
+};
 
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
@@ -78,19 +129,33 @@ async Task EnviarMensaje()
 
     textoConversacion += $"\n\n# Vos\n\n{texto}";
     conversacion.Text = textoConversacion;
+    conversacion.SetNeedsDraw();
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
     textoConversacion += "\n\n# Asistente\n\n";
     conversacion.Text = textoConversacion;
+    conversacion.SetNeedsDraw();
 
     string respuestaCompleta = "";
 
-    await foreach (var parte in chat.GetStreamingResponseAsync(mensajes))
+    try
     {
-        respuestaCompleta += parte.Text;
-        textoConversacion += parte.Text;
+        await foreach (var parte in chat.GetStreamingResponseAsync(mensajes, opciones))
+        {
+            respuestaCompleta += parte.Text;
+            textoConversacion += parte.Text;
+
+            conversacion.Text = textoConversacion;
+            conversacion.SetNeedsDraw();
+        }
+    }
+    catch (Exception ex)
+    {
+        respuestaCompleta = $"Error: {ex.Message}";
+        textoConversacion += $"Error: {ex.Message}";
         conversacion.Text = textoConversacion;
+        conversacion.SetNeedsDraw();
     }
 
     mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
@@ -109,9 +174,5 @@ entrada.Accepting += async (sender, e) => {
 };
 
 ventana.Add(conversacion, entrada, botonEnviar);
-
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 
 app.Run(ventana);
