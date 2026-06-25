@@ -142,3 +142,72 @@ if (errorConfiguracion is not null)
 }
 
 app.Run(ventana);
+
+async Task EnviarMensajeAsync()
+{
+    var texto = entrada.Text?.ToString()?.Trim();
+    if (string.IsNullOrWhiteSpace(texto) || respondiendo || errorConfiguracion is not null)
+    {
+        return;
+    }
+
+    respondiendo = true;
+    entrada.Text = "";
+    entrada.Enabled = false;
+    enviar.Enabled = false;
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+    turnos.Add(new TurnoVisible("Vos", texto));
+    var turnoAsistente = new TurnoVisible("Asistente", "");
+    turnos.Add(turnoAsistente);
+    ActualizarConversacion();
+
+    try
+    {
+        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones))
+        {
+            if (!string.IsNullOrEmpty(fragmento.Text))
+            {
+                turnoAsistente.Texto += fragmento.Text;
+                ActualizarConversacion();
+            }
+        }
+
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, turnoAsistente.Texto));
+    }
+    catch (Exception ex)
+    {
+        turnoAsistente.Texto += $"\n\n> Error: {ExplicarErrorApi(ex)}";
+        ActualizarConversacion();
+    }
+    finally
+    {
+        respondiendo = false;
+        entrada.Enabled = true;
+        enviar.Enabled = true;
+        entrada.SetFocus();
+    }
+}
+
+void ActualizarConversacion()
+{
+    app.Invoke(() =>
+    {
+        conversacion.Text = RenderizarConversacion(turnos);
+
+        conversacion.SetNeedsDraw();
+
+        conversacion.ScrollVertical(100000);
+    });
+}
+
+static string RenderizarConversacion(IEnumerable<TurnoVisible> turnos)
+{
+    var partes = turnos.Select(t => $"### {IconoRol(t.Autor)} {t.Autor}\n{t.Texto.TrimEnd()}");
+    var texto = string.Join("\n\n", partes);
+    return string.IsNullOrWhiteSpace(texto)
+        ? "### Asistente\nEscribi tu mensaje y presiona Enter."
+        : texto;
+}
+
+static string IconoRol(string autor) => autor == "Vos" ? "●" : "✦";
