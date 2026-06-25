@@ -36,6 +36,11 @@ static class AlumnosCliActions {
         return 0;
     }
 
+    public static int NormalizarCarpetas() {
+        PrepararCarpetasAlumnos();
+        return 0;
+    }
+
     public static int LimpiarProyectosPracticos() {
         PrepararCarpetasAlumnos();
         LimpiezaCompilacionPracticosResultado resultado = AppPaths.LimpiarDirectoriosCompilacionPracticos();

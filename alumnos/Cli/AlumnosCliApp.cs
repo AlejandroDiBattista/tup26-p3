@@ -25,6 +25,8 @@ static class AlumnosCliApp {
                 .WithDescription("Ejecuta publicar.py dentro de la carpeta de apuntes.");
             config.AddCommand<ListarPracticosFaltantesCommand>("listar-practicos-faltantes")
                 .WithDescription("Lista alumnos a quienes les falta el trabajo práctico indicado.");
+            config.AddCommand<NormalizarCarpetasCommand>("normalizar-carpetas")
+                .WithDescription("Normaliza los nombres de carpetas locales de alumnos.");
             config.AddCommand<ExportarEstadoCommand>("exportar-estado")
                 .WithDescription("Exporta el estado resumido a ESTADO.md.");
             config.AddCommand<ExportarMarkdownCommand>("exportar-markdown")
@@ -170,6 +172,7 @@ static class AlumnosCliApp {
             new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
             new("publicar-apuntes",               "Publicar apuntes",               "Ejecutar apuntes/publicar.py"),
             new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
+            new("normalizar-carpetas",            "Normalizar carpetas",             "Renombrar carpetas locales de alumnos"),
             new("exportar-estado",                "Exportar Estado",                "Exportar el resumen a ESTADO.md"),
             new("exportar-markdown",              "Exportar como Markdown",         "Exportar alumnos a alumnos.md"),
             new("exportar-json",                  "Exportar como JSON",             "Exportar alumnos a alumnos.json"),
