@@ -25,10 +25,30 @@ using var ventana = new Window {
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
+const int altoEntrada = 3;
+
+var panelConversacion = new Markdown {
     Text = "# Asistente\n\nEscribí un mensaje para comenzar.",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+    X = 0, Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(altoEntrada)
+};
+
+var campoEntrada = new TextField {
+    X = 0,
+    Y = Pos.AnchorEnd(altoEntrada),
+    Width = Dim.Fill(12),
+    Height = 1
+};
+
+var botonEnviar = new Button {
+    Text = "Enviar",
+    X = Pos.AnchorEnd(11),
+    Y = Pos.AnchorEnd(altoEntrada),
+    Width = 11
+};
+
+ventana.Add(panelConversacion, campoEntrada, botonEnviar);
 
 app.Run(ventana);
 
