@@ -41,3 +41,21 @@ void ConfigurarClienteIA()
     {
         urlBase = urlBase.Substring(0, urlBase.LastIndexOf("/chat/completions", StringComparison.InvariantCultureIgnoreCase));
     }
+        IChatClient baseClient = new OpenAIClient(
+        new ApiKeyCredential(token ?? "no-requiere-key"),
+        new OpenAIClientOptions { Endpoint = new Uri(urlBase) })
+        .GetChatClient(modelo)
+        .AsIChatClient();
+
+    clienteChat = new ChatClientBuilder(baseClient).UseFunctionInvocation().Build();
+
+    var herramientas = new HerramientasArchivos();
+    opcionesChat = new ChatOptions
+    {
+        Tools = [
+            AIFunctionFactory.Create(herramientas.LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo."),
+            AIFunctionFactory.Create(herramientas.EscribirArchivo, "escribir-archivo", "Crea o sobrescribe un archivo."),
+            AIFunctionFactory.Create(herramientas.ListarArchivos, "listar-archivos", "Lista elementos de una carpeta.")
+        ]
+    };
+}
