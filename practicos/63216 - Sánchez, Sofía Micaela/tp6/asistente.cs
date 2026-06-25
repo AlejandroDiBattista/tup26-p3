@@ -119,6 +119,58 @@ string EjecutarHerramienta(string nombre, JsonElement argumentos)
         return $"Error al ejecutar '{nombre}': {ex.Message}";
     }
 }
+
+
+async Task<string> PreguntarAsync(string pregunta)
+{
+    historial.Add(new { role = "user", content = pregunta });
+
+    while (true)
+    {
+        var body = JsonSerializer.Serialize(new {
+            model = modelo,
+            messages = historial,
+            tools = herramientas,
+            tool_choice = "auto"
+        });
+
+        var resp = await http.PostAsync(
+            url + "/chat/completions",
+            new StringContent(body, Encoding.UTF8, "application/json"));
+
+        var json = await resp.Content.ReadAsStringAsync();
+
+        if (!resp.IsSuccessStatusCode)
+            throw new Exception($"HTTP {(int)resp.StatusCode}: {json}");
+
+        using var doc = JsonDocument.Parse(json);
+        var choice = doc.RootElement.GetProperty("choices")[0];
+        var message = choice.GetProperty("message");
+        var finishReason = choice.GetProperty("finish_reason").GetString();
+
+        if (finishReason == "tool_calls" && message.TryGetProperty("tool_calls", out var toolCalls))
+        {
+            historial.Add(JsonSerializer.Deserialize<object>(message.GetRawText())!);
+
+            foreach (var toolCall in toolCalls.EnumerateArray())
+            {
+                var toolId   = toolCall.GetProperty("id").GetString() ?? "";
+                var toolName = toolCall.GetProperty("function").GetProperty("name").GetString() ?? "";
+                var toolArgs = JsonDocument.Parse(
+                    toolCall.GetProperty("function").GetProperty("arguments").GetString() ?? "{}"
+                ).RootElement;
+
+                var resultado = EjecutarHerramienta(toolName, toolArgs);
+
+                historial.Add(new {
+                    role = "tool",
+                    tool_call_id = toolId,
+                    content = resultado
+                });
+            }
+            continue;
+        }
+
         var texto = message.GetProperty("content").GetString() ?? "";
         historial.Add(new { role = "assistant", content = texto });
         return texto;
