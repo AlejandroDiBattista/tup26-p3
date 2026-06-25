@@ -149,3 +149,38 @@ ventana.KeyDown += (s, e) => {
 
 inputMensaje.SetFocus();
 app.Run(ventana);
+public class HerramientasArchivos
+{
+    [Description("Devuelve el contenido completo de un archivo de texto.")]
+    public string LeerArchivo([Description("La ruta relativa o absoluta del archivo.")] string ruta)
+    {
+        if (!File.Exists(ruta)) return $"Error: El archivo en '{ruta}' no existe.";
+        return File.ReadAllText(ruta);
+    }
+
+    [Description("Crea o sobrescribe un archivo de texto con el contenido especificado.")]
+    public string EscribirArchivo(
+        [Description("La ruta donde se va a guardar el archivo.")] string ruta, 
+        [Description("El contenido textual completo a insertar.")] string contenido)
+    {
+        var directorio = Path.GetDirectoryName(ruta);
+        if (!string.IsNullOrEmpty(directorio) && !Directory.Exists(directorio))
+        {
+            Directory.CreateDirectory(directorio);
+        }
+        File.WriteAllText(ruta, contenido);
+        return $"Éxito: Archivo escrito correctamente en '{ruta}'.";
+    }
+
+    [Description("Lista todos los archivos y subcarpetas dentro de un directorio determinado.")]
+    public string ListarArchivos([Description("La ruta del directorio a explorar (usa '.' para la raíz del proyecto).")] string ruta)
+    {
+        var rutaDestino = string.IsNullOrEmpty(ruta) ? "." : ruta;
+        if (!Directory.Exists(rutaDestino)) return $"Error: El directorio '{rutaDestino}' no existe.";
+
+        var archivos = Directory.GetFileSystemEntries(rutaDestino);
+        if (archivos.Length == 0) return "El directorio está vacío.";
+
+        return string.Join(Environment.NewLine, archivos.Select(Path.GetFileName));
+    }
+}
