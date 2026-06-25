@@ -88,3 +88,44 @@ ventana.Add(panelConversacion, lineaDivisoria, inputMensaje, botonEnviar);
 
 string historialPantalla = "# Asistente de programación inicializado.\n";
 panelConversacion.Text = historialPantalla;
+async Task EnviarMensajeUsuarioAsync()
+{
+    var texto = inputMensaje.Text?.ToString()?.Trim();
+    if (string.IsNullOrEmpty(texto)) return;
+
+    historialPantalla += $"\n# Vos\n\n{texto}\n\n# Asistente\n\n";
+    panelConversacion.Text = historialPantalla;
+    inputMensaje.Text = string.Empty;
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    _ = Task.Run(async () => {
+        try
+        {
+            string respuestaParcialAcumulada = "";
+            
+            await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, chatOptions))
+            {
+                if (!string.IsNullOrEmpty(fragmento.Text))
+                {
+                    respuestaParcialAcumulada += fragmento.Text;
+                    
+                    var textoActualizado = historialPantalla + respuestaParcialAcumulada;
+                    app.Invoke(() => {
+                        panelConversacion.Text = textoActualizado;
+                    });
+                }
+            }
+
+            mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaParcialAcumulada));
+            historialPantalla += respuestaParcialAcumulada + "\n";
+        }
+        catch (Exception ex)
+        {
+            var msgError = historialPantalla + $"\n*Error al procesar la solicitud: {ex.Message}*\n";
+            app.Invoke(() => {
+                panelConversacion.Text = msgError;
+            });
+        }
+    });
+}
