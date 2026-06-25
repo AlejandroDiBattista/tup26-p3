@@ -46,3 +46,45 @@ var chatOptions = new ChatOptions
         AIFunctionFactory.Create(herramientas.ListarArchivos, "listar-archivos", "Lista los archivos (y carpetas) de un directorio.")
     ]
 };
+using IApplication app = Application.Create().Init();
+
+using var ventana = new Window {
+    Title = $" Asistente IA · {modelo} ",
+    Width = Dim.Fill(), Height = Dim.Fill()
+};
+
+var panelConversacion = new Markdown {
+    Text = "# Asistente de programación listo.\n\nEscribí tu consulta abajo.",
+    Width = Dim.Fill(),
+    Height = Dim.Percent(80),
+    CanFocus = true
+};
+
+var lineaDivisoria = new Line {
+    Orientation = Orientation.Horizontal,
+    Y = Pos.Bottom(panelConversacion),
+    Width = Dim.Fill(),
+    Height = 1
+};
+
+var inputMensaje = new TextField {
+    X = 1,
+    Y = Pos.Bottom(lineaDivisoria),
+    Width = Dim.Percent(85),
+    Height = 1,
+    CanFocus = true
+};
+
+var botonEnviar = new Button {
+    Text = "Enviar",
+    X = Pos.Right(inputMensaje) + 1,
+    Y = Pos.Bottom(lineaDivisoria),
+    Width = Dim.Fill(),
+    Height = 1,
+    CanFocus = true
+};
+
+ventana.Add(panelConversacion, lineaDivisoria, inputMensaje, botonEnviar);
+
+string historialPantalla = "# Asistente de programación inicializado.\n";
+panelConversacion.Text = historialPantalla;
