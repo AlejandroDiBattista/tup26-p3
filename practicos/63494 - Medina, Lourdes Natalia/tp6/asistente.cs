@@ -52,6 +52,7 @@ var turnos = new List<TurnoVisible>();
 var respondiendo = false;
 var autoScroll = true;
 
+
 using IApplication app = Application.Create().Init();
 
 using var ventana = new Window
@@ -107,3 +108,37 @@ var enviar = new Button
 panelConversacion.Add(conversacion);
 panelEntrada.Add(entrada, enviar);
 ventana.Add(panelConversacion, panelEntrada);
+
+ventana.KeyDown += (_, e) =>
+{
+    if (e.KeyCode == Key.Esc)
+    {
+        app.RequestStop();
+        e.Handled = true;
+    }
+};
+
+entrada.KeyDown += (_, e) =>
+{
+    if (e.KeyCode == Key.Enter)
+    {
+        _ = EnviarMensajeAsync();
+        e.Handled = true;
+    }
+};
+
+enviar.Accepting += (_, e) =>
+{
+    _ = EnviarMensajeAsync();
+    e.Handled = true;
+};
+
+entrada.SetFocus();
+
+if (errorConfiguracion is not null)
+{
+    entrada.Enabled = false;
+    enviar.Enabled = false;
+}
+
+app.Run(ventana);
