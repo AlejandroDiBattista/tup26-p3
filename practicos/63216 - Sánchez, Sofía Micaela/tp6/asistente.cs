@@ -38,6 +38,87 @@ var historial = new List<object> {
     new { role = "system", content = sistemaPrompt }
 };
 
+var herramientas = new object[] {
+    new {
+        type = "function",
+        function = new {
+            name = "leer-archivo",
+            description = "Devuelve el contenido de un archivo de texto",
+            parameters = new {
+                type = "object",
+                properties = new {
+                    ruta = new { type = "string", description = "Ruta del archivo a leer" }
+                },
+                required = new[] { "ruta" }
+            }
+        }
+    },
+    new {
+        type = "function",
+        function = new {
+            name = "escribir-archivo",
+            description = "Crea o sobrescribe un archivo con el contenido indicado",
+            parameters = new {
+                type = "object",
+                properties = new {
+                    ruta = new { type = "string", description = "Ruta del archivo a escribir" },
+                    contenido = new { type = "string", description = "Contenido a escribir en el archivo" }
+                },
+                required = new[] { "ruta", "contenido" }
+            }
+        }
+    },
+    new {
+        type = "function",
+        function = new {
+            name = "listar-archivos",
+            description = "Lista los archivos y carpetas de un directorio",
+            parameters = new {
+                type = "object",
+                properties = new {
+                    ruta = new { type = "string", description = "Ruta del directorio a listar" }
+                },
+                required = new[] { "ruta" }
+            }
+        }
+    }
+};
+
+
+string EjecutarHerramienta(string nombre, JsonElement argumentos)
+{
+    try
+    {
+        switch (nombre)
+        {
+            case "leer-archivo":
+                var rutaLeer = argumentos.GetProperty("ruta").GetString() ?? "";
+                if (!File.Exists(rutaLeer)) return $"Error: el archivo '{rutaLeer}' no existe.";
+                return File.ReadAllText(rutaLeer);
+
+            case "escribir-archivo":
+                var rutaEscribir = argumentos.GetProperty("ruta").GetString() ?? "";
+                var contenido = argumentos.GetProperty("contenido").GetString() ?? "";
+                var dir = Path.GetDirectoryName(rutaEscribir);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllText(rutaEscribir, contenido);
+                return $"Archivo '{rutaEscribir}' guardado correctamente.";
+
+            case "listar-archivos":
+                var rutaListar = argumentos.GetProperty("ruta").GetString() ?? ".";
+                if (!Directory.Exists(rutaListar)) return $"Error: el directorio '{rutaListar}' no existe.";
+                var entradas = Directory.GetFileSystemEntries(rutaListar);
+                return string.Join("\n", entradas);
+
+            default:
+                return $"Herramienta '{nombre}' no reconocida.";
+        }
+    }
+    catch (Exception ex)
+    {
+        return $"Error al ejecutar '{nombre}': {ex.Message}";
+    }
+}
         var texto = message.GetProperty("content").GetString() ?? "";
         historial.Add(new { role = "assistant", content = texto });
         return texto;
