@@ -44,12 +44,63 @@ IChatClient clienteChat = new OpenAIClient(
     .UseFunctionInvocation()
     .Build();
 
+var capacidades = new List<AITool>
+{
+    AIFunctionFactory.Create(
+        (Func<string, string>)ObtenerContenidoArchivo,
+        "leer-archivo",
+        "Devuelve el contenido de un archivo de texto del proyecto."),
+    AIFunctionFactory.Create(
+        (Func<string, string, string>)GuardarContenidoArchivo,
+        "escribir-archivo",
+        "Crea o sobrescribe un archivo de texto del proyecto."),
+    AIFunctionFactory.Create(
+        (Func<string, string>)ObtenerListadoDirectorio,
+        "listar-archivos",
+        "Lista los archivos y carpetas de un directorio del proyecto.")
+};
+
 string BuscarDirectorioRaiz(string inicio)
 {
     if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
     var subcarpeta = Path.Combine(inicio, "tp6");
     if (File.Exists(Path.Combine(subcarpeta, "AGENTS.md"))) return subcarpeta;
     return inicio;
+}
+
+string ValidarYResolverRuta(string rutaRelativa)
+{
+    if (string.IsNullOrWhiteSpace(rutaRelativa)) rutaRelativa = ".";
+    var rutaAbsoluta = Path.GetFullPath(Path.Combine(directorioBase, rutaRelativa));
+    if (!rutaAbsoluta.StartsWith(directorioBase, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("La ruta debe permanecer dentro de la carpeta del proyecto.");
+    return rutaAbsoluta;
+}
+
+string ObtenerContenidoArchivo([Description("Ruta relativa del archivo a leer.")] string ruta)
+{
+    var ubicacion = ValidarYResolverRuta(ruta);
+    return File.Exists(ubicacion) ? File.ReadAllText(ubicacion) : $"Archivo no encontrado: {ruta}";
+}
+
+string GuardarContenidoArchivo(
+    [Description("Ruta relativa del archivo a crear o sobrescribir.")] string ruta,
+    [Description("Contenido que se guardara en el archivo.")] string contenido)
+{
+    var ubicacion = ValidarYResolverRuta(ruta);
+    Directory.CreateDirectory(Path.GetDirectoryName(ubicacion)!);
+    File.WriteAllText(ubicacion, contenido);
+    return $"Guardado correctamente: {ruta}";
+}
+
+string ObtenerListadoDirectorio([Description("Ruta relativa del directorio a listar.")] string ruta)
+{
+    var ubicacion = ValidarYResolverRuta(ruta);
+    if (!Directory.Exists(ubicacion)) return $"Directorio no encontrado: {ruta}";
+    return string.Join(Environment.NewLine, Directory
+        .EnumerateFileSystemEntries(ubicacion)
+        .Select(Path.GetFileName)
+        .OrderBy(n => n));
 }
 
 bool EsValorValido(string? valor)
