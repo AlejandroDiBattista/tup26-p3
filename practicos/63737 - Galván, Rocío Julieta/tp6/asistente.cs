@@ -81,12 +81,19 @@ async Task EnviarMensaje()
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
-    ChatResponse respuesta = await chat.GetResponseAsync(mensajes);
-
-    mensajes.AddMessages(respuesta);
-
-    textoConversacion += $"\n\n# Asistente\n\n{respuesta.Text}";
+    textoConversacion += "\n\n# Asistente\n\n";
     conversacion.Text = textoConversacion;
+
+    string respuestaCompleta = "";
+
+    await foreach (var parte in chat.GetStreamingResponseAsync(mensajes))
+    {
+        respuestaCompleta += parte.Text;
+        textoConversacion += parte.Text;
+        conversacion.Text = textoConversacion;
+    }
+
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
 
     entrada.Enabled = true;
     botonEnviar.Enabled = true;
