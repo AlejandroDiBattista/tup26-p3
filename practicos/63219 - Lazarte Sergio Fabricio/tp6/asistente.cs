@@ -167,8 +167,6 @@ async Task ProcesarMensajeAsync()
     }
 }
 
-aplicacion.Run(pantallaprincipal);
-
 string ConstruirMarkdown()
 {
     if (intercambios.Count == 0)
@@ -191,14 +189,6 @@ void ActualizarVista()
     vistaChat.SetContentSize(new Size(vistaChat.Viewport.Width, vistaChat.LineCount));
     vistaChat.ScrollVertical(vistaChat.LineCount);
     vistaChat.SetNeedsDraw();
-}
-
-string BuscarDirectorioRaiz(string inicio)
-{
-    if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
-    var subcarpeta = Path.Combine(inicio, "tp6");
-    if (File.Exists(Path.Combine(subcarpeta, "AGENTS.md"))) return subcarpeta;
-    return inicio;
 }
 
 string ValidarYResolverRuta(string rutaRelativa)
@@ -236,27 +226,12 @@ string ObtenerListadoDirectorio([Description("Ruta relativa del directorio a lis
         .OrderBy(n => n));
 }
 
-bool EsValorValido(string? valor)
+string BuscarDirectorioRaiz(string inicio)
 {
-    if (string.IsNullOrWhiteSpace(valor)) return false;
-    var v = valor.Trim();
-    return !(v.StartsWith('<') && v.EndsWith('>'))
-        && !v.Contains("tu_clave_api_aqui", StringComparison.OrdinalIgnoreCase);
-}
-
-string LeerVariableObligatoria(string clave)
-{
-    var valor = Environment.GetEnvironmentVariable(clave);
-    if (!EsValorValido(valor))
-        throw new InvalidOperationException($"Falta configurar {clave} en .env.");
-    return valor!;
-}
-
-string ResolverProveedorPredeterminado()
-{
-    var lista = new[] { "OPENAI", "GROQ", "GEMINI", "OPENROUTER", "FIREWORK", "GROK", "HHGG", "OLLAMA" };
-    return lista.FirstOrDefault(p => EsValorValido(Environment.GetEnvironmentVariable($"{p}_API_KEY")))
-        ?? "OPENAI";
+    if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
+    var subcarpeta = Path.Combine(inicio, "tp6");
+    if (File.Exists(Path.Combine(subcarpeta, "AGENTS.md"))) return subcarpeta;
+    return inicio;
 }
 
 ConfiguracionServicio InicializarConfiguracion(string[] argumentos)
@@ -280,6 +255,29 @@ ConfiguracionServicio InicializarConfiguracion(string[] argumentos)
     return new ConfiguracionServicio(proveedor, urlBase, clave!, modelo);
 }
 
+string ResolverProveedorPredeterminado()
+{
+    var lista = new[] { "OPENAI", "GROQ", "GEMINI", "OPENROUTER", "FIREWORK", "GROK", "HHGG", "OLLAMA" };
+    return lista.FirstOrDefault(p => EsValorValido(Environment.GetEnvironmentVariable($"{p}_API_KEY")))
+        ?? "OPENAI";
+}
+
+string LeerVariableObligatoria(string clave)
+{
+    var valor = Environment.GetEnvironmentVariable(clave);
+    if (!EsValorValido(valor))
+        throw new InvalidOperationException($"Falta configurar {clave} en .env.");
+    return valor!;
+}
+
+bool EsValorValido(string? valor)
+{
+    if (string.IsNullOrWhiteSpace(valor)) return false;
+    var v = valor.Trim();
+    return !(v.StartsWith('<') && v.EndsWith('>'))
+        && !v.Contains("tu_clave_api_aqui", StringComparison.OrdinalIgnoreCase);
+}
+
 Uri PrepararEndpoint(string endpoint)
 {
     var url = endpoint.TrimEnd('/');
@@ -288,5 +286,7 @@ Uri PrepararEndpoint(string endpoint)
     return new Uri(url);
 }
 
+
+aplicacion.Run(pantallaprincipal);
 record InteraccionUI(string Autor, string Texto);
 record ConfiguracionServicio(string Proveedor, string Url, string ApiKey, string Modelo);
