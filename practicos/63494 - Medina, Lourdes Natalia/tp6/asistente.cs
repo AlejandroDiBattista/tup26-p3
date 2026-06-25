@@ -211,3 +211,60 @@ static string RenderizarConversacion(IEnumerable<TurnoVisible> turnos)
 }
 
 static string IconoRol(string autor) => autor == "Vos" ? "●" : "✦";
+
+static string CargarPromptSistema()
+{
+    const string archivo = "AGENTS.md";
+    return File.Exists(archivo)
+        ? File.ReadAllText(archivo)
+        : "Sos un asistente conversacional claro, amable y preciso. Responde siempre en espanol rioplatense.";
+}
+
+static string? ValidarConfiguracion(string proveedor, string url, string? apiKey, string modelo)
+{
+    if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+    {
+        return $"La variable {proveedor}_API_URL no es una URL valida: `{url}`.";
+    }
+
+    if (string.IsNullOrWhiteSpace(apiKey) ||
+        apiKey.Equals("tu-clave", StringComparison.OrdinalIgnoreCase) ||
+        apiKey.Contains("pega-tu-key", StringComparison.OrdinalIgnoreCase))
+    {
+        return $"Falta configurar {proveedor}_API_KEY en el archivo `.env`.";
+    }
+
+    if (string.IsNullOrWhiteSpace(modelo))
+    {
+        return $"Falta configurar {proveedor}_MODEL en el archivo `.env`.";
+    }
+
+    return null;
+}
+
+static string ExplicarErrorApi(Exception ex)
+{
+    var mensaje = ex.Message;
+
+    if (mensaje.Contains("401", StringComparison.OrdinalIgnoreCase) ||
+        mensaje.Contains("invalid_api_key", StringComparison.OrdinalIgnoreCase))
+    {
+        return "La API key no es valida o fue revocada. Revisa OPENAI_API_KEY en `.env`.";
+    }
+
+    if (mensaje.Contains("429", StringComparison.OrdinalIgnoreCase) ||
+        mensaje.Contains("insufficient_quota", StringComparison.OrdinalIgnoreCase) ||
+        mensaje.Contains("quota", StringComparison.OrdinalIgnoreCase))
+    {
+        return "La cuenta no tiene cuota disponible o falta configurar billing. Revisa el plan/creditos del proveedor.";
+    }
+
+    if (mensaje.Contains("model", StringComparison.OrdinalIgnoreCase) &&
+        (mensaje.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
+         mensaje.Contains("does not exist", StringComparison.OrdinalIgnoreCase)))
+    {
+        return "El modelo configurado no esta disponible para esta cuenta. Revisa OPENAI_MODEL en `.env`.";
+    }
+
+    return mensaje;
+}
