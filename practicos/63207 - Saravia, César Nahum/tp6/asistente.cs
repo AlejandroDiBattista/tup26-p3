@@ -64,18 +64,48 @@ string EscribirArchivo(
          return string.Join("\n", entradas);
     }
 
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
-    .AsIChatClient();
+IChatClient chat = new ChatClientBuilder(
+        new OpenAIClient(
+            new ApiKeyCredential(apiKey ?? "no-requiere-key"),
+            new OpenAIClientOptions { Endpoint = new Uri(url) })
+                .GetChatClient(modelo)
+                .AsIChatClient())
+        .UseFunctionInvocation()
+        .Build();
+   
+var herramientas = new List<AITool> {
+    AIFunctionFactory.Create(LeerArchivo,   "leer-archivo"),
+    AIFunctionFactory.Create(EscribirArchivo,   "escribir-archivo"),
+    AIFunctionFactory.Create(ListarArchivos,   "listar-archivo"),
+};
 
-const string pregunta = "Definí recursividad";
+var opciones = new ChatOptions{Tools = herramientas };
+
 
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, File.ReadAllText("AGENTS.md")+
+        "\n\nRespondé siempre usando Markdown cuando sea posible." +
+        "\nUsá títulos, listas y bloques de código con triple acento grave cuando la respuesta lo justifique." +
+        "\nSi mostrás código, encerralo en bloques Markdown.")
 ];
+
+using IApplication app = Application.Create().Init();
+
+var ventana= new Window
+{
+    Title = $"AsistenteAI · {modelo} ",
+    Width  = Dim.Fill(),
+    Height = Dim.Fill(),
+};
+
+var panelConversacion = new TextView
+{
+    X = 0, Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    ReadOnly = true,
+    WordWrap = true 
+};
 
 var respuesta = await chat.GetResponseAsync(mensajes);
 
