@@ -14,9 +14,10 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var url = NormalizarEndpoint(Environment.GetEnvironmentVariable($"{proveedor}_API_URL")
+    ?? "https://api.groq.com/openai/v1/chat/completions");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "sin-api-key";
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/qwen3.6-27b";
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
@@ -36,12 +37,14 @@ var respuesta = await chat.GetResponseAsync(mensajes);
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
 };
 
 ventana.Add(new Markdown {
     Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
 });
 
 // TODO: agregar el panel de conversación y el panel de entrada.
