@@ -148,3 +148,45 @@ Window CrearInterfaz(IApplication aplicacionActiva, out TextField campoTextoOut)
             historialMensajes.Add(new ChatMessage(ChatRole.Assistant, bufferRespuesta));
             textoConsolaAcumulado += bufferRespuesta + "\n";
         }
+                    catch (Exception ex)
+            {
+                var cadenaError = textoConsolaAcumulado + $"\n*Fallo de comunicación: {ex.Message}*\n";
+
+                aplicacionActiva.Invoke(() =>
+                {
+                    vistaChat.Text = cadenaError;
+                });
+            }
+        });
+    }
+
+    campoTexto.Accepting += async (s, e) =>
+    {
+        e.Handled = true;
+        await ProcesarFlujoAsync();
+    };
+
+    btnEnviar.Accepting += async (s, e) =>
+    {
+        e.Handled = true;
+        await ProcesarFlujoAsync();
+    };
+
+    win.KeyDown += (s, e) =>
+    {
+        if (e != null && e.ToString().Contains("Esc"))
+        {
+            aplicacionActiva.RequestStop();
+            e.Handled = true;
+        }
+    };
+
+    return win;
+}
+
+public class HerramientasArchivos
+{
+    // LeerArchivo
+    // EscribirArchivo
+    // ListarArchivos
+}
