@@ -129,3 +129,23 @@ async Task EnviarMensajeUsuarioAsync()
         }
     });
 }
+botonEnviar.Accepting += async (s, e) => {
+    e.Handled = true;
+    await EnviarMensajeUsuarioAsync();
+};
+
+inputMensaje.Accepting += async (s, e) => {
+    e.Handled = true;
+    await EnviarMensajeUsuarioAsync();
+};
+
+ventana.KeyDown += (s, e) => {
+    if (e != null && e.ToString().Contains("Esc"))
+    {
+        app.RequestStop();
+        e.Handled = true;
+    }
+};
+
+inputMensaje.SetFocus();
+app.Run(ventana);
