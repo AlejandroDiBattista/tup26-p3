@@ -7,6 +7,7 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -47,6 +48,52 @@ var botonEnviar = new Button {
     Y = Pos.AnchorEnd(altoEntrada),
     Width = 11
 };
+
+async void EnviarMensaje()
+{
+    var texto = campoEntrada.Text?.ToString()?.Trim();
+    if (string.IsNullOrEmpty(texto)) return;
+
+    campoEntrada.Enabled = false;
+    botonEnviar.Enabled = false;
+    campoEntrada.Text = "";
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+    ActualizarPanelConversacion();
+
+    var respuesta = await chat.GetResponseAsync(mensajes);
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+    ActualizarPanelConversacion();
+
+    campoEntrada.Enabled = true;
+    botonEnviar.Enabled = true;
+    campoEntrada.SetFocus();
+}
+
+void ActualizarPanelConversacion()
+{
+    var sb = new StringBuilder();
+    foreach (var m in mensajes)
+    {
+        if (m.Role == ChatRole.System) continue;
+        var encabezado = m.Role == ChatRole.User ? "Vos" : "Asistente";
+        sb.AppendLine($"# {encabezado}\n");
+        sb.AppendLine(m.Text);
+        sb.AppendLine();
+    }
+    panelConversacion.Text = sb.ToString();
+}
+
+botonEnviar.Accepting += (_, _) => EnviarMensaje();
+campoEntrada.KeyDown += (_, key) =>
+{
+    if (key.KeyCode == Terminal.Gui.Input.Key.Enter)
+    {
+        EnviarMensaje();
+        key.Handled = true;
+    }
+};
+
 
 ventana.Add(panelConversacion, campoEntrada, botonEnviar);
 
