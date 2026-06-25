@@ -73,6 +73,43 @@ var historial = new List<ChatMessage>
 
 var intercambios = new List<InteraccionUI>();
 
+using IApplication aplicacion = Application.Create().Init();
+using var pantallaprincipal = new Window {
+    Title = $" Chat IA · {nombreModelo} ",
+    Width = Dim.Fill(), Height = Dim.Fill()
+};
+
+var vistaChat = new Markdown
+{
+    X = 0, Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    CanFocus = true,
+    Text = "# Chat IA\n\nEscribí tu consulta y presioná Enter para enviar."
+};
+vistaChat.ViewportSettings |= ViewportSettingsFlags.HasVerticalScrollBar;
+
+var campoTexto = new TextField
+{
+    X = 0,
+    Y = Pos.Bottom(vistaChat),
+    Width = Dim.Fill(12),
+    Height = 1
+};
+
+var botonEnviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(campoTexto) + 1,
+    Y = Pos.Top(campoTexto),
+    Width = 10,
+    IsDefault = true
+}; 
+
+pantallaprincipal.Add(vistaChat, campoTexto, botonEnviar);
+
+aplicacion.Run(pantallaprincipal);
+
 string BuscarDirectorioRaiz(string inicio)
 {
     if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
