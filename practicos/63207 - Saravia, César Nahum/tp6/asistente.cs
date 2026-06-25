@@ -178,13 +178,57 @@ string RenderizarMarkdown(string markdown)
     return salida.ToString();
 }
 
-var respuesta = await chat.GetResponseAsync(mensajes);
+void SetEntradaHabilitada(bool habilitada)
+{
+    app.Invoke(() => 
+    {
+      campoTexto.Enabled = habilitada;
+      botonEnviar.Enabled = habilitada;
+      if (habilitada) campoTexto.SetFocus();  
+    });
+}
 
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
-};
+async Task EnviarMensajeAsync()
+{
+    var texto = campoTexto.Text?.Trim();
+    if (string.IsNullOrEmpty(texto)) return;
+    app.Invoke(() => campoTexto.Text = "");
+    SetEntradaHabilitada(false);
+
+    AgregarTexto($"\n─── Vos ────────────────────────────────\n{texto}\n");
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    AgregarTexto("\n─── Asistente ──────────────────────────\n");
+    var respuestaCompleta = new StringBuilder();
+    var inicioRespuestaAsistente = textoConversacion.Length;
+
+    try
+    {
+        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones))
+        {
+           if (!string.IsNullOrEmpty(fragmento.Text))
+           {
+                AgregarTexto(fragmento.Text);
+                respuestaCompleta.Append(fragmento.Text);
+           } 
+        }
+    }
+    catch (Exception ex)
+    {
+        AgregarTexto($"\n[Error]: {ex.Message}\n");
+    }
+
+    if(respuestaCompleta.Length > 0)
+    {
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta.ToString()));
+
+        var respuestaRenderizada = RenderizarMarkdown(respuestaCompleta.ToString());
+        ReemplazarTextoDesde(inicioRespuestaAsistente, respuestaRenderizada);
+    }
+     AgregarTexto("\n");
+     SetEntradaHabilitada(true);
+}
+
 
 ventana.Add(new Markdown {
     Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
