@@ -268,3 +268,54 @@ static string ExplicarErrorApi(Exception ex)
 
     return mensaje;
 }
+
+static string LeerArchivo(string ruta)
+{
+    var path = ResolverRutaSegura(ruta);
+    return File.Exists(path)
+        ? File.ReadAllText(path)
+        : $"No existe el archivo: {ruta}";
+}
+
+static string EscribirArchivo(string ruta, string contenido)
+{
+    var path = ResolverRutaSegura(ruta);
+    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+    File.WriteAllText(path, contenido);
+    return $"Archivo escrito: {Path.GetRelativePath(Environment.CurrentDirectory, path)}";
+}
+
+static string ListarArchivos(string ruta = ".")
+{
+    var path = ResolverRutaSegura(ruta);
+    if (!Directory.Exists(path))
+    {
+        return $"No existe el directorio: {ruta}";
+    }
+
+    return string.Join(Environment.NewLine,
+        Directory.EnumerateFileSystemEntries(path)
+            .OrderBy(Directory.Exists)
+            .ThenBy(Path.GetFileName)
+            .Select(p => Directory.Exists(p)
+                ? $"[dir]  {Path.GetFileName(p)}"
+                : $"[file] {Path.GetFileName(p)}"));
+}
+
+static string ResolverRutaSegura(string ruta)
+{
+    var raiz = Path.GetFullPath(Environment.CurrentDirectory);
+    var path = Path.GetFullPath(Path.Combine(raiz, ruta));
+
+    if (!path.StartsWith(raiz, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException("La ruta debe estar dentro del directorio del proyecto.");
+    }
+
+    return path;
+}
+
+record TurnoVisible(string Autor, string Texto)
+{
+    public string Texto { get; set; } = Texto;
+}
