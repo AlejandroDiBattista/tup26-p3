@@ -1,51 +1,56 @@
-#!/usr/bin/env -S dotnet run
-#:package DotNetEnv@*
-#:package Microsoft.Extensions.AI.OpenAI@10.4.0
-#:package Terminal.Gui@2.4.3
-#:property PublishAot=false
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
-using Terminal.Gui.App;
-using Terminal.Gui.ViewBase;
-using Terminal.Gui.Views;
+using Terminal.Gui;
 
+// Cargamos variables desde .env
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var url = Environment.GetEnvironmentVariable("GROQ_API_URL") ?? "https://api.groq.com/openai/v1/";
+var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
+var modelo = Environment.GetEnvironmentVariable("GROQ_MODEL") ?? "llama-3.3-70b-versatile";
+
+List<ChatMessage> mensajes = File.Exists("historial.json") 
+    ? JsonSerializer.Deserialize<List<ChatMessage>>(File.ReadAllText("historial.json")) 
+    : [new(ChatRole.System, File.Exists("AGENTS.md") ? File.ReadAllText("AGENTS.md") : "Sos un asistente útil.")];
 
 IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
+        new ApiKeyCredential(apiKey ?? throw new Exception("Falta GROQ_API_KEY")),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
+Application.Init();
+var ventana = new Window($" AsistenteIA · Groq ({modelo}) ") { Width = Dim.Fill(), Height = Dim.Fill() };
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
+var vistaMarkdown = new TextView { Width = Dim.Fill(), Height = Dim.Fill() - 2, Text = "Escribí y presioná Enviar." };
+var campoTexto = new TextField { X = 1, Y = Pos.AnchorEnd(1), Width = Dim.Fill() - 10, Height = 1 };
+var botonEnviar = new Button { X = Pos.Right(campoTexto), Y = Pos.AnchorEnd(1), Text = "Enviar" };
 
-var respuesta = await chat.GetResponseAsync(mensajes);
-
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+botonEnviar.Clicked += async () => {
+    var texto = campoTexto.Text.ToString();
+    if (string.IsNullOrWhiteSpace(texto)) return;
+    
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+    campoTexto.Text = "";
+    
+    try {
+        string respuesta = "";
+        await foreach (var frag in chat.GetStreamingResponseAsync(mensajes)) {
+            respuesta += frag.Text;
+            vistaMarkdown.Text = respuesta;
+        }
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta));
+        File.WriteAllText("historial.json", JsonSerializer.Serialize(mensajes));
+    } catch (Exception ex) {
+        vistaMarkdown.Text = $"Error: {ex.Message}";
+    }
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
-
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
-
-app.Run(ventana);
+ventana.Add(vistaMarkdown, campoTexto, botonEnviar);
+Application.Run(ventana);
+Application.Shutdown();
