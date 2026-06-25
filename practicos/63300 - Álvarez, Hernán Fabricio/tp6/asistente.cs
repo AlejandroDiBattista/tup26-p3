@@ -90,4 +90,29 @@ var botonEnviar = new Button
 panelEntrada.Add(entrada, botonEnviar);
 ventana.Add(panelConversacion, panelEntrada);
 
-app.Run(ventana);
+// Si falta configuracion, la app muestra el problema y bloquea el envio.
+var configuracionValida = ValidarConfiguracion(proveedor, url, apiKey, out var mensajeConfiguracion);
+if (!configuracionValida)
+{
+    vistaConversacion.Text = mensajeConfiguracion;
+    entrada.Enabled = false;
+    botonEnviar.Enabled = false;
+}
+
+IChatClient? chat = null;
+ChatOptions? opcionesChat = null;
+
+// Crea el cliente de chat y activa la invocacion automatica de herramientas.
+if (configuracionValida)
+{
+    chat = CrearClienteChat(url!, apiKey!, modelo);
+    chat = chat.AsBuilder()
+        .UseFunctionInvocation()
+        .Build();
+
+    opcionesChat = new ChatOptions
+    {
+        Tools = CrearHerramientas(),
+        ToolMode = ChatToolMode.Auto
+    };
+}
