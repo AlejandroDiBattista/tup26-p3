@@ -54,6 +54,48 @@ var botonEnviar = new Button {
 
 ventana.Add(vistaMarkdown, campoEntrada, botonEnviar);
 
-vistaMarkdown.Text = "Escribí un mensaje para comenzar.\n\n---\n\n";
+string historialPantalla = "Escribí un mensaje para comenzar.\n\n---\n\n";
+vistaMarkdown.Text = historialPantalla;
+
+async Task EnviarMensaje()
+{
+    var textoUsuario = (string)campoEntrada.Text;
+    if (string.IsNullOrWhiteSpace(textoUsuario)) return;
+
+    campoEntrada.Enabled = false;
+    botonEnviar.Enabled = false;
+    campoEntrada.Text = "";
+
+    mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
+    historialPantalla += $"# Vos\n\n{textoUsuario}\n\n# Asistente\n\n";
+    vistaMarkdown.Text = historialPantalla;
+    
+    try 
+    {
+        var respuestaStream = chat.GetStreamingResponseAsync(mensajes);
+        var respuestaCompleta = "";
+
+        await foreach (var fragmento in respuestaStream)
+        {
+            respuestaCompleta += fragmento.Text;
+            vistaMarkdown.Text = historialPantalla + respuestaCompleta;
+            app.Invoke(() => vistaMarkdown.SetNeedsDraw());
+        }
+        
+        historialPantalla += respuestaCompleta + "\n\n---\n\n";
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
+    }
+    catch (Exception ex)
+    {
+        historialPantalla += $"*Error: {ex.Message}*\n\n";
+        vistaMarkdown.Text = historialPantalla;
+    }
+
+    campoEntrada.Enabled = true;
+    botonEnviar.Enabled = true;
+    campoEntrada.SetFocus();
+}
+
+botonEnviar.Accepting += (s, e) => _ = Task.Run(EnviarMensaje);
 
 app.Run(ventana);
