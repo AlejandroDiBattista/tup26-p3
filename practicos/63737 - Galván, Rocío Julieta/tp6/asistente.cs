@@ -18,9 +18,12 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
+
+var urlBase = url!.EndsWith("/chat/completions") ? url[..^"/chat/completions".Length] : url;
+
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new OpenAIClientOptions { Endpoint = new Uri(urlBase) })
     .GetChatClient(modelo)
     .AsIChatClient();
 
@@ -32,6 +35,7 @@ List<ChatMessage> mensajes = [
 ];
 
 var respuesta = await chat.GetResponseAsync(mensajes);
+
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
