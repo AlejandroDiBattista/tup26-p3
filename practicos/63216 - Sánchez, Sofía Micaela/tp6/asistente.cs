@@ -29,10 +29,6 @@ var http = new HttpClient();
 http.DefaultRequestHeaders.Add("x-goog-api-key", apiKey);
 http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
 var sistemaPrompt = File.ReadAllText("AGENTS.md");
 var historial = new List<object> {
     new { role = "system", content = sistemaPrompt }
