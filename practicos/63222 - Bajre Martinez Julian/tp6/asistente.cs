@@ -13,25 +13,11 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
-
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
-    .AsIChatClient();
-
-const string pregunta = "Definí recursividad";
+var (chat, modelo) = CrearChatClient(args);
 
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -40,12 +26,24 @@ using var ventana = new Window {
 };
 
 ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
+    Text = "# Asistente\n\nEscribí un mensaje para comenzar.",
     Width = Dim.Fill(), Height = Dim.Fill()
 });
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
-
 app.Run(ventana);
+
+static (IChatClient chat, string modelo) CrearChatClient(string[] args)
+{
+    var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+    var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL")?? "https://api.openai.com/v1";
+    var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+    var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+
+    IChatClient chat = new OpenAIClient(
+            new ApiKeyCredential(apiKey ?? "no-requiere-key"),
+            new OpenAIClientOptions { Endpoint = new Uri(url) })
+        .GetChatClient(modelo)
+        .AsIChatClient();
+
+    return (chat, modelo);
+}
