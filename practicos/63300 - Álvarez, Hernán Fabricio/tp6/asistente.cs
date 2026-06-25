@@ -116,3 +116,31 @@ if (configuracionValida)
         ToolMode = ChatToolMode.Auto
     };
 }
+
+// Historial que se envia al modelo. Incluye el prompt de sistema y todos los turnos.
+var mensajesChat = new List<ChatMessage>
+{
+    new(ChatRole.System, promptSistema)
+};
+
+// Historial visual que se renderiza en pantalla.
+var mensajesPantalla = new List<MensajePantalla>();
+var respondiendo = false;
+
+// Eventos principales de la interfaz: enviar con Enter/boton y salir con Esc.
+entrada.Accepted += (_, _) => EnviarMensaje();
+botonEnviar.Accepted += (_, _) => EnviarMensaje();
+ventana.KeyDown += (_, tecla) =>
+{
+    if (tecla == Key.Esc || tecla.KeyCode == KeyCode.Esc)
+    {
+        app.RequestStop();
+    }
+};
+
+if (configuracionValida)
+{
+    entrada.SetFocus();
+}
+
+app.Run(ventana);
