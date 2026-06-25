@@ -41,6 +41,12 @@ static class AlumnosCliApp {
                 .WithDescription("Marca TPs presentados a partir del código local.");
             config.AddCommand<VerificarCompilacionCommand>("verificar-compilacion")
                 .WithDescription("Compila los TP entregados y marca para revisar los que tienen errores.");
+            config.AddCommand<VerificarEjecucionCommand>("verificar-ejecucion")
+                .WithDescription("Ejecuta los TP entregados y marca para revisar los que fallan al iniciar.");
+            config.AddCommand<CapturarPantallasCommand>("capturar-pantallas")
+                .WithDescription("Ejecuta TP web presentados, abre el navegador y guarda una captura en cada carpeta.");
+            config.AddCommand<EjecutarTp5Command>("ejecutar-tp5")
+                .WithDescription("Ejecuta el TP5 de un alumno y abre el navegador en su página.");
             config.AddCommand<LimpiarArchivosTemporalesCommand>("limpiar-archivos-temporales")
                 .WithDescription("Elimina bin, obj, .vs, cachés de compilación y temporales SQLite dentro de prácticos.");
         });
@@ -111,6 +117,9 @@ static class AlumnosCliApp {
             "exportar-vcard" => "Exportar alumnos a vCard",
             "revisar-presentaciones" => $"Revisar presentaciones{detalle}",
             "verificar-compilacion" => $"Verificar compilación{detalle}",
+            "verificar-ejecucion" => $"Verificar ejecución{detalle}",
+            "capturar-pantallas" => $"Capturar pantallas{detalle}",
+            "ejecutar-tp5" => $"Ejecutar TP5{detalle}",
             "limpiar-archivos-temporales" => "Limpiar archivos temporales",
             "listar-grupos-whatsapp" => "Listar grupos y participantes de WhatsApp",
             _ => args[0]
@@ -141,6 +150,9 @@ static class AlumnosCliApp {
             "publicar-apuntes" => ["publicar-apuntes"],
             "revisar-presentaciones" => ConstruirArgumentosRevisarPresentaciones(),
             "verificar-compilacion" => ConstruirArgumentosVerificarCompilacion(),
+            "verificar-ejecucion" => ConstruirArgumentosVerificarEjecucion(),
+            "capturar-pantallas" => ConstruirArgumentosCapturarPantallas(),
+            "ejecutar-tp5" => ["ejecutar-tp5"],
             "listar-practicos-faltantes" => ConstruirArgumentosPracticosFaltantes(),
             "exportar-estado" => ["exportar-estado"],
             "exportar-markdown" => ["exportar-markdown"],
@@ -169,6 +181,9 @@ static class AlumnosCliApp {
             new("cerrar-prs",                     "Cerrar PRs",                     "Cerrar pull requests abiertos"),
             new("revisar-presentaciones",         "Revisar presentaciones",         "Marcar TP presentados desde el código local"),
             new("verificar-compilacion",          "Verificar compilación",          "Compilar entregados y marcar los que tienen errores"),
+            new("verificar-ejecucion",            "Verificar ejecución",            "Ejecutar entregados y marcar los que fallan al iniciar"),
+            new("capturar-pantallas",             "Capturar pantallas",             "Guardar captura del navegador para TP web"),
+            new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador"),
             new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
             new("publicar-apuntes",               "Publicar apuntes",               "Ejecutar apuntes/publicar.py"),
             new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
@@ -206,6 +221,22 @@ static class AlumnosCliApp {
         return trabajoPractico is null
             ? Array.Empty<string>()
             : ["verificar-compilacion", trabajoPractico];
+    }
+
+    static string[] ConstruirArgumentosVerificarEjecucion() {
+        string? trabajoPractico = PedirTrabajoPractico("Verificar ejecución");
+
+        return trabajoPractico is null
+            ? Array.Empty<string>()
+            : ["verificar-ejecucion", trabajoPractico];
+    }
+
+    static string[] ConstruirArgumentosCapturarPantallas() {
+        string? trabajoPractico = PedirTrabajoPractico("Capturar pantallas");
+
+        return trabajoPractico is null
+            ? Array.Empty<string>()
+            : ["capturar-pantallas", trabajoPractico];
     }
 
     static string[] ConstruirArgumentosPublicarPractico() {
