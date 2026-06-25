@@ -64,7 +64,7 @@ var botonEnviar = new Button {
     Width = 10
 };
 
-void EnviarMensaje()
+async Task EnviarMensaje()
 {
     string texto = entrada.Text?.ToString() ?? "";
 
@@ -72,19 +72,33 @@ void EnviarMensaje()
         return;
     }
 
+    entrada.Text = "";
+    entrada.Enabled = false;
+    botonEnviar.Enabled = false;
+
     textoConversacion += $"\n\n# Vos\n\n{texto}";
     conversacion.Text = textoConversacion;
 
-    entrada.Text = "";
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    ChatResponse respuesta = await chat.GetResponseAsync(mensajes);
+
+    mensajes.AddMessages(respuesta);
+
+    textoConversacion += $"\n\n# Asistente\n\n{respuesta.Text}";
+    conversacion.Text = textoConversacion;
+
+    entrada.Enabled = true;
+    botonEnviar.Enabled = true;
     entrada.SetFocus();
 }
 
-botonEnviar.Accepting += (sender, e) => {
-    EnviarMensaje();
+botonEnviar.Accepting += async (sender, e) => {
+    await EnviarMensaje();
 };
 
-entrada.Accepting += (sender, e) => {
-    EnviarMensaje();
+entrada.Accepting += async (sender, e) => {
+    await EnviarMensaje();
 };
 
 ventana.Add(conversacion, entrada, botonEnviar);
