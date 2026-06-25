@@ -113,3 +113,38 @@ Window CrearInterfaz(IApplication aplicacionActiva, out TextField campoTextoOut)
     marcoEntrada.Add(campoTexto, btnEnviar);
 
     win.Add(marcoChat, marcoEntrada);
+    async Task ProcesarFlujoAsync()
+{
+    var entradaUsuario = campoTexto.Text?.ToString()?.Trim();
+    if (string.IsNullOrEmpty(entradaUsuario)) return;
+
+    textoConsolaAcumulado += $"\n# Vos\n\n{entradaUsuario}\n\n# Asistente\n\n";
+    vistaChat.Text = textoConsolaAcumulado;
+    campoTexto.Text = string.Empty;
+
+    historialMensajes.Add(new ChatMessage(ChatRole.User, entradaUsuario));
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            string bufferRespuesta = "";
+
+            await foreach (var pieza in clienteChat.GetStreamingResponseAsync(historialMensajes, opcionesChat))
+            {
+                if (!string.IsNullOrEmpty(pieza.Text))
+                {
+                    bufferRespuesta += pieza.Text;
+
+                    var actualizacion = textoConsolaAcumulado + bufferRespuesta;
+
+                    aplicacionActiva.Invoke(() =>
+                    {
+                        vistaChat.Text = actualizacion;
+                    });
+                }
+            }
+
+            historialMensajes.Add(new ChatMessage(ChatRole.Assistant, bufferRespuesta));
+            textoConsolaAcumulado += bufferRespuesta + "\n";
+        }
