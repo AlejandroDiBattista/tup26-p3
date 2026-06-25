@@ -33,3 +33,16 @@ IChatClient clienteBase = new OpenAIClient(
 IChatClient chat = new ChatClientBuilder(clienteBase)
     .UseFunctionInvocation()
     .Build();
+    List<ChatMessage> mensajes = [
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+];
+
+var herramientas = new HerramientasArchivos();
+var chatOptions = new ChatOptions
+{
+    Tools = [
+        AIFunctionFactory.Create(herramientas.LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo de texto."),
+        AIFunctionFactory.Create(herramientas.EscribirArchivo, "escribir-archivo", "Crea o sobrescribe un archivo con el contenido indicado."),
+        AIFunctionFactory.Create(herramientas.ListarArchivos, "listar-archivos", "Lista los archivos (y carpetas) de un directorio.")
+    ]
+};
