@@ -16,6 +16,42 @@ using System.Text;
 using System.Drawing;
 using System.ComponentModel;
 
+var directorioBase = BuscarDirectorioRaiz(Directory.GetCurrentDirectory());
+DotNetEnv.Env.Load(Path.Combine(directorioBase, ".env"));
+
+ConfiguracionServicio config;
+try
+{
+    config = InicializarConfiguracion(args);
+}
+catch (InvalidOperationException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return;
+}
+
+var nombreProveedor = config.Proveedor;
+var endpointUrl = config.Url;
+var claveApi = config.ApiKey;
+var nombreModelo = config.Modelo;
+
+IChatClient clienteChat = new OpenAIClient(
+        new ApiKeyCredential(claveApi ?? "sin-clave"),
+        new OpenAIClientOptions { Endpoint = PrepararEndpoint(endpointUrl) })
+    .GetChatClient(nombreModelo)
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
+
+string BuscarDirectorioRaiz(string inicio)
+{
+    if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
+    var subcarpeta = Path.Combine(inicio, "tp6");
+    if (File.Exists(Path.Combine(subcarpeta, "AGENTS.md"))) return subcarpeta;
+    return inicio;
+}
+
 bool EsValorValido(string? valor)
 {
     if (string.IsNullOrWhiteSpace(valor)) return false;
