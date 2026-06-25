@@ -67,29 +67,46 @@ btnEnviar.Accepting += async (s, e) => {
     }
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
-    inputTexto.Text = "";
-    ActualizarPantalla();
+    var historialParaEnviar = mensajes.ToList();
 
+    inputTexto.Text = "";
     inputTexto.Enabled = false;
     btnEnviar.Enabled = false;
-    historialView.Text += "### Asistente\n*Pensando...*\n\n";
-    
     e.Handled = true;
+
+    string textoAcumulado = "";
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, textoAcumulado));
+    ActualizarPantalla();
     
     try {
-        var respuesta = await chat.GetResponseAsync(mensajes);
-        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
+        var stream = chat.GetStreamingResponseAsync(historialParaEnviar);
+
+        // 4. Consumimos el stream fragmento a fragmento
+        await foreach (var chunk in stream) {
+            if (chunk.Text != null) {
+                textoAcumulado += chunk.Text; 
+                
+                // Reemplazamos el último mensaje de la lista con la versión actualizada
+                mensajes[mensajes.Count - 1] = new ChatMessage(ChatRole.Assistant, textoAcumulado);
+                
+                // Actualizamos la pantalla (Terminal.Gui v2 se encarga del redibujado solo)
+                Application.Invoke(() => {
+                    ActualizarPantalla();
+                });
+            }
+        }
     }
     catch (Exception ex) {
-        mensajes.Add(new ChatMessage(ChatRole.Assistant, $"**Error:** {ex.Message}"));
+        textoAcumulado += $"\n\n**Error:** {ex.Message}";
+        mensajes[mensajes.Count - 1] = new ChatMessage(ChatRole.Assistant, textoAcumulado);
+        Application.Invoke(() => ActualizarPantalla());
     }
 
-    // 4. Volvemos al hilo de la interfaz para actualizar y desbloquear
+    // 5. Desbloqueamos la UI cuando termina
     Application.Invoke(() => {
-        ActualizarPantalla();
         inputTexto.Enabled = true;
         btnEnviar.Enabled = true;
-        inputTexto.SetFocus(); // Devolvemos el cursor a la caja de texto
+        inputTexto.SetFocus(); 
     });
 };
 
