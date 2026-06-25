@@ -20,19 +20,25 @@ var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "sin-
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/qwen3.6-27b";
 
 IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
+        new ApiKeyCredential(apiKey),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
-    .AsIChatClient();
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 
-const string pregunta = "Definí recursividad";
+var mensajes = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+};
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
+var opciones = new ChatOptions
+{
+    Tools = CrearHerramientasDeArchivos()
+};
 
-var respuesta = await chat.GetResponseAsync(mensajes);
+var turnos = new List<TurnoMostrado>();
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -41,14 +47,46 @@ using var ventana = new Window {
     Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
+var conversacion = new Markdown
+{
+    Text = "# Asistente IA\n\nListo para conversar.",
+    X = 0,
+    Y = 0,
     Width = Dim.Fill(),
-    Height = Dim.Fill()
-});
+    Height = Dim.Fill(3),
+    CanFocus = true
+};
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+var entrada = new TextField
+{
+    X = 0,
+    Y = Pos.AnchorEnd(3),
+    Width = Dim.Fill(12),
+    Height = 1
+};
+
+var enviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.AnchorEnd(10),
+    Y = Pos.AnchorEnd(3),
+    Width = 10,
+    Height = 1,
+    IsDefault = true
+};
+
+var estado = new Label
+{
+    Text = "Enter: enviar | Esc: salir",
+    X = 0,
+    Y = Pos.AnchorEnd(2),
+    Width = Dim.Fill(),
+    Height = 1
+};
+
+ventana.Add(conversacion, entrada, enviar, estado);
+entrada.SetFocus();
+
+
 
 app.Run(ventana);
