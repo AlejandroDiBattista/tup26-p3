@@ -15,3 +15,6 @@ using Terminal.Gui.Input;
 using System.Text;
 using System.Drawing;
 using System.ComponentModel;
+
+record InteraccionUI(string Autor, string Texto);
+record ConfiguracionServicio(string Proveedor, string Url, string ApiKey, string Modelo);
