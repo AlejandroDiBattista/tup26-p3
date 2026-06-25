@@ -83,3 +83,33 @@ Window CrearInterfaz(IApplication aplicacionActiva, out TextField campoTextoOut)
     };
 
     marcoChat.Add(vistaChat);
+        var marcoEntrada = new FrameView {
+        Title = " Consola de Entrada (Presione Enter para enviar / Esc para salir) ",
+        X = 0,
+        Y = Pos.Bottom(marcoChat),
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+
+    var campoTexto = new TextField {
+        X = 1,
+        Y = 0,
+        Width = Dim.Percent(85),
+        Height = 1,
+        CanFocus = true
+    };
+
+    campoTextoOut = campoTexto;
+
+    var btnEnviar = new Button {
+        Text = "Enviar",
+        X = Pos.Right(campoTexto) + 2,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = 1,
+        CanFocus = true
+    };
+
+    marcoEntrada.Add(campoTexto, btnEnviar);
+
+    win.Add(marcoChat, marcoEntrada);
