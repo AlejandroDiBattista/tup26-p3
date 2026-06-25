@@ -59,3 +59,19 @@ void ConfigurarClienteIA()
         ]
     };
 }
+Window CrearInterfaz(IApplication aplicacionActiva, out TextField campoTextoOut)
+{
+    var win = new Window
+    {
+        Width = Dim.Fill(),
+        Height = Dim.Fill(),
+        Title = " Interfaz de Asistencia de IA "
+    };
+
+    var marcoChat = new FrameView {
+        Title = " Historial de Conversación (Markdown) ",
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Percent(82)
+    };
