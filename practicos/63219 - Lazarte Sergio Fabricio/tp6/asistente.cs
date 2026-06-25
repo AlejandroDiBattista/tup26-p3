@@ -60,6 +60,19 @@ var capacidades = new List<AITool>
         "Lista los archivos y carpetas de un directorio del proyecto.")
 };
 
+var parametrosChat = new ChatOptions
+{
+    Tools = capacidades,
+    ToolMode = ChatToolMode.Auto
+};
+
+var historial = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText(Path.Combine(directorioBase, "AGENTS.md")))
+};
+
+var intercambios = new List<InteraccionUI>();
+
 string BuscarDirectorioRaiz(string inicio)
 {
     if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
