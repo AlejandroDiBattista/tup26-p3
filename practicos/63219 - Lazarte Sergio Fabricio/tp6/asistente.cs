@@ -107,6 +107,65 @@ var botonEnviar = new Button
 }; 
 
 pantallaprincipal.Add(vistaChat, campoTexto, botonEnviar);
+bool procesando = false;
+campoTexto.Accepted += (_, _) => _ = ProcesarMensajeAsync();
+botonEnviar.Accepted += (_, _) => _ = ProcesarMensajeAsync();
+campoTexto.SetFocus();
+
+async Task ProcesarMensajeAsync()
+{
+    if (procesando) return;
+
+    var consulta = campoTexto.Text?.ToString()?.Trim();
+    if (string.IsNullOrWhiteSpace(consulta)) return;
+
+    procesando = true;
+    campoTexto.Text = "";
+    campoTexto.Enabled = false;
+    botonEnviar.Enabled = false;
+
+    historial.Add(new ChatMessage(ChatRole.User, consulta));
+    intercambios.Add(new InteraccionUI("Tú", consulta));
+    intercambios.Add(new InteraccionUI("Asistente", ""));
+    ActualizarVista();
+
+    try
+    {
+        var buffer = new StringBuilder();
+        var fragmentos = new List<ChatResponseUpdate>();
+
+        await foreach (var fragmento in clienteChat.GetStreamingResponseAsync(historial, parametrosChat))
+        {
+            fragmentos.Add(fragmento);
+            if (!string.IsNullOrEmpty(fragmento.Text))
+            {
+                buffer.Append(fragmento.Text);
+                intercambios[^1] = intercambios[^1] with { Texto = buffer.ToString() };
+                aplicacion.Invoke(ActualizarVista);
+            }
+        }
+        var mensajeCompleto = fragmentos.ToChatResponse();
+        historial.AddMessages(mensajeCompleto);
+        intercambios[^1] = intercambios[^1] with { Texto = mensajeCompleto.Text };
+    }
+    catch (Exception ex)
+    {
+        var msgError = $"Error al obtener respuesta: {ex.Message}";
+        historial.Add(new ChatMessage(ChatRole.Assistant, msgError));
+        intercambios[^1] = intercambios[^1] with { Texto = msgError };
+    }
+    finally
+    {
+        aplicacion.Invoke(() =>
+        {
+            procesando = false;
+            campoTexto.Enabled = true;
+            botonEnviar.Enabled = true;
+            ActualizarVista();
+            campoTexto.SetFocus();
+        });
+    }
+}
 
 aplicacion.Run(pantallaprincipal);
 
