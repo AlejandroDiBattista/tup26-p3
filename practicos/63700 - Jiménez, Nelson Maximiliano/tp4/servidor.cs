@@ -1,65 +1,120 @@
-#:sdk Microsoft.NET.Sdk.Web
-#:package Microsoft.EntityFrameworkCore.Sqlite@*
-#:property PublishAot=false
-
 using Microsoft.EntityFrameworkCore;
-
-// ── Configuración ──────────────────────────────────────────────────────────
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
-builder.Services.AddScoped<CatalogoRepositorio>();
+
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 var app = builder.Build();
 
-// ── Inicialización de la base de datos ────────────────────────────────────
-
-using (var scope = app.Services.CreateScope()) {
-    var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
-    repositorio.Iniciar();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CatalogoDb>();
+    db.Database.EnsureCreated();
 }
 
-// ── Endpoints ─────────────────────────────────────────────────────────────
 
-app.MapGet("/producto", (CatalogoRepositorio repositorio) => {
-    var producto = repositorio.TraerProducto();
-    if(producto is null) return Results.NotFound();
+app.MapGet("/productos", async (CatalogoDb db) =>
+    await db.Productos.ToListAsync());
 
-    return Results.Ok(producto);
+app.MapGet("/productos/{id}", async (int id, CatalogoDb db) =>
+    await db.Productos.FindAsync(id) is Producto p ? Results.Ok(p) : Results.NotFound());
+
+app.MapPost("/productos", async (Producto p, CatalogoDb db) =>
+{
+    db.Productos.Add(p);
+    await db.SaveChangesAsync();
+    return Results.Created($"/productos/{p.Id}", p);
 });
 
-app.Run("http://localhost:5050");
+app.MapPut("/productos/{id}", async (int id, Producto p, CatalogoDb db) =>
+{
+    var prod = await db.Productos.FindAsync(id);
+    if (prod is null) return Results.NotFound();
+
+    prod.Codigo = p.Codigo;
+    prod.Nombre = p.Nombre;
+    prod.Precio = p.Precio;
+
+    
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+app.MapDelete("/productos/{id}", async (int id, CatalogoDb db) =>
+{
+    var prod = await db.Productos.FindAsync(id);
+    if (prod is null) return Results.NotFound();
+
+    db.Productos.Remove(prod);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
 
 
 
-// ── Modelo ────────────────────────────────────────────────────────────────
+app.MapGet("/productos/{id}/movimientos", async (int id, CatalogoDb db) =>
+    await db.Movimientos.Where(m => m.ProductoId == id).OrderByDescending(m => m.Fecha).ToListAsync());
 
-record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+app.MapPost("/productos/{id}/movimientos", async (int id, MovimientoDeProducto m, CatalogoDb db) =>
+{
+    var prod = await db.Productos.FindAsync(id);
+    if (prod is null) return Results.NotFound();
 
-// ── DbContext ─────────────────────────────────────────────────────────────
-
-class CatalogoDb : DbContext {
-    public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
-    public DbSet<Producto> Productos => Set<Producto>();
-}
-
-// ── Repositorio ───────────────────────────────────────────────────────────
-
-class CatalogoRepositorio {
-    private readonly CatalogoDb db;
-
-    public CatalogoRepositorio(CatalogoDb db) => this.db = db;
-
-    public void Iniciar() {
-        db.Database.EnsureCreated();
-
-        if (!db.Productos.Any()) {
-            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
-            db.SaveChanges();
-        }
+    m.ProductoId = id;
+    m.Fecha = DateTime.Now;
+    m.Cantidad = Math.Abs(m.Cantidad);
+    switch (m.Tipo)
+    {
+        case TipoMovimiento.Compra:
+            prod.Stock += m.Cantidad;
+            break;
+        case TipoMovimiento.Venta:
+            prod.Stock -= m.Cantidad;
+            break;
+        case TipoMovimiento.Ajuste:
+            prod.Stock = m.Cantidad;
+            break;
     }
 
-    public Producto? TraerProducto() =>
-        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
+    db.Movimientos.Add(m);
+    await db.SaveChangesAsync();
+    return Results.Created($"/productos/{id}/movimientos/{m.Id}", m);
+});
+
+app.Run("http://localhost:5000");
+
+
+public class CatalogoDb : DbContext
+{
+    public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
+    public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
+
+public class Producto
+{
+    public int Id { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public decimal Precio { get; set; }
+    public int Stock { get; set; }
+}
+
+public class MovimientoDeProducto
+{
+    public int Id { get; set; }
+    public int ProductoId { get; set; }
+    public TipoMovimiento Tipo { get; set; }
+    public int Cantidad { get; set; }
+    public DateTime Fecha { get; set; }
+}
+
+public enum TipoMovimiento { Compra, Venta, Ajuste }
