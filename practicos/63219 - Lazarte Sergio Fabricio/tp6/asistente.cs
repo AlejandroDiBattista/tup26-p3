@@ -110,6 +110,30 @@ pantallaprincipal.Add(vistaChat, campoTexto, botonEnviar);
 
 aplicacion.Run(pantallaprincipal);
 
+string ConstruirMarkdown()
+{
+    if (intercambios.Count == 0)
+        return "# Chat IA\n\nEscribí tu consulta y presioná Enter para enviar.";
+
+    var sb = new StringBuilder();
+    foreach (var item in intercambios)
+    {
+        sb.AppendLine($"# {item.Autor}");
+        sb.AppendLine();
+        sb.AppendLine(string.IsNullOrWhiteSpace(item.Texto) ? "_Procesando..._" : item.Texto);
+        sb.AppendLine();
+    }
+    return sb.ToString();
+}
+
+void ActualizarVista()
+{
+    vistaChat.Text = ConstruirMarkdown();
+    vistaChat.SetContentSize(new Size(vistaChat.Viewport.Width, vistaChat.LineCount));
+    vistaChat.ScrollVertical(vistaChat.LineCount);
+    vistaChat.SetNeedsDraw();
+}
+
 string BuscarDirectorioRaiz(string inicio)
 {
     if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
