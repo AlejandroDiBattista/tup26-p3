@@ -67,7 +67,7 @@ string EscribirArchivo(
 IChatClient chat = new ChatClientBuilder(
         new OpenAIClient(
             new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-            new OpenAIClientOptions { Endpoint = new Uri(url) })
+            new OpenAIClientOptions { Endpoint = new Uri(url!) })
                 .GetChatClient(modelo)
                 .AsIChatClient())
         .UseFunctionInvocation()
@@ -123,6 +123,8 @@ var botonEnviar = new Button
 };
 
 ventana.Add(panelConversacion, campoTexto, botonEnviar);
+
+var textoConversacion = new StringBuilder();
 
 void ActualizarConversacion()
 {
@@ -228,15 +230,25 @@ async Task EnviarMensajeAsync()
      AgregarTexto("\n");
      SetEntradaHabilitada(true);
 }
+botonEnviar.Accepting += async (s, e) => await EnviarMensajeAsync();
+campoTexto.KeyDown += async (s, e) =>
+{
+    if (e.KeyCode == Key.Enter)
+    {
+        e.Handled = true;
+        await EnviarMensajeAsync();  
+    }
+};
+ventana.KeyDown += (s,e) =>
+{
+    if (e.KeyCode == Key.Esc)
+    {
+        app.RequestStop();
+        e.Handled = true;
+    }
+};
 
-
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
-
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+AgregarTexto("Escribí un mensaje para comenzar.\n");
+campoTexto.SetFocus();
 
 app.Run(ventana);
