@@ -8,6 +8,8 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using Terminal.Gui.App;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
@@ -25,3 +27,33 @@ IChatClient chat = new OpenAIClient(
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
+
+using IApplication app = Application.Create().Init();
+using var ventana = new Window {
+     Title = $" Asistente IA · {modelo} ",
+    Width = Dim.Fill(), Height = Dim.Fill()
+};
+
+var vistaMarkdown = new Markdown {
+    Width = Dim.Fill(),
+    Height = Dim.Fill(2)
+};
+
+var campoEntrada = new TextField {
+    X = 0,
+    Y = Pos.AnchorEnd(1),
+    Width = Dim.Fill(12)
+};
+
+var botonEnviar = new Button {
+    Title = "Enviar",
+    X = Pos.AnchorEnd(10),
+    Y = Pos.AnchorEnd(1),
+    IsDefault = true
+};
+
+ventana.Add(vistaMarkdown, campoEntrada, botonEnviar);
+
+vistaMarkdown.Text = "Escribí un mensaje para comenzar.\n\n---\n\n";
+
+app.Run(ventana);
