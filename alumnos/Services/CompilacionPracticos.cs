@@ -69,7 +69,7 @@ static class CompilacionPracticos {
             Path.GetTempPath(),
             "tup26-compilacion",
             Guid.NewGuid().ToString("N"));
-        string directorioFuente = Path.Combine(directorioTemporal, "fuente");
+        string directorioFuente = DirectorioFuenteTemporal(directorioTemporal, rutaPractico);
 
         try {
             CopiarDirectorioFuente(rutaPractico, directorioFuente);
@@ -127,6 +127,26 @@ static class CompilacionPracticos {
                 // Los artefactos temporales no deben ocultar el resultado de compilación.
             }
         }
+    }
+
+    static string DirectorioFuenteTemporal(string directorioTemporal, string rutaPractico) {
+        string rutaPracticoNormalizada = rutaPractico.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar);
+        string nombrePractico = Path.GetFileName(rutaPracticoNormalizada);
+        string? rutaAlumno = Path.GetDirectoryName(rutaPracticoNormalizada);
+        string nombreAlumno = string.IsNullOrWhiteSpace(rutaAlumno)
+            ? "alumno"
+            : Path.GetFileName(rutaAlumno);
+
+        if (string.IsNullOrWhiteSpace(nombreAlumno)) {
+            nombreAlumno = "alumno";
+        }
+        if (string.IsNullOrWhiteSpace(nombrePractico)) {
+            nombrePractico = "tp";
+        }
+
+        return Path.Combine(directorioTemporal, nombreAlumno, nombrePractico);
     }
 
     static void CopiarDirectorioFuente(string origen, string destino) {

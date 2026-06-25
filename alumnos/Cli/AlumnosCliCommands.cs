@@ -39,6 +39,11 @@ sealed class LimpiarArchivosTemporalesCommand : Command<VacioSettings> {
         AlumnosCliActions.LimpiarProyectosPracticos();
 }
 
+sealed class NormalizarCarpetasCommand : Command<VacioSettings> {
+    protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.NormalizarCarpetas();
+}
+
 sealed class ExportarMarkdownCommand : Command<RutaSalidaSettings> {
     protected override int Execute(CommandContext context, RutaSalidaSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.GuardarMarkdown(settings.Ruta);

@@ -20,7 +20,7 @@ public class Alumno {
     public List<Estado> examenes = new();
 
     public string NombreCompleto => $"{Apellido}, {Nombre}";
-    public string CarpetaNombre => $"{Legajo} - {NombreCompleto}";
+    public string CarpetaNombre => $"{Legajo} - {NormalizarNombreCarpeta(NombreCompleto)}";
     public bool ConTelefono => !string.IsNullOrWhiteSpace(Telefono);
     public string TelefonoId => TelefonoID(Telefono);
     public bool ConGithub => EsGitHubValido(GitHub);
@@ -92,6 +92,18 @@ public class Alumno {
         nombre = Regex.Replace(nombre, @"^\s+|\s+$|\s+(?=\s)", "");
         nombre = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nombre);
         return nombre;
+    }
+
+    static string NormalizarNombreCarpeta(string nombre) {
+        string sinAcentos = nombre
+            .Normalize(NormalizationForm.FormD)
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            .Aggregate(new StringBuilder(), (sb, c) => sb.Append(c))
+            .ToString()
+            .Normalize(NormalizationForm.FormC);
+
+        string sinComas = sinAcentos.Replace(",", "");
+        return Regex.Replace(sinComas, @"\s+", " ").Trim();
     }
 
     static string NormalizarGitHub(string github) {
