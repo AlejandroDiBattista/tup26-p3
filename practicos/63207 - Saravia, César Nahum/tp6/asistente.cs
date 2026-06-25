@@ -107,6 +107,77 @@ var panelConversacion = new TextView
     WordWrap = true 
 };
 
+var campoTexto = new TextField
+{
+    X      = 0,
+    Y      = Pos.AnchorEnd(2),
+    Width  = Dim.Fill(10),
+    Height = 1,
+};
+
+var botonEnviar = new Button 
+{
+    X    = Pos.AnchorEnd(9),
+    Y    = Pos.AnchorEnd(2),
+    Text = "Enviar",
+};
+
+ventana.Add(panelConversacion, campoTexto, botonEnviar);
+
+void ActualizarConversacion()
+{
+    app.Invoke(() => {
+        panelConversacion.Text = textoConversacion.ToString();
+        panelConversacion.MoveEnd();
+        panelConversacion.SetNeedsDraw();
+    });
+}
+
+void AgregarTexto(string texto)
+{
+    textoConversacion.Append(texto);
+    ActualizarConversacion();
+}
+
+void ReemplazarTextoDesde(int inicio, string texto)
+{
+     textoConversacion.Remove(inicio, textoConversacion.Length - inicio);
+     textoConversacion.Append(texto);
+    ActualizarConversacion();
+}
+
+string RenderizarMarkdown(string markdown)
+{
+    var lineas = markdown.Replace("\r\n", "\n").Split('\n');
+    var salida = new StringBuilder();
+    var enCodigo = false;
+    var marcaCodigo = new string('`', 3);
+
+    foreach (var linea in lineas)
+    {
+        var limpia = linea.TrimStart();
+
+        if (limpia.StartsWith(marcaCodigo))
+        {
+            enCodigo = !enCodigo;
+            salida.AppendLine(enCodigo ? "----- codigo -----" : "------------------");
+            continue;
+        }
+
+        if(enCodigo)
+            salida.AppendLine("  " + linea);
+         else if (linea.StartsWith("### "))
+          salida.AppendLine("  " + linea.Substring(4).ToUpperInvariant());   
+        else if (linea.StartsWith("## "))
+           salida.AppendLine("== " + linea.Substring(3).ToUpperInvariant() + " ==");
+        else if (linea.StartsWith("# "))
+           salida.AppendLine("=== " + linea.Substring(2).ToUpperInvariant() + " ==="); 
+         else
+           salida.AppendLine(linea.Replace("**", "")); 
+    }
+    return salida.ToString();
+}
+
 var respuesta = await chat.GetResponseAsync(mensajes);
 
 using IApplication app = Application.Create().Init();
