@@ -25,7 +25,6 @@ using Window ventana = new () { Title = " Catalogo REST — Producto (ESC para s
 var detalleProducto = new Label {
     Text = $"""
             # PRODUCTO 
-
             - Id     : {producto.Id}
             - Código : {producto.Codigo}
             - Nombre : {producto.Nombre}
