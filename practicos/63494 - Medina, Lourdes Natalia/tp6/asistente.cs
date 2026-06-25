@@ -21,3 +21,13 @@ var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? "https:/
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 var errorConfiguracion = ValidarConfiguracion(proveedor, url, apiKey, modelo);
+
+
+IChatClient chat = new ChatClientBuilder(
+        new OpenAIClient(
+                new ApiKeyCredential(apiKey ?? "no-requiere-key"),
+                new OpenAIClientOptions { Endpoint = new Uri(url) })
+            .GetChatClient(modelo)
+            .AsIChatClient())
+    .UseFunctionInvocation()
+    .Build();
