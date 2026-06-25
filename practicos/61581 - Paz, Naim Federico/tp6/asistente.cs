@@ -13,6 +13,7 @@ using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui.Drawing;
 
 DotNetEnv.Env.Load();
 
@@ -79,6 +80,12 @@ var entrada = new TextView
     Width = Dim.Fill(14),
     Height = 3
 };
+
+entrada.SetScheme(new Scheme
+{
+    Normal = new Terminal.Gui.Drawing.Attribute(Color.Black, Color.White),
+    Focus = new Terminal.Gui.Drawing.Attribute(Color.Black, Color.White)
+});
 
 var enviar = new Button
 {
