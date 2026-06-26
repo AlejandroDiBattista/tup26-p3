@@ -21,8 +21,12 @@
             </small>
         </div>
 
-        <button class="btn btn-primary"
-                @onclick="NuevoContacto">
+    <!-- =====================================================
+     BLOQUE: BOTÓN NUEVO CONTACTO
+     ===================================================== -->
+
+        <button class="btn btn-nuevo"
+             @onclick="NuevoContacto">
             <i class="bi bi-plus-circle"></i>
             Nuevo contacto
         </button>
@@ -78,143 +82,149 @@
 
         <div class="col-8">
 
-            <div class="card shadow-sm">
+            <div class="card shadow-sm panel-derecho">
 
                 <div class="card-body">
 
-                    @if (contactoSeleccionado != null)
-                    {
-                        <div class="d-flex justify-content-between">
+                  <!-- =====================================================
+     BLOQUE: PANEL DERECHO
+     Muestra el detalle o el formulario
+     ===================================================== -->
 
-                            <div>
+@if (mostrandoFormulario)
+{
+    <h3>
+        @(nuevoContacto.Id == 0
+            ? "Nuevo Contacto"
+            : "Editar Contacto")
+    </h3>
 
-                                <h2>
-                                    @contactoSeleccionado.Nombre
-                                    @contactoSeleccionado.Apellido
-                                </h2>
+    <div class="row">
 
-                                <p class="text-muted">
-                                    @contactoSeleccionado.Empresa
-                                </p>
+        <div class="col-6 mb-2">
+            <label>Nombre</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Nombre" />
+        </div>
 
-                            </div>
+        <div class="col-6 mb-2">
+            <label>Apellido</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Apellido" />
+        </div>
 
-                            <div>
+        <div class="col-6 mb-2">
+            <label>Teléfono</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Telefono" />
+        </div>
 
-                                <button class="btn btn-warning me-2"
-                                        @onclick="EditarContacto">
-                                    Editar
-                                </button>
+        <div class="col-6 mb-2">
+            <label>Email</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Email" />
+        </div>
 
-                                <button class="btn btn-danger"
-                                        @onclick="EliminarContacto">
-                                    Eliminar
-                                </button>
+        <div class="col-6 mb-2">
+            <label>Empresa</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Empresa" />
+        </div>
 
-                            </div>
+        <div class="col-6 mb-2">
+            <label>Cargo</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Cargo" />
+        </div>
 
-                        </div>
+        <div class="col-12 mb-2">
+            <label>Dirección</label>
+            <input class="form-control"
+                   @bind="nuevoContacto.Direccion" />
+        </div>
 
-                        <hr>
+        <div class="col-12 mb-2">
+            <label>Fecha de nacimiento</label>
 
-                        <p><b>Email:</b> @contactoSeleccionado.Email</p>
+            <input type="date"
+                   class="form-control"
+                   @bind="nuevoContacto.FechaNacimiento" />
+        </div>
 
-                        <p><b>Teléfono:</b> @contactoSeleccionado.Telefono</p>
+        <div class="col-12 mb-3">
+            <label>Notas</label>
 
-                        <p><b>Empresa:</b> @contactoSeleccionado.Empresa</p>
+            <textarea class="form-control"
+                      rows="4"
+                      @bind="nuevoContacto.Notas">
+            </textarea>
+        </div>
 
-                        <p><b>Cargo:</b> @contactoSeleccionado.Cargo</p>
+    </div>
 
-                        <p><b>Dirección:</b> @contactoSeleccionado.Direccion</p>
+    <button class="btn btn-success"
+            @onclick="GuardarContacto">
+        Guardar
+    </button>
 
-                        <p><b>Fecha de nacimiento:</b> @contactoSeleccionado.FechaNacimiento</p>
+    <button class="btn btn-secondary ms-2"
+            @onclick="Cancelar">
+        Cancelar
+    </button>
+}
+else if (contactoSeleccionado != null)
+{
+    <div class="d-flex justify-content-between">
 
-                        <p><b>Notas:</b></p>
+        <div>
 
-                        <div class="border rounded p-3 bg-light">
-                            @contactoSeleccionado.Notas
-                        </div>
-                    }
+            <h2>
+                @contactoSeleccionado.Nombre
+                @contactoSeleccionado.Apellido
+            </h2>
 
-                    @if (mostrandoFormulario)
-                    {
-                        <hr>
+            <p class="text-muted">
+                @contactoSeleccionado.Empresa
+            </p>
 
-                        <h3>
-                            @(nuevoContacto.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")
-                        </h3>
+        </div>
 
-                        <div class="row">
+        <div>
 
-                            <div class="col-6 mb-2">
-                                <label>Nombre</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Nombre" />
-                            </div>
+            <button class="btn btn-editar me-2"
+                    @onclick="EditarContacto">
+                Editar
+            </button>
 
-                            <div class="col-6 mb-2">
-                                <label>Apellido</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Apellido" />
-                            </div>
+            <button class="btn btn-eliminar"
+                    @onclick="EliminarContacto">
+                Eliminar
+            </button>
 
-                            <div class="col-6 mb-2">
-                                <label>Teléfono</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Telefono" />
-                            </div>
+        </div>
 
-                            <div class="col-6 mb-2">
-                                <label>Email</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Email" />
-                            </div>
+    </div>
 
-                            <div class="col-6 mb-2">
-                                <label>Empresa</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Empresa" />
-                            </div>
+    <hr>
 
-                            <div class="col-6 mb-2">
-                                <label>Cargo</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Cargo" />
-                            </div>
+    <p><b>Email:</b> @contactoSeleccionado.Email</p>
 
-                            <div class="col-12 mb-2">
-                                <label>Dirección</label>
-                                <input class="form-control"
-                                       @bind="nuevoContacto.Direccion" />
-                            </div>
+    <p><b>Teléfono:</b> @contactoSeleccionado.Telefono</p>
 
-                            <div class="col-12 mb-2">
-                                <label>Fecha de nacimiento</label>
-                                <input type="date"
-                                       class="form-control"
-                                       @bind="nuevoContacto.FechaNacimiento" />
-                            </div>
+    <p><b>Empresa:</b> @contactoSeleccionado.Empresa</p>
 
-                            <div class="col-12 mb-3">
-                                <label>Notas</label>
-                                <textarea class="form-control"
-                                          rows="4"
-                                          @bind="nuevoContacto.Notas">
-                                </textarea>
-                            </div>
+    <p><b>Cargo:</b> @contactoSeleccionado.Cargo</p>
 
-                        </div>
+    <p><b>Dirección:</b> @contactoSeleccionado.Direccion</p>
 
-                        <button class="btn btn-success"
-                                @onclick="GuardarContacto">
-                            Guardar
-                        </button>
+    <p><b>Fecha de nacimiento:</b> @contactoSeleccionado.FechaNacimiento</p>
 
-                        <button class="btn btn-secondary ms-2"
-                                @onclick="Cancelar">
-                            Cancelar
-                        </button>
-                    }
+    <p><b>Notas:</b></p>
+
+    <div class="border rounded p-3 bg-light">
+        @contactoSeleccionado.Notas
+    </div>
+}
 
                 </div>
 
