@@ -24,14 +24,10 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 
-const string pregunta = "Definí recursividad";
-
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
 ];
 
-var respuesta = await chat.GetResponseAsync(mensajes);
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -39,10 +35,50 @@ using var ventana = new Window {
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var panelMensajes = new FrameView()
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3)
+};
+
+var panelEntrada = new FrameView()
+{
+    X = 0,
+    Y = Pos.Bottom(panelMensajes),
+    Width = Dim.Fill(),
+    Height = 3
+};
+
+var conversacion = new Markdown
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(),
+    Text = "Asistente IA\n\nEsperando mensaje..."
+};
+
+var input = new TextField
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(12)
+};
+
+var botonEnviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(input) + 1,
+    Y = 0
+};
+
+panelMensajes.Add(conversacion);
+panelEntrada.Add(input);
+panelEntrada.Add(botonEnviar);
+ventana.Add(panelMensajes);
+ventana.Add(panelEntrada);
 
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
