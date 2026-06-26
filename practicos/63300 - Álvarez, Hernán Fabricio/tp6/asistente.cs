@@ -144,3 +144,80 @@ if (configuracionValida)
 }
 
 app.Run(ventana);
+
+// Toma el texto del usuario, lo agrega al historial y pide la respuesta al modelo.
+void EnviarMensaje()
+{
+    if (respondiendo || chat is null || opcionesChat is null)
+    {
+        return;
+    }
+
+    var textoUsuario = entrada.Text?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(textoUsuario))
+    {
+        return;
+    }
+
+    respondiendo = true;
+    entrada.Text = "";
+    entrada.Enabled = false;
+    botonEnviar.Enabled = false;
+
+    // Guarda el mensaje del usuario en ambos historiales.
+    mensajesChat.Add(new ChatMessage(ChatRole.User, textoUsuario));
+    mensajesPantalla.Add(new MensajePantalla("Vos", textoUsuario));
+
+    // Reserva un lugar para la respuesta mientras se va generando por streaming.
+    var indiceRespuesta = mensajesPantalla.Count;
+    mensajesPantalla.Add(new MensajePantalla("Asistente", "_Pensando..._"));
+    RefrescarConversacion(true);
+
+    // Ejecuta la consulta fuera del hilo de la interfaz para que la terminal no se congele.
+    _ = Task.Run(async () =>
+    {
+        var respuesta = new StringBuilder();
+
+        try
+        {
+            // Se envia una copia del historial para conservar el contexto de la sesion.
+            var mensajesParaEnviar = mensajesChat.ToArray();
+
+            // Streaming: cada fragmento que llega se agrega y se muestra enseguida.
+            await foreach (var parte in chat.GetStreamingResponseAsync(mensajesParaEnviar, opcionesChat))
+            {
+                if (string.IsNullOrEmpty(parte.Text))
+                {
+                    continue;
+                }
+
+                respuesta.Append(parte.Text);
+                ActualizarRespuestaParcial(indiceRespuesta, respuesta.ToString());
+            }
+
+            // Al terminar, la respuesta completa queda guardada en el historial del modelo.
+            var textoRespuesta = respuesta.Length == 0
+                ? "No recibi texto como respuesta del modelo."
+                : respuesta.ToString();
+
+            mensajesChat.Add(new ChatMessage(ChatRole.Assistant, textoRespuesta));
+            ActualizarRespuestaParcial(indiceRespuesta, textoRespuesta);
+        }
+        catch (Exception ex)
+        {
+            var error = $"Error al consultar el modelo: `{ex.Message}`";
+            ActualizarRespuestaParcial(indiceRespuesta, error);
+        }
+        finally
+        {
+            // Reactiva los controles cuando termina la respuesta o si hubo error.
+            app.Invoke(() =>
+            {
+                respondiendo = false;
+                entrada.Enabled = true;
+                botonEnviar.Enabled = true;
+                entrada.SetFocus();
+            });
+        }
+    });
+}
