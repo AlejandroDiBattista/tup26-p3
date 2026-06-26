@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -23,14 +24,51 @@ IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
-    .AsIChatClient();
-
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
 ];
 
 string historialMarkdown = "";
 bool enviando = false;
+
+string LeerArchivo(string ruta)
+{
+    if (!File.Exists(ruta))
+    return $"No existe el archivo: {ruta}";
+    return File.ReadAllText(ruta);
+}
+string EscribirArchivo(string ruta, string contenido)
+{
+    File.WriteAllText(ruta, contenido);
+    return $"Archivo guardado correctamente: {ruta}";
+}
+string ListarArchivos(string ruta = ".")
+{
+    if (!Directory.Exists(ruta))
+    return $"No existe el directorio: {ruta}";
+    return string.Join(Environment.NewLine,Directory.GetFileSystemEntries(ruta).Select(Path.GetFileName));
+}
+
+var herramientas = new ChatOptions
+{
+Tools = [ AIFunctionFactory.Create( LeerArchivo, new() {
+Name = "leer-archivo",
+Description = "Lee el contenido completo de un archivo"
+}),
+    AIFunctionFactory.Create(EscribirArchivo,new() {
+    Name = "escribir-archivo",
+    Description = "Crea o reemplaza un archivo de texto"
+    }),
+    AIFunctionFactory.Create(ListarArchivos,new(){
+    Name = "listar-archivos",
+    Description = "Lista archivos y carpetas de un directorio"
+    })
+]};
+
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
