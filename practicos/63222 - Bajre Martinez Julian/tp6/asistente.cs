@@ -7,6 +7,7 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using System.ComponentModel;
 using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
@@ -19,6 +20,16 @@ var (chat, modelo) = CrearChatClient(args);
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
+
+var opcionesChat = new ChatOptions
+{
+    Tools = [
+        AIFunctionFactory.Create(LeerArchivo),
+        AIFunctionFactory.Create(EscribirArchivo),
+        AIFunctionFactory.Create(ListarArchivos)
+    ]
+};
+
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -63,6 +74,19 @@ string TextoDeHistorial(IEnumerable<ChatMessage> historial)
     return sb.ToString();
 }
 
+bool UsuarioEstaAlFinal()
+{
+    var maxScrollY = Math.Max(0, panelConversacion.GetContentSize().Height - panelConversacion.Viewport.Height);
+    return panelConversacion.Viewport.Y >= maxScrollY - 1;
+}
+
+void IrAlFinal()
+{
+    var maxScrollY = Math.Max(0, panelConversacion.GetContentSize().Height - panelConversacion.Viewport.Height);
+    var vp = panelConversacion.Viewport;
+    panelConversacion.Viewport = vp with { Y = maxScrollY };
+}
+
 async void EnviarMensaje()
 {
     var texto = campoEntrada.Text?.ToString()?.Trim();
@@ -74,6 +98,7 @@ async void EnviarMensaje()
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
     panelConversacion.Text = TextoDeHistorial(mensajes);
+    IrAlFinal();
 
     var textoAsistente = new StringBuilder();
     mensajes.Add(new ChatMessage(ChatRole.Assistant, ""));
@@ -86,7 +111,10 @@ async void EnviarMensaje()
         app.Invoke(() =>
         {
             mensajes[^1] = new ChatMessage(ChatRole.Assistant, textoAsistente.ToString());
+
+            var pegadoAlFinal = UsuarioEstaAlFinal();
             panelConversacion.Text = TextoDeHistorial(mensajes);
+            if (pegadoAlFinal) IrAlFinal();
         });
     }
 
@@ -124,4 +152,51 @@ static (IChatClient chat, string modelo) CrearChatClient(string[] args)
         .AsIChatClient();
 
     return (chat, modelo);
+}
+
+[Description("Devuelve el contenido de un archivo de texto.")]
+static string LeerArchivo(
+    [Description("Ruta del archivo a leer, relativa o absoluta.")] string ruta)
+{
+    try
+    {
+        return File.ReadAllText(ruta);
+    }
+    catch (Exception ex)
+    {
+        return $"Error al leer el archivo '{ruta}': {ex.Message}";
+    }
+}
+
+[Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+static string EscribirArchivo(
+    [Description("Ruta del archivo a crear o sobrescribir.")] string ruta,
+    [Description("Contenido a escribir en el archivo.")] string contenido)
+{
+    try
+    {
+        File.WriteAllText(ruta, contenido);
+        return $"Archivo '{ruta}' guardado correctamente.";
+    }
+    catch (Exception ex)
+    {
+        return $"Error al escribir el archivo '{ruta}': {ex.Message}";
+    }
+}
+
+[Description("Lista los archivos y carpetas de un directorio.")]
+static string ListarArchivos(
+    [Description("Ruta del directorio a listar.")] string ruta)
+{
+    try
+    {
+        var entradas = Directory.GetFileSystemEntries(ruta)
+            .Select(e => Directory.Exists(e) ? $"[dir]  {Path.GetFileName(e)}" : $"[file] {Path.GetFileName(e)}");
+        var resultado = string.Join("\n", entradas);
+        return string.IsNullOrEmpty(resultado) ? "El directorio está vacío." : resultado;
+    }
+    catch (Exception ex)
+    {
+        return $"Error al listar '{ruta}': {ex.Message}";
+    }
 }
