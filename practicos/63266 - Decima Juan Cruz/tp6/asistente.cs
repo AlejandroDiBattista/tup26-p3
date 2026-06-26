@@ -1,6 +1,7 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
@@ -11,11 +12,12 @@ using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Terminal.Gui.Input;
-
+using System.ComponentModel;
+using System.Text;
 
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "groq").ToUpperInvariant();
 var url = NormalizarEndpoint(Environment.GetEnvironmentVariable($"{proveedor}_API_URL")
     ?? "https://api.groq.com/openai/v1/chat/completions");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "sin-api-key";
@@ -35,8 +37,7 @@ var mensajes = new List<ChatMessage>
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 };
 
-var opciones = new ChatOptions
-{
+var opciones = new ChatOptions {
     Tools = CrearHerramientasDeArchivos()
 };
 
@@ -49,8 +50,7 @@ using var ventana = new Window {
     Height = Dim.Fill()
 };
 
-var conversacion = new Markdown
-{
+var conversacion = new Markdown {
     Text = "# Asistente IA\n\nListo para conversar.",
     X = 0,
     Y = 0,
@@ -59,16 +59,14 @@ var conversacion = new Markdown
     CanFocus = true
 };
 
-var entrada = new TextField
-{
+var entrada = new TextField {
     X = 0,
     Y = Pos.AnchorEnd(3),
     Width = Dim.Fill(12),
     Height = 1
 };
 
-var enviar = new Button
-{
+var enviar = new Button {
     Text = "Enviar",
     X = Pos.AnchorEnd(10),
     Y = Pos.AnchorEnd(3),
@@ -77,8 +75,7 @@ var enviar = new Button
     IsDefault = true
 };
 
-var estado = new Label
-{
+var estado = new Label {
     Text = "Enter: enviar | Esc: salir",
     X = 0,
     Y = Pos.AnchorEnd(2),
@@ -89,25 +86,20 @@ var estado = new Label
 ventana.Add(conversacion, entrada, enviar, estado);
 entrada.SetFocus();
 
-enviar.Accepting += (_, e) =>
-{
+enviar.Accepting += (_, e) => {
     e.Handled = true;
     _ = EnviarMensajeAsync();
 };
 
-entrada.KeyDown += (_, key) =>
-{
-    if (key == Key.Enter)
-    {
+entrada.KeyDown += (_, key) => {
+    if (key == Key.Enter) {
         key.Handled = true;
         _ = EnviarMensajeAsync();
     }
 };
 
-ventana.KeyDown += (_, key) =>
-{
-    if (key == Key.Esc)
-    {
+ventana.KeyDown += (_, key) => {
+    if (key == Key.Esc) {
         key.Handled = true;
         app.RequestStop(ventana);
     }
@@ -115,11 +107,9 @@ ventana.KeyDown += (_, key) =>
 
 app.Run(ventana);
 
-async Task EnviarMensajeAsync()
-{
+async Task EnviarMensajeAsync() {
     var textoUsuario = entrada.Text?.ToString()?.Trim();
-    if (string.IsNullOrWhiteSpace(textoUsuario) || !entrada.Enabled)
-    {
+    if (string.IsNullOrWhiteSpace(textoUsuario) || !entrada.Enabled) {
         return;
     }
 
@@ -134,12 +124,9 @@ async Task EnviarMensajeAsync()
     turnos.Add(new TurnoMostrado("Asistente", string.Empty));
     RefrescarConversacion();
 
-    try
-    {
-        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones))
-        {
-            if (string.IsNullOrEmpty(fragmento.Text))
-            {
+    try {
+        await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones)) {
+            if (string.IsNullOrEmpty(fragmento.Text)) {
                 continue;
             }
 
@@ -150,18 +137,13 @@ async Task EnviarMensajeAsync()
 
         var textoAsistente = respuesta.ToString();
         mensajes.Add(new ChatMessage(ChatRole.Assistant, textoAsistente));
-    }
-    catch (Exception ex)
-    {
+    } catch (Exception ex) {
         var error = $"No se pudo obtener respuesta del modelo.\n\nDetalle: `{ex.Message}`";
         turnos[^1] = turnos[^1] with { Texto = error };
         mensajes.Add(new ChatMessage(ChatRole.Assistant, error));
         app.Invoke(RefrescarConversacion);
-    }
-    finally
-    {
-        app.Invoke(() =>
-        {
+    } finally {
+        app.Invoke(() => {
             entrada.Enabled = true;
             enviar.Enabled = true;
             estado.Text = "Enter: enviar | Esc: salir";
@@ -170,27 +152,23 @@ async Task EnviarMensajeAsync()
     }
 }
 
-void RefrescarConversacion()
-{
+void RefrescarConversacion() {
     var estabaAbajo = conversacion.VerticalScrollBar.Value >=
         Math.Max(0, conversacion.VerticalScrollBar.ScrollableContentSize - conversacion.VerticalScrollBar.VisibleContentSize - 1);
 
     conversacion.Text = RenderizarTurnos(turnos);
     conversacion.SetNeedsDraw();
 
-    if (estabaAbajo)
-    {
+    if (estabaAbajo) {
         conversacion.VerticalScrollBar.Value = Math.Max(0,
             conversacion.VerticalScrollBar.ScrollableContentSize - conversacion.VerticalScrollBar.VisibleContentSize);
     }
 }
 
-static string RenderizarTurnos(IEnumerable<TurnoMostrado> turnos)
-{
+static string RenderizarTurnos(IEnumerable<TurnoMostrado> turnos) {
     var markdown = new StringBuilder("# Conversacion\n");
 
-    foreach (var turno in turnos)
-    {
+    foreach (var turno in turnos) {
         markdown.AppendLine();
         markdown.Append("## ").AppendLine(turno.Autor);
         markdown.AppendLine();
@@ -200,4 +178,80 @@ static string RenderizarTurnos(IEnumerable<TurnoMostrado> turnos)
     return markdown.ToString();
 }
 
+static IList<AITool> CrearHerramientasDeArchivos() {
+    return
+    [
+        AIFunctionFactory.Create(LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo de texto del proyecto."),
+        AIFunctionFactory.Create(EscribirArchivo, "escribir-archivo", "Crea o sobrescribe un archivo de texto dentro del proyecto."),
+        AIFunctionFactory.Create(ListarArchivos, "listar-archivos", "Lista los archivos y carpetas de un directorio del proyecto.")
+    ];
+}
+
+[Description("Devuelve el contenido de un archivo de texto del proyecto.")]
+static string LeerArchivo([Description("Ruta relativa del archivo a leer.")] string ruta) {
+    var archivo = ResolverRutaProyecto(ruta);
+
+    if (!File.Exists(archivo)) {
+        return $"No existe el archivo: {ruta}";
+    }
+
+    return File.ReadAllText(archivo);
+}
+
+[Description("Crea o sobrescribe un archivo de texto dentro del proyecto.")]
+static string EscribirArchivo(
+    [Description("Ruta relativa del archivo a crear o sobrescribir.")] string ruta,
+    [Description("Contenido completo que se escribira en el archivo.")] string contenido) {
+    var archivo = ResolverRutaProyecto(ruta);
+    Directory.CreateDirectory(Path.GetDirectoryName(archivo)!);
+
+    var existia = File.Exists(archivo);
+    File.WriteAllText(archivo, contenido);
+
+    return existia
+        ? $"Archivo sobrescrito correctamente: {ruta}"
+        : $"Archivo creado correctamente: {ruta}";
+}
+
+[Description("Lista los archivos y carpetas de un directorio del proyecto.")]
+static string ListarArchivos([Description("Ruta relativa del directorio a listar.")] string ruta) {
+    var directorio = ResolverRutaProyecto(string.IsNullOrWhiteSpace(ruta) ? "." : ruta);
+
+    if (!Directory.Exists(directorio)) {
+        return $"No existe el directorio: {ruta}";
+    }
+
+    var entradas = Directory.EnumerateFileSystemEntries(directorio)
+        .OrderBy(entrada => entrada)
+        .Select(entrada => Directory.Exists(entrada)
+            ? $"[dir]  {Path.GetFileName(entrada)}"
+            : $"[file] {Path.GetFileName(entrada)}");
+
+    return string.Join(Environment.NewLine, entradas);
+}
+
+static string ResolverRutaProyecto(string ruta)
+{
+    var raiz = Path.GetFullPath(Directory.GetCurrentDirectory());
+    var destino = Path.GetFullPath(Path.Combine(raiz, ruta));
+
+    if (!destino.StartsWith(raiz, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException("La ruta debe estar dentro del proyecto.");
+    }
+
+    return destino;
+}
+
+static string NormalizarEndpoint(string endpoint)
+{
+    endpoint = endpoint.TrimEnd('/');
+
+    if (endpoint.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+    {
+        endpoint = endpoint[..^"/chat/completions".Length];
+    }
+
+    return endpoint;
+}
 record TurnoMostrado(string Autor, string Texto);
