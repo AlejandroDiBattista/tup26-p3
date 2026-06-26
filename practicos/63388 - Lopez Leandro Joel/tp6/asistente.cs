@@ -195,3 +195,53 @@ class VentanaAsistente : Runnable {
         textoConversacion.AppendLine();
         ActualizarPanel();
         ScrollAlFinal();
+
+        StringBuilder respuestaCompleta = new();
+        try {
+            await foreach (var fragmento in chat.GetStreamingResponseAsync(historial, opciones)) {
+                string chunk = fragmento.Text ?? "";
+                if (string.IsNullOrEmpty(chunk)) continue;
+ 
+                respuestaCompleta.Append(chunk);
+ 
+                string visible = System.Text.RegularExpressions.Regex.Replace(
+                    respuestaCompleta.ToString(), @"<think>.*?</think>", "", 
+                    System.Text.RegularExpressions.RegexOptions.Singleline).Trim();
+ 
+                App!.Invoke(() => {
+                    ActualizarPanelConRespuestaParcial(visible);
+                    if (!usuarioScrolleo) ScrollAlFinal();
+                });
+            }
+ 
+            string textoRespuesta = respuestaCompleta.ToString();
+            historial.Add(new(ChatRole.Assistant, textoRespuesta));
+        } catch (Exception ex) {
+            string error = $"*Error: {ex.Message}*";
+            respuestaCompleta.Append(error);
+            historial.Add(new(ChatRole.Assistant, error));
+            App!.Invoke(() => {
+                lblEstado.Text = $"✗ Error: {ex.Message}";
+                ActualizarPanelConRespuestaParcial(error);
+            });
+        }
+
+        string respuestaFinal = System.Text.RegularExpressions.Regex.Replace(
+            respuestaCompleta.ToString(), @"<think>.*?</think>", "",
+            System.Text.RegularExpressions.RegexOptions.Singleline).Trim();
+        textoConversacion.AppendLine(respuestaFinal);
+        textoConversacion.AppendLine();
+        textoConversacion.AppendLine("---");
+        textoConversacion.AppendLine();
+ 
+        App!.Invoke(() => {
+            ActualizarPanel();
+            if (!usuarioScrolleo) ScrollAlFinal();
+            campoEntrada.Enabled = true;
+            btnEnviar.Enabled    = true;
+            respondiendo         = false;
+            lblEstado.Text       = "Escribí tu mensaje y presioná Enter o hacé clic en Enviar.";
+            campoEntrada.SetFocus();
+        });
+    }
+ 
