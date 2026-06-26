@@ -156,6 +156,93 @@ class PantallaChat : Runnable {
             }
         };
 
+        visorConversacion.KeyDown += (_, _) => { scrollManual = true; };
+
+        MostrarMensajeBienvenida();
+        entradaTexto.SetFocus();
+    }
+
+    void MostrarMensajeBienvenida() {
+        contenidoChat.Clear();
+        contenidoChat.AppendLine("# Asistente IA");
+        contenidoChat.AppendLine();
+        contenidoChat.AppendLine("Escribí tu mensaje abajo. Podés pedirme que lea, escriba o liste archivos del directorio actual.");
+        contenidoChat.AppendLine();
+        SincronizarVisor();
+    }
+
+    async Task ProcesarEnvio() {
+        if (estaRespondiendo) return;
+
+        string mensajeUsuario = entradaTexto.Text?.ToString()?.Trim() ?? "";
+        if (string.IsNullOrEmpty(mensajeUsuario)) return;
+
+        entradaTexto.Text    = "";
+        entradaTexto.Enabled = false;
+        btnEnviar.Enabled    = false;
+        estaRespondiendo     = true;
+        scrollManual         = false;
+        estadoActual.Text    = "El asistente está respondiendo…";
+
+        mensajes.Add(new(ChatRole.User, mensajeUsuario));
+        contenidoChat.AppendLine("## 👤 Vos");
+        contenidoChat.AppendLine();
+        contenidoChat.AppendLine(mensajeUsuario);
+        contenidoChat.AppendLine();
+        contenidoChat.AppendLine("## ✦ Asistente");
+        contenidoChat.AppendLine();
+        SincronizarVisor();
+        IrAlFinal();
+
+        StringBuilder respuestaAcumulada = new();
+        try {
+            await foreach (var fragmento in clienteChat.GetStreamingResponseAsync(mensajes, config)) {
+                string trozo = fragmento.Text ?? "";
+                if (string.IsNullOrEmpty(trozo)) continue;
+
+                respuestaAcumulada.Append(trozo);
+
+                string textoVisible = System.Text.RegularExpressions.Regex.Replace(
+                    respuestaAcumulada.ToString(), @"<think>.*?</think>", "",
+                    System.Text.RegularExpressions.RegexOptions.Singleline).Trim();
+
+                App!.Invoke(() => {
+                    MostrarRespuestaParcial(textoVisible);
+                    if (!scrollManual) IrAlFinal();
+                });
+            }
+
+            mensajes.Add(new(ChatRole.Assistant, respuestaAcumulada.ToString()));
+        } catch (Exception ex) {
+            string msgError = $"*Error: {ex.Message}*";
+            respuestaAcumulada.Append(msgError);
+            mensajes.Add(new(ChatRole.Assistant, msgError));
+            App!.Invoke(() => {
+                estadoActual.Text = $"✗ Error: {ex.Message}";
+                MostrarRespuestaParcial(msgError);
+            });
+        }
+
+        string respuestaFinal = System.Text.RegularExpressions.Regex.Replace(
+            respuestaAcumulada.ToString(), @"<think>.*?</think>", "",
+            System.Text.RegularExpressions.RegexOptions.Singleline).Trim();
+
+        contenidoChat.AppendLine(respuestaFinal);
+        contenidoChat.AppendLine();
+        contenidoChat.AppendLine("---");
+        contenidoChat.AppendLine();
+
+        App!.Invoke(() => {
+            SincronizarVisor();
+            if (!scrollManual) IrAlFinal();
+            entradaTexto.Enabled = true;
+            btnEnviar.Enabled    = true;
+            estaRespondiendo     = false;
+            estadoActual.Text    = "Escribí tu mensaje y presioná Enter o hacé clic en Enviar.";
+            entradaTexto.SetFocus();
+        });
+    }
+
 ventana.Add(new Markdown {
     Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
     Width = Dim.Fill(), Height = Dim.Fill()
