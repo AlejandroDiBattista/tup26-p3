@@ -221,3 +221,100 @@ void EnviarMensaje()
         }
     });
 }
+
+// Actualiza una respuesta ya visible sin crear un mensaje nuevo.
+void ActualizarRespuestaParcial(int indice, string texto)
+{
+    app.Invoke(() =>
+    {
+        mensajesPantalla[indice] = mensajesPantalla[indice] with { Texto = texto };
+        RefrescarConversacion(true);
+    });
+}
+
+// Vuelve a dibujar la conversacion completa en Markdown.
+void RefrescarConversacion(bool irAlFinal)
+{
+    vistaConversacion.Text = RenderizarMarkdown(mensajesPantalla);
+
+    if (irAlFinal)
+    {
+        vistaConversacion.ScrollToAnchor("fin");
+    }
+}
+
+// Convierte la lista de mensajes visibles en un unico texto Markdown.
+static string RenderizarMarkdown(IReadOnlyList<MensajePantalla> mensajes)
+{
+    if (mensajes.Count == 0)
+    {
+        return "# Asistente IA\n\nEscribi un mensaje y presiona **Enter** o el boton **Enviar**.\n\n<a id=\"fin\"></a>";
+    }
+
+    var texto = new StringBuilder();
+
+    foreach (var mensaje in mensajes)
+    {
+        texto.Append("## ")
+            .AppendLine(mensaje.Rol)
+            .AppendLine()
+            .AppendLine(mensaje.Texto)
+            .AppendLine();
+    }
+
+    texto.AppendLine("<a id=\"fin\"></a>");
+    return texto.ToString();
+}
+
+// Revisa que las variables de entorno necesarias existan antes de usar la IA.
+static bool ValidarConfiguracion(string proveedor, string? url, string? apiKey, out string mensaje)
+{
+    var errores = new List<string>();
+
+    if (string.IsNullOrWhiteSpace(url))
+    {
+        errores.Add($"Falta `{proveedor}_API_URL`.");
+    }
+
+    if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("<tu_clave_api_aqui>", StringComparison.OrdinalIgnoreCase))
+    {
+        errores.Add($"Falta `{proveedor}_API_KEY`.");
+    }
+
+    if (errores.Count == 0)
+    {
+        mensaje = "";
+        return true;
+    }
+
+    mensaje = "# Configuracion incompleta\n\n"
+        + string.Join("\n", errores.Select(error => $"- {error}"))
+        + "\n\nCopia `.env.ejemplo` como `.env`, completa los datos de Gemini y ejecuta:\n\n"
+        + "```bash\n"
+        + "dotnet run .\\asistente.cs\n"
+        + "```\n\n"
+        + "Tambien podes elegir otro proveedor pasando su nombre, por ejemplo `openai`.\n";
+
+    return false;
+}
+
+// Crea un IChatClient usando un proveedor compatible con la API de OpenAI.
+static IChatClient CrearClienteChat(string url, string apiKey, string modelo)
+{
+    return new OpenAIClient(
+            new ApiKeyCredential(apiKey),
+            new OpenAIClientOptions { Endpoint = new Uri(NormalizarUrlBase(url)) })
+        .GetChatClient(modelo)
+        .AsIChatClient();
+}
+
+// Algunos .env traen la URL completa de chat/completions; el SDK necesita la URL base.
+static string NormalizarUrlBase(string url)
+{
+    var limpia = url.Trim().TrimEnd('/');
+    const string sufijoChat = "/chat/completions";
+
+    return limpia.EndsWith(sufijoChat, StringComparison.OrdinalIgnoreCase)
+        ? limpia[..^sufijoChat.Length]
+        : limpia;
+}
