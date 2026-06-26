@@ -62,6 +62,7 @@ class AsistenteWindow : Window {
     readonly IChatClient chat;
     readonly ChatOptions opciones;
     readonly List<ChatMessage> mensajes;
+    readonly List<TurnoVisible> turnos = [];
 
     readonly Markdown conversacion = new() {
         X = 0,
@@ -131,7 +132,35 @@ class AsistenteWindow : Window {
         panelEntrada.Add(entrada, enviar);
         Add(panelConversacion, panelEntrada, estado);
     }
+
+    void AgregarTurno(string rol, string texto) {
+        turnos.Add(new(rol, texto));
+        RenderizarConversacion();
+    }
+
+    void ActualizarUltimoTurno(string texto) {
+        if (turnos.Count == 0) {
+            return;
+        }
+
+        var ultimo = turnos[^1];
+        turnos[^1] = ultimo with { Texto = texto };
+        RenderizarConversacion();
+    }
+
+    void RenderizarConversacion() {
+        if (turnos.Count == 0) {
+            conversacion.Text = "# Asistente IA\n\nEscribi un mensaje abajo y presiona Enter o Enviar.";
+            return;
+        }
+
+        conversacion.Text = string.Join(
+            "\n\n---\n\n",
+            turnos.Select(t => $"## {t.Rol}\n\n{t.Texto.Trim()}"));
+    }
 }
+
+record TurnoVisible(string Rol, string Texto);
 
 record ConfiguracionProveedor(string Nombre, Uri Endpoint, string ApiKey, string Modelo) {
     public static ConfiguracionProveedor Cargar(string nombre) {
