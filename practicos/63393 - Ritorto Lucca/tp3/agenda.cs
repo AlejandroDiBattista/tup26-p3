@@ -98,8 +98,8 @@ public sealed class AgendaWindow : Runnable
         {
             X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(),
         };
-        _listView.SelectedItemChanged += (_, _) => UpdateDetail();
-        _listView.OpenSelectedItem    += (_, _) => EditarContacto();
+        _listView.ValueChanged += (_, _) => UpdateDetail();
+        _listView.Accepted     += (_, _) => EditarContacto();
         listFrame.Add(_listView);
 
         FrameView detailFrame = new()
@@ -309,7 +309,7 @@ public sealed class ContactDialog : Dialog
         _favorito = new CheckBox
         {
             Text       = "★ Favorito",
-            CheckState = c.Favorito ? CheckState.Checked : CheckState.UnChecked,
+            Value = c.Favorito ? CheckState.Checked : CheckState.UnChecked,
             X = 1, Y = y,
         };
         Add(_favorito);
@@ -353,7 +353,7 @@ public sealed class ContactDialog : Dialog
             Telefonos = string.Join(", ", tels.Where(t => !string.IsNullOrEmpty(t))),
             Email     = email,
             Notas     = _notas.Text?.ToString() ?? "",
-            Favorito  = _favorito.CheckState == CheckState.Checked,
+            Favorito  = _favorito.Value == CheckState.Checked,
         };
         WasAccepted = true; return true;
     }
