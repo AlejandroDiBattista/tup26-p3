@@ -208,7 +208,7 @@ class AsistenteWindow : Window {
 
     void AgregarTurno(string rol, string texto) {
         turnos.Add(new(rol, texto));
-        RenderizarConversacion();
+        RenderizarConversacion(seguirAlFinal: true);
     }
 
     void ActualizarUltimoTurno(string texto) {
@@ -218,18 +218,35 @@ class AsistenteWindow : Window {
 
         var ultimo = turnos[^1];
         turnos[^1] = ultimo with { Texto = texto };
-        RenderizarConversacion();
+        RenderizarConversacion(seguirAlFinal: false);
     }
 
-    void RenderizarConversacion() {
+    void RenderizarConversacion(bool seguirAlFinal = false) {
+        int posicionAnterior = conversacion.VerticalScrollBar.Value;
+        int maxAnterior = Math.Max(
+            0,
+            conversacion.VerticalScrollBar.ScrollableContentSize
+            - conversacion.VerticalScrollBar.VisibleContentSize);
+        bool estabaAbajo = posicionAnterior >= Math.Max(0, maxAnterior - 1);
+
         if (turnos.Count == 0) {
             conversacion.Text = "# Asistente IA\n\nEscribi un mensaje abajo y presiona Enter o Enviar.";
+            conversacion.VerticalScrollBar.Value = 0;
             return;
         }
 
         conversacion.Text = string.Join(
             "\n\n---\n\n",
             turnos.Select(t => $"## {t.Rol}\n\n{t.Texto.Trim()}"));
+
+        int maxActual = Math.Max(
+            0,
+            conversacion.VerticalScrollBar.ScrollableContentSize
+            - conversacion.VerticalScrollBar.VisibleContentSize);
+
+        conversacion.VerticalScrollBar.Value = seguirAlFinal || estabaAbajo
+            ? maxActual
+            : Math.Min(posicionAnterior, maxActual);
         conversacion.SetNeedsDraw();
     }
 
