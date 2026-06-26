@@ -7,7 +7,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63456   Ávila Lahr, Joaquín             (381)527-6836   joacoavila9                🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  Sin scroll en maestro; revisar modo oscuro
 63415   Chávez, Lucas Francisco         (381)301-3490   lucaschavez10lc-ai         🔴🔴🔴🔴🔴⚪   🟢⚪   No    17    8
 63268   Condori, Karina Edith           (381)412-4723   kariiedith9315             🟢🟢🟢🟢🟢⚪   🟢⚪   No     9    1  Mal scroll en maestro; mal uso del espacio vertical
-63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢⚪   🟢⚪   No    29   10  Edita en caja de diálogo en lugar de hacerlo en el detalle
+63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  No muestra el modo solo lectura, edita en forma directa.
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢🟢⚪   🟢⚪   No    30   10  Correcto; mejorar uso del espacio vertical
 63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  Correcto
 63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🔴🔴🟢⚪   🟢⚪   No    17    8  No funciona: no muestra detalle, no busca y no edita
@@ -30,7 +30,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63546   Sosa Paz, Jeremías              (381)200-7473   jeerepazz                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  Mal uso del espacio vertical
 63547   Sosa Paz, José Lisandro         (381)675-3624   lisandropaz                🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  Correcto; mejorar uso del espacio vertical
 63447   Suárez, Sofía Celeste           (381)246-3725   suarezsofia541-alt         🟢🟢🟢🟢🟢⚪   🟢⚪   No    29   10  Edición en página separada en lugar de en el detalle; no tiene búsqueda en caliente
-61490   Valdez Bustamante, Tomás        (381)303-1034   tomas-valdez-bustamante    🟢🟢🔴🟢🟢⚪   🟢⚪   No    34    6  No inicia con la pantalla inicial; sin scroll en maestro
+61490   Valdez Bustamante, Tomás        (381)303-1034   tomas-valdez-bustamante    🟢🟢🔴🟢🟢⚪   🟢⚪   No    34    6  correcto
 63397   Vercellone, Tomás               (381)676-6267   xtomi2456                  🟢🟢🟢🔴🟢⚪   🟢⚪   No    24    9  Mal scroll en maestro; mal uso del espacio vertical
 ```
 

@@ -1,48 +1,56 @@
-@page "/contactos"
+@page "/"
+
 @rendermode InteractiveServer
 @inject IContactoService ContactosService
 
 <PageTitle>Agenda de contactos</PageTitle>
 
-<h1 class="mb-4">📒 Agenda de contactos</h1>
+<div class="contacts-page">
+    <h1 class="mb-4">📒 Agenda de contactos</h1>
 
-<div class="row g-3">
+    <div class="contact-shell row g-3 flex-grow-1">
 
     @* ===================== PANEL DE LA LISTA ===================== *@
-    <div class="col-lg-4">
-        <div class="input-group mb-3">
-            <span class="input-group-text"><span class="bi bi-search"></span></span>
-            <input class="form-control" placeholder="Buscar por nombre, apellido o email..."
-                   @bind="this.filtro" @bind:event="oninput" @bind:after="Refrescar" />
-        </div>
+    <div class="col-lg-4 d-flex">
+        <div class="contact-list-panel d-flex flex-column h-100 w-100">
+            <div class="input-group mb-3">
+                <span class="input-group-text"><span class="bi bi-search"></span></span>
+                <input class="form-control" placeholder="Buscar por nombre, apellido o email..."
+                       @bind="this.filtro" @bind:event="oninput" @bind:after="Refrescar" />
+            </div>
 
-        <button class="btn btn-success w-100 mb-3" @onclick="Nuevo">
-            <span class="bi bi-plus-lg"></span> Nuevo contacto
-        </button>
+            <button class="btn btn-success w-100 mb-3" @onclick="Nuevo">
+                <span class="bi bi-plus-lg"></span> Nuevo contacto
+            </button>
 
-        @if (this.lista is null)
-        {
-            <p><em>Cargando...</em></p>
-        }
-        else if (this.lista.Count == 0)
-        {
-            <div class="alert alert-info">No hay contactos que coincidan.</div>
-        }
-        else
-        {
-            <div class="list-group">
-                @foreach (var contacto in this.lista)
+            <div class="contact-list-body flex-grow-1 d-flex flex-column">
+                @if (this.lista is null)
                 {
-                    <button type="button"
-                            class="list-group-item list-group-item-action @(this.seleccionado?.Id == contacto.Id && !this.enEdicion ? "active" : "")"
-                            @onclick="() => Seleccionar(contacto)">
-                        <div class="fw-semibold">@contacto.Apellido, @contacto.Nombre</div>
-                        <small class="d-block text-truncate">@contacto.Email</small>
-                    </button>
+                    <div class="d-flex align-items-center justify-content-center flex-grow-1">
+                        <p class="mb-0"><em>Cargando...</em></p>
+                    </div>
+                }
+                else if (this.lista.Count == 0)
+                {
+                    <div class="alert alert-info">No hay contactos que coincidan.</div>
+                }
+                else
+                {
+                    <div class="list-group flex-grow-1 overflow-auto">
+                        @foreach (var contacto in this.lista)
+                        {
+                            <button type="button"
+                                    class="list-group-item list-group-item-action @(this.seleccionado?.Id == contacto.Id && !this.enEdicion ? "active" : "")"
+                                    @onclick="() => Seleccionar(contacto)">
+                                <div class="fw-semibold">@contacto.Apellido, @contacto.Nombre</div>
+                                <small class="d-block text-truncate">@contacto.Email</small>
+                            </button>
+                        }
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">@this.lista.Count contacto(s).</p>
                 }
             </div>
-            <p class="text-muted small mt-2">@this.lista.Count contacto(s).</p>
-        }
+        </div>
     </div>
 
     @* ===================== PANEL DEL DETALLE ===================== *@
@@ -119,6 +127,7 @@
                 Seleccioná un contacto de la lista o creá uno nuevo para ver el detalle acá.
             </div>
         }
+    </div>
     </div>
 </div>
 
