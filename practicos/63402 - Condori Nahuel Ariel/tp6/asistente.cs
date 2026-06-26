@@ -34,8 +34,7 @@ static IChatClient CrearCliente(ConfiguracionProveedor config) {
         .GetChatClient(config.Modelo)
         .AsIChatClient();
 
-    return clienteBase
-        .AsBuilder()
+    return new ChatClientBuilder(clienteBase)
         .UseFunctionInvocation()
         .Build();
 }
