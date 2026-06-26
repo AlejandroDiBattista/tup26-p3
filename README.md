@@ -1,109 +1,77 @@
-﻿# TP6: AsistenteIA
-## Asistente de Chat por Terminal con Microsoft.Extensions.AI y Terminal.Gui
+# Segundo parcial - Programacion III
 
-> [!IMPORTANT]
-> Plazo para entregar el TP6: **Jueves 25 de Junio hasta las 23:59hs**
->
-> *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*
+El segundo parcial va a consistir en la defensa de los trabajos practicos 5 y 6.
 
-## Descripción general
+La defensa consiste en realizar en vivo una modificacion sobre el sistema desarrollado por cada alumno. La modificacion se indicara en el momento de la defensa y sera concreta: no implicara desarrollar funcionalidad nueva, sino corregir o ajustar aspectos del sistema presentado.
 
-Desarrollar una aplicación de **consola interactiva** que funcione como un **asistente conversacional** apoyado en un modelo de lenguaje, construida con:
+Cada alumno dispondra de una computadora provista por la catedra y tendra 15 minutos para realizar los cambios y documentarlos.
 
-- **Terminal.Gui (v2)** — Interfaz de usuario en modo texto (TUI).
-- **Microsoft.Extensions.AI (MEAI)** — Abstracción `IChatClient` para conversar con el modelo.
-- **Proveedor compatible con OpenAI** — Acceso al modelo mediante una clave configurada por variable de entorno.
+Los alumnos que se encuentran en condiciones promocionales son aquellos que, al momento de esta comunicacion, tienen nota de promocion y el Trabajo Practico 5 presentado. La falta de presentacion del Trabajo Practico 6 no los excluye en este momento, porque el plazo de presentacion de ese trabajo todavia no esta cerrado.
 
-El sistema debe permitir mantener una conversación con el asistente: el usuario escribe un mensaje, lo envía, y la respuesta del modelo se va mostrando **a medida que se genera** (streaming). La conversación se conserva durante toda la sesión para dar contexto a cada nueva pregunta.
+Los siguientes alumnos se encuentran en condiciones promocionales y deben revisar el estado indicado para el Trabajo Practico 5. Cuando haya observaciones, deberan corregirlas y presentarlas hasta el lunes 29 de junio de 2026 a las 21:00.
 
----
+La correccion debe entregarse mediante un pull request con los cambios realizados. El pull request debe contener solamente las correcciones solicitadas para esta instancia.
 
-## Modelo de la conversación
+Oportunamente se informara el calendario con el dia y horario en que cada alumno debera defender el trabajo.
 
-La conversación es una secuencia de mensajes, cada uno con un **rol** que lo distingue dentro del diálogo. Los roles que intervienen son:
+## Condicion del TP6
 
-| Rol         | Descripción                                                                 | Visible al usuario |
-|-------------|-----------------------------------------------------------------------------|:------------------:|
-| Sistema     | Instrucción inicial que define el comportamiento del asistente              | No                 |
-| Usuario     | Cada mensaje que escribe la persona                                         | Sí                 |
-| Asistente   | Cada respuesta que produce el modelo                                        | Sí                 |
+El Trabajo Practico 6 formara parte de la defensa del segundo parcial, pero su ausencia no invalida este listado mientras el plazo de presentacion no este cerrado. La condicion final se verificara cuando corresponda cerrar la instancia.
 
-El mensaje de **sistema** se carga desde un archivo `AGENTS.md` ubicado junto a la aplicación, y fija el "carácter" del asistente (idioma, tono, preferencias de lenguaje de ejemplo, qué hacer cuando falta contexto). Mantener el prompt en un archivo aparte permite ajustarlo sin recompilar. Los mensajes de **usuario** y **asistente** se acumulan a lo largo de la sesión y se envían completos en cada consulta, de modo que el modelo recuerde lo conversado.
+## Correcciones a realizar
 
-El acceso al modelo se realiza mediante la abstracción `IChatClient` de **Microsoft.Extensions.AI**, sin acoplar la lógica de la aplicación a un proveedor concreto. La clave de la API se lee desde una **variable de entorno** (por ejemplo, cargada desde un archivo `.env`), nunca escrita en el código.
+Cada alumno debe revisar la observacion indicada. Si se informa una falla, debe corregirla para que el TP5 pueda considerarse aprobado en esta instancia.
 
----
+### C7
 
-## Funcionalidades requeridas
+| Legajo | Estudiante | Estado / observacion del TP5 |
+| ------ | ---------- | ---------------------------- |
+| 63456 | Ávila Lahr, Joaquín | Sin scroll en maestro; revisar modo oscuro |
+| 63402 | Condori, Nahuel Ariel | No muestra el modo solo lectura, edita en forma directa. |
+| 63419 | Coronel, Tomás | Correcto; mejorar uso del espacio vertical |
+| 63241 | Cortez, Josías | Correcto |
+| 63776 | Fuensalida, Ulises Nahuel | No funciona: no muestra detalle, no busca y no edita |
+| 63396 | Gil Garau, Atalía Trinidad | Sin scroll en maestro; botones de edición fuera del modo mostrar; edita dentro del detalle |
+| 63457 | González Dupuy, Ignacio | No edita; sin scroll en maestro; muestra mensaje de error al final |
+| 63174 | Jerez, Luciano Germán | Mal formato; sin CSS |
+| 63700 | Jiménez, Nelson Maximiliano | Sin observaciones registradas. |
+| 63399 | Lazarte, Gonzalo Romeo | Correcto; botones duplicados para cancelar/guardar |
+| 63350 | Páez Carabajal, Santiago | Mal uso del espacio vertical |
+| 61581 | Paz, Naim Federico | No usa bien el espacio vertical |
+| 63647 | Paz, Valentina | No edita; solo muestra cancelar/guardar |
+| 63389 | Pereyra Petroni, Nicolas | Edición mal ubicada arriba; no alterna mostrar/editar; no cancela |
+| 63354 | Perondi, Luciano | Sin scroll en maestro; no cancela al seleccionar |
+| 63393 | Ritorto, Lucca | Sin scroll en maestro; edición en página aparte en lugar de alternar mostrar/editar |
+| 63387 | Sosa Gonella, Luca | No alterna entre mostrar detalle y editar; no cancela al seleccionar; no tiene búsqueda en caliente |
+| 63546 | Sosa Paz, Jeremías | Mal uso del espacio vertical |
+| 63547 | Sosa Paz, José Lisandro | Correcto; mejorar uso del espacio vertical |
+| 63447 | Suárez, Sofía Celeste | Edición en página separada en lugar de en el detalle; no tiene búsqueda en caliente |
+| 63397 | Vercellone, Tomás | Mal scroll en maestro; mal uso del espacio vertical |
 
-La aplicación debe implementar la conversación con el asistente:
+### C9
 
-- **Enviar mensaje:** tomar el texto que escribió el usuario y agregarlo a la conversación.
-- **Recibir respuesta en streaming:** mostrar la respuesta del modelo **fragmento a fragmento**, a medida que llega, sin esperar a que termine.
-- **Mantener contexto:** conservar el historial completo de la sesión para que cada nueva pregunta tenga en cuenta lo anterior.
-- **Renderizar Markdown:** mostrar la conversación con formato (encabezados por turno, bloques de código resaltados, etc.).
-- **Salir:** cerrar la aplicación de forma limpia con la tecla **Esc**.
-
----
-
-## Herramientas (function calling)
-
-El asistente debe poder **operar sobre el sistema de archivos** del proyecto a pedido del usuario. Para ello se exponen al modelo, mediante el mecanismo de *function calling* de **Microsoft.Extensions.AI**, las siguientes herramientas:
-
-| Herramienta        | Descripción                                              | Parámetros            |
-|--------------------|----------------------------------------------------------|-----------------------|
-| `leer-archivo`     | Devuelve el contenido de un archivo de texto             | ruta del archivo      |
-| `escribir-archivo` | Crea o sobrescribe un archivo con el contenido indicado  | ruta y contenido      |
-| `listar-archivos`  | Lista los archivos (y carpetas) de un directorio         | ruta del directorio   |
-
-El modelo decide **cuándo** invocar cada herramienta a partir de lo que pide el usuario (por ejemplo: "leé `notas.txt`", "guardá esto en `salida.md`", "qué archivos hay en esta carpeta"). La aplicación debe ejecutar la función solicitada y devolver el resultado al modelo para que continúe la respuesta.
-
-Las herramientas se definen como funciones de C# (con `AIFunctionFactory`) y se entregan al cliente a través de las `ChatOptions`, habilitando la invocación automática de funciones en el `IChatClient`.
-
----
-
-## Diseño de interfaz
-
-La interfaz debe organizarse en una ventana de pantalla completa, dividida en dos zonas verticales:
-
-- **Panel de conversación:** ocupa la mayor parte de la pantalla y muestra el historial del diálogo. Debe poder desplazarse (scroll) con mouse y teclado para releer mensajes anteriores.
-- **Panel de entrada:** un campo de texto donde el usuario escribe su mensaje, acompañado de un botón **Enviar**.
-
-![Ejemplo de la interfaz del asistente](image.png)
-
-La experiencia de teclado esperada es:
-
-- **Enter** envía el mensaje.
-- **Esc** cierra la aplicación.
-
-Mientras el asistente responde, la entrada y el botón deben deshabilitarse para evitar envíos superpuestos, y el panel de conversación debe acompañar la respuesta que se genera (auto-scroll), respetando el desplazamiento manual del usuario si éste decide leer hacia arriba.
-
-El diseño no necesita ser visualmente complejo, pero debe ser claro, ordenado y funcional.
-
----
-
-## Organización del proyecto
-
-La solución debe separar responsabilidades de forma clara, con una estructura comprensible y mantenible. Se espera una separación razonable entre:
-
-- Configuración y arranque (lectura de la clave, creación del `IChatClient`).
-- La ventana principal y su disposición de paneles.
-- El control de entrada de texto.
-- El modelo de los mensajes que se muestran en pantalla.
-- Las herramientas de archivos expuestas al modelo (`leer-archivo`, `escribir-archivo`, `listar-archivos`).
-- La lógica de envío, streaming y actualización del historial.
-
-La estructura concreta queda a criterio del estudiante.
-
----
-
-## Cómo comenzar el desarrollo
-
-El proyecto se entrega como un punto de partida mínimo que ya incluye:
-
-- Un archivo ejecutable de **C# (file-based app)** con los paquetes necesarios declarados (`Microsoft.Extensions.AI`, `Terminal.Gui`, carga de `.env`).
-- La lectura de la **clave de API** desde la variable de entorno y la creación del cliente `IChatClient`.
-- Una **ventana base** de Terminal.Gui que abre a pantalla completa con el título del asistente.
-- El archivo **`AGENTS.md`** con el mensaje de sistema, que la aplicación carga al iniciar.
-
-Se recomienda avanzar de a poco, verificando el funcionamiento de cada parte antes de continuar con la siguiente.
+| Legajo | Estudiante | Estado / observacion del TP5 |
+| ------ | ---------- | ---------------------------- |
+| 63385 | Almaraz Sintora, Nahuel | Mal scroll en maestro; edita en otra pantalla en lugar de a la derecha |
+| 63300 | Álvarez, Hernán Fabricio | Muestra la pantalla del enunciado |
+| 63313 | Ávila Puntano, Benjamín | Mal uso del espacio vertical; edición en otra página en lugar de a la derecha |
+| 63150 | Carlino, Joaquín | Mal scroll interno en maestro; mal uso del espacio vertical |
+| 63341 | Carrer, Juan Cruz | Mal layout; no tiene búsqueda en caliente; no cancela la edición |
+| 63218 | Cortés, Guillermo Augusto | correcto |
+| 63266 | Decima, Juan Cruz | Al editar no oculta el detalle; al seleccionar no cancela la edición |
+| 63737 | Galván, Rocío Julieta | resolver scroll de la pantalla |
+| 61489 | Gómez, Tomás | No ocupa el espacio vertical; no muestra detalle de solo lectura |
+| 63182 | González Rojas, Emmanuel | Mal scroll en maestro; mal uso del espacio vertical; muestra mensaje de error; no inicia con la pantalla del sistema |
+| 63717 | González, Octavio | buscar se desplaza, rotulo negro sobre negro, modo oscuro, mal acentos. |
+| 63231 | Herrera, Rocío Tatiana | Layout roto; sin scroll en maestro; el detalle queda debajo del maestro |
+| 63219 | Lazarte, Sergio Fabricio | correcto |
+| 63297 | Lezana, Juan Ignacio | Edición en caja de diálogo en lugar de a la derecha |
+| 63388 | López, Leandro Joel | Correcto; revisar bordes |
+| 63213 | Marina Noguera, Morena Giovann | El campo de búsqueda genera scroll vertical |
+| 63494 | Medina, Lourdes Natalia | Correcto; mal uso del espacio vertical |
+| 63234 | Molina, Lázaro Exequiel | Edición mal ubicada abajo; mal scroll en maestro |
+| 63412 | Morán, Facundo Martín | Correcto; revisar modo oscuro |
+| 63220 | Pérez Del Rien, Valentina | Correcto; botones duplicados para cancelar/guardar |
+| 63216 | Sánchez, Sofía Micaela | no funcion scroll en maestro ni detalle, sencible a los acentos. |
+| 63207 | Saravia, César Nahum | No funciona; AmbiguousMatchException: la solicitud coincide con múltiples endpoints |
+| 61026 | Thompson, María José | correcto |
