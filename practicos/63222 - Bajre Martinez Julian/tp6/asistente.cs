@@ -49,6 +49,20 @@ var botonEnviar = new Button {
     Width = 11
 };
 
+string TextoDeHistorial(IEnumerable<ChatMessage> historial)
+{
+    var sb = new StringBuilder();
+    foreach (var m in historial)
+    {
+        if (m.Role == ChatRole.System) continue;
+        var encabezado = m.Role == ChatRole.User ? "Vos" : "Asistente";
+        sb.AppendLine($"# {encabezado}\n");
+        sb.AppendLine(m.Text);
+        sb.AppendLine();
+    }
+    return sb.ToString();
+}
+
 async void EnviarMensaje()
 {
     var texto = campoEntrada.Text?.ToString()?.Trim();
@@ -59,29 +73,26 @@ async void EnviarMensaje()
     campoEntrada.Text = "";
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
-    ActualizarPanelConversacion();
+    panelConversacion.Text = TextoDeHistorial(mensajes);
 
-    var respuesta = await chat.GetResponseAsync(mensajes);
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
-    ActualizarPanelConversacion();
+    var textoAsistente = new StringBuilder();
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, ""));
+
+    await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes.Take(mensajes.Count - 1)))
+    {
+        if (string.IsNullOrEmpty(fragmento.Text)) continue;
+        textoAsistente.Append(fragmento.Text);
+
+        app.Invoke(() =>
+        {
+            mensajes[^1] = new ChatMessage(ChatRole.Assistant, textoAsistente.ToString());
+            panelConversacion.Text = TextoDeHistorial(mensajes);
+        });
+    }
 
     campoEntrada.Enabled = true;
     botonEnviar.Enabled = true;
     campoEntrada.SetFocus();
-}
-
-void ActualizarPanelConversacion()
-{
-    var sb = new StringBuilder();
-    foreach (var m in mensajes)
-    {
-        if (m.Role == ChatRole.System) continue;
-        var encabezado = m.Role == ChatRole.User ? "Vos" : "Asistente";
-        sb.AppendLine($"# {encabezado}\n");
-        sb.AppendLine(m.Text);
-        sb.AppendLine();
-    }
-    panelConversacion.Text = sb.ToString();
 }
 
 botonEnviar.Accepting += (_, _) => EnviarMensaje();
