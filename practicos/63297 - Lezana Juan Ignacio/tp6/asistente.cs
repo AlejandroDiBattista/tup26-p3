@@ -59,6 +59,85 @@ ChatOptions configuracionChat = new() {
         }),
     ]
 };
+Console.OutputEncoding = Encoding.UTF8;
+
+using IApplication instanciaApp = Application.Create().Init();
+instanciaApp.Run(new PantallaChat(clienteConHerramientas, mensajes, configuracionChat, nombreModelo));
+class PantallaChat : Runnable {
+    readonly IChatClient clienteChat;
+    readonly List<ChatMessage> mensajes;
+    readonly ChatOptions config;
+
+    readonly Markdown visorConversacion;
+    readonly TextField entradaTexto;
+    readonly Button btnEnviar;
+    readonly Label estadoActual;
+
+    readonly StringBuilder contenidoChat = new();
+    bool estaRespondiendo = false;
+    bool scrollManual = false;
+
+    public PantallaChat(IChatClient clienteChat, List<ChatMessage> mensajes, ChatOptions config, string nombreModelo) {
+        this.clienteChat = clienteChat;
+        this.mensajes    = mensajes;
+        this.config      = config;
+
+        Title  = $" AsistenteIA · {nombreModelo} ";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+
+    
+        var marcoChat = new FrameView {
+            Title  = " Conversación ",
+            X = 0, Y = 0,
+            Width  = Dim.Fill(),
+            Height = Dim.Fill(4),
+        };
+        marcoChat.BorderStyle = LineStyle.Single;
+
+        visorConversacion = new Markdown {
+            X = 0, Y = 0,
+            Width    = Dim.Fill(),
+            Height   = Dim.Fill(),
+            CanFocus = true,
+        };
+        marcoChat.Add(visorConversacion);
+
+        var marcoEntrada = new FrameView {
+            Title  = " Mensaje (Enter = enviar · Esc = salir) ",
+            X = 0,
+            Y = Pos.Bottom(marcoChat),
+            Width  = Dim.Fill(),
+            Height = 4,
+        };
+        marcoEntrada.BorderStyle = LineStyle.Single;
+
+        entradaTexto = new TextField {
+            X = 1, Y = 0,
+            Width    = Dim.Fill(12),
+            Height   = 1,
+            CanFocus = true,
+        };
+
+        btnEnviar = new Button {
+            Text     = "Enviar",
+            X        = Pos.Right(entradaTexto) + 1,
+            Y        = 0,
+            CanFocus = true,
+        };
+
+        estadoActual = new Label {
+            X    = 1,
+            Y    = 1,
+            Width = Dim.Fill(2),
+            Text  = "Escribí tu mensaje y presioná Enter o hacé clic en Enviar.",
+        };
+
+        marcoEntrada.Add(entradaTexto, btnEnviar, estadoActual);
+        Add(marcoChat, marcoEntrada);
+
+        
+
 ventana.Add(new Markdown {
     Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
     Width = Dim.Fill(), Height = Dim.Fill()
