@@ -19,8 +19,8 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 // Define proveedor a usar en este caso Gemini
 var proveedor = (args.Length > 0 ? args[0] : "gemini").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}123456");
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gemini-2.5-flash";
 // Lee el mensaje del sistema que marca el comportamiento inicial 
 
