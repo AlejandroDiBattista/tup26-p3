@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -7,7 +8,11 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
+using System.ComponentModel;
+using System.Text;
 using Terminal.Gui.App;
+using Terminal.Gui.Drivers;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
@@ -387,3 +392,49 @@ static string EscribirArchivo(
 [Description("Lista archivos y carpetas de un directorio del proyecto.")]
 
 
+// Herramienta para mostrar que contiene una carpeta.
+static string ListarArchivos([Description("Ruta relativa o absoluta del directorio dentro del proyecto.")] string ruta)
+{
+    var carpeta = ResolverRutaDelProyecto(string.IsNullOrWhiteSpace(ruta) ? "." : ruta);
+
+    if (!Directory.Exists(carpeta))
+    {
+        return $"No existe el directorio: {ruta}";
+    }
+
+    var elementos = Directory.EnumerateFileSystemEntries(carpeta)
+        .OrderBy(rutaElemento => rutaElemento)
+        .Select(rutaElemento =>
+        {
+            var nombre = Path.GetFileName(rutaElemento);
+            return Directory.Exists(rutaElemento) ? $"[carpeta] {nombre}" : $"[archivo] {nombre}";
+        })
+        .ToArray();
+
+    return elementos.Length == 0
+        ? "El directorio esta vacio."
+        : string.Join(Environment.NewLine, elementos);
+}
+
+// Normaliza rutas y evita que las herramientas salgan de la carpeta del proyecto.
+static string ResolverRutaDelProyecto(string ruta)
+{
+    if (string.IsNullOrWhiteSpace(ruta))
+    {
+        ruta = ".";
+    }
+
+    var raiz = Path.GetFullPath(Directory.GetCurrentDirectory());
+    var combinada = Path.IsPathRooted(ruta) ? ruta : Path.Combine(raiz, ruta);
+    var completa = Path.GetFullPath(combinada);
+
+    if (!completa.StartsWith(raiz, StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException("Las herramientas solo pueden acceder a archivos dentro del proyecto.");
+    }
+
+    return completa;
+}
+
+// Modelo simple para mostrar cada turno de la conversacion en pantalla.
+record MensajePantalla(string Rol, string Texto);
