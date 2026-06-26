@@ -7,6 +7,7 @@
 
 using System.ClientModel;
 using System.ComponentModel;
+using System.Text;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using Terminal.Gui.App;
@@ -44,7 +45,7 @@ List<ChatMessage> mensajes =
 ];
 
 using IApplication app = Application.Create().Init();
-using var ventana = new VentanaAsistente(chat, opciones, mensajes, configuracion.Modelo);
+using var ventana = new VentanaAsistente(app, chat, opciones, mensajes, configuracion.Modelo);
 app.Run(ventana);
 
 static string CargarPromptSistema()
@@ -179,14 +180,17 @@ record ConfiguracionIA(string UrlBase, string ApiKey, string Modelo)
 sealed class VentanaAsistente : Window
 {
     readonly IChatClient chat;
+    readonly IApplication app;
     readonly ChatOptions opciones;
     readonly List<ChatMessage> mensajes;
     readonly Markdown conversacion;
     readonly TextField entrada;
     readonly Button enviar;
+    bool ocupado;
 
-    public VentanaAsistente(IChatClient chat, ChatOptions opciones, List<ChatMessage> mensajes, string modelo)
+    public VentanaAsistente(IApplication app, IChatClient chat, ChatOptions opciones, List<ChatMessage> mensajes, string modelo)
     {
+        this.app = app;
         this.chat = chat;
         this.opciones = opciones;
         this.mensajes = mensajes;
@@ -255,41 +259,93 @@ sealed class VentanaAsistente : Window
 
     async Task EnviarMensajeAsync()
     {
+        if (ocupado)
+        {
+            return;
+        }
+
         string texto = (entrada.Text?.ToString() ?? "").Trim();
         if (string.IsNullOrWhiteSpace(texto))
         {
             return;
         }
 
+        ocupado = true;
+        entrada.Enabled = false;
+        enviar.Enabled = false;
         entrada.Text = "";
         mensajes.Add(new ChatMessage(ChatRole.User, texto));
-        Renderizar();
+        Renderizar("...");
 
-        var respuesta = await chat.GetResponseAsync(mensajes, opciones);
-        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text ?? ""));
-        Renderizar();
-        entrada.SetFocus();
+        var fragmentos = new List<ChatResponseUpdate>();
+        var parcial = new StringBuilder();
+        Exception? error = null;
+
+        try
+        {
+            await Task.Run(async () =>
+            {
+                await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones))
+                {
+                    fragmentos.Add(fragmento);
+
+                    if (!string.IsNullOrEmpty(fragmento.Text))
+                    {
+                        parcial.Append(fragmento.Text);
+                        var textoParcial = parcial.ToString();
+                        app.Invoke(() => Renderizar(textoParcial));
+                    }
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            error = ex;
+        }
+
+        app.Invoke(() =>
+        {
+            if (error is null)
+            {
+                mensajes.AddMessages(fragmentos);
+            }
+            else
+            {
+                mensajes.Add(new ChatMessage(ChatRole.Assistant, "No se pudo obtener respuesta: " + error.Message));
+            }
+
+            Renderizar();
+            entrada.Enabled = true;
+            enviar.Enabled = true;
+            entrada.SetFocus();
+            ocupado = false;
+        });
     }
 
-    void Renderizar()
+    void Renderizar(string? respuestaEnCurso = null)
     {
-        var texto = "";
+        var texto = new StringBuilder();
 
         foreach (var mensaje in mensajes)
         {
             if (mensaje.Role == ChatRole.User)
             {
-                texto += $"# Vos\n\n{mensaje.Text}\n\n";
+                texto.Append("# Vos\n\n").Append(mensaje.Text).Append("\n\n");
             }
 
             if (mensaje.Role == ChatRole.Assistant)
             {
-                texto += $"# Asistente\n\n{mensaje.Text}\n\n";
+                texto.Append("# Asistente\n\n").Append(mensaje.Text).Append("\n\n");
             }
         }
 
-        conversacion.Text = string.IsNullOrWhiteSpace(texto)
+        if (respuestaEnCurso is not null)
+        {
+            texto.Append("# Asistente\n\n").Append(respuestaEnCurso).Append("\n\n");
+        }
+
+        conversacion.Text = texto.Length == 0
             ? "_Escribi una consulta y presiona Enter._"
-            : texto;
+            : texto.ToString();
     }
 }
