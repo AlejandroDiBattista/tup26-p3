@@ -124,3 +124,74 @@ class VentanaAsistente : Runnable {
             Y      = 0,
             CanFocus = true,
         };
+
+        lblEstado = new Label {
+            X = 1, Y = 1,
+            Width = Dim.Fill(2),
+            Text  = "Escribí tu mensaje y presioná Enter o hacé clic en Enviar.",
+        };
+ 
+        frameEntrada.Add(campoEntrada, btnEnviar, lblEstado);
+        Add(frameConversacion, frameEntrada);
+ 
+        campoEntrada.KeyDown += (_, key) => {
+            if (key == Key.Enter) {
+                key.Handled = true;
+                _ = EnviarMensaje();
+            }
+        };
+ 
+        btnEnviar.Accepted += (_, _) => _ = EnviarMensaje();
+ 
+        KeyDown += (_, key) => {
+            if (key == Key.Esc) {
+                key.Handled = true;
+                App!.RequestStop();
+            }
+        };
+        campoEntrada.KeyDown += (_, key) => {
+            if (key == Key.Esc) {
+                key.Handled = true;
+                App!.RequestStop();
+            }
+        };
+ 
+        panelConversacion.KeyDown += (_, key) => {
+            usuarioScrolleo = true;
+        };
+ 
+        MostrarBienvenida();
+        campoEntrada.SetFocus();
+    }
+ 
+    void MostrarBienvenida() {
+        textoConversacion.Clear();
+        textoConversacion.AppendLine("# Asistente IA");
+        textoConversacion.AppendLine();
+        textoConversacion.AppendLine("Escribí tu mensaje abajo. Podés pedirme que lea, escriba o liste archivos del directorio actual.");
+        textoConversacion.AppendLine();
+        ActualizarPanel();
+    }
+ 
+    async Task EnviarMensaje() {
+        if (respondiendo) return;
+ 
+        string texto = campoEntrada.Text?.ToString()?.Trim() ?? "";
+        if (string.IsNullOrEmpty(texto)) return;
+ 
+        campoEntrada.Text    = "";
+        campoEntrada.Enabled = false;
+        btnEnviar.Enabled    = false;
+        respondiendo         = true;
+        usuarioScrolleo      = false;
+        lblEstado.Text       = "El asistente está respondiendo…";
+ 
+        historial.Add(new(ChatRole.User, texto));
+        textoConversacion.AppendLine("## 👤 Vos");
+        textoConversacion.AppendLine();
+        textoConversacion.AppendLine(texto);
+        textoConversacion.AppendLine();
+        textoConversacion.AppendLine("## 🤖 Asistente");
+        textoConversacion.AppendLine();
+        ActualizarPanel();
+        ScrollAlFinal();
