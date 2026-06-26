@@ -13,7 +13,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 using Terminal.Gui;
 
-DotNetEnv.Env.Load();
+DotNetEnv.Env.Load(".env.ejemplo");
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
@@ -52,8 +52,16 @@ ChatOptions opcionesChat = new() {
     ]
 };
 
+string textoAgente = "Sos un asistente útil.";
+if (File.Exists("AGENTS.md")) {
+    textoAgente = File.ReadAllText("AGENTS.md");
+} else {
+    Console.WriteLine("⚠️ No se encontró AGENTS.md. Usando texto por defecto...");
+    Thread.Sleep(2000); 
+}
+
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
+    new(ChatRole.System, textoAgente),
 ];
 
 using IApplication app = Application.Create().Init();
@@ -116,7 +124,7 @@ btnEnviar.Accepting += async (s, e) => {
                 
                 mensajes[mensajes.Count - 1] = new ChatMessage(ChatRole.Assistant, textoAcumulado);
                 
-                Application.Invoke(() => {
+                app.Invoke(() => {
                     ActualizarPantalla();
                 });
             }
@@ -125,15 +133,15 @@ btnEnviar.Accepting += async (s, e) => {
     catch (Exception ex) {
         textoAcumulado += $"\n\n**Error:** {ex.Message}";
         mensajes[mensajes.Count - 1] = new ChatMessage(ChatRole.Assistant, textoAcumulado);
-        Application.Invoke(() => ActualizarPantalla());
+        app.Invoke(() => ActualizarPantalla());
     }
 
-    Application.Invoke(() => {
+    app.Invoke(() => {
         inputTexto.Enabled = true;
         btnEnviar.Enabled = true;
         inputTexto.SetFocus(); 
     });
-};
+};;
 
 panelInferior.Add(inputTexto, btnEnviar);
 ventana.Add(historialView, panelInferior);
@@ -162,8 +170,5 @@ void ActualizarPantalla()
     historialView.Text = textoPantalla;
 }
 
-Application.Invoke(() => {
-    inputTexto.SetFocus();
-});
 
 app.Run(ventana);
