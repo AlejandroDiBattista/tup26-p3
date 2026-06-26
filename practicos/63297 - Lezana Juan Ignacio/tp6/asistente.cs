@@ -242,11 +242,20 @@ class PantallaChat : Runnable {
             entradaTexto.SetFocus();
         });
     }
+    void MostrarRespuestaParcial(string textoParcial) {
+        visorConversacion.Text = contenidoChat.ToString() + textoParcial;
+        visorConversacion.SetNeedsDraw();
+    }
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+    void SincronizarVisor() {
+        visorConversacion.Text = contenidoChat.ToString();
+        visorConversacion.SetNeedsDraw();
+    }
+
+    void IrAlFinal() {
+        visorConversacion.ScrollVertical(visorConversacion.LineCount);
+    }
+}
 
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
