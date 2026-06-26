@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using Terminal.Gui.App;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
@@ -186,6 +187,7 @@ sealed class VentanaAsistente : Window
     readonly Markdown conversacion;
     readonly TextField entrada;
     readonly Button enviar;
+    readonly Label estado;
     bool ocupado;
 
     public VentanaAsistente(IApplication app, IChatClient chat, ChatOptions opciones, List<ChatMessage> mensajes, string modelo)
@@ -239,8 +241,16 @@ sealed class VentanaAsistente : Window
             Width = Dim.Fill() - Dim.Width(enviar) - 1
         };
 
+        estado = new Label
+        {
+            X = 0,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(),
+            Text = "Enter envia el mensaje. Esc sale del asistente."
+        };
+
         panelEntrada.Add(entrada, enviar);
-        Add(panelConversacion, panelEntrada);
+        Add(panelConversacion, panelEntrada, estado);
 
         enviar.Accepting += (_, e) =>
         {
@@ -255,6 +265,17 @@ sealed class VentanaAsistente : Window
         };
 
         Initialized += (_, _) => entrada.SetFocus();
+
+        KeyDown += (_, key) =>
+        {
+            if (key != Key.Esc)
+            {
+                return;
+            }
+
+            key.Handled = true;
+            App!.RequestStop();
+        };
     }
 
     async Task EnviarMensajeAsync()
@@ -273,6 +294,7 @@ sealed class VentanaAsistente : Window
         ocupado = true;
         entrada.Enabled = false;
         enviar.Enabled = false;
+        estado.Text = "El asistente esta respondiendo...";
         entrada.Text = "";
         mensajes.Add(new ChatMessage(ChatRole.User, texto));
         Renderizar("...");
@@ -317,6 +339,7 @@ sealed class VentanaAsistente : Window
             Renderizar();
             entrada.Enabled = true;
             enviar.Enabled = true;
+            estado.Text = "Enter envia el mensaje. Esc sale del asistente.";
             entrada.SetFocus();
             ocupado = false;
         });
