@@ -318,3 +318,72 @@ static string NormalizarUrlBase(string url)
         ? limpia[..^sufijoChat.Length]
         : limpia;
 }
+
+// Registra las funciones que el modelo puede pedir ejecutar sobre archivos del proyecto.
+static List<AITool> CrearHerramientas()
+{
+    return
+    [
+        AIFunctionFactory.Create(
+            (Func<string, string>)LeerArchivo,
+            new AIFunctionFactoryOptions
+            {
+                Name = "leer-archivo",
+                Description = "Lee y devuelve el contenido de un archivo de texto del proyecto."
+            }),
+        AIFunctionFactory.Create(
+            (Func<string, string, string>)EscribirArchivo,
+            new AIFunctionFactoryOptions
+            {
+                Name = "escribir-archivo",
+                Description = "Crea o sobrescribe un archivo de texto dentro del proyecto."
+            }),
+        AIFunctionFactory.Create(
+            (Func<string, string>)ListarArchivos,
+            new AIFunctionFactoryOptions
+            {
+                Name = "listar-archivos",
+                Description = "Lista archivos y carpetas de un directorio del proyecto."
+            })
+    ];
+}
+
+[Description("Devuelve el contenido de un archivo de texto del proyecto.")]
+// Herramienta para leer un archivo cuando el usuario se lo pide al asistente.
+static string LeerArchivo([Description("Ruta relativa o absoluta del archivo dentro del proyecto.")] string ruta)
+{
+    var archivo = ResolverRutaDelProyecto(ruta);
+
+    if (!File.Exists(archivo))
+    {
+        return $"No existe el archivo: {ruta}";
+    }
+
+    return File.ReadAllText(archivo);
+}
+
+[Description("Crea o sobrescribe un archivo de texto dentro del proyecto.")]
+// Herramienta para crear o reemplazar un archivo con contenido generado o indicado.
+static string EscribirArchivo(
+    [Description("Ruta relativa o absoluta del archivo dentro del proyecto.")] string ruta,
+    [Description("Contenido que se escribira en el archivo.")] string contenido)
+{
+    var archivo = ResolverRutaDelProyecto(ruta);
+    var carpeta = Path.GetDirectoryName(archivo);
+
+    if (!string.IsNullOrWhiteSpace(carpeta))
+    {
+        Directory.CreateDirectory(carpeta);
+    }
+
+    var existia = File.Exists(archivo);
+    File.WriteAllText(archivo, contenido);
+
+    return existia
+        ? $"Archivo sobrescrito correctamente: {ruta}"
+        : $"Archivo creado correctamente: {ruta}";
+}
+
+[Description("Lista archivos y carpetas de un directorio del proyecto.")]
+
+
