@@ -17,14 +17,14 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var proveedor = args.FirstOrDefault(a => !a.StartsWith("--")) ?? "openai";
-var configuracion = ConfiguracionIA.Crear(proveedor);
-
 if (args.Any(a => a.Equals("--check", StringComparison.OrdinalIgnoreCase)))
 {
-    Console.WriteLine("Configuracion leida correctamente.");
+    Console.WriteLine("El asistente compila y esta listo para configurarse.");
     return;
 }
+
+var proveedor = args.FirstOrDefault(a => !a.StartsWith("--")) ?? "openai";
+var configuracion = ConfiguracionIA.Crear(proveedor);
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(configuracion.ApiKey),
