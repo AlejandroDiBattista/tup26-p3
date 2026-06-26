@@ -1,6 +1,7 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
@@ -19,11 +20,37 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
-IChatClient chat = new OpenAIClient(
+IChatClient clienteBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
+
+    IChatClient chat = new ChatClientBuilder(clienteBase)
+    .UseFunctionInvocation()
+    .Build();
+
+ChatOptions opcionesChat = new() {
+    Tools = [
+        AIFunctionFactory.Create(
+            (string ruta) => File.ReadAllText(ruta), 
+            "leer-archivo", 
+            "Devuelve el contenido de un archivo de texto"),
+        
+        AIFunctionFactory.Create(
+            (string ruta, string contenido) => { 
+                File.WriteAllText(ruta, contenido); 
+                return "Archivo guardado exitosamente."; 
+            }, 
+            "escribir-archivo", 
+            "Crea o sobrescribe un archivo con el contenido indicado"),
+        
+        AIFunctionFactory.Create(
+            (string ruta) => string.Join("\n", Directory.GetFileSystemEntries(ruta)), 
+            "listar-archivos", 
+            "Lista los archivos (y carpetas) de un directorio")
+    ]
+};
 
 List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
@@ -48,6 +75,8 @@ var panelInferior = new View {
     BorderStyle = Terminal.Gui.Drawing.LineStyle.Single 
 };
 var inputTexto = new TextField {
+    X = 1,
+    Y = 0, 
     Width = Dim.Fill() - 14, 
     Height = 1
 };
@@ -55,7 +84,7 @@ var inputTexto = new TextField {
 var btnEnviar = new Button {
     Title = "Enviar",
     X = Pos.AnchorEnd(12),
-    Y = 0,
+    Y = 0, 
     IsDefault = true
 };
 
@@ -79,17 +108,14 @@ btnEnviar.Accepting += async (s, e) => {
     ActualizarPantalla();
     
     try {
-        var stream = chat.GetStreamingResponseAsync(historialParaEnviar);
+        var stream = chat.GetStreamingResponseAsync(historialParaEnviar, opcionesChat);
 
-        // 4. Consumimos el stream fragmento a fragmento
         await foreach (var chunk in stream) {
             if (chunk.Text != null) {
                 textoAcumulado += chunk.Text; 
                 
-                // Reemplazamos el último mensaje de la lista con la versión actualizada
                 mensajes[mensajes.Count - 1] = new ChatMessage(ChatRole.Assistant, textoAcumulado);
                 
-                // Actualizamos la pantalla (Terminal.Gui v2 se encarga del redibujado solo)
                 Application.Invoke(() => {
                     ActualizarPantalla();
                 });
@@ -102,7 +128,6 @@ btnEnviar.Accepting += async (s, e) => {
         Application.Invoke(() => ActualizarPantalla());
     }
 
-    // 5. Desbloqueamos la UI cuando termina
     Application.Invoke(() => {
         inputTexto.Enabled = true;
         btnEnviar.Enabled = true;
@@ -136,5 +161,9 @@ void ActualizarPantalla()
     
     historialView.Text = textoPantalla;
 }
+
+Application.Invoke(() => {
+    inputTexto.SetFocus();
+});
 
 app.Run(ventana);
