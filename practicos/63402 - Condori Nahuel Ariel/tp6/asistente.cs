@@ -63,6 +63,7 @@ class AsistenteWindow : Window {
     readonly ChatOptions opciones;
     readonly List<ChatMessage> mensajes;
     readonly List<TurnoVisible> turnos = [];
+    bool respondiendo;
 
     readonly Markdown conversacion = new() {
         X = 0,
@@ -109,6 +110,7 @@ class AsistenteWindow : Window {
         Height = Dim.Fill();
 
         ArmarInterfaz();
+        ConectarEventos();
     }
 
     void ArmarInterfaz() {
@@ -131,6 +133,77 @@ class AsistenteWindow : Window {
         panelConversacion.Add(conversacion);
         panelEntrada.Add(entrada, enviar);
         Add(panelConversacion, panelEntrada, estado);
+    }
+
+    void ConectarEventos() {
+        enviar.Accepting += async (_, e) => {
+            e.Handled = true;
+            await EnviarMensajeAsync();
+        };
+
+        entrada.KeyDown += async (_, key) => {
+            if (key == Key.Enter) {
+                key.Handled = true;
+                await EnviarMensajeAsync();
+            }
+        };
+    }
+
+    async Task EnviarMensajeAsync() {
+        string textoUsuario = entrada.Text?.ToString()?.Trim() ?? "";
+        if (respondiendo || string.IsNullOrWhiteSpace(textoUsuario)) {
+            return;
+        }
+
+        respondiendo = true;
+        HabilitarEntrada(false);
+        entrada.Text = "";
+
+        mensajes.Add(new(ChatRole.User, textoUsuario));
+        AgregarTurno("Vos", textoUsuario);
+        AgregarTurno("Asistente", "_Pensando..._");
+
+        var respuesta = new StringBuilder();
+
+        try {
+            await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones)) {
+                if (string.IsNullOrEmpty(fragmento.Text)) {
+                    continue;
+                }
+
+                respuesta.Append(fragmento.Text);
+                string textoParcial = respuesta.ToString();
+                App!.Invoke(() => ActualizarUltimoTurno(textoParcial));
+            }
+
+            string textoFinal = respuesta.ToString();
+            if (string.IsNullOrWhiteSpace(textoFinal)) {
+                textoFinal = "No se recibio texto del modelo.";
+                App!.Invoke(() => ActualizarUltimoTurno(textoFinal));
+            }
+
+            mensajes.Add(new(ChatRole.Assistant, textoFinal));
+        }
+        catch (Exception ex) {
+            string error = $"No se pudo obtener respuesta del modelo.\n\n`{ex.Message}`";
+            mensajes.Add(new(ChatRole.Assistant, error));
+            App!.Invoke(() => ActualizarUltimoTurno(error));
+        }
+        finally {
+            App!.Invoke(() => {
+                respondiendo = false;
+                HabilitarEntrada(true);
+                entrada.SetFocus();
+            });
+        }
+    }
+
+    void HabilitarEntrada(bool habilitada) {
+        entrada.Enabled = habilitada;
+        enviar.Enabled = habilitada;
+        estado.Text = habilitada
+            ? "Enter: enviar | Esc: salir"
+            : "El asistente esta respondiendo...";
     }
 
     void AgregarTurno(string rol, string texto) {
@@ -157,6 +230,16 @@ class AsistenteWindow : Window {
         conversacion.Text = string.Join(
             "\n\n---\n\n",
             turnos.Select(t => $"## {t.Rol}\n\n{t.Texto.Trim()}"));
+        conversacion.SetNeedsDraw();
+    }
+
+    protected override bool OnKeyDown(Key key) {
+        if (key == Key.Esc) {
+            App!.RequestStop();
+            return true;
+        }
+
+        return base.OnKeyDown(key);
     }
 }
 
