@@ -6,6 +6,7 @@
 #:property PublishAot=false
 
 using System.ClientModel;
+using System.ComponentModel;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using Terminal.Gui.App;
@@ -27,7 +28,15 @@ IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(configuracion.ApiKey),
         new OpenAIClientOptions { Endpoint = new Uri(configuracion.UrlBase) })
     .GetChatClient(configuracion.Modelo)
-    .AsIChatClient();
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
+
+var opciones = new ChatOptions
+{
+    Tools = HerramientasArchivos.Crear()
+};
 
 List<ChatMessage> mensajes =
 [
@@ -35,7 +44,7 @@ List<ChatMessage> mensajes =
 ];
 
 using IApplication app = Application.Create().Init();
-using var ventana = new VentanaAsistente(chat, mensajes, configuracion.Modelo);
+using var ventana = new VentanaAsistente(chat, opciones, mensajes, configuracion.Modelo);
 app.Run(ventana);
 
 static string CargarPromptSistema()
@@ -43,6 +52,102 @@ static string CargarPromptSistema()
     return File.Exists("AGENTS.md")
         ? File.ReadAllText("AGENTS.md")
         : "Sos un asistente de programacion. Responde en espanol y prioriza ejemplos en C#.";
+}
+
+static class HerramientasArchivos
+{
+    static readonly string Raiz = Path.GetFullPath(Directory.GetCurrentDirectory());
+
+    public static IList<AITool> Crear()
+    {
+        return
+        [
+            AIFunctionFactory.Create(ListarArchivos, new()
+            {
+                Name = "listar-archivos",
+                Description = "Lista los archivos y carpetas de un directorio del proyecto."
+            }),
+            AIFunctionFactory.Create(LeerArchivo, new()
+            {
+                Name = "leer-archivo",
+                Description = "Lee el contenido de texto de un archivo del proyecto."
+            }),
+            AIFunctionFactory.Create(EscribirArchivo, new()
+            {
+                Name = "escribir-archivo",
+                Description = "Crea o sobrescribe un archivo de texto del proyecto."
+            })
+        ];
+    }
+
+    static string ListarArchivos(
+        [Description("Ruta relativa del directorio. Usar punto para la raiz.")] string ruta = ".")
+    {
+        try
+        {
+            var completa = ResolverRuta(ruta);
+            if (!Directory.Exists(completa))
+            {
+                return $"No existe el directorio: {ruta}";
+            }
+
+            var carpetas = Directory.GetDirectories(completa).Select(r => "[carpeta] " + Path.GetFileName(r));
+            var archivos = Directory.GetFiles(completa).Select(r => "[archivo] " + Path.GetFileName(r));
+            var resultado = carpetas.Concat(archivos).ToList();
+
+            return resultado.Count == 0 ? "El directorio esta vacio." : string.Join(Environment.NewLine, resultado);
+        }
+        catch (Exception ex)
+        {
+            return "Error al listar: " + ex.Message;
+        }
+    }
+
+    static string LeerArchivo(
+        [Description("Ruta relativa del archivo que se quiere leer.")] string ruta)
+    {
+        try
+        {
+            var completa = ResolverRuta(ruta);
+            return File.Exists(completa)
+                ? File.ReadAllText(completa)
+                : $"No existe el archivo: {ruta}";
+        }
+        catch (Exception ex)
+        {
+            return "Error al leer: " + ex.Message;
+        }
+    }
+
+    static string EscribirArchivo(
+        [Description("Ruta relativa del archivo que se quiere escribir.")] string ruta,
+        [Description("Contenido completo que se guardara en el archivo.")] string contenido)
+    {
+        try
+        {
+            var completa = ResolverRuta(ruta);
+            Directory.CreateDirectory(Path.GetDirectoryName(completa)!);
+            File.WriteAllText(completa, contenido);
+            return $"Archivo escrito: {ruta}";
+        }
+        catch (Exception ex)
+        {
+            return "Error al escribir: " + ex.Message;
+        }
+    }
+
+    static string ResolverRuta(string ruta)
+    {
+        var completa = Path.GetFullPath(Path.Combine(Raiz, ruta));
+        var prefijo = Raiz.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        if (completa != Raiz && !completa.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException("La ruta esta fuera del proyecto.");
+        }
+
+        return completa;
+    }
 }
 
 record ConfiguracionIA(string UrlBase, string ApiKey, string Modelo)
@@ -74,14 +179,16 @@ record ConfiguracionIA(string UrlBase, string ApiKey, string Modelo)
 sealed class VentanaAsistente : Window
 {
     readonly IChatClient chat;
+    readonly ChatOptions opciones;
     readonly List<ChatMessage> mensajes;
     readonly Markdown conversacion;
     readonly TextField entrada;
     readonly Button enviar;
 
-    public VentanaAsistente(IChatClient chat, List<ChatMessage> mensajes, string modelo)
+    public VentanaAsistente(IChatClient chat, ChatOptions opciones, List<ChatMessage> mensajes, string modelo)
     {
         this.chat = chat;
+        this.opciones = opciones;
         this.mensajes = mensajes;
 
         Title = $" AsistenteIA - {modelo} ";
@@ -158,7 +265,7 @@ sealed class VentanaAsistente : Window
         mensajes.Add(new ChatMessage(ChatRole.User, texto));
         Renderizar();
 
-        var respuesta = await chat.GetResponseAsync(mensajes);
+        var respuesta = await chat.GetResponseAsync(mensajes, opciones);
         mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text ?? ""));
         Renderizar();
         entrada.SetFocus();
