@@ -62,3 +62,65 @@ Console.OutputEncoding = Encoding.UTF8;
  
 using IApplication app = Application.Create().Init();
 app.Run(new VentanaAsistente(chat, historial, opcionesChat, modelo));
+
+class VentanaAsistente : Runnable {
+    readonly IChatClient chat;
+    readonly List<ChatMessage> historial;
+    readonly ChatOptions opciones;
+ 
+    readonly Markdown panelConversacion;
+    readonly TextField campoEntrada;
+    readonly Button btnEnviar;
+    readonly Label lblEstado;
+ 
+    readonly StringBuilder textoConversacion = new();
+    bool respondiendo = false;
+    bool usuarioScrolleo = false;
+ 
+    public VentanaAsistente(IChatClient chat, List<ChatMessage> historial, ChatOptions opciones, string modelo) {
+        this.chat      = chat;
+        this.historial = historial;
+        this.opciones  = opciones;
+ 
+        Title  = $" Asistente IA · {modelo} ";
+        Width  = Dim.Fill();
+        Height = Dim.Fill();
+ 
+        var frameConversacion = new FrameView {
+            Title  = " Conversación ",
+            X = 0, Y = 0,
+            Width  = Dim.Fill(),
+            Height = Dim.Fill(4),
+        };
+        frameConversacion.BorderStyle = LineStyle.Single;
+ 
+        panelConversacion = new Markdown {
+            X = 0, Y = 0,
+            Width  = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true,
+        };
+        frameConversacion.Add(panelConversacion);
+ 
+        var frameEntrada = new FrameView {
+            Title  = " Mensaje (Enter = enviar · Esc = salir) ",
+            X = 0,
+            Y = Pos.Bottom(frameConversacion),
+            Width  = Dim.Fill(),
+            Height = 4,
+        };
+        frameEntrada.BorderStyle = LineStyle.Single;
+ 
+        campoEntrada = new TextField {
+            X = 1, Y = 0,
+            Width  = Dim.Fill(12),
+            Height = 1,
+            CanFocus = true,
+        };
+ 
+        btnEnviar = new Button {
+            Text   = "Enviar",
+            X      = Pos.Right(campoEntrada) + 1,
+            Y      = 0,
+            CanFocus = true,
+        };
