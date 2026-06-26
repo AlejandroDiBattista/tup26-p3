@@ -42,7 +42,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63217   Altamiranda Borquez, Bian       (381)581-3104   sofiaaltamiranda22         🟢🔴🔴🔴🔴⚪   🟢⚪   Sí    26    8
 63300   Álvarez, Hernán Fabricio        (381)581-4086   hernancarpalvarez28        🟢🟢🟢🟢🟢⚪   🟢⚪   No    23   10  Muestra la pantalla del enunciado
 63313   Ávila Puntano, Benjamín         (381)329-6643   santiagobnj-avila-pun      🟢🟢🟢🟢🟢🟢   🟢⚪   Sí    27   10  Mal uso del espacio vertical; edición en otra página en lugar de a la derecha
-63222   Bajre Martínez, Julián          (381)351-9652   julianbajre-png            🟢🟢🟢🟢🟢⚪   🟢⚪   No    25    7  No edita ni busca; solo muestra datos
+63222   Bajre Martínez, Julián          (381)351-9652   julianbajre-png            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25    7  No edita, busca ni selecciona
 61801   Benega, Maximiliano Abraham     (381)505-9048   abrahambenega              🟢🟢🟢🟢🟢🟢   🟢⚪   Sí    22    6  correcto
 63493   Busnelli, Bruno                 (381)366-0607   brunobusnelli              🟢🟢🟢🔴🔴⚪   🟢⚪   Sí    14   10
 63150   Carlino, Joaquín                (381)605-7383   vincent-coffe              🟢🟢🟢🟢🟢🟢   🟢⚪   No    12   10  Mal scroll interno en maestro; mal uso del espacio vertical
