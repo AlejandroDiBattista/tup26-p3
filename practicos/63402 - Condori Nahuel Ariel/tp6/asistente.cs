@@ -64,6 +64,7 @@ class AsistenteWindow : Window {
     readonly List<ChatMessage> mensajes;
     readonly List<TurnoVisible> turnos = [];
     bool respondiendo;
+    int versionScroll;
 
     readonly Markdown conversacion = new() {
         X = 0,
@@ -208,7 +209,7 @@ class AsistenteWindow : Window {
 
     void AgregarTurno(string rol, string texto) {
         turnos.Add(new(rol, texto));
-        RenderizarConversacion(seguirAlFinal: true);
+        RenderizarConversacion();
     }
 
     void ActualizarUltimoTurno(string texto) {
@@ -218,17 +219,10 @@ class AsistenteWindow : Window {
 
         var ultimo = turnos[^1];
         turnos[^1] = ultimo with { Texto = texto };
-        RenderizarConversacion(seguirAlFinal: false);
+        RenderizarConversacion();
     }
 
-    void RenderizarConversacion(bool seguirAlFinal = false) {
-        int posicionAnterior = conversacion.VerticalScrollBar.Value;
-        int maxAnterior = Math.Max(
-            0,
-            conversacion.VerticalScrollBar.ScrollableContentSize
-            - conversacion.VerticalScrollBar.VisibleContentSize);
-        bool estabaAbajo = posicionAnterior >= Math.Max(0, maxAnterior - 1);
-
+    void RenderizarConversacion() {
         if (turnos.Count == 0) {
             conversacion.Text = "# Asistente IA\n\nEscribi un mensaje abajo y presiona Enter o Enviar.";
             conversacion.VerticalScrollBar.Value = 0;
@@ -238,15 +232,27 @@ class AsistenteWindow : Window {
         conversacion.Text = string.Join(
             "\n\n---\n\n",
             turnos.Select(t => $"## {t.Rol}\n\n{t.Texto.Trim()}"));
+        conversacion.SetNeedsDraw();
+        ProgramarScrollAlFinal();
+    }
 
-        int maxActual = Math.Max(
-            0,
-            conversacion.VerticalScrollBar.ScrollableContentSize
-            - conversacion.VerticalScrollBar.VisibleContentSize);
+    void ProgramarScrollAlFinal() {
+        int versionActual = ++versionScroll;
+        LlevarScrollAlFinal();
 
-        conversacion.VerticalScrollBar.Value = seguirAlFinal || estabaAbajo
-            ? maxActual
-            : Math.Min(posicionAnterior, maxActual);
+        _ = Task.Run(async () => {
+            await Task.Delay(40);
+            App!.Invoke(() => {
+                if (versionActual == versionScroll) {
+                    LlevarScrollAlFinal();
+                }
+            });
+        });
+    }
+
+    void LlevarScrollAlFinal() {
+        var barra = conversacion.VerticalScrollBar;
+        barra.Value = Math.Max(0, barra.ScrollableContentSize - barra.VisibleContentSize);
         conversacion.SetNeedsDraw();
     }
 
