@@ -18,15 +18,17 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+DotNetEnv.Env.Load(".env");
 
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
+var nombreProveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var endpoint = Environment.GetEnvironmentVariable($"{nombreProveedor}_API_URL") ?? "";
+var clave    = Environment.GetEnvironmentVariable($"{nombreProveedor}_API_KEY") ?? "no-requiere-key";
+var nombreModelo = Environment.GetEnvironmentVariable($"{nombreProveedor}_MODEL") ?? "gpt-4o-mini";
+
+IChatClient clienteIA = new OpenAIClient(
+        new ApiKeyCredential(clave),
+        new OpenAIClientOptions { Endpoint = new Uri(endpoint) })
+    .GetChatClient(nombreModelo)
     .AsIChatClient();
 
 const string pregunta = "Definí recursividad";
