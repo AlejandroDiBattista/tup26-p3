@@ -10,6 +10,7 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui.Input;
 
 DotNetEnv.Env.Load();
 
@@ -80,8 +81,27 @@ panelEntrada.Add(botonEnviar);
 ventana.Add(panelMensajes);
 ventana.Add(panelEntrada);
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+botonEnviar.Accepted += async (sender, e) =>
+{
+    await EnviarMensaje();
+};
+
+
+input.KeyDown += async (sender, key) =>
+{
+    if (key == Key.Enter)
+    {
+        await EnviarMensaje();
+    }
+};
+
+
+ventana.KeyDown += (sender, key) =>
+{
+    if (key == Key.Esc)
+    {
+        app.RequestStop();
+    }
+};
 
 app.Run(ventana);
