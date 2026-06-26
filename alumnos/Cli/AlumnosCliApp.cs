@@ -131,7 +131,7 @@ static class AlumnosCliApp {
 
         AnsiConsole.Write(
             new Panel(new Markup($"[bold]Modo interactivo[/]\n[grey]Elegí una acción y completá sus parámetros.[/]\n[green]Alumnos detectados:[/] {alumnos.Count()}")) {
-                Header = new PanelHeader("[yellow]TUP 2026 · Alumnos[/]"),
+                Header = new PanelHeader("[yellow]TUP 2026 · Sistema Alumnos[/]"),
                 Border = BoxBorder.Rounded,
                 Padding = new Padding(1, 1, 1, 1)
             });
@@ -169,8 +169,10 @@ static class AlumnosCliApp {
         AnsiConsole.Prompt(
             new SelectionPrompt<InteractiveChoice>()
                 .Title(titulo)
-                .PageSize(16)
+                .EnableSearch()
+                .WrapAround(true)
                 .UseConverter(choice => $"[green]{choice.Label,-30}[/] [grey] {choice.Description}[/]")
+                .AddCancelResult(opciones[^1])
                 .AddChoices(opciones));
 
     static IReadOnlyList<InteractiveChoice> ObtenerOpcionesPrincipales() => [
@@ -179,11 +181,11 @@ static class AlumnosCliApp {
             new("revisar-prs",                    "Revisar PRs",                    "Mostrar el estado de los pull requests"),
             new("bajar-prs",                      "Bajar PRs",                      "Descargar y sobrescribir todos los prácticos"),
             new("cerrar-prs",                     "Cerrar PRs",                     "Cerrar pull requests abiertos"),
+            new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador"),
             new("revisar-presentaciones",         "Revisar presentaciones",         "Marcar TP presentados desde el código local"),
             new("verificar-compilacion",          "Verificar compilación",          "Compilar entregados y marcar los que tienen errores"),
             new("verificar-ejecucion",            "Verificar ejecución",            "Ejecutar entregados y marcar los que fallan al iniciar"),
             new("capturar-pantallas",             "Capturar pantallas",             "Guardar captura del navegador para TP web"),
-            new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador"),
             new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
             new("publicar-apuntes",               "Publicar apuntes",               "Ejecutar apuntes/publicar.py"),
             new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
@@ -294,8 +296,10 @@ static class AlumnosCliApp {
         InteractiveChoice seleccionado = AnsiConsole.Prompt(
             new SelectionPrompt<InteractiveChoice>()
                 .Title($"[bold cyan]{accion}[/] · Elegí el trabajo práctico\n[grey]Se encontraron {practicos.Count} en {AppPaths.EnunciadosDirectory}[/]")
-                .PageSize(12)
+                .EnableSearch()
+                .WrapAround(true)
                 .UseConverter(choice => $"[green]{choice.Label,-22}[/] [grey] {choice.Description}[/]")
+                .AddCancelResult(opciones[^1])
                 .AddChoices(opciones));
 
         return seleccionado.Command == "volver" ? null : seleccionado.Command;

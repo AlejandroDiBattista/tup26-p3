@@ -1,7 +1,6 @@
-# TP5: AgendaWeb
-## Agenda de Contactos con Blazor, EF Core y SQLite
+ AgendaWeb
 
-> [!IMPORTANT]
+>
 > Plazo para entregar el TP5: **Sábado 13 de Junio hasta las 23:59hs**
 >
 > *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*

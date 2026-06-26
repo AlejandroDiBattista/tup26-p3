@@ -732,10 +732,12 @@ static class AlumnosCliActions {
         OpcionAlumnoTp5 seleccion = AnsiConsole.Prompt(
             new SelectionPrompt<OpcionAlumnoTp5>()
                 .Title($"[bold cyan]Ejecutar TP{numeroTp}[/] · Elegí el alumno\n[grey]{presentados.Count} alumno(s) con TP{numeroTp} presentado[/]")
-                .PageSize(16)
+                .EnableSearch()
+                .WrapAround(true)
                 .UseConverter(opcion => opcion.Alumno is null
                     ? "[grey]Volver al menú principal[/]"
                     : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")
+                .AddCancelResult(opciones[^1])
                 .AddChoices(opciones));
 
         return seleccion.Alumno;

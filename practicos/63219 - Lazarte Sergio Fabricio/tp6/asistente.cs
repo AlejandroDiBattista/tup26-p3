@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -10,42 +11,282 @@ using System.ClientModel;
 using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
+using Terminal.Gui.Input;
+using System.Text;
+using System.Drawing;
+using System.ComponentModel;
 
-DotNetEnv.Env.Load();
+var directorioBase = BuscarDirectorioRaiz(Directory.GetCurrentDirectory());
+DotNetEnv.Env.Load(Path.Combine(directorioBase, ".env"));
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+ConfiguracionServicio config;
+try
+{
+    config = InicializarConfiguracion(args);
+}
+catch (InvalidOperationException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return;
+}
 
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
-    .AsIChatClient();
+var nombreProveedor = config.Proveedor;
+var endpointUrl = config.Url;
+var claveApi = config.ApiKey;
+var nombreModelo = config.Modelo;
 
-const string pregunta = "Definí recursividad";
+IChatClient clienteChat = new OpenAIClient(
+        new ApiKeyCredential(claveApi ?? "sin-clave"),
+        new OpenAIClientOptions { Endpoint = PrepararEndpoint(endpointUrl) })
+    .GetChatClient(nombreModelo)
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
+var capacidades = new List<AITool>
+{
+    AIFunctionFactory.Create(
+        (Func<string, string>)ObtenerContenidoArchivo,
+        "leer-archivo",
+        "Devuelve el contenido de un archivo de texto del proyecto."),
+    AIFunctionFactory.Create(
+        (Func<string, string, string>)GuardarContenidoArchivo,
+        "escribir-archivo",
+        "Crea o sobrescribe un archivo de texto del proyecto."),
+    AIFunctionFactory.Create(
+        (Func<string, string>)ObtenerListadoDirectorio,
+        "listar-archivos",
+        "Lista los archivos y carpetas de un directorio del proyecto.")
+};
 
-var respuesta = await chat.GetResponseAsync(mensajes);
+var parametrosChat = new ChatOptions
+{
+    Tools = capacidades,
+    ToolMode = ChatToolMode.Auto
+};
 
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
+var historial = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText(Path.Combine(directorioBase, "AGENTS.md")))
+};
+
+var intercambios = new List<InteraccionUI>();
+
+using IApplication aplicacion = Application.Create().Init();
+using var pantallaprincipal = new Window {
+    Title = $" Chat IA · {nombreModelo} ",
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var vistaChat = new Markdown
+{
+    X = 0, Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    CanFocus = true,
+    Text = "# Chat IA\n\nEscribí tu consulta y presioná Enter para enviar."
+};
+vistaChat.ViewportSettings |= ViewportSettingsFlags.HasVerticalScrollBar;
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+var campoTexto = new TextField
+{
+    X = 0,
+    Y = Pos.Bottom(vistaChat),
+    Width = Dim.Fill(12),
+    Height = 1
+};
 
-app.Run(ventana);
+var botonEnviar = new Button
+{
+    Text = "Enviar",
+    X = Pos.Right(campoTexto) + 1,
+    Y = Pos.Top(campoTexto),
+    Width = 10,
+    IsDefault = true
+}; 
+
+pantallaprincipal.Add(vistaChat, campoTexto, botonEnviar);
+bool procesando = false;
+campoTexto.Accepted += (_, _) => _ = ProcesarMensajeAsync();
+botonEnviar.Accepted += (_, _) => _ = ProcesarMensajeAsync();
+campoTexto.SetFocus();
+
+async Task ProcesarMensajeAsync()
+{
+    if (procesando) return;
+
+    var consulta = campoTexto.Text?.ToString()?.Trim();
+    if (string.IsNullOrWhiteSpace(consulta)) return;
+
+    procesando = true;
+    campoTexto.Text = "";
+    campoTexto.Enabled = false;
+    botonEnviar.Enabled = false;
+
+    historial.Add(new ChatMessage(ChatRole.User, consulta));
+    intercambios.Add(new InteraccionUI("Tú", consulta));
+    intercambios.Add(new InteraccionUI("Asistente", ""));
+    ActualizarVista();
+
+    try
+    {
+        var buffer = new StringBuilder();
+        var fragmentos = new List<ChatResponseUpdate>();
+
+        await foreach (var fragmento in clienteChat.GetStreamingResponseAsync(historial, parametrosChat))
+        {
+            fragmentos.Add(fragmento);
+            if (!string.IsNullOrEmpty(fragmento.Text))
+            {
+                buffer.Append(fragmento.Text);
+                intercambios[^1] = intercambios[^1] with { Texto = buffer.ToString() };
+                aplicacion.Invoke(ActualizarVista);
+            }
+        }
+        var mensajeCompleto = fragmentos.ToChatResponse();
+        historial.AddMessages(mensajeCompleto);
+        intercambios[^1] = intercambios[^1] with { Texto = mensajeCompleto.Text };
+    }
+    catch (Exception ex)
+    {
+        var msgError = $"Error al obtener respuesta: {ex.Message}";
+        historial.Add(new ChatMessage(ChatRole.Assistant, msgError));
+        intercambios[^1] = intercambios[^1] with { Texto = msgError };
+    }
+    finally
+    {
+        aplicacion.Invoke(() =>
+        {
+            procesando = false;
+            campoTexto.Enabled = true;
+            botonEnviar.Enabled = true;
+            ActualizarVista();
+            campoTexto.SetFocus();
+        });
+    }
+}
+
+string ConstruirMarkdown()
+{
+    if (intercambios.Count == 0)
+        return "# Chat IA\n\nEscribí tu consulta y presioná Enter para enviar.";
+
+    var sb = new StringBuilder();
+    foreach (var item in intercambios)
+    {
+        sb.AppendLine($"# {item.Autor}");
+        sb.AppendLine();
+        sb.AppendLine(string.IsNullOrWhiteSpace(item.Texto) ? "_Procesando..._" : item.Texto);
+        sb.AppendLine();
+    }
+    return sb.ToString();
+}
+
+void ActualizarVista()
+{
+    vistaChat.Text = ConstruirMarkdown();
+    vistaChat.SetContentSize(new Size(vistaChat.Viewport.Width, vistaChat.LineCount));
+    vistaChat.ScrollVertical(vistaChat.LineCount);
+    vistaChat.SetNeedsDraw();
+}
+
+string ValidarYResolverRuta(string rutaRelativa)
+{
+    if (string.IsNullOrWhiteSpace(rutaRelativa)) rutaRelativa = ".";
+    var rutaAbsoluta = Path.GetFullPath(Path.Combine(directorioBase, rutaRelativa));
+    if (!rutaAbsoluta.StartsWith(directorioBase, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("La ruta debe permanecer dentro de la carpeta del proyecto.");
+    return rutaAbsoluta;
+}
+
+string ObtenerContenidoArchivo([Description("Ruta relativa del archivo a leer.")] string ruta)
+{
+    var ubicacion = ValidarYResolverRuta(ruta);
+    return File.Exists(ubicacion) ? File.ReadAllText(ubicacion) : $"Archivo no encontrado: {ruta}";
+}
+
+string GuardarContenidoArchivo(
+    [Description("Ruta relativa del archivo a crear o sobrescribir.")] string ruta,
+    [Description("Contenido que se guardara en el archivo.")] string contenido)
+{
+    var ubicacion = ValidarYResolverRuta(ruta);
+    Directory.CreateDirectory(Path.GetDirectoryName(ubicacion)!);
+    File.WriteAllText(ubicacion, contenido);
+    return $"Guardado correctamente: {ruta}";
+}
+
+string ObtenerListadoDirectorio([Description("Ruta relativa del directorio a listar.")] string ruta)
+{
+    var ubicacion = ValidarYResolverRuta(ruta);
+    if (!Directory.Exists(ubicacion)) return $"Directorio no encontrado: {ruta}";
+    return string.Join(Environment.NewLine, Directory
+        .EnumerateFileSystemEntries(ubicacion)
+        .Select(Path.GetFileName)
+        .OrderBy(n => n));
+}
+
+string BuscarDirectorioRaiz(string inicio)
+{
+    if (File.Exists(Path.Combine(inicio, "AGENTS.md"))) return inicio;
+    var subcarpeta = Path.Combine(inicio, "tp6");
+    if (File.Exists(Path.Combine(subcarpeta, "AGENTS.md"))) return subcarpeta;
+    return inicio;
+}
+
+ConfiguracionServicio InicializarConfiguracion(string[] argumentos)
+{
+    var proveedor = (argumentos.Length > 0
+            ? argumentos[0]
+            : Environment.GetEnvironmentVariable("ASISTENTE_PROVIDER") ?? ResolverProveedorPredeterminado())
+        .Trim().ToUpperInvariant();
+
+    var urlBase = LeerVariableObligatoria($"{proveedor}_API_URL");
+    var clave = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+    var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-4o-mini";
+
+    if (proveedor == "GROQ")
+        clave = string.IsNullOrWhiteSpace(clave) ? "groq" : clave;
+    else if (!EsValorValido(clave))
+        throw new InvalidOperationException(
+            $"Falta configurar {proveedor}_API_KEY en .env. " +
+            "Pegá la clave sin los signos < >, por ejemplo: GROQ_API_KEY=gsk_...");
+
+    return new ConfiguracionServicio(proveedor, urlBase, clave!, modelo);
+}
+
+string ResolverProveedorPredeterminado()
+{
+    var lista = new[] { "OPENAI", "GROQ", "GEMINI", "OPENROUTER", "FIREWORK", "GROK", "HHGG", "OLLAMA" };
+    return lista.FirstOrDefault(p => EsValorValido(Environment.GetEnvironmentVariable($"{p}_API_KEY")))
+        ?? "OPENAI";
+}
+
+string LeerVariableObligatoria(string clave)
+{
+    var valor = Environment.GetEnvironmentVariable(clave);
+    if (!EsValorValido(valor))
+        throw new InvalidOperationException($"Falta configurar {clave} en .env.");
+    return valor!;
+}
+
+bool EsValorValido(string? valor)
+{
+    if (string.IsNullOrWhiteSpace(valor)) return false;
+    var v = valor.Trim();
+    return !(v.StartsWith('<') && v.EndsWith('>'))
+        && !v.Contains("tu_clave_api_aqui", StringComparison.OrdinalIgnoreCase);
+}
+
+Uri PrepararEndpoint(string endpoint)
+{
+    var url = endpoint.TrimEnd('/');
+    if (url.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+        url = url[..^"/chat/completions".Length];
+    return new Uri(url);
+}
+
+
+aplicacion.Run(pantallaprincipal);
+record InteraccionUI(string Autor, string Texto);
+record ConfiguracionServicio(string Proveedor, string Url, string ApiKey, string Modelo);
