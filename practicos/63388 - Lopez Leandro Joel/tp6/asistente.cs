@@ -245,3 +245,78 @@ class VentanaAsistente : Runnable {
         });
     }
  
+     void ActualizarPanelConRespuestaParcial(string parcial) {
+        panelConversacion.Text = textoConversacion.ToString() + parcial;
+        panelConversacion.SetNeedsDraw();
+    }
+ 
+    void ActualizarPanel() {
+        panelConversacion.Text = textoConversacion.ToString();
+        panelConversacion.SetNeedsDraw();
+    }
+ 
+    void ScrollAlFinal() {
+        panelConversacion.ScrollVertical(panelConversacion.LineCount);
+    }
+}
+
+static class Herramientas {
+    static readonly string WorkDir = Path.GetFullPath(".");
+ 
+    public static string ListarArchivos(
+        [Description("Ruta del directorio a listar. Usá '.' para el directorio actual.")] string ruta = ".") {
+        try {
+            string rutaCompleta = ResolverRuta(ruta);
+            if (!Directory.Exists(rutaCompleta))
+                return $"No se encontró el directorio: {ruta}";
+ 
+            var elementos = Directory.EnumerateFileSystemEntries(rutaCompleta)
+                .Select(e => {
+                    string nombre = Path.GetFileName(e);
+                    return Directory.Exists(e) ? $"[DIR] {nombre}" : nombre;
+                })
+                .OrderBy(e => e);
+ 
+            return string.Join("\n", elementos);
+        } catch (Exception ex) {
+            return $"Error al listar '{ruta}': {ex.Message}";
+        }
+    }
+ 
+    public static string LeerArchivo(
+        [Description("Ruta del archivo a leer.")] string ruta) {
+        try {
+            string rutaCompleta = ResolverRuta(ruta);
+            if (!File.Exists(rutaCompleta))
+                return $"No se encontró el archivo: {ruta}";
+ 
+            return File.ReadAllText(rutaCompleta);
+        } catch (Exception ex) {
+            return $"Error al leer '{ruta}': {ex.Message}";
+        }
+    }
+ 
+    public static string EscribirArchivo(
+        [Description("Ruta del archivo a crear o sobrescribir.")] string ruta,
+        [Description("Contenido completo que se guardará en el archivo.")] string contenido) {
+        try {
+            string rutaCompleta = ResolverRuta(ruta);
+            Directory.CreateDirectory(Path.GetDirectoryName(rutaCompleta)!);
+            File.WriteAllText(rutaCompleta, contenido);
+            return $"Archivo guardado correctamente: {ruta}";
+        } catch (Exception ex) {
+            return $"Error al escribir '{ruta}': {ex.Message}";
+        }
+    }
+ 
+    static string ResolverRuta(string ruta) {
+        string rutaCompleta = Path.GetFullPath(Path.Combine(WorkDir, ruta));
+        string prefijo = WorkDir.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+ 
+        if (rutaCompleta != WorkDir && !rutaCompleta.StartsWith(prefijo, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("No se puede acceder a rutas fuera del directorio de trabajo.");
+ 
+        return rutaCompleta;
+    }
+}
+ 
