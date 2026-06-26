@@ -35,11 +35,12 @@ IChatClient clienteConHerramientas = new ChatClientBuilder(clienteIA)
 .UseFunctionInvocation()
 .Build();
 
-const string pregunta = "Definí recursividad";
+string promptInicial = File.Exists("AGENTS.md")
+    ? File.ReadAllText("AGENTS.md")
+    : "Sos un asistente de programación. Respondé en español.";
 
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
+    new(ChatRole.System, promptInicial)
 ];
 
 var respuesta = await chat.GetResponseAsync(mensajes);
