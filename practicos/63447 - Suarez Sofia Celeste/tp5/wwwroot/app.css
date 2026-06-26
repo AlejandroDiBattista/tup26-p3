@@ -36,3 +36,14 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+.list-group-item.active {
+    background-color: #b6d4fe;
+    border-color: #b6d4fe;
+    color: black;
+}
