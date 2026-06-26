@@ -5,10 +5,14 @@
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
+using System.ComponentModel;
+using System.Text;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using Terminal.Gui.App;
+using Terminal.Gui.Drawing;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
