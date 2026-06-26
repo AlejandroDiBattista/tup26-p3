@@ -43,14 +43,22 @@ List<ChatMessage> mensajes = [
     new(ChatRole.System, promptInicial)
 ];
 
-var respuesta = await chat.GetResponseAsync(mensajes);
-
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+ChatOptions configuracionChat = new() {
+    Tools = [
+        AIFunctionFactory.Create(OperacionesArchivo.ListarArchivos, new() {
+            Name        = "listar-archivos",
+            Description = "Lista los archivos y carpetas de un directorio."
+        }),
+        AIFunctionFactory.Create(OperacionesArchivo.LeerArchivo, new() {
+            Name        = "leer-archivo",
+            Description = "Devuelve el contenido de un archivo de texto."
+        }),
+        AIFunctionFactory.Create(OperacionesArchivo.EscribirArchivo, new() {
+            Name        = "escribir-archivo",
+            Description = "Crea o sobrescribe un archivo con el contenido indicado."
+        }),
+    ]
 };
-
 ventana.Add(new Markdown {
     Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
     Width = Dim.Fill(), Height = Dim.Fill()
