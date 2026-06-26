@@ -136,7 +136,25 @@ class PantallaChat : Runnable {
         marcoEntrada.Add(entradaTexto, btnEnviar, estadoActual);
         Add(marcoChat, marcoEntrada);
 
-        
+         entradaTexto.KeyDown += (_, tecla) => {
+            if (tecla == Key.Enter) {
+                tecla.Handled = true;
+                _ = ProcesarEnvio();
+            }
+            if (tecla == Key.Esc) {
+                tecla.Handled = true;
+                App!.RequestStop();
+            }
+        };
+
+        btnEnviar.Accepted += (_, _) => _ = ProcesarEnvio();
+
+        KeyDown += (_, tecla) => {
+            if (tecla == Key.Esc) {
+                tecla.Handled = true;
+                App!.RequestStop();
+            }
+        };
 
 ventana.Add(new Markdown {
     Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
