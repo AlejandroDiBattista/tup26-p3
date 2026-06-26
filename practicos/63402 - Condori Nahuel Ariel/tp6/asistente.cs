@@ -24,18 +24,7 @@ ChatOptions opciones = CrearOpcionesHerramientas();
 List<ChatMessage> mensajes = [new(ChatRole.System, File.ReadAllText("AGENTS.md"))];
 
 using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA - {configuracion.Modelo} ",
-    Width = Dim.Fill(),
-    Height = Dim.Fill()
-};
-
-ventana.Add(new Markdown {
-    Text = "# Asistente IA\n\nEscribi un mensaje abajo y presiona Enter o Enviar.",
-    Width = Dim.Fill(),
-    Height = Dim.Fill()
-});
-
+using var ventana = new AsistenteWindow(configuracion, chat, opciones, mensajes);
 app.Run(ventana);
 
 static IChatClient CrearCliente(ConfiguracionProveedor config) {
@@ -67,6 +56,82 @@ static ChatOptions CrearOpcionesHerramientas() => new() {
         })
     ]
 };
+
+class AsistenteWindow : Window {
+    readonly ConfiguracionProveedor configuracion;
+    readonly IChatClient chat;
+    readonly ChatOptions opciones;
+    readonly List<ChatMessage> mensajes;
+
+    readonly Markdown conversacion = new() {
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill(),
+        Text = "# Asistente IA\n\nEscribi un mensaje abajo y presiona Enter o Enviar."
+    };
+
+    readonly TextField entrada = new() {
+        X = 1,
+        Y = 0,
+        Width = Dim.Fill(13),
+        CanFocus = true
+    };
+
+    readonly Button enviar = new() {
+        Text = "Enviar",
+        X = Pos.AnchorEnd(10),
+        Y = 0,
+        Width = 9
+    };
+
+    readonly Label estado = new() {
+        Text = "Listo",
+        X = 1,
+        Y = Pos.AnchorEnd(1),
+        Width = Dim.Fill(2),
+        Height = 1
+    };
+
+    public AsistenteWindow(
+        ConfiguracionProveedor configuracion,
+        IChatClient chat,
+        ChatOptions opciones,
+        List<ChatMessage> mensajes) {
+        this.configuracion = configuracion;
+        this.chat = chat;
+        this.opciones = opciones;
+        this.mensajes = mensajes;
+
+        Title = $" Asistente IA - {configuracion.Modelo} ";
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        ArmarInterfaz();
+    }
+
+    void ArmarInterfaz() {
+        FrameView panelConversacion = new() {
+            Title = "Conversacion",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(5)
+        };
+
+        FrameView panelEntrada = new() {
+            Title = "Mensaje",
+            X = 0,
+            Y = Pos.Bottom(panelConversacion),
+            Width = Dim.Fill(),
+            Height = 4
+        };
+
+        panelConversacion.Add(conversacion);
+        panelEntrada.Add(entrada, enviar);
+        Add(panelConversacion, panelEntrada, estado);
+    }
+}
 
 record ConfiguracionProveedor(string Nombre, Uri Endpoint, string ApiKey, string Modelo) {
     public static ConfiguracionProveedor Cargar(string nombre) {
