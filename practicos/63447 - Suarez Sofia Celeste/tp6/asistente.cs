@@ -29,6 +29,8 @@ List<ChatMessage> mensajes = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md")),
 ];
 
+string historialMarkdown = "";
+bool enviando = false;
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
@@ -103,5 +105,51 @@ ventana.KeyDown += (sender, key) =>
         app.RequestStop();
     }
 };
+
+async Task EnviarMensaje()
+{
+    if (enviando)
+      return;
+      enviando = true;
+
+    var texto = input.Text?.ToString()?.Trim();
+    if (string.IsNullOrWhiteSpace(texto))
+    {
+        enviando = false;
+        return;
+    }
+    
+    input.Text = "";
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+
+    historialMarkdown += $"\n# Usuario\n\n{texto}\n";
+    conversacion.Text = historialMarkdown;
+
+    input.Enabled = false;
+    botonEnviar.Enabled = false;
+
+    string respuestaCompleta = "";
+
+    await foreach (var update in chat.GetStreamingResponseAsync(mensajes))
+    {
+        respuestaCompleta += update.Text ?? "";
+        app.Invoke(() =>
+        {
+            conversacion.Text = historialMarkdown + "\n# Asistente\n\n" + respuestaCompleta;
+        });
+    }
+
+    historialMarkdown += $"\n# Asistente\n\n{respuestaCompleta}\n";
+    conversacion.Text = historialMarkdown;
+
+    mensajes.Add( new ChatMessage(ChatRole.Assistant, respuestaCompleta));
+
+    input.Enabled = true;
+    botonEnviar.Enabled = true;
+
+    input.SetFocus();
+    enviando = false;
+}
 
 app.Run(ventana);
