@@ -31,7 +31,7 @@ h1:focus {
 
 .agenda-shell {
     min-height: 100vh;
-    padding: 2rem clamp(1rem, 4vw, 4rem);
+    padding: 2rem clamp(1rem, 4vw, 4rem) 4rem;
 }
 
 .agenda-header {
@@ -77,11 +77,10 @@ h1:focus {
 
 .agenda-grid {
     max-width: 1500px;
-    min-height: 680px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: minmax(310px, 390px) 1fr;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid var(--line);
     border-radius: 22px;
     background: var(--surface);
@@ -90,6 +89,8 @@ h1:focus {
 
 .contacts-panel {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
     border-right: 1px solid var(--line);
     background: #fbfcfe;
 }
@@ -134,9 +135,11 @@ h1:focus {
 }
 
 .contacts-list {
-    max-height: 595px;
+    max-height: min(640px, calc(100vh - 245px));
     padding: 0 .7rem 1rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .contact-card {
@@ -202,6 +205,7 @@ h1:focus {
 
 .detail-panel {
     min-width: 0;
+    align-self: start;
 }
 
 .empty-detail,
@@ -216,7 +220,7 @@ h1:focus {
 }
 
 .empty-detail {
-    min-height: 650px;
+    min-height: 520px;
     padding: 2rem;
 }
 
@@ -275,7 +279,7 @@ h1:focus {
 }
 
 .detail-content {
-    padding: 2rem;
+    padding: 1.75rem 2rem 2rem;
 }
 
 .info-section h3,
@@ -383,7 +387,7 @@ h1:focus {
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
+    gap: 1rem 1.1rem;
 }
 
 .form-wide {
@@ -413,11 +417,14 @@ h1:focus {
     font-size: .78rem;
 }
 
+.form-actions,
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: .65rem;
-    margin-top: 1.5rem;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
 }
 
 .confirm-modal {
@@ -470,6 +477,7 @@ h1:focus {
 
     .contacts-list {
         max-height: 330px;
+        overflow-y: auto;
     }
 
     .empty-detail {
