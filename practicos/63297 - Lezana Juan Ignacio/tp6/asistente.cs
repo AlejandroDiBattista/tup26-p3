@@ -256,9 +256,62 @@ class PantallaChat : Runnable {
         visorConversacion.ScrollVertical(visorConversacion.LineCount);
     }
 }
+static class OperacionesArchivo {
+    static readonly string DirectorioBase = Path.GetFullPath(".");
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+    public static string ListarArchivos(
+        [Description("Ruta del directorio a listar. Usá '.' para el directorio actual.")] string ruta = ".") {
+        try {
+            string rutaFinal = ValidarRuta(ruta);
+            if (!Directory.Exists(rutaFinal))
+                return $"No se encontró el directorio: {ruta}";
 
-app.Run(ventana);
+            var entradas = Directory.EnumerateFileSystemEntries(rutaFinal)
+                .Select(e => {
+                    string nombre = Path.GetFileName(e);
+                    return Directory.Exists(e) ? $"[DIR] {nombre}" : nombre;
+                })
+                .OrderBy(e => e);
+
+            return string.Join("\n", entradas);
+        } catch (Exception ex) {
+            return $"Error al listar '{ruta}': {ex.Message}";
+        }
+    }
+
+    public static string LeerArchivo(
+        [Description("Ruta del archivo a leer.")] string ruta) {
+        try {
+            string rutaFinal = ValidarRuta(ruta);
+            if (!File.Exists(rutaFinal))
+                return $"No se encontró el archivo: {ruta}";
+
+            return File.ReadAllText(rutaFinal);
+        } catch (Exception ex) {
+            return $"Error al leer '{ruta}': {ex.Message}";
+        }
+    }
+
+    public static string EscribirArchivo(
+        [Description("Ruta del archivo a crear o sobrescribir.")] string ruta,
+        [Description("Contenido completo que se guardará en el archivo.")] string contenido) {
+        try {
+            string rutaFinal = ValidarRuta(ruta);
+            Directory.CreateDirectory(Path.GetDirectoryName(rutaFinal)!);
+            File.WriteAllText(rutaFinal, contenido);
+            return $"Archivo guardado correctamente: {ruta}";
+        } catch (Exception ex) {
+            return $"Error al escribir '{ruta}': {ex.Message}";
+        }
+    }
+
+    static string ValidarRuta(string ruta) {
+        string rutaCompleta = Path.GetFullPath(Path.Combine(DirectorioBase, ruta));
+        string prefijo = DirectorioBase.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        if (rutaCompleta != DirectorioBase && !rutaCompleta.StartsWith(prefijo, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("No se puede acceder a rutas fuera del directorio de trabajo.");
+
+        return rutaCompleta;
+    }
+}
