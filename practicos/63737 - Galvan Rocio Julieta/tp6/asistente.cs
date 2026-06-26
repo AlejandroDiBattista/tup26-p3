@@ -1,9 +1,11 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
+using System.ComponentModel;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
@@ -14,38 +16,163 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
+var urlBase = url!.EndsWith("/chat/completions")
+    ? url[..^"/chat/completions".Length]
+    : url;
+
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new OpenAIClientOptions { Endpoint = new Uri(urlBase) })
     .GetChatClient(modelo)
-    .AsIChatClient();
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 
-const string pregunta = "Definí recursividad";
+[Description("Lee el contenido de un archivo de texto.")]
+string LeerArchivo([Description("Ruta del archivo a leer.")] string ruta)
+{
+    if (!File.Exists(ruta))
+        return "El archivo no existe.";
 
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
+    return File.ReadAllText(ruta);
+}
 
-var respuesta = await chat.GetResponseAsync(mensajes);
+[Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+string EscribirArchivo(
+    [Description("Ruta del archivo a escribir.")] string ruta,
+    [Description("Contenido que se va a guardar.")] string contenido)
+{
+    File.WriteAllText(ruta, contenido);
+    return "Archivo guardado correctamente.";
+}
 
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+[Description("Lista los archivos y carpetas de un directorio.")]
+string ListarArchivos([Description("Ruta del directorio a listar.")] string ruta = ".")
+{
+    if (!Directory.Exists(ruta))
+        return "El directorio no existe.";
+
+    return string.Join(Environment.NewLine, Directory.GetFileSystemEntries(ruta));
+}
+
+ChatOptions opciones = new()
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(LeerArchivo, new() {
+            Name = "leer-archivo",
+            Description = "Lee el contenido de un archivo de texto."
+        }),
+        AIFunctionFactory.Create(EscribirArchivo, new() {
+            Name = "escribir-archivo",
+            Description = "Crea o sobrescribe un archivo con el contenido indicado."
+        }),
+        AIFunctionFactory.Create(ListarArchivos, new() {
+            Name = "listar-archivos",
+            Description = "Lista los archivos y carpetas de un directorio."
+        })
+    ]
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+List<ChatMessage> mensajes = [
+    new(ChatRole.System, File.ReadAllText("AGENTS.md"))
+];
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+string textoConversacion = "# Asistente IA\n\nEscribí un mensaje para comenzar.";
+
+using IApplication app = Application.Create().Init();
+
+using var ventana = new Window {
+    Title = $" Asistente IA · {modelo} ",
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
+};
+
+var conversacion = new Markdown {
+    Text = textoConversacion,
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3)
+};
+
+var entrada = new TextField {
+    X = 0,
+    Y = Pos.AnchorEnd(3),
+    Width = Dim.Fill(12),
+    Height = 1
+};
+
+var botonEnviar = new Button {
+    Text = "Enviar",
+    X = Pos.Right(entrada) + 1,
+    Y = Pos.AnchorEnd(3),
+    Width = 10
+};
+
+async Task EnviarMensaje()
+{
+    string texto = entrada.Text?.ToString() ?? "";
+
+    if (string.IsNullOrWhiteSpace(texto)) {
+        return;
+    }
+
+    entrada.Text = "";
+    entrada.Enabled = false;
+    botonEnviar.Enabled = false;
+
+    textoConversacion += $"\n\n# Vos\n\n{texto}";
+    conversacion.Text = textoConversacion;
+    conversacion.SetNeedsDraw();
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    textoConversacion += "\n\n# Asistente\n\n";
+    conversacion.Text = textoConversacion;
+    conversacion.SetNeedsDraw();
+
+    string respuestaCompleta = "";
+
+    try
+    {
+        await foreach (var parte in chat.GetStreamingResponseAsync(mensajes, opciones))
+        {
+            respuestaCompleta += parte.Text;
+            textoConversacion += parte.Text;
+
+            conversacion.Text = textoConversacion;
+            conversacion.SetNeedsDraw();
+        }
+    }
+    catch (Exception ex)
+    {
+        respuestaCompleta = $"Error: {ex.Message}";
+        textoConversacion += $"Error: {ex.Message}";
+        conversacion.Text = textoConversacion;
+        conversacion.SetNeedsDraw();
+    }
+
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
+
+    entrada.Enabled = true;
+    botonEnviar.Enabled = true;
+    entrada.SetFocus();
+}
+
+botonEnviar.Accepting += async (sender, e) => {
+    await EnviarMensaje();
+};
+
+entrada.Accepting += async (sender, e) => {
+    await EnviarMensaje();
+};
+
+ventana.Add(conversacion, entrada, botonEnviar);
 
 app.Run(ventana);

@@ -648,13 +648,13 @@ static class AlumnosCliActions {
         }
 
         while (true) {
-            Alumno[] pendientes = AlumnosTp5SinObservacion(alumnos, numeroTp);
-            if (pendientes.Length == 0) {
-                Log.Success($"No quedan alumnos con TP{numeroTp} presentado sin observación.");
+            Alumno[] candidatos = AlumnosTp5Ordenados(alumnos, numeroTp);
+            if (candidatos.Length == 0) {
+                Log.Warning($"No hay alumnos con TP{numeroTp} presentado para ejecutar.");
                 return 0;
             }
 
-            Alumno? alumno = SeleccionarAlumnoTp5(pendientes, numeroTp);
+            Alumno? alumno = SeleccionarAlumnoTp5(candidatos, numeroTp);
             if (alumno is null) {
                 return 0;
             }
@@ -664,11 +664,11 @@ static class AlumnosCliActions {
         }
     }
 
-    static Alumno[] AlumnosTp5SinObservacion(Alumnos alumnos, int numeroTp) =>
+    static Alumno[] AlumnosTp5Ordenados(Alumnos alumnos, int numeroTp) =>
         alumnos
             .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
-            .Where(alumno => string.IsNullOrWhiteSpace(alumno.Observaciones))
-            .OrderBy(alumno => alumno.Legajo)
+            .OrderBy(alumno => string.IsNullOrWhiteSpace(alumno.Observaciones) ? 0 : 1)
+            .ThenBy(alumno => alumno.Legajo)
             .ToArray();
 
     static void RegistrarObservacionTp5(Alumnos alumnos, Alumno alumno) {
@@ -735,11 +735,16 @@ static class AlumnosCliActions {
                 .PageSize(16)
                 .UseConverter(opcion => opcion.Alumno is null
                     ? "[grey]Volver al menú principal[/]"
-                    : $"[green]{opcion.Alumno.Legajo,-10}[/] [grey] {opcion.Alumno.NombreCompleto}[/]")
+                    : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")
                 .AddChoices(opciones));
 
         return seleccion.Alumno;
     }
+
+    static string FormatearObservacion(string observaciones) =>
+        string.IsNullOrWhiteSpace(observaciones)
+            ? string.Empty
+            : $"[yellow]{Markup.Escape(observaciones)}[/]";
 
     public static int RelevarAsistencias() {
         Alumnos alumnos = CargarAlumnos();
