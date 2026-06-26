@@ -31,6 +31,10 @@ IChatClient clienteIA = new OpenAIClient(
     .GetChatClient(nombreModelo)
     .AsIChatClient();
 
+IChatClient clienteConHerramientas = new ChatClientBuilder(clienteIA)
+.UseFunctionInvocation()
+.Build();
+
 const string pregunta = "Definí recursividad";
 
 List<ChatMessage> mensajes = [
