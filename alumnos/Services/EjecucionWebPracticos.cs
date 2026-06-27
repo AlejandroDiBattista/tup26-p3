@@ -110,7 +110,7 @@ static class EjecucionWebPracticos {
         return string.Equals(
             directorioProyecto,
             Path.GetFullPath(rutaPractico).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
-            StringComparison.OrdinalIgnoreCase);
+            AppPaths.ComparacionRutas);
     }
 
     static Process IniciarAplicacion(string rutaPractico, string proyecto) {
