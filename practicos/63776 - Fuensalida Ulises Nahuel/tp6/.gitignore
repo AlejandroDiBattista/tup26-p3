@@ -1,0 +1,34 @@
+# Secrets and local environment
+.env
+*.env
+!.env.example
+
+# .NET build output
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Visual Studio / VS Code local state
+.vs/
+**/.vs/
+.vscode/
+**/.vscode/
+
+# User-specific IDE files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Other workspace projects / accidentally nested repos
+AsistenteIA/ai asitente/
