@@ -8,6 +8,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using Terminal.Gui.App;
+using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
