@@ -9,6 +9,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.Input;
@@ -160,42 +161,52 @@ sealed class VentanaPrincipal : Window
         RenderizarConversacion();
 
         var respuesta = new StringBuilder();
+        var fragmentos = new List<ChatResponseUpdate>();
 
         try
         {
             await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones))
             {
+                fragmentos.Add(fragmento);
                 if (string.IsNullOrEmpty(fragmento.Text))
                 {
                     continue;
                 }
 
                 respuesta.Append(fragmento.Text);
-                ActualizarUltimoTurno(respuesta.ToString());
+                Application.Invoke(() => ActualizarUltimoTurno(respuesta.ToString()));
             }
 
-            var textoFinal = respuesta.ToString();
+            var respuestaFinal = fragmentos.ToChatResponse();
+            var textoFinal = respuestaFinal.Text;
             if (string.IsNullOrWhiteSpace(textoFinal))
             {
                 textoFinal = "No se recibio texto del modelo.";
-                ActualizarUltimoTurno(textoFinal);
+                Application.Invoke(() => ActualizarUltimoTurno(textoFinal));
+            }
+            else
+            {
+                Application.Invoke(() => ActualizarUltimoTurno(textoFinal));
             }
 
-            mensajes.Add(new ChatMessage(ChatRole.Assistant, textoFinal));
+            mensajes.AddMessages(respuestaFinal);
         }
         catch (Exception ex)
         {
             var error = $"No se pudo obtener respuesta del modelo.\n\n`{ex.Message}`";
-            ActualizarUltimoTurno(error);
+            Application.Invoke(() => ActualizarUltimoTurno(error));
             mensajes.Add(new ChatMessage(ChatRole.Assistant, error));
         }
         finally
         {
-            respondiendo = false;
-            entrada.Enabled = true;
-            enviar.Enabled = true;
-            estado.Text = "Enter: enviar | Esc: salir";
-            entrada.SetFocus();
+            Application.Invoke(() =>
+            {
+                respondiendo = false;
+                entrada.Enabled = true;
+                enviar.Enabled = true;
+                estado.Text = "Enter: enviar | Esc: salir";
+                entrada.SetFocus();
+            });
         }
     }
 
@@ -230,7 +241,15 @@ sealed class VentanaPrincipal : Window
         }
 
         conversacion.Text = markdown.ToString();
+        LlevarScrollAlFinal();
         conversacion.SetNeedsDraw();
+    }
+
+    void LlevarScrollAlFinal()
+    {
+        var viewport = conversacion.Viewport;
+        var y = Math.Max(0, conversacion.LineCount - viewport.Height);
+        conversacion.Viewport = new Rectangle(viewport.X, y, viewport.Width, viewport.Height);
     }
 
     protected override bool OnKeyDown(Key key)
