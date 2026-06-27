@@ -52,28 +52,41 @@ var enviar = new Button {
 
 ventana.Add(conversacion, entrada, enviar);
 
+// enviar mensaje - guardo, muestro, pido respuesta en streaming y la voy mostrando
 async void Mandar() {
     var texto = entrada.Text?.Trim() ?? "";
     if (texto.Length == 0) return;
+
+    // bloqueo la entrada mientras responde para no encimar mensajes
+    entrada.Enabled = false;
+    enviar.Enabled = false;
 
     asistente.Registrar(ChatRole.User, texto);
     conversacion.Text += $"\n\n# Vos\n\n{texto}\n\n# Asistente\n\n";
     entrada.Text = "";
     IrAlFinal();
 
-    var respuesta = await asistente.Respuesta(fragmento => {
-        app.Invoke(() => { conversacion.Text += fragmento; });
-        IrAlFinal();
-    });
-
-    asistente.Registrar(ChatRole.Assistant, respuesta);
-
-    app.Invoke(() => {
-    entrada.SetFocus();
-    IrAlFinal();
-    });
+    try {
+        var respuesta = await asistente.Respuesta(fragmento => {
+            app.Invoke(() => {
+                conversacion.Text += fragmento;
+                IrAlFinal();
+            });
+        });
+        asistente.Registrar(ChatRole.Assistant, respuesta);
+    } catch (Exception ex) {
+        app.Invoke(() => { conversacion.Text += $"\n\n*Error: {ex.Message}*"; });
+    } finally {
+        app.Invoke(() => {
+            entrada.Enabled = true;
+            enviar.Enabled = true;
+            entrada.SetFocus();
+            IrAlFinal();
+        });
+    }
 }
 
+//auto scroll
 void IrAlFinal() {
     var alto  = conversacion.GetContentSize().Height;
     var vista = conversacion.Viewport;
@@ -81,11 +94,13 @@ void IrAlFinal() {
     conversacion.Viewport = vista;
 }
 
+//con enter
 entrada.Accepting += (sender, e) => {
     Mandar();
     e.Handled = true;
 };
 
+//click en el boton
 enviar.Accepting += (sender, e) => {
     Mandar();
     e.Handled = true;
@@ -161,7 +176,7 @@ class Asistente {
 
     static string Escribir(
     [Description("Ruta del archivo que se va a crear o reemplazar.")] string ruta,
-    [Description("Contenido completo que se va a guardar en el archivo.")] string contenido) {
+    [Description("Contenido que se va a guardar en el archivo.")] string contenido) {
 
     var rutaCompleta = ResolverRuta(ruta);
     Directory.CreateDirectory(Path.GetDirectoryName(rutaCompleta)!);
