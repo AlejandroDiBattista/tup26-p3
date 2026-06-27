@@ -18,7 +18,7 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? throw new InvalidOperationException($"Falta {proveedor}_API_URL en .env");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
@@ -101,20 +101,25 @@ class VentanaChat : Window {
         conversacion.Append($"\n\n### Vos\n\n{texto}\n\n### Asistente\n\n");
         panel.Text = conversacion.ToString();
 
-        var respuesta = new StringBuilder();
-        await foreach (var item in chat.GetStreamingResponseAsync(historial)) {
-            if (item.Text is not null) {
-                respuesta.Append(item.Text);
-                panel.Text = conversacion + respuesta.ToString();
+        try {
+            var respuesta = new StringBuilder();
+            await foreach (var item in chat.GetStreamingResponseAsync(historial)) {
+                if (item.Text is not null) {
+                    respuesta.Append(item.Text);
+                    panel.Text = conversacion + respuesta.ToString();
+                }
             }
+
+            historial.Add(new(ChatRole.Assistant, respuesta.ToString()));
+            conversacion.Append(respuesta);
+        } catch (Exception ex) {
+            conversacion.Append($"\n\n*Error: {ex.Message}*");
+            panel.Text = conversacion.ToString();
+        } finally {
+            ocupado = false;
+            entrada.Enabled = true;
+            boton.Enabled = true;
+            entrada.SetFocus();
         }
-
-        historial.Add(new(ChatRole.Assistant, respuesta.ToString()));
-        conversacion.Append(respuesta);
-
-        ocupado = false;
-        entrada.Enabled = true;
-        boton.Enabled = true;
-        entrada.SetFocus();
     }
 }
