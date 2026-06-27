@@ -23,7 +23,10 @@ IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
-    .AsIChatClient();
+    .AsIChatClient()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 
 const string pregunta = "Definí recursividad";
 
