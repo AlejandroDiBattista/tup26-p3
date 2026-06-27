@@ -5,7 +5,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AgendaWeb</title>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="app.css" />
@@ -13,84 +12,8 @@
 </head>
 
 <body>
-    <div id="app">
-        <Routes />
-        <div id="blazor-error-ui" style="display:none">
-            Se perdió la conexión con el servidor.
-            <a href="" class="reload">Reconectar</a>
-        </div>
-    </div>
-
-    <div id="pantalla-carga">
-        <div class="carga-contenido">
-            <i class="bi bi-book carga-icono"></i>
-            <h1 class="carga-titulo">Agenda</h1>
-            <p class="carga-subtitulo">Cargando contactos...</p>
-            <div class="carga-spinner"></div>
-        </div>
-    </div>
-
-    <style>
-        #pantalla-carga {
-            position: fixed;
-            inset: 0;
-            background: #128C7E;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.4s ease;
-        }
-        #pantalla-carga.oculto {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .carga-contenido {
-            text-align: center;
-            color: white;
-        }
-        .carga-icono {
-            font-size: 3.5rem;
-            display: block;
-            margin-bottom: 12px;
-        }
-        .carga-titulo {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-        .carga-subtitulo {
-            font-size: 0.95rem;
-            opacity: 0.8;
-            margin-bottom: 24px;
-        }
-        .carga-spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: girar 0.8s linear infinite;
-            margin: 0 auto;
-        }
-        @@keyframes girar {
-            to { transform: rotate(360deg); }
-        }
-    </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            Blazor.start().then(function () {
-                var pantalla = document.getElementById('pantalla-carga');
-                if (pantalla) {
-                    pantalla.classList.add('oculto');
-                    setTimeout(function () { pantalla.remove(); }, 500);
-                }
-            });
-        });
-    </script>
-
-    <script src="_framework/blazor.server.js" autostart="false"></script>
+    <Routes />
+    <script src="_framework/blazor.server.js"></script>
 </body>
 
 </html>
