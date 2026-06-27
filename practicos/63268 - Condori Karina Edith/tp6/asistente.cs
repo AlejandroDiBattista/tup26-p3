@@ -9,6 +9,10 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using System.ComponentModel;
+using Terminal.Gui.App;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
@@ -24,7 +28,126 @@ var mensajes = new List<ChatMessage>
     new(ChatRole.System, File.ReadAllText(RutasProyecto.Archivo("AGENTS.md")))
 };
 
-Console.WriteLine($"Asistente IA configurado con {configuracion.Proveedor} / {configuracion.Modelo}.");
+using IApplication app = Application.Create().Init();
+using var ventana = new VentanaPrincipal(configuracion.Modelo, mensajes, chat, opciones);
+app.Run(ventana);
+
+sealed class VentanaPrincipal : Window
+{
+    readonly List<ChatMessage> mensajes;
+    readonly IChatClient chat;
+    readonly ChatOptions opciones;
+    readonly Markdown conversacion;
+    readonly TextField entrada;
+    readonly Button enviar;
+    readonly Label estado;
+
+    public VentanaPrincipal(
+        string modelo,
+        List<ChatMessage> mensajes,
+        IChatClient chat,
+        ChatOptions opciones)
+    {
+        this.mensajes = mensajes;
+        this.chat = chat;
+        this.opciones = opciones;
+
+        Title = $" Asistente IA - {modelo} ";
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        var panelConversacion = new FrameView
+        {
+            Title = "Conversacion",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(5)
+        };
+
+        conversacion = new Markdown
+        {
+            Text = "# Asistente IA\n\nEscribi un mensaje para comenzar.",
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            CanFocus = true,
+            ViewportSettings = ViewportSettingsFlags.HasVerticalScrollBar
+        };
+
+        var panelEntrada = new FrameView
+        {
+            Title = "Mensaje",
+            X = 0,
+            Y = Pos.Bottom(panelConversacion),
+            Width = Dim.Fill(),
+            Height = 4
+        };
+
+        entrada = new TextField
+        {
+            X = 1,
+            Y = 0,
+            Width = Dim.Fill(13),
+            Height = 1
+        };
+
+        enviar = new Button
+        {
+            Text = "Enviar",
+            X = Pos.AnchorEnd(10),
+            Y = 0,
+            Width = 9
+        };
+
+        estado = new Label
+        {
+            Text = "Enter: enviar | Esc: salir",
+            X = 1,
+            Y = Pos.AnchorEnd(1),
+            Width = Dim.Fill(2),
+            Height = 1
+        };
+
+        panelConversacion.Add(conversacion);
+        panelEntrada.Add(entrada, enviar);
+        Add(panelConversacion, panelEntrada, estado);
+
+        enviar.Accepting += async (_, args) =>
+        {
+            args.Handled = true;
+            await EnviarMensajeAsync();
+        };
+
+        entrada.KeyDown += async (_, args) =>
+        {
+            if (args == Key.Enter)
+            {
+                args.Handled = true;
+                await EnviarMensajeAsync();
+            }
+        };
+
+        entrada.SetFocus();
+    }
+
+    async Task EnviarMensajeAsync()
+    {
+        await Task.CompletedTask;
+    }
+
+    protected override bool OnKeyDown(Key key)
+    {
+        if (key == Key.Esc)
+        {
+            App?.RequestStop();
+            return true;
+        }
+
+        return base.OnKeyDown(key);
+    }
+}
 
 sealed record ConfiguracionProveedor(string Proveedor, string Url, string ApiKey, string Modelo)
 {
