@@ -31,26 +31,30 @@ IChatClient chat = new OpenAIClient(
     .UseFunctionInvocation()
     .Build();
 
+var opciones = Herramientas.CrearOpciones();
+
 List<ChatMessage> historial = [
     new(ChatRole.System, File.ReadAllText("AGENTS.md"))
 ];
 
 using IApplication app = Application.Create().Init();
-app.Run(new VentanaChat(chat, historial, modelo));
+app.Run(new VentanaChat(chat, historial, opciones, modelo));
 
 
 class VentanaChat : Window {
     readonly IChatClient chat;
     readonly List<ChatMessage> historial;
+    readonly ChatOptions opciones;
     readonly Markdown panel;
     readonly TextField entrada;
     readonly Button boton;
     bool ocupado;
     readonly StringBuilder conversacion = new();
 
-    public VentanaChat(IChatClient chat, List<ChatMessage> historial, string modelo) {
+    public VentanaChat(IChatClient chat, List<ChatMessage> historial, ChatOptions opciones, string modelo) {
         this.chat = chat;
         this.historial = historial;
+        this.opciones = opciones;
 
         Title = $" Asistente IA · {modelo} ";
         Width = Dim.Fill();
@@ -103,7 +107,7 @@ class VentanaChat : Window {
 
         try {
             var respuesta = new StringBuilder();
-            await foreach (var item in chat.GetStreamingResponseAsync(historial)) {
+            await foreach (var item in chat.GetStreamingResponseAsync(historial, opciones)) {
                 if (item.Text is not null) {
                     respuesta.Append(item.Text);
                     panel.Text = conversacion + respuesta.ToString();
@@ -121,5 +125,39 @@ class VentanaChat : Window {
             boton.Enabled = true;
             entrada.SetFocus();
         }
+    }
+}
+
+
+static class Herramientas {
+    static readonly string Raiz = Directory.GetCurrentDirectory();
+
+    public static ChatOptions CrearOpciones() => new() {
+        Tools = [
+            AIFunctionFactory.Create(Leer, new() {
+                Name = "leer-archivo",
+                Description = "Devuelve el contenido de un archivo de texto"
+            })
+        ]
+    };
+
+    [Description("Devuelve el contenido de un archivo de texto")]
+    public static string Leer([Description("Ruta del archivo")] string ruta) {
+        try {
+            var completa = RutaSegura(ruta);
+            if (!File.Exists(completa))
+                return $"No se encontró el archivo: {ruta}";
+            return File.ReadAllText(completa);
+        } catch (Exception ex) {
+            return $"Error al leer '{ruta}': {ex.Message}";
+        }
+    }
+
+    static string RutaSegura(string ruta) {
+        var completa = Path.GetFullPath(Path.Combine(Raiz, ruta));
+        var prefijo = Raiz.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!completa.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Acceso denegado");
+        return completa;
     }
 }
