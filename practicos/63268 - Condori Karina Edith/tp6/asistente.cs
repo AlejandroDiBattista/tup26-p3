@@ -9,6 +9,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
 using System.ComponentModel;
+using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
@@ -35,6 +36,7 @@ app.Run(ventana);
 sealed class VentanaPrincipal : Window
 {
     readonly List<ChatMessage> mensajes;
+    readonly List<TurnoVisible> turnos = [];
     readonly IChatClient chat;
     readonly ChatOptions opciones;
     readonly Markdown conversacion;
@@ -134,7 +136,39 @@ sealed class VentanaPrincipal : Window
 
     async Task EnviarMensajeAsync()
     {
+        var textoUsuario = entrada.Text?.ToString()?.Trim();
+        if (string.IsNullOrWhiteSpace(textoUsuario))
+        {
+            return;
+        }
+
+        entrada.Text = string.Empty;
+        mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
+        turnos.Add(new TurnoVisible("Vos", textoUsuario));
+        RenderizarConversacion();
         await Task.CompletedTask;
+    }
+
+    void RenderizarConversacion()
+    {
+        if (turnos.Count == 0)
+        {
+            conversacion.Text = "# Asistente IA\n\nEscribi un mensaje para comenzar.";
+            conversacion.SetNeedsDraw();
+            return;
+        }
+
+        var markdown = new StringBuilder();
+        foreach (var turno in turnos)
+        {
+            markdown.AppendLine($"# {turno.Rol}");
+            markdown.AppendLine();
+            markdown.AppendLine(string.IsNullOrWhiteSpace(turno.Texto) ? "_Procesando..._" : turno.Texto);
+            markdown.AppendLine();
+        }
+
+        conversacion.Text = markdown.ToString();
+        conversacion.SetNeedsDraw();
     }
 
     protected override bool OnKeyDown(Key key)
@@ -148,6 +182,8 @@ sealed class VentanaPrincipal : Window
         return base.OnKeyDown(key);
     }
 }
+
+sealed record TurnoVisible(string Rol, string Texto);
 
 sealed record ConfiguracionProveedor(string Proveedor, string Url, string ApiKey, string Modelo)
 {
