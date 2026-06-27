@@ -24,10 +24,14 @@
                         <button class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
                                 @onclick="() => Seleccionar(c)">
                             <div class="avatar-inicial">@c.Apellido[0]</div>
-                            <div>
-                                <strong>@c.Apellido, @c.Nombre</strong><br />
-                                <small>@c.Empresa</small>
-                            </div>
+
+
+                         <div style="min-height: 42px;">
+                            <strong>@c.Apellido, @c.Nombre</strong><br />
+                            <small>@c.Empresa</small>
+                        </div>
+
+
                         </button>
                     }
                 </div>
@@ -65,12 +69,33 @@
     bool modoEdicion = false;
     string busqueda = "";
 
-    IEnumerable<Contacto> ContactosFiltrados => contactos
-        .Where(c => string.IsNullOrEmpty(busqueda) ||
-            c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-            c.Empresa.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
-        .OrderBy(c => c.Apellido);
+    static string Normalizar(string texto)
+    {
+        if (string.IsNullOrEmpty(texto)) return "";
+        var normalizado = texto.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder();
+        foreach (var c in normalizado)
+        {
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c)
+                != System.Globalization.UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+        return sb.ToString().ToLowerInvariant();
+    }
+
+    IEnumerable<Contacto> ContactosFiltrados
+    {
+        get
+        {
+            var termino = Normalizar(busqueda);
+            return contactos
+                .Where(c => string.IsNullOrEmpty(busqueda) ||
+                    Normalizar(c.Nombre).Contains(termino) ||
+                    Normalizar(c.Apellido).Contains(termino) ||
+                    Normalizar(c.Empresa).Contains(termino))
+                .OrderBy(c => c.Apellido);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,39 +129,39 @@
         modoEdicion = true;
     }
 
-   async Task Guardar()
-{
-    if (contactoEditando.Id == 0)
+    async Task Guardar()
     {
-        Db.Contactos.Add(contactoEditando);
-    }
-    else
-    {
-        var contactoDb = await Db.Contactos.FindAsync(contactoEditando.Id);
-
-        if (contactoDb != null)
+        if (contactoEditando.Id == 0)
         {
-            contactoDb.Nombre = contactoEditando.Nombre;
-            contactoDb.Apellido = contactoEditando.Apellido;
-            contactoDb.Telefono = contactoEditando.Telefono;
-            contactoDb.Email = contactoEditando.Email;
-            contactoDb.Empresa = contactoEditando.Empresa;
-            contactoDb.Cargo = contactoEditando.Cargo;
-            contactoDb.Direccion = contactoEditando.Direccion;
-            contactoDb.FechaNacimiento = contactoEditando.FechaNacimiento;
-            contactoDb.Notas = contactoEditando.Notas;
+            Db.Contactos.Add(contactoEditando);
         }
+        else
+        {
+            var contactoDb = await Db.Contactos.FindAsync(contactoEditando.Id);
+
+            if (contactoDb != null)
+            {
+                contactoDb.Nombre = contactoEditando.Nombre;
+                contactoDb.Apellido = contactoEditando.Apellido;
+                contactoDb.Telefono = contactoEditando.Telefono;
+                contactoDb.Email = contactoEditando.Email;
+                contactoDb.Empresa = contactoEditando.Empresa;
+                contactoDb.Cargo = contactoEditando.Cargo;
+                contactoDb.Direccion = contactoEditando.Direccion;
+                contactoDb.FechaNacimiento = contactoEditando.FechaNacimiento;
+                contactoDb.Notas = contactoEditando.Notas;
+            }
+        }
+
+        await Db.SaveChangesAsync();
+
+        contactos = await Db.Contactos.ToListAsync();
+
+        contactoSeleccionado = contactos
+            .FirstOrDefault(c => c.Id == contactoEditando.Id);
+
+        modoEdicion = false;
     }
-
-    await Db.SaveChangesAsync();
-
-    contactos = await Db.Contactos.ToListAsync();
-
-    contactoSeleccionado = contactos
-        .FirstOrDefault(c => c.Id == contactoEditando.Id);
-
-    modoEdicion = false;
-}
 
     async Task EliminarContacto()
     {

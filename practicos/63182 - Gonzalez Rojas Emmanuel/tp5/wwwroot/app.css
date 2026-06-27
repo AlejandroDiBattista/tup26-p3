@@ -1,19 +1,17 @@
-/* COLOR VARIABLES */
 :root {
     --verde-principal: #25D366;      
-    --verde-oscuro: #086258;         
-    --verde-claro: #DCF8C6;         
-    --gris-fondo: #F0F2F5;          
+    --verde-oscuro: #128C7E;         
+    --verde-claro: #DCF8C6;          
+    --gris-fondo: #F0F2F5;           
     --gris-panel: #FFFFFF;           
-    --gris-borde: #E2E8F0;          
+    --gris-borde: #E2E8F0;           
     --gris-texto: #667085;           
-    --texto-principal: #1A202C;     
+    --texto-principal: #1A202C;      
     --azul-link: #0078D4;            
-    --rojo-eliminar: #E53E3E;    
-    --sombra: 0 2px 8px rgba(0,0,0,0.08);
+    --rojo-eliminar: #E53E3E;        
+    --sombra: 0 2px 8px rgba(0,0,0,0.08); 
 }
 
-/* ESTILOS GENERALES */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -26,17 +24,19 @@ body {
     color: var(--texto-principal);
 }
 
-/* CONTENEDOR PRINCIPAL */
+/* ===CONTENEDOR===*/
 .pagina-agenda {
     max-width: 1280px;
     margin: 0 auto;
     padding: 20px;
-    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
-/* ENCABEZADO */
 .encabezado {
-    background: var(--verde-oscuro);
+    background: var(--verde-oscuro);   
     color: white;
     padding: 20px 28px;
     border-radius: 12px 12px 0 0;
@@ -58,7 +58,6 @@ body {
     margin-top: 2px;
 }
 
-/* BOTON NUEVO */
 .btn-nuevo {
     background: var(--verde-principal);
     color: white;
@@ -75,31 +74,34 @@ body {
 }
 
 .btn-nuevo:hover {
-    background: #1ebe58;
+    background: #1ebe58; 
 }
-/* CUERPO PRINCIPAL */
+
+/*=====CAJA PRINCIPAL====== */
 .cuerpo-principal {
     display: flex;
     background: var(--gris-panel);
     border-radius: 0 0 12px 12px;
     box-shadow: var(--sombra);
-    min-height: 75vh;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
     border: 1px solid var(--gris-borde);
     border-top: none;
 }
 
-
-/* PANEL IZQUIERDO */
+/* =========PANEL IZQUIERDO============= */
 .panel-lista {
-    width: 320px;
+    width: 320px;          
     min-width: 320px;
     border-right: 1px solid var(--gris-borde);
     display: flex;
     flex-direction: column;
     background: var(--gris-panel);
+    overflow: hidden;
 }
 
+/* ==BUSCADOR=== */
 .caja-busqueda {
     padding: 14px 16px;
     border-bottom: 1px solid var(--gris-borde);
@@ -118,9 +120,9 @@ body {
 
 .input-busqueda {
     width: 100%;
-    padding: 8px 12px 8px 34px; 
+    padding: 8px 12px 8px 34px;  
     border: 1px solid var(--gris-borde);
-    border-radius: 20px;
+    border-radius: 20px;          
     background: white;
     font-size: 0.88rem;
     outline: none;
@@ -132,12 +134,11 @@ body {
     box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.2);
 }
 
-/* SCROLL */
-.lista-contactos {
-    flex: 1;
-    overflow-y: auto;
-}
-
+/* ====Lista de contactos (scrolleable)=== */
+    .lista-contactos {
+        flex: 1;
+        overflow-y: auto;
+    }
 
 .item-contacto {
     display: flex;
@@ -170,32 +171,31 @@ body {
     color: var(--gris-texto);
     display: block;
 }
-/* MENSAJE CUANDO NO HAY RESULTADOS */
+
 .mensaje-vacio {
     text-align: center;
     padding: 40px 20px;
     color: var(--gris-texto);
     font-size: 0.9rem;
 }
-/* ICONO DE MENSAJE VACÍO */
+
 .mensaje-vacio i {
     font-size: 2rem;
     display: block;
     margin-bottom: 8px;
 }
-/* ---------------------------------------- */
-/* AVATAR */
+/* ====AVATARES=== */
 .avatar {
     width: 40px;
     height: 40px;
-    border-radius: 50%;  
+    border-radius: 50%; 
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.85rem;
     font-weight: 700;
     color: white;
-    flex-shrink: 0;      
+    flex-shrink: 0;   
 }
 
 .avatar-grande {
@@ -204,24 +204,22 @@ body {
     font-size: 1.2rem;
 }
 
-/* COLORES PARA LOS AVATARES */
+/* ======COLORES PARA LOS AVATARES====== */
 .avatar-verde   { background: #25D366; }
 .avatar-azul    { background: #3B82F6; }
 .avatar-violeta { background: #8B5CF6; }
 .avatar-naranja { background: #F97316; }
 .avatar-rojo    { background: #EF4444; }
 .avatar-turquesa{ background: #06B6D4; }
-/* ----------------------------------------------- */
 
-/* PANEL DERECHO */
-
+/* ===PANEL DERECHO===== */
 .panel-detalle {
-    flex: 1;  
+    flex: 1;    
     padding: 28px;
     overflow-y: auto;
 }
 
-
+/* =====PANTALLA INICIAL CUANDO NO SELECCION ALGUN CONTACTO=== */
 .panel-vacio {
     display: flex;
     flex-direction: column;
@@ -279,10 +277,6 @@ body {
     align-items: center;
 }
 
-
-/* BOTONES */
-
-/* EDITAR */
 .btn-editar {
     background: white;
     border: 1.5px solid var(--gris-borde);
@@ -301,7 +295,7 @@ body {
     border-color: var(--verde-oscuro);
     color: var(--verde-oscuro);
 }
-/* ELIMINAR */
+
 .btn-eliminar {
     background: white;
     border: 1.5px solid var(--rojo-eliminar);
@@ -320,7 +314,6 @@ body {
     background: var(--rojo-eliminar);
     color: white;
 }
-/* GUARDAR */
 
 .btn-guardar {
     background: var(--verde-oscuro);
@@ -341,8 +334,6 @@ body {
     background: #0d7369;
 }
 
-/* CANCELAR */
-
 .btn-cancelar {
     background: white;
     border: 1.5px solid var(--gris-borde);
@@ -358,9 +349,8 @@ body {
     border-color: var(--gris-texto);
     color: var(--texto-principal);
 }
-/* --------------------------------------- */
-/* FILA-CAMPO (DETALLE DE LA INFORMACION DEL CONTACTO) */
 
+/* ==========INFORMACION EN PANEL DETALLE============= */
 .lista-campos {
     margin-top: 4px;
 }
@@ -381,6 +371,7 @@ body {
     text-align: center;
 }
 
+
 .etiqueta-fila {
     font-size: 0.78rem;
     color: var(--gris-texto);
@@ -391,12 +382,14 @@ body {
     margin-bottom: 2px;
 }
 
+
 .valor-fila {
     font-size: 0.92rem;
     color: var(--texto-principal);
-    white-space: pre-wrap; 
+    white-space: pre-wrap;   
 }
 
+/* Link de email */
 .valor-enlace {
     font-size: 0.92rem;
     color: var(--azul-link);
@@ -407,12 +400,11 @@ body {
     text-decoration: underline;
 }
 
-/* ------------------------------------ */
-/* FORMULARIO CREAR/EDITAR */
+/* ======FORMULARIO========*/
 
 .formulario {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr; 
     gap: 20px 28px;
     padding: 20px 0;
 }
@@ -423,8 +415,9 @@ body {
     gap: 6px;
 }
 
+
 .campo-ancho-completo {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1; 
 }
 
 .etiqueta {
@@ -434,6 +427,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
+
 
 .input-campo {
     border: 1.5px solid var(--gris-borde);
@@ -454,7 +448,7 @@ body {
 
 .input-area {
     min-height: 110px;
-    resize: vertical;
+    resize: vertical;    
 }
 
 .pie-formulario {
@@ -466,7 +460,6 @@ body {
     margin-top: 8px;
 }
 
-/* MENSAJE DE ERROR */
 .alerta-error {
     background: #FEF2F2;
     border: 1px solid #FECACA;
@@ -477,9 +470,9 @@ body {
     margin-top: 12px;
 }
 
-
-/* ---------------------------------------- */
-/* DIALOGO DE CONFIRMACION DE ELIMINACION */
+/* ============================================================
+   DIÁLOGO DE CONFIRMACIÓN DE ELIMINACIÓN
+   ============================================================ */
 
 .fondo-modal {
     position: fixed;
@@ -487,7 +480,6 @@ body {
     background: rgba(0, 0, 0, 0.45);
     z-index: 100;
 }
-
 
 .dialogo-confirmacion {
     position: fixed;
@@ -518,14 +510,11 @@ body {
     line-height: 1.5;
 }
 
-/* --------------------------------- */
-
-/* RESPONSIVE */
-
 @media (max-width: 768px) {
     .cuerpo-principal {
         flex-direction: column;
     }
+
 
     .panel-lista {
         width: 100%;

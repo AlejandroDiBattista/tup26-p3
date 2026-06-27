@@ -10,9 +10,9 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  No muestra el modo solo lectura, edita en forma directa.
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  Correcto; mejorar uso del espacio vertical
 63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  Correcto
-63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🔴🔴🟢⚪   🟢⚪   No    17    8  No funciona: no muestra detalle, no busca y no edita
+63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🔴🔴🟢🟢   🟢⚪   No    17    8  No funciona: no muestra detalle, no busca y no edita
 63396   Gil Garau, Atalía Trinidad      (381)456-4405   ataliagg                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  Sin scroll en maestro; botones de edición fuera del modo mostrar; edita dentro del detalle
-63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢⚪   🟢⚪   No    28   10  No edita; sin scroll en maestro; muestra mensaje de error al final
+63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  No edita; sin scroll en maestro; muestra mensaje de error al final
 61577   González, Lucas Alfredo         (381)669-4386   lucasgonzaa                🟢🔴🔴🔴🔴⚪   🟢⚪   No    25   10
 63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    32    9  Mal formato; sin CSS
 63700   Jiménez, Nelson Maximiliano     (381)639-2861   maximilianojimnez          🟢🟢🟢🟢🟢⚪   🟢⚪   No    26    8
@@ -21,9 +21,9 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63350   Páez Carabajal, Santiago        (381)572-4096   santiagopaez-2             🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  Mal uso del espacio vertical
 61581   Paz, Naim Federico              (381)353-0060   naimp074                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  No usa bien el espacio vertical
 63647   Paz, Valentina                  (381)599-6422   valepaz11                  🟢🟢🟢🟢🟢⚪   🟢⚪   No    25   10  No edita; solo muestra cancelar/guardar
-63389   Pereyra Petroni, Nicolas        (381)332-4401   nicopereyra255-ship-it     🟢🟢🟢🟢🟢⚪   🟢⚪   No    18    8  Edición mal ubicada arriba; no alterna mostrar/editar; no cancela
+63389   Pereyra Petroni, Nicolas        (381)332-4401   nicopereyra255-ship-it     🟢🟢🟢🟢🟢🟢   🟢⚪   No    18    8  Edición mal ubicada arriba; no alterna mostrar/editar; no cancela
 63420   Pereyra, Valentina Nazaret      (381)552-8065   valentinapereyra03         🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  Sin scroll en maestro; debe mostrar el detalle sin botón; botones editar/borrar deben estar en el detalle
-63354   Perondi, Luciano                (381)350-0777   lucho-bot                  🟢🟢🟢🟢🟢⚪   🟢⚪   No    22   10  Sin scroll en maestro; no cancela al seleccionar
+63354   Perondi, Luciano                (381)350-0777   lucho-bot                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  Sin scroll en maestro; no cancela al seleccionar
 63393   Ritorto, Lucca                  (381)627-2271   luccardp                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    20   10  Sin scroll en maestro; edición en página aparte en lugar de alternar mostrar/editar
 63208   Rosconi, Ignacio Federico       (381)533-1344   ignaciorosconi             🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  Mal scroll en maestro; mal uso del espacio vertical
 63387   Sosa Gonella, Luca              (381)355-5126   lucasosag1                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  No alterna entre mostrar detalle y editar; no cancela al seleccionar; no tiene búsqueda en caliente

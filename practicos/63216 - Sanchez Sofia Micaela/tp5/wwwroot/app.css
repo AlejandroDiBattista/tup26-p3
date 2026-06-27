@@ -125,3 +125,15 @@ body {
     margin-top: 4rem;
 }
 .estado-vacio .icono-grande { font-size: 3.5rem; margin-bottom: 0.5rem; }
+
+
+.lista-contactos {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+
+.col-md-8 {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
