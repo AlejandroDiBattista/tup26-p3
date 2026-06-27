@@ -127,7 +127,7 @@ static class AlumnosCliActions {
         try {
             Log.Info("Ejecutando apuntes/publicar.py...");
             ProcessStartInfo startInfo = new() {
-                FileName = "python3",
+                FileName = PythonExecutable(),
                 WorkingDirectory = AppPaths.ApuntesDirectory,
                 UseShellExecute = false
             };
@@ -145,6 +145,56 @@ static class AlumnosCliActions {
         } catch (Exception ex) {
             Log.Error($"No se pudo ejecutar publicar.py: {ex.Message}");
             return 1;
+        }
+    }
+
+    static string PythonExecutable() {
+        string[] candidatos = OperatingSystem.IsWindows()
+            ? ["python", "py"]
+            : ["python3", "python"];
+
+        string? path = Environment.GetEnvironmentVariable("PATH");
+        foreach (string candidato in candidatos) {
+            if (ExisteEjecutableEnPath(candidato, path)) {
+                return candidato;
+            }
+        }
+
+        return candidatos[0];
+    }
+
+    static bool ExisteEjecutableEnPath(string ejecutable, string? path) {
+        if (string.IsNullOrWhiteSpace(path)) {
+            return false;
+        }
+
+        IEnumerable<string> nombres = OperatingSystem.IsWindows()
+            ? ExtensionesEjecutablesWindows(ejecutable)
+            : [ejecutable];
+
+        foreach (string directorio in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)) {
+            foreach (string nombre in nombres) {
+                if (File.Exists(Path.Combine(directorio.Trim(), nombre))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    static IEnumerable<string> ExtensionesEjecutablesWindows(string ejecutable) {
+        if (Path.HasExtension(ejecutable)) {
+            yield return ejecutable;
+            yield break;
+        }
+
+        string[] extensiones = (Environment.GetEnvironmentVariable("PATHEXT") ?? ".COM;.EXE;.BAT;.CMD")
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        yield return ejecutable;
+        foreach (string extension in extensiones) {
+            yield return ejecutable + extension.ToLowerInvariant();
         }
     }
 

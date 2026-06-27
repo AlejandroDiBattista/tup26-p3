@@ -669,9 +669,10 @@ class GitHub {
 
     string? Ejecutar(string mensajeError, string endpoint, params string[] argumentos) {
         ProcessStartInfo startInfo = new ProcessStartInfo {
-            FileName = "gh",
+            FileName = GhExecutable(),
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            UseShellExecute = false
         };
 
         startInfo.ArgumentList.Add("api");
@@ -695,6 +696,40 @@ class GitHub {
         }
 
         return salida;
+    }
+
+
+    static string GhExecutable() {
+        string nombre = OperatingSystem.IsWindows() ? "gh.exe" : "gh";
+        string[] rutasConocidas = OperatingSystem.IsWindows()
+            ? [
+                @"C:\Program Files\GitHub CLI\bin\gh.exe",
+                @"C:\Program Files\GitHub CLI\gh.exe",
+                @"C:\Program Files (x86)\GitHub CLI\gh.exe"
+            ]
+            : [
+                "/opt/homebrew/bin/gh",
+                "/usr/local/bin/gh",
+                "/usr/bin/gh"
+            ];
+
+        foreach (string ruta in rutasConocidas) {
+            if (File.Exists(ruta)) {
+                return ruta;
+            }
+        }
+
+        string? path = Environment.GetEnvironmentVariable("PATH");
+        if (!string.IsNullOrWhiteSpace(path)) {
+            foreach (string directorio in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)) {
+                string ruta = Path.Combine(directorio.Trim(), nombre);
+                if (File.Exists(ruta)) {
+                    return ruta;
+                }
+            }
+        }
+
+        return "gh";
     }
 
 

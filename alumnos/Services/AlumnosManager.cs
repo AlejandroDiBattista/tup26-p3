@@ -286,7 +286,7 @@ static class AlumnosManager {
             if (carpetasConLegajo.Count == 1) {
                 string rutaCarpetaExistente = carpetasConLegajo[0];
                 string rutaRelativa = AppPaths.RutaRelativaDesdePracticos(rutaCarpetaExistente);
-                if (!string.Equals(rutaCarpetaExistente, rutaCarpeta, StringComparison.OrdinalIgnoreCase)) {
+                if (!string.Equals(rutaCarpetaExistente, rutaCarpeta, AppPaths.ComparacionRutas)) {
                     AppPaths.RenombrarCarpetaAlumno(rutaCarpetaExistente, alumno);
                     Log.Warning($" 🔄 {rutaRelativa,-40} → {nombreCarpeta}");
                 }

@@ -12,6 +12,16 @@ static class AppPaths {
     static readonly string[] extensionesBasesSqlite = [".db", ".sqlite", ".sqlite3"];
     static readonly string[] sufijosArchivosTemporalesSqlite = ["-wal", "-shm", "-journal"];
 
+    public static StringComparison ComparacionRutas =>
+        OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+    public static StringComparer ComparadorRutas =>
+        OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+
     public static string DataDirectory => dataDirectory;
     public static string RepoRoot => Directory.GetParent(DataDirectory)?.FullName ?? DataDirectory;
     public static string ArchivoAlumnos => Path.Combine(DataDirectory, "alumnos.md");
@@ -217,7 +227,7 @@ static class AppPaths {
         List<string> elementosRestantes = directoriosLimpieza
             .SelectMany(BuscarArtefactosCompilacion)
             .ToList();
-        return new(elementosEliminados.Distinct(StringComparer.OrdinalIgnoreCase).ToList(), elementosRestantes);
+        return new(elementosEliminados.Distinct(ComparadorRutas).ToList(), elementosRestantes);
     }
 
     public static bool ExisteEnunciadoPractico(string practico) =>
@@ -251,7 +261,7 @@ static class AppPaths {
 
         List<string> eliminadas = new();
         foreach (string rutaDuplicada in BuscarCarpetasMismoLegajo(alumno.Legajo)) {
-            if (string.Equals(rutaDuplicada, rutaCanonica, StringComparison.OrdinalIgnoreCase)) {
+            if (string.Equals(rutaDuplicada, rutaCanonica, ComparacionRutas)) {
                 continue;
             }
 
@@ -379,7 +389,7 @@ static class AppPaths {
             return;
         }
 
-        if (!string.Equals(origen, destino, StringComparison.OrdinalIgnoreCase)) {
+        if (!string.Equals(origen, destino, ComparacionRutas)) {
             throw new IOException($"Ya existe una carpeta destino: {destino}");
         }
 
