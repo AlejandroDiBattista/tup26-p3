@@ -43,6 +43,7 @@ sealed class VentanaPrincipal : Window
     readonly TextField entrada;
     readonly Button enviar;
     readonly Label estado;
+    bool respondiendo;
 
     public VentanaPrincipal(
         string modelo,
@@ -136,17 +137,78 @@ sealed class VentanaPrincipal : Window
 
     async Task EnviarMensajeAsync()
     {
+        if (respondiendo)
+        {
+            return;
+        }
+
         var textoUsuario = entrada.Text?.ToString()?.Trim();
         if (string.IsNullOrWhiteSpace(textoUsuario))
         {
             return;
         }
 
+        respondiendo = true;
+        entrada.Enabled = false;
+        enviar.Enabled = false;
+        estado.Text = "El asistente esta respondiendo...";
         entrada.Text = string.Empty;
+
         mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
         turnos.Add(new TurnoVisible("Vos", textoUsuario));
+        turnos.Add(new TurnoVisible("Asistente", string.Empty));
         RenderizarConversacion();
-        await Task.CompletedTask;
+
+        var respuesta = new StringBuilder();
+
+        try
+        {
+            await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opciones))
+            {
+                if (string.IsNullOrEmpty(fragmento.Text))
+                {
+                    continue;
+                }
+
+                respuesta.Append(fragmento.Text);
+                ActualizarUltimoTurno(respuesta.ToString());
+            }
+
+            var textoFinal = respuesta.ToString();
+            if (string.IsNullOrWhiteSpace(textoFinal))
+            {
+                textoFinal = "No se recibio texto del modelo.";
+                ActualizarUltimoTurno(textoFinal);
+            }
+
+            mensajes.Add(new ChatMessage(ChatRole.Assistant, textoFinal));
+        }
+        catch (Exception ex)
+        {
+            var error = $"No se pudo obtener respuesta del modelo.\n\n`{ex.Message}`";
+            ActualizarUltimoTurno(error);
+            mensajes.Add(new ChatMessage(ChatRole.Assistant, error));
+        }
+        finally
+        {
+            respondiendo = false;
+            entrada.Enabled = true;
+            enviar.Enabled = true;
+            estado.Text = "Enter: enviar | Esc: salir";
+            entrada.SetFocus();
+        }
+    }
+
+    void ActualizarUltimoTurno(string texto)
+    {
+        if (turnos.Count == 0)
+        {
+            return;
+        }
+
+        var ultimo = turnos[^1];
+        turnos[^1] = ultimo with { Texto = texto };
+        RenderizarConversacion();
     }
 
     void RenderizarConversacion()
