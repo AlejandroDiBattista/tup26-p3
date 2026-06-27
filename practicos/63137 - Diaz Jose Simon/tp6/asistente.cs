@@ -137,6 +137,14 @@ static class Herramientas {
             AIFunctionFactory.Create(Leer, new() {
                 Name = "leer-archivo",
                 Description = "Devuelve el contenido de un archivo de texto"
+            }),
+            AIFunctionFactory.Create(Escribir, new() {
+                Name = "escribir-archivo",
+                Description = "Crea o sobrescribe un archivo con el contenido indicado"
+            }),
+            AIFunctionFactory.Create(Listar, new() {
+                Name = "listar-archivos",
+                Description = "Lista los archivos y carpetas de un directorio"
             })
         ]
     };
@@ -150,6 +158,37 @@ static class Herramientas {
             return File.ReadAllText(completa);
         } catch (Exception ex) {
             return $"Error al leer '{ruta}': {ex.Message}";
+        }
+    }
+
+    [Description("Crea o sobrescribe un archivo con el contenido indicado")]
+    public static string Escribir(
+        [Description("Ruta del archivo")] string ruta,
+        [Description("Contenido del archivo")] string contenido) {
+        try {
+            var completa = RutaSegura(ruta);
+            var dir = Path.GetDirectoryName(completa);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            File.WriteAllText(completa, contenido);
+            return $"Archivo escrito: {ruta}";
+        } catch (Exception ex) {
+            return $"Error al escribir '{ruta}': {ex.Message}";
+        }
+    }
+
+    [Description("Lista los archivos y carpetas de un directorio")]
+    public static string Listar([Description("Ruta del directorio")] string ruta = ".") {
+        try {
+            var completa = RutaSegura(ruta);
+            if (!Directory.Exists(completa))
+                return $"No se encontró el directorio: {ruta}";
+            var resultado = new StringBuilder();
+            foreach (var entry in Directory.EnumerateFileSystemEntries(completa))
+                resultado.AppendLine(Path.GetFileName(entry));
+            return resultado.ToString().TrimEnd();
+        } catch (Exception ex) {
+            return $"Error al listar '{ruta}': {ex.Message}";
         }
     }
 
