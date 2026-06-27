@@ -16,112 +16,107 @@
                    placeholder="Buscar por nombre, apellido, empresa o email"
                    @bind="TextoBusqueda"
                    @bind:event="oninput" />
+
+            <button type="button"
+                    class="btn btn-primary mt-2"
+                    @onclick="MostrarNuevo">
+                Nuevo contacto
+            </button>
         </div>
     </div>
 
-    <div class="d-flex gap-2 mb-3">
-        <button type="button" class="btn btn-primary" @onclick="MostrarNuevo">
-            Nuevo
-        </button>
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header fw-bold">
+                    Contactos
+                </div>
 
-        <button type="button" class="btn btn-warning"
-                @onclick="() => MostrarEditar(seleccionado)"
-                disabled="@(seleccionado is null)">
-            Editar
-        </button>
-
-        <button type="button" class="btn btn-danger"
-                @onclick="() => EliminarContacto(seleccionado!)"
-                disabled="@(seleccionado is null)">
-            Eliminar
-        </button>
-    </div>
-
-    @if (contactosFiltrados.Count == 0)
-    {
-        <div class="alert alert-info">
-            No hay contactos cargados para mostrarlos.
+                <div class="list-group list-group-flush maestro-scroll">
+                    @foreach (var contacto in contactosFiltrados)
+                    {
+                        <button type="button"
+                                class="list-group-item list-group-item-action @(seleccionado?.Id == contacto.Id ? "active" : "")"
+                                @onclick="() => Seleccionar(contacto)">
+                            <div class="fw-semibold">@contacto.Apellido, @contacto.Nombre</div>
+                            <div class="small">@contacto.Empresa</div>
+                        </button>
+                    }
+                </div>
+            </div>
         </div>
-    }
-    else
-    {
-        <div class="row g-4">
-            <div class="col-md-5">
-                <div class="card shadow-sm">
-                    <div class="card-header fw-bold">
-                        Contactos
-                    </div>
-                    <div class="list-group list-group-flush">
-                        @foreach (var contacto in contactosFiltrados)
-                        {
+
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header fw-bold">
+                    Detalles
+                </div>
+
+                <div class="card-body">
+                    @if (mostrarFormulario)
+                    {
+                        <FormularioContacto
+                            Visible="true"
+                            EsNuevo="esNuevo"
+                            Modelo="contactoEditando"
+                            OnGuardar="GuardarContacto"
+                            OnCancelar="CerrarFormulario" />
+                    }
+                    else if (seleccionado is null)
+                    {
+                        <p class="text-muted mb-0">Seleccione un contacto para ver sus detalles.</p>
+                    }
+                    else
+                    {
+                        <dl class="row mb-3">
+                            <dt class="col-sm-4">Nombre</dt>
+                            <dd class="col-sm-8">@seleccionado.Nombre</dd>
+
+                            <dt class="col-sm-4">Apellido</dt>
+                            <dd class="col-sm-8">@seleccionado.Apellido</dd>
+
+                            <dt class="col-sm-4">Teléfono</dt>
+                            <dd class="col-sm-8">@seleccionado.Telefono</dd>
+
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@seleccionado.Email</dd>
+
+                            <dt class="col-sm-4">Empresa</dt>
+                            <dd class="col-sm-8">@seleccionado.Empresa</dd>
+
+                            <dt class="col-sm-4">Cargo</dt>
+                            <dd class="col-sm-8">@seleccionado.Cargo</dd>
+
+                            <dt class="col-sm-4">Dirección</dt>
+                            <dd class="col-sm-8">@seleccionado.Direccion</dd>
+
+                            <dt class="col-sm-4">Fecha de nacimiento</dt>
+                            <dd class="col-sm-8">
+                                @(seleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")
+                            </dd>
+
+                            <dt class="col-sm-4">Notas</dt>
+                            <dd class="col-sm-8">@seleccionado.Notas</dd>
+                        </dl>
+
+                        <div class="d-flex gap-2">
                             <button type="button"
-                                    class="list-group-item list-group-item-action @(seleccionado?.Id == contacto.Id ? "active" : "")"
-                                    @onclick="() => Seleccionar(contacto)">
-                                <div class="fw-semibold">@contacto.Apellido, @contacto.Nombre</div>
-                                <div class="small">@contacto.Empresa</div>
+                                    class="btn btn-warning"
+                                    @onclick="() => MostrarEditar(seleccionado)">
+                                Editar
                             </button>
-                        }
-                    </div>
-                </div>
-            </div>
 
-            <div class="col-md-7">
-                <div class="card shadow-sm">
-                    <div class="card-header fw-bold">
-                        Detalles
-                    </div>
-                    <div class="card-body">
-                        @if (mostrarFormulario)
-                        {
-                            <FormularioContacto
-                                Visible="true"
-                                EsNuevo="esNuevo"
-                                Modelo="contactoEditando"
-                                OnGuardar="GuardarContacto"
-                                OnCancelar="CerrarFormulario" />
-                        }
-                        else if (seleccionado is null)
-                        {
-                            <p class="text-muted mb-0">Seleccione un contacto para ver sus detalles.</p>
-                        }
-                        else
-                        {
-                            <dl class="row mb-0">
-                                <dt class="col-sm-4">Nombre</dt>
-                                <dd class="col-sm-8">@seleccionado.Nombre</dd>
-
-                                <dt class="col-sm-4">Apellido</dt>
-                                <dd class="col-sm-8">@seleccionado.Apellido</dd>
-
-                                <dt class="col-sm-4">Teléfono</dt>
-                                <dd class="col-sm-8">@seleccionado.Telefono</dd>
-
-                                <dt class="col-sm-4">Email</dt>
-                                <dd class="col-sm-8">@seleccionado.Email</dd>
-
-                                <dt class="col-sm-4">Empresa</dt>
-                                <dd class="col-sm-8">@seleccionado.Empresa</dd>
-
-                                <dt class="col-sm-4">Cargo</dt>
-                                <dd class="col-sm-8">@seleccionado.Cargo</dd>
-
-                                <dt class="col-sm-4">Dirección</dt>
-                                <dd class="col-sm-8">@seleccionado.Direccion</dd>
-
-                                <dt class="col-sm-4">Fecha de nacimiento</dt>
-                                <dd class="col-sm-8">
-                                    @(seleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")
-                                </dd>
-
-                                <dt class="col-sm-4">Notas</dt>
-                                <dd class="col-sm-8">@seleccionado.Notas</dd>
-                            </dl>
-                        }
-                    </div>
+                            <button type="button"
+                                    class="btn btn-danger"
+                                    @onclick="EliminarSeleccionado">
+                                Eliminar
+                            </button>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
-    }
+    </div>
 </div>
 
 @code {
@@ -179,9 +174,18 @@
             return;
         }
 
-        if (seleccionado is null || !contactosFiltrados.Any(c => c.Id == seleccionado.Id))
+        if (seleccionado is not null && contactosFiltrados.Any(c => c.Id == seleccionado.Id))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
         {
             seleccionado = contactosFiltrados[0];
+        }
+        else
+        {
+            seleccionado = null;
         }
     }
 
@@ -221,6 +225,7 @@
             FechaNacimiento = contacto.FechaNacimiento,
             Notas = contacto.Notas
         };
+
         mostrarFormulario = true;
     }
 
@@ -248,14 +253,23 @@
             .ThenBy(c => c.Nombre)
             .ToListAsync();
 
-        seleccionado = contactos.FirstOrDefault(c => c.Id == contacto.Id);
-        FiltrarContactos();
         mostrarFormulario = false;
+        seleccionado = contactos.FirstOrDefault(c => c.Id == contacto.Id);
+
+        FiltrarContactos();
     }
 
-    private async Task EliminarContacto(Contacto contacto)
+    private async Task EliminarSeleccionado()
     {
-        Db.Contactos.Remove(contacto);
+        if (seleccionado is null)
+            return;
+
+        var contactoAEliminar = await Db.Contactos.FindAsync(seleccionado.Id);
+
+        if (contactoAEliminar is null)
+            return;
+
+        Db.Contactos.Remove(contactoAEliminar);
         await Db.SaveChangesAsync();
 
         contactos = await Db.Contactos
@@ -263,6 +277,10 @@
             .OrderBy(c => c.Apellido)
             .ThenBy(c => c.Nombre)
             .ToListAsync();
+
+        seleccionado = null;
+        mostrarFormulario = false;
+        contactoEditando = new Contacto();
 
         FiltrarContactos();
     }

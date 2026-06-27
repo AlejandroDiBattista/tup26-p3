@@ -1,75 +1,67 @@
 @if (Visible)
 {
-    <div class="card shadow-sm mt-4">
-        <div class="card-header fw-bold">
-            @(EsNuevo ? "Nuevo contacto" : "Editar contacto")
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger">
+            @error
+        </div>
+    }
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Nombre *</label>
+            <input class="form-control" @bind="Modelo.Nombre" />
         </div>
 
-        <div class="card-body">
-            @if (!string.IsNullOrWhiteSpace(error))
-            {
-                <div class="alert alert-danger">
-                    @error
-                </div>
-            }
-
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Nombre *</label>
-                    <input class="form-control" @bind="Modelo.Nombre" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Apellido *</label>
-                    <input class="form-control" @bind="Modelo.Apellido" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Teléfono *</label>
-                    <input class="form-control" @bind="Modelo.Telefono" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Correo electrónico *</label>
-                    <input class="form-control" @bind="Modelo.Email" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Empresa</label>
-                    <input class="form-control" @bind="Modelo.Empresa" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Cargo</label>
-                    <input class="form-control" @bind="Modelo.Cargo" />
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label">Dirección</label>
-                    <input class="form-control" @bind="Modelo.Direccion" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">Fecha de nacimiento</label>
-                    <input class="form-control" type="text" placeholder="yyyy-MM-dd" @bind="FechaNacimientoTexto" />
-                </div>
-
-                <div class="col-12">
-                    <label class="form-label">Notas</label>
-                    <textarea class="form-control" rows="4" @bind="Modelo.Notas"></textarea>
-                </div>
-            </div>
-
-            <div class="d-flex gap-2 mt-4">
-                <button class="btn btn-success" @onclick="Guardar">
-                    Guardar
-                </button>
-
-                <button class="btn btn-secondary" @onclick="Cancelar">
-                    Cancelar
-                </button>
-            </div>
+        <div class="col-md-6">
+            <label class="form-label">Apellido *</label>
+            <input class="form-control" @bind="Modelo.Apellido" />
         </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Teléfono *</label>
+            <input class="form-control" @bind="Modelo.Telefono" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Correo electrónico *</label>
+            <input class="form-control" @bind="Modelo.Email" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Empresa</label>
+            <input class="form-control" @bind="Modelo.Empresa" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Cargo</label>
+            <input class="form-control" @bind="Modelo.Cargo" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Dirección</label>
+            <input class="form-control" @bind="Modelo.Direccion" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Fecha de nacimiento</label>
+            <input class="form-control" type="text" placeholder="yyyy-MM-dd" @bind="FechaNacimientoTexto" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Notas</label>
+            <textarea class="form-control" rows="4" @bind="Modelo.Notas"></textarea>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-success" @onclick="Guardar">
+            Guardar
+        </button>
+
+        <button class="btn btn-secondary" @onclick="Cancelar">
+            Cancelar
+        </button>
     </div>
 }
 
