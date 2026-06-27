@@ -5,6 +5,8 @@
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
 
+using System.ComponentModel;
+using System.Text;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
@@ -43,6 +45,8 @@ class VentanaChat : Window {
     readonly Markdown panel;
     readonly TextField entrada;
     readonly Button boton;
+    bool ocupado;
+    readonly StringBuilder conversacion = new();
 
     public VentanaChat(IChatClient chat, List<ChatMessage> historial, string modelo) {
         this.chat = chat;
@@ -69,6 +73,9 @@ class VentanaChat : Window {
             Y = Pos.AnchorEnd(1),
         };
 
+        entrada.Accepting += async (_, _) => await Enviar();
+        boton.Accepting += async (_, _) => await Enviar();
+
         Add(panel, entrada, boton);
     }
 
@@ -78,5 +85,36 @@ class VentanaChat : Window {
             return true;
         }
         return base.OnKeyDown(key);
+    }
+
+    async Task Enviar() {
+        if (ocupado) return;
+        var texto = entrada.Text?.Trim();
+        if (string.IsNullOrEmpty(texto)) return;
+
+        ocupado = true;
+        entrada.Enabled = false;
+        boton.Enabled = false;
+        entrada.Text = "";
+
+        historial.Add(new(ChatRole.User, texto));
+        conversacion.Append($"\n\n### Vos\n\n{texto}\n\n### Asistente\n\n");
+        panel.Text = conversacion.ToString();
+
+        var respuesta = new StringBuilder();
+        await foreach (var item in chat.GetStreamingResponseAsync(historial)) {
+            if (item.Text is not null) {
+                respuesta.Append(item.Text);
+                panel.Text = conversacion + respuesta.ToString();
+            }
+        }
+
+        historial.Add(new(ChatRole.Assistant, respuesta.ToString()));
+        conversacion.Append(respuesta);
+
+        ocupado = false;
+        entrada.Enabled = true;
+        boton.Enabled = true;
+        entrada.SetFocus();
     }
 }
