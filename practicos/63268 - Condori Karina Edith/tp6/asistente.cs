@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -7,45 +8,138 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.ClientModel;
-using Terminal.Gui.App;
-using Terminal.Gui.ViewBase;
-using Terminal.Gui.Views;
+using System.ComponentModel;
 
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var configuracion = ConfiguracionProveedor.Cargar(args);
+var opciones = HerramientasArchivos.CrearOpciones();
+var chat = configuracion.CrearCliente()
+    .AsBuilder()
+    .UseFunctionInvocation()
+    .Build();
 
-IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
-    .AsIChatClient();
-
-const string pregunta = "Definí recursividad";
-
-List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md")),
-    new(ChatRole.User, pregunta)
-];
-
-var respuesta = await chat.GetResponseAsync(mensajes);
-
-using IApplication app = Application.Create().Init();
-using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+var mensajes = new List<ChatMessage>
+{
+    new(ChatRole.System, File.ReadAllText(RutasProyecto.Archivo("AGENTS.md")))
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+Console.WriteLine($"Asistente IA configurado con {configuracion.Proveedor} / {configuracion.Modelo}.");
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+sealed record ConfiguracionProveedor(string Proveedor, string Url, string ApiKey, string Modelo)
+{
+    public static ConfiguracionProveedor Cargar(string[] args)
+    {
+        var proveedor = (args.Length > 0 ? args[0] : "openai").Trim().ToUpperInvariant();
+        var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL")
+            ?? "https://api.openai.com/v1";
+        var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY")
+            ?? "no-requiere-key";
+        var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL")
+            ?? "gpt-4o-mini";
 
-app.Run(ventana);
+        return new ConfiguracionProveedor(proveedor, NormalizarUrl(url), apiKey, modelo);
+    }
+
+    public IChatClient CrearCliente()
+    {
+        return new OpenAIClient(
+                new ApiKeyCredential(ApiKey),
+                new OpenAIClientOptions { Endpoint = new Uri(Url) })
+            .GetChatClient(Modelo)
+            .AsIChatClient();
+    }
+
+    static string NormalizarUrl(string url)
+    {
+        const string chatCompletions = "/chat/completions";
+        var limpia = url.Trim().TrimEnd('/');
+
+        return limpia.EndsWith(chatCompletions, StringComparison.OrdinalIgnoreCase)
+            ? limpia[..^chatCompletions.Length]
+            : limpia;
+    }
+}
+
+static class RutasProyecto
+{
+    public static readonly string Raiz = Directory.GetCurrentDirectory();
+
+    public static string Archivo(string nombre)
+    {
+        var ruta = Path.Combine(Raiz, nombre);
+        if (File.Exists(ruta))
+        {
+            return ruta;
+        }
+
+        throw new FileNotFoundException($"No se encontro el archivo requerido: {nombre}", ruta);
+    }
+
+    public static string ResolverDentroDelProyecto(string ruta)
+    {
+        var relativa = string.IsNullOrWhiteSpace(ruta) ? "." : ruta;
+        var completa = Path.GetFullPath(Path.Combine(Raiz, relativa));
+        var prefijo = Raiz.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        if (completa != Raiz &&
+            !completa.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("La ruta debe estar dentro de la carpeta del proyecto.");
+        }
+
+        return completa;
+    }
+}
+
+static class HerramientasArchivos
+{
+    public static ChatOptions CrearOpciones() => new()
+    {
+        Tools =
+        [
+            AIFunctionFactory.Create(LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo de texto."),
+            AIFunctionFactory.Create(EscribirArchivo, "escribir-archivo", "Crea o sobrescribe un archivo con el contenido indicado."),
+            AIFunctionFactory.Create(ListarArchivos, "listar-archivos", "Lista los archivos y carpetas de un directorio.")
+        ],
+        ToolMode = ChatToolMode.Auto
+    };
+
+    [Description("Devuelve el contenido de un archivo de texto.")]
+    static string LeerArchivo([Description("Ruta relativa del archivo a leer.")] string ruta)
+    {
+        var archivo = RutasProyecto.ResolverDentroDelProyecto(ruta);
+        return File.Exists(archivo)
+            ? File.ReadAllText(archivo)
+            : $"No existe el archivo: {ruta}";
+    }
+
+    [Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+    static string EscribirArchivo(
+        [Description("Ruta relativa del archivo a escribir.")] string ruta,
+        [Description("Contenido completo que se guardara.")] string contenido)
+    {
+        var archivo = RutasProyecto.ResolverDentroDelProyecto(ruta);
+        Directory.CreateDirectory(Path.GetDirectoryName(archivo)!);
+        File.WriteAllText(archivo, contenido);
+        return $"Archivo escrito: {ruta}";
+    }
+
+    [Description("Lista los archivos y carpetas de un directorio.")]
+    static string ListarArchivos([Description("Ruta relativa del directorio a listar.")] string ruta = ".")
+    {
+        var directorio = RutasProyecto.ResolverDentroDelProyecto(ruta);
+        if (!Directory.Exists(directorio))
+        {
+            return $"No existe el directorio: {ruta}";
+        }
+
+        var entradas = Directory.EnumerateFileSystemEntries(directorio)
+            .OrderBy(e => e)
+            .Select(e => Directory.Exists(e)
+                ? $"[carpeta] {Path.GetFileName(e)}"
+                : $"[archivo] {Path.GetFileName(e)}");
+
+        return string.Join(Environment.NewLine, entradas);
+    }
+}
