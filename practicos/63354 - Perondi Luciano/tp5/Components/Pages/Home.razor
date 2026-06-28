@@ -24,7 +24,7 @@
                        placeholder="Buscar..."
                        @bind="filtro" @bind:event="oninput" />
 
-                <div class="list-group">
+                <div class="list-group overflow-auto" style="max-height: 70vh;">
                     @foreach (var c in ContactosFiltrados)
                     {
                         <button type="button"
@@ -143,9 +143,7 @@
     string filtro = "";
     IEnumerable<Contacto> ContactosFiltrados =>
         contactos is null
-            ? Enumerable.Empty<Contacto>()
-            : contactos.Where(c =>
-                  c.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase)
+            ? Enumerable.Empty<Contacto>() : contactos.Where(c => c.Nombre.Contains(filtro, StringComparison.OrdinalIgnoreCase)
                || c.Apellido.Contains(filtro, StringComparison.OrdinalIgnoreCase));
     void Nuevo()
     {
@@ -181,12 +179,10 @@
     {
         if (enEdicion.Id == 0)
         {
-            // ALTA: es un contacto nuevo
             db.Contactos.Add(enEdicion);
         }
         else
         {
-            // EDICIÓN: piso los datos del contacto existente
             var original = await db.Contactos.FindAsync(enEdicion.Id);
             if (original is null) return;
 
@@ -220,17 +216,21 @@
     void Seleccionar(Contacto c)
     {
         seleccionado = c;
+        editando = false;
     }
 
     async Task Eliminar()
     {
         if (seleccionado is null) return;
 
-        bool confirmado = await JS.InvokeAsync<bool>("confirm",
-            $"¿Eliminar a {seleccionado.Nombre} {seleccionado.Apellido}?");
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar a {seleccionado.Nombre} {seleccionado.Apellido}?");
         if (!confirmado) return;
+        
+        //guardo cual borrar y suelto la seleccion antes de tocar la base
+        var aBorrar = seleccionado;
+        seleccionado = null;
 
-        db.Contactos.Remove(seleccionado);
+        db.Contactos.Remove(aBorrar);
         await db.SaveChangesAsync();
 
         seleccionado = null;
