@@ -47,6 +47,8 @@ static class AlumnosCliApp {
                 .WithDescription("Ejecuta TP web presentados, abre el navegador y guarda una captura en cada carpeta.");
             config.AddCommand<EjecutarTp5Command>("ejecutar-tp5")
                 .WithDescription("Ejecuta el TP5 de un alumno y abre el navegador en su página.");
+            config.AddCommand<EjecutarTp6Command>("ejecutar-tp6")
+                .WithDescription("Ejecuta el TP6 de un alumno en la terminal actual.");
             config.AddCommand<LimpiarArchivosTemporalesCommand>("limpiar-archivos-temporales")
                 .WithDescription("Elimina bin, obj, .vs, cachés de compilación y temporales SQLite dentro de prácticos.");
         });
@@ -120,6 +122,7 @@ static class AlumnosCliApp {
             "verificar-ejecucion" => $"Verificar ejecución{detalle}",
             "capturar-pantallas" => $"Capturar pantallas{detalle}",
             "ejecutar-tp5" => $"Ejecutar TP5{detalle}",
+            "ejecutar-tp6" => $"Ejecutar TP6{detalle}",
             "limpiar-archivos-temporales" => "Limpiar archivos temporales",
             "listar-grupos-whatsapp" => "Listar grupos y participantes de WhatsApp",
             _ => args[0]
@@ -154,6 +157,7 @@ static class AlumnosCliApp {
             "verificar-ejecucion" => ConstruirArgumentosVerificarEjecucion(),
             "capturar-pantallas" => ConstruirArgumentosCapturarPantallas(),
             "ejecutar-tp5" => ["ejecutar-tp5"],
+            "ejecutar-tp6" => ["ejecutar-tp6"],
             "listar-practicos-faltantes" => ConstruirArgumentosPracticosFaltantes(),
             "exportar-estado" => ["exportar-estado"],
             "exportar-markdown" => ["exportar-markdown"],
@@ -218,7 +222,8 @@ static class AlumnosCliApp {
             new("verificar-compilacion",          "Verificar compilación",          "Compilar entregados y marcar los que tienen errores"),
             new("verificar-ejecucion",            "Verificar ejecución",            "Ejecutar entregados y marcar los que fallan al iniciar"),
             new("capturar-pantallas",             "Capturar pantallas",             "Guardar captura del navegador para TP web"),
-            new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador")
+            new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador"),
+            new("ejecutar-tp6",                   "Ejecutar TP6",                   "Ejecutar el TP6 de un alumno en la terminal")
         ]),
         new("Datos y mantenimiento", [
             new("normalizar-carpetas",            "Normalizar carpetas",             "Renombrar carpetas locales de alumnos"),

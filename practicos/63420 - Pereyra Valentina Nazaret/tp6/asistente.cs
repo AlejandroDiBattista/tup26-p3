@@ -1,8 +1,10 @@
-/*#!/usr/bin/env -S dotnet run
-#:package DotNetEnv@*
-#:package Microsoft.Extensions.AI.OpenAI@10.4.0
-#:package Terminal.Gui@2.4.3
-#:property PublishAot=false*/
+#!/usr/bin/env -S dotnet run
+#:package DotNetEnv@3.2.0
+#:package Microsoft.Extensions.AI@10.7.0
+#:package Microsoft.Extensions.AI.OpenAI@10.7.0
+#:package Terminal.Gui@2.4.9-develop.1
+#:property Nullable=enable
+#:property PublishAot=false
 
 using Microsoft.Extensions.AI;
 using OpenAI;

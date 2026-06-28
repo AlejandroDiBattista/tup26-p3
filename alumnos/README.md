@@ -26,6 +26,7 @@ dotnet run -- publicar-practico TP3 --forzar
 dotnet run -- revisar-presentaciones 3
 dotnet run -- revisar-presentaciones
 dotnet run -- verificar-compilacion TP5
+dotnet run -- ejecutar-tp6
 ```
 
 - En los comandos que reciben un práctico, se acepta `1`, `tp1` o `TP1`.
@@ -72,6 +73,8 @@ Las carpetas de alumnos se crean o normalizan automáticamente antes de los coma
 	- `TP5`: presentado si agrega al menos 200 líneas respecto del enunciado.
 	- `TP6`: presentado si agrega al menos 50 líneas respecto del enunciado.
 - `verificar-compilacion <tp>`: compila únicamente los trabajos entregados (`Aprobado`). Los que fallan pasan a `Revision` y muestran un resumen de errores; los que compilan conservan su estado.
+- `ejecutar-tp5 [legajo]`: ejecuta el TP5 presentado por un alumno, abre el navegador y luego permite registrar una observación.
+- `ejecutar-tp6 [legajo]`: ejecuta el TP6 presentado por un alumno en la terminal actual y luego permite registrar una observación.
 - `limpiar-archivos-temporales`: elimina `bin`, `obj`, `.vs`, cachés de compilación y temporales SQLite (`-wal`, `-shm`, `-journal`) dentro de `practicos/`, `enunciados/`, `clases/` y `experimentos/`.
 
 ## Archivos de referencia

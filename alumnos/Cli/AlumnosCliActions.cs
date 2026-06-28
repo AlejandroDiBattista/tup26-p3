@@ -676,7 +676,14 @@ static class AlumnosCliActions {
     }
 
     public static int EjecutarTp5(int? legajo) {
-        const int numeroTp = 5;
+        return EjecutarPracticoAlumno(5, legajo, EjecutarTp5Alumno);
+    }
+
+    public static int EjecutarTp6(int? legajo) {
+        return EjecutarPracticoAlumno(6, legajo, EjecutarTp6Alumno);
+    }
+
+    static int EjecutarPracticoAlumno(int numeroTp, int? legajo, Func<Alumno, string, int, int> ejecutarAlumno) {
         string carpetaTp = CarpetaTrabajoPractico(numeroTp);
         if (!AppPaths.ExisteEnunciadoPractico(carpetaTp)) {
             Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
@@ -692,36 +699,36 @@ static class AlumnosCliActions {
                 return 1;
             }
 
-            EjecutarTp5Alumno(alumno, carpetaTp, numeroTp);
-            RegistrarObservacionTp5(alumnos, alumno);
+            ejecutarAlumno(alumno, carpetaTp, numeroTp);
+            RegistrarObservacionPractico(alumnos, alumno);
             return 0;
         }
 
         while (true) {
-            Alumno[] candidatos = AlumnosTp5Ordenados(alumnos, numeroTp);
+            Alumno[] candidatos = AlumnosPracticoOrdenados(alumnos, numeroTp);
             if (candidatos.Length == 0) {
                 Log.Warning($"No hay alumnos con TP{numeroTp} presentado para ejecutar.");
                 return 0;
             }
 
-            Alumno? alumno = SeleccionarAlumnoTp5(candidatos, numeroTp);
+            Alumno? alumno = SeleccionarAlumnoPractico(candidatos, numeroTp);
             if (alumno is null) {
                 return 0;
             }
 
-            EjecutarTp5Alumno(alumno, carpetaTp, numeroTp);
-            RegistrarObservacionTp5(alumnos, alumno);
+            ejecutarAlumno(alumno, carpetaTp, numeroTp);
+            RegistrarObservacionPractico(alumnos, alumno);
         }
     }
 
-    static Alumno[] AlumnosTp5Ordenados(Alumnos alumnos, int numeroTp) =>
+    static Alumno[] AlumnosPracticoOrdenados(Alumnos alumnos, int numeroTp) =>
         alumnos
             .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
             .OrderBy(alumno => string.IsNullOrWhiteSpace(alumno.Observaciones) ? 0 : 1)
             .ThenBy(alumno => alumno.Legajo)
             .ToArray();
 
-    static void RegistrarObservacionTp5(Alumnos alumnos, Alumno alumno) {
+    static void RegistrarObservacionPractico(Alumnos alumnos, Alumno alumno) {
         string observacion = AnsiConsole.Prompt(
             new TextPrompt<string>($"[bold cyan]Observación para {alumno.Legajo} | {Markup.Escape(alumno.NombreCompleto)}[/] [grey](vacío = sin observación)[/]:")
                 .AllowEmpty());
@@ -773,14 +780,79 @@ static class AlumnosCliActions {
         return 0;
     }
 
-    static Alumno? SeleccionarAlumnoTp5(IReadOnlyList<Alumno> presentados, int numeroTp) {
-        List<OpcionAlumnoTp5> opciones = [
-            .. presentados.Select(alumno => new OpcionAlumnoTp5(alumno)),
+    static int EjecutarTp6Alumno(Alumno alumno, string carpetaTp, int numeroTp) {
+        string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+        Log.Info($"Iniciando TP{numeroTp} de {alumno.Legajo} | {alumno.NombreCompleto}...");
+
+        IReadOnlyList<string> objetivos = ObjetivosPracticos.Obtener(rutaPractico, numeroTp);
+        if (objetivos.Count == 0) {
+            Log.Error($"No se encontró un proyecto o archivo de entrada para ejecutar en {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}.");
+            return 1;
+        }
+
+        string objetivo = objetivos[0];
+        Log.Success($"Objetivo seleccionado: {Path.GetFileName(objetivo)}");
+        AnsiConsole.MarkupLine("[grey]La aplicación se ejecuta en esta terminal. Salí del TP6 con Esc o Ctrl+C para volver al sistema alumnos.[/]");
+        AnsiConsole.MarkupLine("[grey]Presioná una tecla para iniciar...[/]");
+        Console.ReadKey(intercept: true);
+        AnsiConsole.Clear();
+
+        int codigoSalida = EjecutarObjetivoEnTerminal(rutaPractico, objetivo);
+        AnsiConsole.WriteLine();
+        if (codigoSalida == 0) {
+            Log.Success($"TP{numeroTp} finalizó correctamente.");
+        } else {
+            Log.Error($"TP{numeroTp} terminó con código {codigoSalida}.");
+        }
+
+        return codigoSalida;
+    }
+
+    static int EjecutarObjetivoEnTerminal(string rutaPractico, string objetivo) {
+        bool esProyecto = string.Equals(Path.GetExtension(objetivo), ".csproj", StringComparison.OrdinalIgnoreCase);
+        string objetivoRelativo = Path.GetRelativePath(rutaPractico, objetivo);
+
+        ProcessStartInfo startInfo = new() {
+            FileName = "dotnet",
+            WorkingDirectory = rutaPractico,
+            UseShellExecute = false
+        };
+        startInfo.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
+
+        startInfo.ArgumentList.Add("run");
+        if (esProyecto) {
+            startInfo.ArgumentList.Add("--project");
+        }
+
+        startInfo.ArgumentList.Add(objetivoRelativo);
+        if (esProyecto) {
+            startInfo.ArgumentList.Add("--no-launch-profile");
+            startInfo.ArgumentList.Add("-p:EnableSourceControlManagerQueries=false");
+        }
+
+        ConsoleCancelEventHandler ignorarCtrlC = (_, e) => e.Cancel = true;
+        Console.CancelKeyPress += ignorarCtrlC;
+        try {
+            using Process proceso = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("No se pudo iniciar dotnet run.");
+            proceso.WaitForExit();
+            return proceso.ExitCode;
+        } catch (Exception ex) {
+            Log.Error($"No se pudo ejecutar dotnet run: {ex.Message}");
+            return 1;
+        } finally {
+            Console.CancelKeyPress -= ignorarCtrlC;
+        }
+    }
+
+    static Alumno? SeleccionarAlumnoPractico(IReadOnlyList<Alumno> presentados, int numeroTp) {
+        List<OpcionAlumnoPractico> opciones = [
+            .. presentados.Select(alumno => new OpcionAlumnoPractico(alumno)),
             new(null)
         ];
 
-        OpcionAlumnoTp5 seleccion = AnsiConsole.Prompt(
-            new SelectionPrompt<OpcionAlumnoTp5>()
+        OpcionAlumnoPractico seleccion = AnsiConsole.Prompt(
+            new SelectionPrompt<OpcionAlumnoPractico>()
                 .Title($"[bold cyan]Ejecutar TP{numeroTp}[/] · Elegí el alumno\n[grey]{presentados.Count} alumno(s) con TP{numeroTp} presentado[/]")
                 .EnableSearch()
                 .WrapAround(true)
@@ -1280,7 +1352,7 @@ static class AlumnosCliActions {
     sealed record CompilacionAlumnoResultado(Alumno Alumno, CompilacionPracticoResultado Compilacion);
     sealed record EjecucionAlumnoResultado(Alumno Alumno, EjecucionPracticoResultado Ejecucion);
     sealed record CapturaPantallaAlumnoResultado(Alumno Alumno, CapturaPantallaResultado Captura);
-    sealed record OpcionAlumnoTp5(Alumno? Alumno);
+    sealed record OpcionAlumnoPractico(Alumno? Alumno);
 
     readonly record struct CopiaDetectada(int LineasComunes, int MaximoLineas, double Porcentaje);
 

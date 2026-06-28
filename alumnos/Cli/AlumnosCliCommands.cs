@@ -130,6 +130,11 @@ sealed class EjecutarTp5Command : Command<LegajoOpcionalSettings> {
         AlumnosCliActions.EjecutarTp5(settings.Legajo);
 }
 
+sealed class EjecutarTp6Command : Command<LegajoOpcionalSettings> {
+    protected override int Execute(CommandContext context, LegajoOpcionalSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.EjecutarTp6(settings.Legajo);
+}
+
 sealed class ContarAsistenciasCommand : Command<VacioSettings> {
     protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.RelevarAsistencias();

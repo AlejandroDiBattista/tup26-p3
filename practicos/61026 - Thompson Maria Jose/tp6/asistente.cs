@@ -1,3 +1,10 @@
+#!/usr/bin/env -S dotnet run
+#:package DotNetEnv@3.1.1
+#:package Microsoft.Extensions.AI.OpenAI@10.4.0
+#:package Terminal.Gui@1.17.1
+#:property Nullable=enable
+#:property PublishAot=false
+
 using System;
 using System.Collections.Generic;
 using System.IO;
