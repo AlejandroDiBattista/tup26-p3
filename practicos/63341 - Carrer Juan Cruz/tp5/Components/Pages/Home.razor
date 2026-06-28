@@ -15,25 +15,26 @@
 }
 else
 {
-    <div class="row">
+    <div class="row mt-3">
 
-        <div class="col-4">
+        <div class="col-md-4 border-end">
             <h3>Contactos</h3>
 
-            <input class="form-control mb-3"
-                placeholder="Buscar contacto..."
-                @bind="textoBusqueda" />
+            <input  class="form-control mb-3"
+                    placeholder="Buscar contacto..."
+                    @bind="textoBusqueda"
+                    @bind:event="oninput" />
 
             <button class="btn btn-primary mb-3"
                     @onclick="NuevoContacto">
                     Nuevo contacto
             </button>   
 
-            <ul class="list-group">
+            <ul class="list-group shadow-sm">
 
                 @foreach (var c in contactosFiltrados)
                 {
-                    <li class="list-group-item @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
+                    <li class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
                         @onclick="() => Seleccionar(c)"
                         style="cursor:pointer">
 
@@ -45,99 +46,110 @@ else
             </ul>
         </div>
 
-        <div class="col-8">
+        <div class="col-md-8 ps-4">
+            <div class="card">
+                <div class="card-body">
 
-            @if (modoEdicion)
-            {
-                <h2>Nuevo Contacto</h2>
+                @if (modoEdicion)
+                {
+                    <h2>@(contactoEditando.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
 
-                <div class="mb-2">
-                    <label>Nombre</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Nombre" />
+                    <div class="mb-2">
+                        <label>Nombre</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Nombre" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Apellido</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Apellido" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Teléfono</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Telefono" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Email</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Email" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Empresa</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Empresa" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Cargo</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Cargo" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Dirección</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Direccion" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Notas</label>
+                        <textarea class="form-control"
+                                @bind="contactoEditando.Notas"></textarea>
+                    </div>
+
+                    <button class="btn btn-success"
+                            @onclick="GuardarContacto">
+                        Guardar
+                    </button>
+
+                    <button class="btn btn-secondary ms-2"
+                            @onclick="CancelarEdicion">
+                        Cancelar
+                    </button>
+                }
+                else if (contactoSeleccionado != null)
+                {
+                    <h2>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+
+                    <hr>
+
+                    <p><b>Teléfono:</b> @contactoSeleccionado.Telefono</p>
+
+                    <p><b>Email:</b> @contactoSeleccionado.Email</p>
+
+                    <p><b>Empresa:</b> @contactoSeleccionado.Empresa</p>
+
+                    <p><b>Cargo:</b> @contactoSeleccionado.Cargo</p>
+
+                    <p><b>Dirección:</b> @contactoSeleccionado.Direccion</p>
+
+                    <p><b>Fecha Nacimiento:</b> @contactoSeleccionado.FechaNacimiento</p>
+
+                    <p><b>Notas:</b> @contactoSeleccionado.Notas</p>
+
+                    <button class="btn btn-warning"
+                            @onclick="EditarContacto">
+                        Editar
+                    </button>
+
+                    <button class="btn btn-danger ms-2"
+                            @onclick="EliminarContacto">
+                        Eliminar
+                    </button>
+                }
+
                 </div>
 
-                <div class="mb-2">
-                    <label>Apellido</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Apellido" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Teléfono</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Telefono" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Email</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Email" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Empresa</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Empresa" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Cargo</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Cargo" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Dirección</label>
-                    <input class="form-control"
-                        @bind="contactoEditando.Direccion" />
-                </div>
-
-                <div class="mb-2">
-                    <label>Notas</label>
-                    <textarea class="form-control"
-                            @bind="contactoEditando.Notas"></textarea>
-                </div>
-
-                <button class="btn btn-success"
-                        @onclick="GuardarContacto">
-                    Guardar
-                </button>
-            }
-            else if (contactoSeleccionado != null)
-            {
-                <h2>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
-
-                <hr>
-
-                <p><b>Teléfono:</b> @contactoSeleccionado.Telefono</p>
-
-                <p><b>Email:</b> @contactoSeleccionado.Email</p>
-
-                <p><b>Empresa:</b> @contactoSeleccionado.Empresa</p>
-
-                <p><b>Cargo:</b> @contactoSeleccionado.Cargo</p>
-
-                <p><b>Dirección:</b> @contactoSeleccionado.Direccion</p>
-
-                <p><b>Fecha Nacimiento:</b> @contactoSeleccionado.FechaNacimiento</p>
-
-                <p><b>Notas:</b> @contactoSeleccionado.Notas</p>
-
-                <button class="btn btn-warning"
-                        @onclick="EditarContacto">
-                    Editar
-                </button>
-
-                <button class="btn btn-danger ms-2"
-                        @onclick="EliminarContacto">
-                    Eliminar
-                </button>
-            }
-
+            </div>
+        
         </div>
 
-    </div>
+    </div>   
 }
 
 @code {
@@ -210,7 +222,7 @@ else
         {
             Db.Contactos.Add(contactoEditando);
         }
-       else
+        else
         {
             var contactoExistente = await Db.Contactos.FindAsync(contactoEditando.Id);
 
@@ -226,7 +238,7 @@ else
                 contactoExistente.FechaNacimiento = contactoEditando.FechaNacimiento;
                 contactoExistente.Notas = contactoEditando.Notas;
             }
-}
+        }
 
         await Db.SaveChangesAsync();
 
@@ -237,6 +249,11 @@ else
         contactoSeleccionado = contactos
             .FirstOrDefault(c => c.Id == contactoEditando.Id);
 
+        modoEdicion = false;
+    }
+
+    void CancelarEdicion()
+    {
         modoEdicion = false;
     }
 
