@@ -22,7 +22,7 @@ static class AlumnosCliApp {
             config.AddCommand<PublicarPracticoCommand>("publicar-practico")
                 .WithDescription("Publica el enunciado de un trabajo práctico en la carpeta de cada alumno.");
             config.AddCommand<PublicarApuntesCommand>("publicar-apuntes")
-                .WithDescription("Ejecuta publicar.py dentro de la carpeta de apuntes.");
+                .WithDescription("Publica el libro de apuntes en EPUB y PDF.");
             config.AddCommand<ListarPracticosFaltantesCommand>("listar-practicos-faltantes")
                 .WithDescription("Lista alumnos a quienes les falta el trabajo práctico indicado.");
             config.AddCommand<NormalizarCarpetasCommand>("normalizar-carpetas")
@@ -44,7 +44,7 @@ static class AlumnosCliApp {
             config.AddCommand<VerificarEjecucionCommand>("verificar-ejecucion")
                 .WithDescription("Ejecuta los TP entregados y marca para revisar los que fallan al iniciar.");
             config.AddCommand<CapturarPantallasCommand>("capturar-pantallas")
-                .WithDescription("Ejecuta TP web presentados, abre el navegador y guarda una captura en cada carpeta.");
+                .WithDescription("Guarda capturas de pantalla para TP web o TP6 de terminal.");
             config.AddCommand<EjecutarTp5Command>("ejecutar-tp5")
                 .WithDescription("Ejecuta el TP5 de un alumno y abre el navegador en su página.");
             config.AddCommand<EjecutarTp6Command>("ejecutar-tp6")
@@ -216,12 +216,12 @@ static class AlumnosCliApp {
         ]),
         new("Trabajos prácticos", [
             new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
-            new("publicar-apuntes",               "Publicar apuntes",               "Ejecutar apuntes/publicar.py"),
+            new("publicar-apuntes",               "Publicar apuntes",               "Generar EPUB y PDF del libro"),
             new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
             new("revisar-presentaciones",         "Revisar presentaciones",         "Marcar TP presentados desde el código local"),
             new("verificar-compilacion",          "Verificar compilación",          "Compilar entregados y marcar los que tienen errores"),
             new("verificar-ejecucion",            "Verificar ejecución",            "Ejecutar entregados y marcar los que fallan al iniciar"),
-            new("capturar-pantallas",             "Capturar pantallas",             "Guardar captura del navegador para TP web"),
+            new("capturar-pantallas",             "Capturar pantallas",             "Guardar captura de TP web o terminal"),
             new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador"),
             new("ejecutar-tp6",                   "Ejecutar TP6",                   "Ejecutar el TP6 de un alumno en la terminal")
         ]),

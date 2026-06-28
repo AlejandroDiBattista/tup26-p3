@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10,<3.14"
+# dependencies = [
+#   "pillow>=10.0",
+#   "reportlab>=4.2",
+# ]
+# ///
 
 from __future__ import annotations
 
@@ -40,8 +47,12 @@ try:
     from reportlab.platypus.tableofcontents import TableOfContents
 except ImportError as exc:
     print(
-        "Faltan dependencias para generar el PDF. Instale reportlab y pillow:\n"
-        "  python3 -m pip install reportlab pillow",
+        "Faltan dependencias para generar el PDF: reportlab y pillow.\n\n"
+        "Forma recomendada, sin instalar nada global:\n"
+        "  uv run apuntes/publicar_pdf.py\n\n"
+        "Alternativa con pip:\n"
+        "  python3 -m pip install reportlab pillow\n"
+        "  python3 apuntes/publicar_pdf.py",
         file=sys.stderr,
     )
     raise SystemExit(1) from exc
@@ -72,6 +83,27 @@ PAPER_TINT = colors.HexColor("#F7FAFC")
 CODE_BG = colors.HexColor("#F4F7FB")
 CODE_BORDER = colors.HexColor("#D9E2EC")
 MONO = "Courier"
+MONO_BOLD = "Courier-Bold"
+MONO_ITALIC = "Courier-Oblique"
+TOKEN_STYLES = {
+    "comment": (colors.HexColor("#64748B"), MONO_ITALIC),
+    "string": (colors.HexColor("#047857"), MONO),
+    "char": (colors.HexColor("#047857"), MONO),
+    "number": (colors.HexColor("#7C3AED"), MONO),
+    "keyword": (colors.HexColor("#B45309"), MONO_BOLD),
+    "directive": (colors.HexColor("#B45309"), MONO_BOLD),
+    "razor": (colors.HexColor("#B45309"), MONO_BOLD),
+    "type": (colors.HexColor("#0369A1"), MONO),
+    "var": (colors.HexColor("#A16207"), MONO),
+    "command": (colors.HexColor("#0369A1"), MONO_BOLD),
+    "tag": (colors.HexColor("#0369A1"), MONO),
+    "attr": (colors.HexColor("#B45309"), MONO),
+    "punct": (colors.HexColor("#0369A1"), MONO),
+    "doctype": (colors.HexColor("#7C3AED"), MONO_BOLD),
+    "json_key": (colors.HexColor("#0369A1"), MONO),
+    "literal": (colors.HexColor("#7C3AED"), MONO_BOLD),
+}
+DEFAULT_CODE_STYLE = (colors.HexColor("#243447"), MONO)
 
 
 def as_reportlab_markup(text: str) -> str:
@@ -120,7 +152,7 @@ def as_reportlab_markup(text: str) -> str:
     for index, code in enumerate(code_spans):
         text = text.replace(
             f"@@CODE{index}@@",
-            f'<font name="{MONO}" size="8" color="#334155">{code}</font>',
+            f'<font name="{MONO}" color="#334155">{code}</font>',
         )
     return text
 
@@ -248,7 +280,93 @@ class CodeBlock(Flowable):
         self.font_size = 7.2
         self.padding_x = 8
         self.padding_y = 8
-        self.header_height = 12
+        self.header_height = 10
+
+    def _highlight_patterns(self) -> list[tuple[str, str]]:
+        lang = self.language.lower()
+        csharp_keywords = (
+            "using|namespace|class|record|struct|interface|enum|public|private|protected|internal|static|"
+            "void|int|string|bool|var|new|return|if|else|switch|case|default|break|continue|for|foreach|"
+            "while|do|try|catch|finally|throw|null|true|false|this|base|out|ref|in|is|as|params|await|"
+            "async|get|set|readonly|const|virtual|override|sealed|abstract"
+        )
+
+        if lang in {"cs", "csharp", "razor", "cshtml"}:
+            return [
+                ("comment", r"//.*"),
+                ("string", r'@"(?:""|[^"])*"|"(?:\\.|[^"\\])*"'),
+                ("char", r"'(?:\\.|[^'\\])+'"),
+                ("number", r"\b\d+(?:\.\d+)?\b"),
+                ("directive", r"^\s*@(?:page|model|using|inject|code|functions|implements|inherits|layout|namespace|attribute|typeparam|rendermode|section)\b"),
+                ("razor", r"@(?:if|else|switch|for|foreach|while|do|try|catch|finally|lock|using|await)\b|@(?=[{(:])"),
+                ("keyword", rf"\b(?:{csharp_keywords})\b"),
+                ("type", r"\b(?:Console|List|Dictionary|HashSet|File|Directory|Path|Environment|Exception|DateTime|Task|IEnumerable|IEnumerator|ConsoleKeyInfo|ConsoleKey)\b"),
+            ]
+
+        if lang in {"bash", "sh", "zsh", "shell"}:
+            shell_keywords = "if|then|else|fi|for|in|do|done|case|esac|while|function"
+            return [
+                ("comment", r"#.*"),
+                ("string", r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''),
+                ("var", r"\$[A-Za-z_][A-Za-z0-9_]*|\$\{[^}]+\}"),
+                ("number", r"\b\d+\b"),
+                ("keyword", rf"\b(?:{shell_keywords})\b"),
+                ("command", r"^\s*(?:dotnet|git|cd|ls|cat|rg|sed|python3|python|bash|zsh|mkdir|cp|mv|rm|curl|uv)\b"),
+            ]
+
+        if lang in {"htm", "html", "xhtml", "xml"}:
+            return [
+                ("comment", r"<!--.*?-->"),
+                ("doctype", r"<!DOCTYPE(?:\s+[^>]+)?>|<!doctype(?:\s+[^>]+)?>"),
+                ("tag", r"</?[A-Za-z][A-Za-z0-9:-]*|<\?[A-Za-z][A-Za-z0-9:-]*"),
+                ("attr", r"\b[A-Za-z_:][A-Za-z0-9:._-]*(?=\s*=)"),
+                ("string", r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''),
+                ("punct", r"\?>|/?>|="),
+            ]
+
+        if lang == "json":
+            return [
+                ("json_key", r'"(?:\\.|[^"\\])*"(?=\s*:)'),
+                ("string", r'"(?:\\.|[^"\\])*"'),
+                ("number", r"-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b"),
+                ("literal", r"\b(?:true|false|null)\b"),
+            ]
+
+        return []
+
+    def _highlight_line(self, line: str) -> list[tuple[str, colors.Color, str]]:
+        patterns = self._highlight_patterns()
+        if not patterns:
+            color, font_name = DEFAULT_CODE_STYLE
+            return [(line, color, font_name)]
+
+        combined = re.compile("|".join(f"(?P<{name}>{pattern})" for name, pattern in patterns))
+        pieces: list[tuple[str, colors.Color, str]] = []
+        last = 0
+        default_color, default_font = DEFAULT_CODE_STYLE
+
+        for match in combined.finditer(line):
+            start, end = match.span()
+            if start > last:
+                pieces.append((line[last:start], default_color, default_font))
+            token_type = match.lastgroup or ""
+            color, font_name = TOKEN_STYLES.get(token_type, DEFAULT_CODE_STYLE)
+            pieces.append((line[start:end], color, font_name))
+            last = end
+
+        if last < len(line):
+            pieces.append((line[last:], default_color, default_font))
+        return pieces
+
+    def _draw_highlighted_line(self, line: str, x: float, y: float) -> None:
+        cursor = x
+        for text, color, font_name in self._highlight_line(line):
+            if not text:
+                continue
+            self.canv.setFillColor(color)
+            self.canv.setFont(font_name, self.font_size)
+            self.canv.drawString(cursor, y, text)
+            cursor += stringWidth(text, font_name, self.font_size)
 
     def _prepare_lines(self, avail_width: float) -> None:
         char_width = max(stringWidth("M", MONO, self.font_size), 1)
@@ -299,17 +417,15 @@ class CodeBlock(Flowable):
         canvas.setStrokeColor(CODE_BORDER)
         canvas.setLineWidth(0.6)
         canvas.roundRect(0, 0, self.width, self.height, 5, fill=1, stroke=1)
-        canvas.setFillColor(colors.HexColor("#475569"))
-        canvas.setFont("Helvetica-Bold", 6.8)
-        label = self.language.upper()
+        canvas.setFillColor(colors.HexColor("#94A3B8"))
+        canvas.setFont("Helvetica", 5.6)
+        label = self.language.lower()
         if self.continued:
-            label = f"{label} - CONTINUACION"
-        canvas.drawString(self.padding_x, self.height - self.padding_y - 6, label)
-        canvas.setFillColor(colors.HexColor("#243447"))
-        canvas.setFont(MONO, self.font_size)
+            label = f"{label} - continuacion"
+        canvas.drawString(self.padding_x, self.height - self.padding_y - 5.4, label)
         y = self.height - self.padding_y - self.header_height - self.font_size
         for line in self.lines:
-            canvas.drawString(self.padding_x, y, line)
+            self._draw_highlighted_line(line, self.padding_x, y)
             y -= self.leading
         canvas.restoreState()
 
@@ -340,13 +456,15 @@ class BookDocTemplate(BaseDocTemplate):
         key = flowable.bookmark_key
         text = flowable.plain_text
         level = flowable.toc_level
+        if level != 0:
+            return
+
         previous_outline_level = getattr(self, "_last_outline_level", -1)
         outline_level = min(level, previous_outline_level + 1)
         self.canv.bookmarkPage(key)
         self.canv.addOutlineEntry(text, key, level=outline_level, closed=outline_level > 0)
         self._last_outline_level = outline_level
-        if level <= 1:
-            self.notify("TOCEntry", (level, html.escape(text, quote=False), self.page, key))
+        self.notify("TOCEntry", (level, html.escape(text, quote=False), self.page, key))
 
 
 def build_styles() -> dict[str, ParagraphStyle]:
@@ -388,6 +506,23 @@ def build_styles() -> dict[str, ParagraphStyle]:
             leading=25,
             textColor=INK,
             spaceAfter=8 * mm,
+        ),
+        "disclaimer_title": ParagraphStyle(
+            "DisclaimerTitle",
+            parent=base["BodyText"],
+            fontName="Helvetica-Bold",
+            fontSize=9.4,
+            leading=12,
+            textColor=INK,
+            spaceAfter=1.5 * mm,
+        ),
+        "disclaimer_body": ParagraphStyle(
+            "DisclaimerBody",
+            parent=base["BodyText"],
+            fontName="Helvetica",
+            fontSize=8.4,
+            leading=12,
+            textColor=colors.HexColor("#475569"),
         ),
         "chapter_kicker": ParagraphStyle(
             "ChapterKicker",
@@ -622,6 +757,34 @@ def make_diagram(path: Path, styles: dict[str, ParagraphStyle]) -> list[Flowable
     ]
 
 
+def make_disclaimer(styles: dict[str, ParagraphStyle]) -> Table:
+    title = Paragraph("Nota sobre este material", styles["disclaimer_title"])
+    body = Paragraph(
+        "Este material fue realizado como soporte al dictado de clase. "
+        "Para su elaboración se empleó inteligencia artificial como ayuda "
+        "en tareas de redacción y corrección; la selección, organización "
+        "y revisión pedagógica corresponden al docente.",
+        styles["disclaimer_body"],
+    )
+    table = Table([[title], [body]], colWidths=["100%"], hAlign="LEFT")
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+                ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#D7DEE8")),
+                ("LINEBEFORE", (0, 0), (0, -1), 2.0, ACCENT),
+                ("LEFTPADDING", (0, 0), (-1, -1), 9),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+                ("TOPPADDING", (0, 0), (-1, 0), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 0),
+                ("TOPPADDING", (0, 1), (-1, 1), 0),
+                ("BOTTOMPADDING", (0, 1), (-1, 1), 7),
+            ]
+        )
+    )
+    return table
+
+
 def flush_list(
     story: list[Flowable],
     list_items: list[tuple[str, str]],
@@ -788,7 +951,7 @@ def body_page(canvas, doc) -> None:
     canvas.setFillColor(MUTED)
     canvas.setFont("Helvetica", 7.5)
     canvas.drawString(BODY_LEFT, PAGE_HEIGHT - 11 * mm, BOOK_TITLE)
-    canvas.drawRightString(PAGE_WIDTH - BODY_RIGHT, PAGE_HEIGHT - 11 * mm, "Programación III")
+    canvas.drawRightString(PAGE_WIDTH - BODY_RIGHT, PAGE_HEIGHT - 11 * mm, "UTN / FRT / TUP 26")
     canvas.setStrokeColor(RULE)
     canvas.line(BODY_LEFT, 15 * mm, PAGE_WIDTH - BODY_RIGHT, 15 * mm)
     canvas.setFillColor(MUTED)
@@ -888,6 +1051,8 @@ def build_pdf(root: Path, output: Path, *, should_renumerar: bool = True) -> Non
         Spacer(1, 58 * mm),
         Paragraph(BOOK_AUTHOR, styles["meta"]),
         Paragraph(dt.date.today().strftime("%d/%m/%Y"), styles["meta"]),
+        Spacer(1, 14 * mm),
+        make_disclaimer(styles),
         PageBreak(),
         Paragraph("Índice", styles["toc_title"]),
         toc,

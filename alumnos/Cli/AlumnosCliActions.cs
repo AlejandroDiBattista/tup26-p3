@@ -118,32 +118,53 @@ static class AlumnosCliActions {
     }
 
     public static int PublicarApuntes() {
-        string script = Path.Combine(AppPaths.ApuntesDirectory, "publicar.py");
-        if (!AppPaths.ExisteArchivo(script)) {
-            Log.Error($"No existe el script de publicación: {script}");
-            return 1;
+        (string Script, string[] Argumentos)[] publicaciones = [
+            ("publicar.py", []),
+            ("publicar_pdf.py", ["--no-renumerar"])
+        ];
+
+        foreach ((string script, _) in publicaciones) {
+            string rutaScript = Path.Combine(AppPaths.ApuntesDirectory, script);
+            if (!AppPaths.ExisteArchivo(rutaScript)) {
+                Log.Error($"No existe el script de publicación: {rutaScript}");
+                return 1;
+            }
         }
 
+        foreach ((string script, string[] argumentos) in publicaciones) {
+            int codigo = EjecutarScriptPublicacion(script, argumentos);
+            if (codigo != 0) {
+                return codigo;
+            }
+        }
+
+        return 0;
+    }
+
+    static int EjecutarScriptPublicacion(string script, string[] argumentos) {
         try {
-            Log.Info("Ejecutando apuntes/publicar.py...");
+            Log.Info($"Ejecutando apuntes/{script}...");
             ProcessStartInfo startInfo = new() {
                 FileName = PythonExecutable(),
                 WorkingDirectory = AppPaths.ApuntesDirectory,
                 UseShellExecute = false
             };
-            startInfo.ArgumentList.Add("publicar.py");
+            startInfo.ArgumentList.Add(script);
+            foreach (string argumento in argumentos) {
+                startInfo.ArgumentList.Add(argumento);
+            }
 
             using Process proceso = Process.Start(startInfo)
-                ?? throw new InvalidOperationException("No se pudo iniciar publicar.py.");
+                ?? throw new InvalidOperationException($"No se pudo iniciar {script}.");
             proceso.WaitForExit();
 
             if (proceso.ExitCode != 0) {
-                Log.Error($"publicar.py terminó con código {proceso.ExitCode}.");
+                Log.Error($"{script} terminó con código {proceso.ExitCode}.");
             }
 
             return proceso.ExitCode;
         } catch (Exception ex) {
-            Log.Error($"No se pudo ejecutar publicar.py: {ex.Message}");
+            Log.Error($"No se pudo ejecutar {script}: {ex.Message}");
             return 1;
         }
     }
@@ -635,10 +656,7 @@ static class AlumnosCliActions {
                 foreach (Alumno alumno in presentados) {
                     tarea.Description = $"Capturando {alumno.Legajo}";
                     string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
-                    CapturaPantallaResultado captura = CapturaPantallasPracticos
-                        .Capturar(rutaPractico, numeroTp, rutaInicial, headed, forzar: true)
-                        .GetAwaiter()
-                        .GetResult();
+                    CapturaPantallaResultado captura = CapturarPantallaPractico(rutaPractico, numeroTp, rutaInicial, headed, forzar);
 
                     resultados.Add(new(alumno, captura));
                     tarea.Increment(1);
@@ -648,7 +666,7 @@ static class AlumnosCliActions {
         foreach (CapturaPantallaAlumnoResultado resultado in resultados) {
             if (resultado.Captura.Capturada) {
                 string archivo = resultado.Captura.Archivo is null
-                    ? "captura-tp5.png"
+                    ? NombreCapturaPorDefecto(numeroTp)
                     : Path.GetFileName(resultado.Captura.Archivo);
                 string proyecto = string.IsNullOrWhiteSpace(resultado.Captura.Proyecto)
                     ? string.Empty
@@ -674,6 +692,22 @@ static class AlumnosCliActions {
         Log.Info($"Resumen TP{numeroTp}: presentados={presentados.Length}, capturados={capturados}, con errores={errores}, omitidos={omitidos}");
         return errores == 0 ? 0 : 1;
     }
+
+    static CapturaPantallaResultado CapturarPantallaPractico(
+        string rutaPractico,
+        int numeroTp,
+        string rutaInicial,
+        bool headed,
+        bool forzar) =>
+        numeroTp == 6
+            ? CapturaTerminalPracticos.CapturarTp6(rutaPractico, forzar)
+            : CapturaPantallasPracticos
+                .Capturar(rutaPractico, numeroTp, rutaInicial, headed, forzar)
+                .GetAwaiter()
+                .GetResult();
+
+    static string NombreCapturaPorDefecto(int numeroTp) =>
+        numeroTp == 6 ? "captura-tp6.png" : "captura-tp5.png";
 
     public static int EjecutarTp5(int? legajo) {
         return EjecutarPracticoAlumno(5, legajo, EjecutarTp5Alumno);

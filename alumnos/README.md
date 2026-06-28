@@ -47,7 +47,7 @@ Los títulos de los PRs se normalizan automáticamente antes de revisarlos, desc
 - `bajar-prs`: descarga y sobrescribe todos los prácticos detectados en los PRs, y luego revisa automáticamente los TP presentados.
 - `cerrar-prs`: cierra todos los PRs abiertos.
 - `publicar-practico <tp> [--forzar]`: copia el enunciado del práctico indicado a la carpeta de cada alumno.
-- `publicar-apuntes`: ejecuta `publicar.py` con `apuntes/` como directorio de trabajo.
+- `publicar-apuntes`: publica el libro de apuntes en EPUB y PDF usando `apuntes/` como directorio de trabajo.
 
 Las carpetas de alumnos se crean o normalizan automáticamente antes de los comandos que las recorren o modifican.
 
@@ -88,4 +88,4 @@ Las carpetas de alumnos se crean o normalizan automáticamente antes de los coma
 - `ESTADO.md`: estado resumido generado para el repositorio.
 - `practicos/`: carpetas locales por alumno.
 - `enunciados/`: enunciados base de los trabajos prácticos.
-- `apuntes/`: fuentes y script de publicación de los apuntes.
+- `apuntes/`: fuentes y scripts de publicación de los apuntes.
