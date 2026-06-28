@@ -37,14 +37,23 @@ h1:focus {
     text-align: start;
 }
 
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     background: #f4f7fb;
     color: #202938;
+    margin: 0;
 }
 
 .pagina-agenda {
-    min-height: 100vh;
-    padding: 24px;
+    box-sizing: border-box;
+    height: 100vh;
+    overflow: hidden;
+    padding: 14px;
 }
 
 .barra-superior {
@@ -55,25 +64,27 @@ body {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 18px;
-    padding: 18px 22px;
+    margin-bottom: 12px;
+    padding: 10px 16px;
 }
 
 .barra-superior h1 {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     margin: 0;
 }
 
 .barra-superior p {
     color: #64748b;
-    margin: 4px 0 0;
+    margin: 2px 0 0;
 }
 
 .contenedor-agenda {
     display: grid;
-    gap: 18px;
+    gap: 14px;
     grid-template-columns: 360px 1fr;
+    height: calc(100vh - 92px);
+    min-height: 0;
 }
 
 .panel-lista,
@@ -82,9 +93,12 @@ body {
     border: 1px solid #dce3ee;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    min-height: 0;
 }
 
 .panel-lista {
+    display: flex;
+    flex-direction: column;
     padding: 16px;
 }
 
@@ -101,7 +115,8 @@ body {
 }
 
 .lista-contactos {
-    max-height: calc(100vh - 190px);
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -150,14 +165,16 @@ body {
 }
 
 .avatar.grande {
-    flex-basis: 72px;
-    font-size: 28px;
-    height: 72px;
-    width: 72px;
+    flex-basis: 58px;
+    font-size: 24px;
+    height: 58px;
+    width: 58px;
 }
 
 .panel-detalle {
-    padding: 30px;
+    height: 100%;
+    overflow: hidden;
+    padding: 20px 24px;
 }
 
 .encabezado-detalle {
@@ -166,8 +183,8 @@ body {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 22px;
-    padding-bottom: 22px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
 }
 
 .datos-principales {
@@ -177,15 +194,15 @@ body {
 
 .datos-principales h2,
 .encabezado-detalle h2 {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     margin: 0;
 }
 
 .datos-principales p {
     color: #0d6efd;
-    font-size: 18px;
-    margin: 2px 0 8px;
+    font-size: 16px;
+    margin: 1px 0 6px;
 }
 
 .etiqueta {
@@ -206,13 +223,13 @@ body {
     align-items: start;
     border-bottom: 1px solid #e5e9f0;
     display: grid;
-    gap: 14px;
+    gap: 12px;
     grid-template-columns: 28px 130px 1fr;
-    padding: 16px 0;
+    padding: 10px 0;
 }
 
 .datos-contacto i {
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .datos-contacto strong {

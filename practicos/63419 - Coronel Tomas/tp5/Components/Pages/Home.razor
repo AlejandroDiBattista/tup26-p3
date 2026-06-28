@@ -251,7 +251,7 @@
         contexto.Contactos.Remove(contacto);
         await contexto.SaveChangesAsync();
 
-        mensaje = "Contacto eliminado correctamente.";
+        mensaje = "";
         contactoSeleccionado = null;
         await CargarContactos();
     }
