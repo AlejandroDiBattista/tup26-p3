@@ -10,8 +10,8 @@
 <div class="container mt-4">
     <h3 class="mb-4">Agenda de Contactos</h3>
 
-    <div class="row">
-        <div class="col-md-4">
+    <div class="row agenda-row">
+        <div class="col-md-4 agenda-lista">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     Contactos
@@ -42,10 +42,60 @@
             </div>
         </div>
 
-        <div class="col-md-8">
+        <div class="col-md-8 agenda-detalle">
             <div class="card">
                 <div class="card-body">
-                    @if (seleccionado != null)
+                    @if (editando && seleccionado != null)
+                    {
+                        <h5 class="mb-3">Editar contacto</h5>
+                        <EditForm Model="seleccionado" OnValidSubmit="Guardar">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>Nombre</label>
+                                    <InputText class="form-control" @bind-Value="seleccionado.Nombre" />
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>Apellido</label>
+                                    <InputText class="form-control" @bind-Value="seleccionado.Apellido" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>Teléfono</label>
+                                    <InputText class="form-control" @bind-Value="seleccionado.Telefono" />
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>Email</label>
+                                    <InputText class="form-control" @bind-Value="seleccionado.Email" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label>Empresa</label>
+                                    <InputText class="form-control" @bind-Value="seleccionado.Empresa" />
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label>Cargo</label>
+                                    <InputText class="form-control" @bind-Value="seleccionado.Cargo" />
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label>Dirección</label>
+                                <InputText class="form-control" @bind-Value="seleccionado.Direccion" />
+                            </div>
+                            <div class="mb-3">
+                                <label>Notas</label>
+                                <InputTextArea class="form-control" @bind-Value="seleccionado.Notas" rows="3" />
+                            </div>
+
+                            <button type="submit" class="btn btn-success me-2">Guardar</button>
+                            <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                        </EditForm>
+                    }
+                    else if (seleccionado != null)
                     {
                         <div class="d-flex gap-3 align-items-center mb-3">
                             <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(seleccionado.Nombre, seleccionado.Apellido)">
@@ -85,6 +135,7 @@
     List<Contacto> contactos = new();
     Contacto? seleccionado;
     string filtro = "";
+    bool editando = false;
 
     IEnumerable<Contacto> ContactosFiltrados => contactos.Where(c =>
         string.IsNullOrEmpty(filtro) ||
@@ -104,9 +155,23 @@
             await Db.SaveChangesAsync();
             contactos.Remove(seleccionado);
             seleccionado = null;
+            editando = false;
         }
     }
 
-    void Editar() => Nav.NavigateTo($"/editar/{seleccionado!.Id}");
+    void Editar() => editando = true;
+
+    void Cancelar() => editando = false;
+
+    async Task Guardar()
+    {
+        if (seleccionado != null)
+        {
+            Db.Contactos.Update(seleccionado);
+            await Db.SaveChangesAsync();
+            editando = false;
+        }
+    }
+
     void Nuevo() => Nav.NavigateTo("/nuevo");
 }
