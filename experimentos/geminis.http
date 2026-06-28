@@ -1,0 +1,23 @@
+@geminiApiKey = {{$dotenv GEMINI_API_KEY}}
+@modelId = gemini-2.5-flash
+@generateContentApi = generateContent
+
+### Generar contenido con Gemini
+POST https://generativelanguage.googleapis.com/v1beta/models/{{modelId}}:{{generateContentApi}}
+Content-Type: application/json
+x-goog-api-key: {{geminiApiKey}}
+
+{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Factorial en C#"
+        }
+      ]
+    }
+  ]
+}
+
+

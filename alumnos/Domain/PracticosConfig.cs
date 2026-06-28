@@ -16,7 +16,7 @@ readonly record struct ConfiguracionPractico(int Numero, TipoUmbralPractico Tipo
     public string DescripcionCriterio =>
         TipoUmbral switch {
             TipoUmbralPractico.LineasTotales => $"al menos {Minimo} líneas totales",
-            TipoUmbralPractico.LineasAgregadas => $"al menos {Minimo} líneas agregadas respecto del enunciado",
+            TipoUmbralPractico.LineasAgregadas => $"al menos {Minimo} líneas fuente totales agregadas respecto del enunciado",
             _ => "criterio no definido"
         };
 }
@@ -24,10 +24,12 @@ readonly record struct ConfiguracionPractico(int Numero, TipoUmbralPractico Tipo
 static class PracticosConfig {
     static readonly IReadOnlyDictionary<int, ConfiguracionPractico> configuraciones =
         new Dictionary<int, ConfiguracionPractico> {
-            [1] = new(1, TipoUmbralPractico.LineasTotales, 100),
-            [2] = new(2, TipoUmbralPractico.LineasAgregadas, 20),
-            [3] = new(3, TipoUmbralPractico.LineasAgregadas, 50),
-            [4] = new(4, TipoUmbralPractico.LineasAgregadas, 150)
+            [1] = new(1, TipoUmbralPractico.LineasTotales,   100),
+            [2] = new(2, TipoUmbralPractico.LineasAgregadas,  20),
+            [3] = new(3, TipoUmbralPractico.LineasAgregadas,  50),
+            [4] = new(4, TipoUmbralPractico.LineasAgregadas, 150),
+            [5] = new(5, TipoUmbralPractico.LineasAgregadas, 200),
+            [6] = new(6, TipoUmbralPractico.LineasAgregadas,  50)
         };
 
     public static bool TryObtener(int numero, out ConfiguracionPractico configuracion) =>

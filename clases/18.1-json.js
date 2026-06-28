@@ -21,10 +21,10 @@ let json = JSON.stringify(datos, null, 4);
 console.log(json);
 
 const fs = require('fs');
-fs.writeFileSync('datos.json', json);  
+fs.writeFileSync('18.datos/18.1.datos.json', json);  
 
 // leer el archivo
-let contenido = fs.readFileSync('datos.json', 'utf-8');
+let contenido = fs.readFileSync('18.datos/18.1.datos.json', 'utf-8');
 let datosLeidos = JSON.parse(contenido);
 console.log(datosLeidos);
 

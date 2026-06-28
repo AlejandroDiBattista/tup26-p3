@@ -19,9 +19,25 @@ sealed class TrabajoPracticoOpcionalSettings : CommandSettings {
     public string? TrabajoPractico { get; init; }
 }
 
+sealed class LegajoOpcionalSettings : CommandSettings {
+    [CommandArgument(0, "[legajo]")]
+    public int? Legajo { get; init; }
+}
+
 sealed class PublicarPracticoSettings : TrabajoPracticoSettings {
     [CommandOption("--forzar")]
     public bool Forzar { get; init; }
+}
+
+sealed class CapturarPantallasSettings : TrabajoPracticoSettings {
+    [CommandOption("--headed")]
+    public bool Headed { get; init; }
+
+    [CommandOption("--forzar")]
+    public bool Forzar { get; init; }
+
+    [CommandOption("--ruta <RUTA>")]
+    public string Ruta { get; init; } = "/contactos";
 }
 
 sealed class ListarAlumnosCommand : Command<VacioSettings> {
@@ -37,6 +53,11 @@ sealed class ListarPracticosFaltantesCommand : Command<TrabajoPracticoSettings> 
 sealed class LimpiarArchivosTemporalesCommand : Command<VacioSettings> {
     protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.LimpiarProyectosPracticos();
+}
+
+sealed class NormalizarCarpetasCommand : Command<VacioSettings> {
+    protected override int Execute(CommandContext context, VacioSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.NormalizarCarpetas();
 }
 
 sealed class ExportarMarkdownCommand : Command<RutaSalidaSettings> {
@@ -87,6 +108,31 @@ sealed class CerrarPrsCommand : Command<VacioSettings> {
 sealed class RevisarPresentacionesCommand : Command<TrabajoPracticoOpcionalSettings> {
     protected override int Execute(CommandContext context, TrabajoPracticoOpcionalSettings settings, CancellationToken cancellationToken) =>
         AlumnosCliActions.RevisarPresentados(settings.TrabajoPractico);
+}
+
+sealed class VerificarCompilacionCommand : Command<TrabajoPracticoSettings> {
+    protected override int Execute(CommandContext context, TrabajoPracticoSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.VerificarCompilacion(settings.TrabajoPractico);
+}
+
+sealed class VerificarEjecucionCommand : Command<TrabajoPracticoSettings> {
+    protected override int Execute(CommandContext context, TrabajoPracticoSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.VerificarEjecucion(settings.TrabajoPractico);
+}
+
+sealed class CapturarPantallasCommand : Command<CapturarPantallasSettings> {
+    protected override int Execute(CommandContext context, CapturarPantallasSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.CapturarPantallas(settings.TrabajoPractico, settings.Ruta, settings.Headed, settings.Forzar);
+}
+
+sealed class EjecutarTp5Command : Command<LegajoOpcionalSettings> {
+    protected override int Execute(CommandContext context, LegajoOpcionalSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.EjecutarTp5(settings.Legajo);
+}
+
+sealed class EjecutarTp6Command : Command<LegajoOpcionalSettings> {
+    protected override int Execute(CommandContext context, LegajoOpcionalSettings settings, CancellationToken cancellationToken) =>
+        AlumnosCliActions.EjecutarTp6(settings.Legajo);
 }
 
 sealed class ContarAsistenciasCommand : Command<VacioSettings> {

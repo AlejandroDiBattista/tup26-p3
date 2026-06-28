@@ -1,0 +1,36 @@
+@using tp5.Models
+
+<EditForm Model="Contacto">
+
+    <div class="mb-2">
+        <label>Nombre</label>
+        <InputText class="form-control"
+                   @bind-Value="Contacto.Nombre" />
+    </div>
+
+    <div class="mb-2">
+        <label>Apellido</label>
+        <InputText class="form-control"
+                   @bind-Value="Contacto.Apellido" />
+    </div>
+
+    <div class="mb-2">
+        <label>Teléfono</label>
+        <InputText class="form-control"
+                   @bind-Value="Contacto.Telefono" />
+    </div>
+
+    <div class="mb-2">
+        <label>Email</label>
+        <InputText class="form-control"
+                   @bind-Value="Contacto.Email" />
+    </div>
+
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public Contacto Contacto { get; set; } = new();
+
+}

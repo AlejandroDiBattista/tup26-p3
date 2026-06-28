@@ -1,0 +1,31 @@
+<div class="detail-field @Clase">
+    <i class="bi @Icono"></i>
+    <div>
+        <span>@Etiqueta</span>
+        @if (ChildContent is not null)
+        {
+            <strong>@ChildContent</strong>
+        }
+        else
+        {
+            <strong>@Valor</strong>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Icono { get; set; } = "bi-info-circle";
+
+    [Parameter, EditorRequired]
+    public string Etiqueta { get; set; } = "";
+
+    [Parameter]
+    public string? Valor { get; set; }
+
+    [Parameter]
+    public string Clase { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

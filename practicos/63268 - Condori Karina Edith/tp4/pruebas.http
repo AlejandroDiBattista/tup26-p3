@@ -1,0 +1,84 @@
+@baseUrl = http://localhost:5050
+
+### 1. Listar productos
+GET {{baseUrl}}/productos
+
+### 2. Crear un producto
+# @name crearProducto
+POST {{baseUrl}}/productos
+Content-Type: application/json
+
+{
+  "codigo": "P900",
+  "nombre": "Producto de prueba",
+  "precio": 1250.50,
+  "stock": 10
+}
+
+### 3. Obtener el producto creado
+# El id se toma automaticamente de la respuesta anterior.
+GET {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}
+
+### 4. Modificar el producto
+PUT {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "codigo": "P900",
+  "nombre": "Producto actualizado",
+  "precio": 1400,
+  "stock": 10
+}
+
+### 5. Registrar una compra: suma 5 unidades
+POST {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}/movimientos
+Content-Type: application/json
+
+{
+  "tipo": "Compra",
+  "cantidad": 5
+}
+
+### 6. Registrar una venta: resta 3 unidades
+POST {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}/movimientos
+Content-Type: application/json
+
+{
+  "tipo": "Venta",
+  "cantidad": 3
+}
+
+### 7. Registrar un ajuste: fija el stock en 20
+POST {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}/movimientos
+Content-Type: application/json
+
+{
+  "tipo": "Ajuste",
+  "cantidad": 20
+}
+
+### 8. Ver historial
+GET {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}/movimientos
+
+### 9. Probar codigo repetido: debe responder 409
+POST {{baseUrl}}/productos
+Content-Type: application/json
+
+{
+  "codigo": "P900",
+  "nombre": "Duplicado",
+  "precio": 1,
+  "stock": 1
+}
+
+### 10. Probar venta sin stock: debe responder 400
+POST {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}/movimientos
+Content-Type: application/json
+
+{
+  "tipo": "Venta",
+  "cantidad": 9999
+}
+
+### 11. Eliminar el producto de prueba
+DELETE {{baseUrl}}/productos/{{crearProducto.response.body.$.id}}

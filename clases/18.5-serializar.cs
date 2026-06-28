@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Xml.Serialization;
 
 
-var serializer = FileSerializerFactory.Create<Persona>("datos/18.4.contactos.json");
+var serializer = FileSerializerFactory.Create<Persona>("18.datos/18.4.contactos.json");
 var db = new Repository<Persona>(serializer);
 
 db.Create(new() { Nombre = "Ana",  Apellido = "Araujo",   Edad = 25 });

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
+  </ItemGroup>
+
+  <Target Name="FixMakeRelative" BeforeTargets="ComputeStaticWebAssetsForPublish">
+    <ItemGroup>
+      <StaticWebAsset Update="@(StaticWebAsset)">
+        <RelativePath>$([System.String]::Copy('%(RelativePath)'))</RelativePath>
+      </StaticWebAsset>
+    </ItemGroup>
+  </Target>
+
+</Project>

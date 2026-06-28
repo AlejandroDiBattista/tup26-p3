@@ -9,6 +9,18 @@ static class AppPaths {
     static readonly string dataDirectory = ResolverDirectorioDatos();
     static readonly string[] directoriosCompilacionPracticos = ["bin", "obj", ".vs"];
     static readonly string[] sufijosArchivosCacheCompilacion = [".lscache", ".suo", ".userosscache", ".sln.docstates"];
+    static readonly string[] extensionesBasesSqlite = [".db", ".sqlite", ".sqlite3"];
+    static readonly string[] sufijosArchivosTemporalesSqlite = ["-wal", "-shm", "-journal"];
+
+    public static StringComparison ComparacionRutas =>
+        OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+    public static StringComparer ComparadorRutas =>
+        OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
 
     public static string DataDirectory => dataDirectory;
     public static string RepoRoot => Directory.GetParent(DataDirectory)?.FullName ?? DataDirectory;
@@ -215,7 +227,7 @@ static class AppPaths {
         List<string> elementosRestantes = directoriosLimpieza
             .SelectMany(BuscarArtefactosCompilacion)
             .ToList();
-        return new(elementosEliminados.Distinct(StringComparer.OrdinalIgnoreCase).ToList(), elementosRestantes);
+        return new(elementosEliminados.Distinct(ComparadorRutas).ToList(), elementosRestantes);
     }
 
     public static bool ExisteEnunciadoPractico(string practico) =>
@@ -242,6 +254,26 @@ static class AppPaths {
 
     public static string? ObtenerCarpetaUnicaMismoLegajo(int legajo) =>
         ObtenerCarpetaUnicaMismoLegajo(PracticosDirectory, legajo);
+
+    public static IReadOnlyList<string> ConsolidarCarpetasAlumno(Alumno alumno) {
+        string rutaCanonica = PracticoAlumnoDirectory(alumno);
+        AsegurarDirectorio(rutaCanonica);
+
+        List<string> eliminadas = new();
+        foreach (string rutaDuplicada in BuscarCarpetasMismoLegajo(alumno.Legajo)) {
+            if (string.Equals(rutaDuplicada, rutaCanonica, ComparacionRutas)) {
+                continue;
+            }
+
+            // La descarga ya actualizó la carpeta canónica. Solo se recuperan
+            // archivos que no existan allí antes de eliminar el duplicado.
+            CopiarCarpeta(rutaDuplicada, rutaCanonica, forzar: false);
+            Directory.Delete(rutaDuplicada, recursive: true);
+            eliminadas.Add(rutaDuplicada);
+        }
+
+        return eliminadas;
+    }
 
     public static void RenombrarCarpetaAlumno(string origen, Alumno alumno) =>
         RenombrarCarpeta(origen, PracticoAlumnoDirectory(alumno));
@@ -289,7 +321,7 @@ static class AppPaths {
         return rutaArchivo;
     }
 
-    public static string GuardarArchivoDescargadoRelativo(string rutaDestinoBase, string rutaRelativa, byte[] contenido, bool forzar = false) {
+    public static string RutaArchivoDescargadoRelativo(string rutaDestinoBase, string rutaRelativa) {
         string rutaNormalizada = rutaRelativa.Replace('\\', Path.DirectorySeparatorChar)
                                              .Replace('/', Path.DirectorySeparatorChar)
                                              .TrimStart(Path.DirectorySeparatorChar);
@@ -305,6 +337,11 @@ static class AppPaths {
             throw new IOException($"La ruta relativa '{rutaRelativa}' es inválida para el destino '{rutaDestinoBase}'.");
         }
 
+        return rutaCompleta;
+    }
+
+    public static string GuardarArchivoDescargadoRelativo(string rutaDestinoBase, string rutaRelativa, byte[] contenido, bool forzar = false) {
+        string rutaCompleta = RutaArchivoDescargadoRelativo(rutaDestinoBase, rutaRelativa);
         string? directorio = Path.GetDirectoryName(rutaCompleta);
         if (!string.IsNullOrWhiteSpace(directorio)) {
             AsegurarDirectorio(directorio);
@@ -352,7 +389,7 @@ static class AppPaths {
             return;
         }
 
-        if (!string.Equals(origen, destino, StringComparison.OrdinalIgnoreCase)) {
+        if (!string.Equals(origen, destino, ComparacionRutas)) {
             throw new IOException($"Ya existe una carpeta destino: {destino}");
         }
 
@@ -429,7 +466,7 @@ static class AppPaths {
 
             string nombre = Path.GetFileName(ruta);
             if (ExisteArchivo(ruta)) {
-                if (sufijosArchivosCacheCompilacion.Any(sufijo => nombre.EndsWith(sufijo, StringComparison.OrdinalIgnoreCase))) {
+                if (EsArchivoCacheCompilacion(nombre) || EsArchivoTemporalSqlite(nombre)) {
                     rutas.Add(ruta);
                 }
 
@@ -447,6 +484,23 @@ static class AppPaths {
 
             BuscarArtefactosCompilacion(ruta, rutas);
         }
+    }
+
+    static bool EsArchivoCacheCompilacion(string nombre) =>
+        sufijosArchivosCacheCompilacion.Any(sufijo => nombre.EndsWith(sufijo, StringComparison.OrdinalIgnoreCase));
+
+    static bool EsArchivoTemporalSqlite(string nombre) {
+        foreach (string sufijoTemporal in sufijosArchivosTemporalesSqlite) {
+            if (!nombre.EndsWith(sufijoTemporal, StringComparison.OrdinalIgnoreCase)) {
+                continue;
+            }
+
+            string nombreBase = nombre[..^sufijoTemporal.Length];
+            string extensionBase = Path.GetExtension(nombreBase);
+            return extensionesBasesSqlite.Contains(extensionBase, StringComparer.OrdinalIgnoreCase);
+        }
+
+        return false;
     }
 
     static bool EsEnlaceSimbolico(string ruta) {

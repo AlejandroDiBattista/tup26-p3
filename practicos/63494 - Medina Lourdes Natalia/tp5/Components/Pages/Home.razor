@@ -1,0 +1,321 @@
+@page "/"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@using tp5.Models
+@using tp5.Services
+@inject ContactoService Contactos
+
+<PageTitle>AgendaWeb</PageTitle>
+
+<div class="agenda-header">
+    <div>
+        <h1>AgendaWeb</h1>
+        <p>Agenda de contactos con Blazor, Entity Framework Core y SQLite.</p>
+    </div>
+    <button class="btn btn-primary" @onclick="NuevoContacto">Nuevo contacto</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="alert alert-success py-2" role="status">@mensaje</div>
+}
+
+<div class="agenda-shell">
+    <section class="agenda-master" aria-label="Contactos">
+        <div class="input-group mb-3">
+            <span class="input-group-text">Buscar</span>
+            <input class="form-control"
+                   placeholder="Nombre, apellido, telefono, email o empresa"
+                   value="@busqueda"
+                   @oninput="BuscarContactosAsync" />
+        </div>
+
+        <div class="contact-list">
+            @if (cargando)
+            {
+                <p class="text-muted px-3 py-2">Cargando contactos...</p>
+            }
+            else if (contactos.Count == 0)
+            {
+                <p class="text-muted px-3 py-2">No hay contactos para mostrar.</p>
+            }
+            else
+            {
+                @foreach (Contacto contacto in contactos)
+                {
+                    string active = contacto.Id == contactoSeleccionado?.Id ? "active" : "";
+                    <button class="contact-list-item @active"
+                            type="button"
+                            @onclick="() => SeleccionarContactoAsync(contacto.Id)">
+                        <span class="contact-name">@contacto.Apellido, @contacto.Nombre</span>
+                        <span class="contact-meta">@contacto.Telefono</span>
+                    </button>
+                }
+            }
+        </div>
+    </section>
+ <section class="agenda-detail" aria-label="Detalle del contacto">
+        @if (editando)
+        {
+            <h2>@(formulario.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
+
+            <EditForm Model="formulario" OnValidSubmit="GuardarContactoAsync" class="contact-form">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="nombre">Nombre *</label>
+                        <InputText id="nombre" class="form-control" @bind-Value="formulario.Nombre" />
+                        <ValidationMessage For="() => formulario.Nombre" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="apellido">Apellido *</label>
+                        <InputText id="apellido" class="form-control" @bind-Value="formulario.Apellido" />
+                        <ValidationMessage For="() => formulario.Apellido" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="telefono">Telefono *</label>
+                        <InputText id="telefono" class="form-control" @bind-Value="formulario.Telefono" />
+                        <ValidationMessage For="() => formulario.Telefono" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="email">Correo electronico *</label>
+                        <InputText id="email" class="form-control" @bind-Value="formulario.Email" />
+                        <ValidationMessage For="() => formulario.Email" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="empresa">Empresa</label>
+                        <InputText id="empresa" class="form-control" @bind-Value="formulario.Empresa" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="cargo">Cargo</label>
+                        <InputText id="cargo" class="form-control" @bind-Value="formulario.Cargo" />
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="direccion">Direccion</label>
+                        <InputText id="direccion" class="form-control" @bind-Value="formulario.Direccion" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="fechaNacimiento">Fecha de nacimiento</label>
+                        <InputDate id="fechaNacimiento" class="form-control" @bind-Value="formulario.FechaNacimiento" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="notas">Notas</label>
+                        <InputTextArea id="notas" class="form-control" rows="4" @bind-Value="formulario.Notas" />
+                    </div>
+                </div>
+
+                <div class="detail-actions">
+                    <button class="btn btn-primary" type="submit">Guardar</button>
+                    <button class="btn btn-outline-secondary" type="button" @onclick="CancelarEdicionAsync">Cancelar</button>
+                </div>
+            </EditForm>
+        }
+       
+        else if (contactoSeleccionado is null)
+        {
+            <div class="empty-detail">
+                <h2>Selecciona un contacto</h2>
+                <p>Usa el panel maestro para ver el detalle o crea un contacto nuevo.</p>
+            </div>
+        }
+        else
+        {
+            <div class="detail-heading">
+
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <div class="contact-avatar">
+            @($"{contactoSeleccionado.Nombre[0]}{contactoSeleccionado.Apellido[0]}")
+        </div>
+
+        <div>
+            <h2>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+            <p>@MostrarDato(contactoSeleccionado.Cargo) @MostrarEmpresa(contactoSeleccionado.Empresa)</p>
+        </div>
+    </div>
+
+    <div class="detail-actions">
+        <button class="btn btn-outline-primary" @onclick="EditarSeleccionado">
+            Editar
+        </button>
+
+        @if (confirmarEliminarId == contactoSeleccionado.Id)
+        {
+            <button class="btn btn-danger" @onclick="EliminarSeleccionadoAsync">
+                Confirmar eliminación
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-outline-danger" @onclick="PedirConfirmacionEliminar">
+                Eliminar
+            </button>
+        }
+    </div>
+
+</div>
+
+            <dl class="detail-grid">
+                <div>
+                    <dt>Telefono</dt>
+                    <dd>@contactoSeleccionado.Telefono</dd>
+                </div>
+                <div>
+                    <dt>Correo electronico</dt>
+                    <dd>@contactoSeleccionado.Email</dd>
+                </div>
+                <div>
+                    <dt>Empresa</dt>
+                    <dd>@MostrarDato(contactoSeleccionado.Empresa)</dd>
+                </div>
+                <div>
+                    <dt>Cargo</dt>
+                    <dd>@MostrarDato(contactoSeleccionado.Cargo)</dd>
+                </div>
+                <div>
+                    <dt>Direccion</dt>
+                    <dd>@MostrarDato(contactoSeleccionado.Direccion)</dd>
+                </div>
+                <div>
+                    <dt>Fecha de nacimiento</dt>
+                    <dd>@MostrarFecha(contactoSeleccionado.FechaNacimiento)</dd>
+                </div>
+            </dl>
+
+            <div class="notes-block">
+                <h3>Notas</h3>
+                <p>@MostrarDato(contactoSeleccionado.Notas)</p>
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private List<Contacto> contactos = [];
+    private Contacto? contactoSeleccionado;
+    private Contacto formulario = new();
+    private string busqueda = "";
+    private string mensaje = "";
+    private bool cargando = true;
+    private bool editando;
+    private int? confirmarEliminarId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactosAsync();
+        contactoSeleccionado = contactos.FirstOrDefault();
+        cargando = false;
+    }
+
+    private async Task BuscarContactosAsync(ChangeEventArgs args)
+    {
+        busqueda = args.Value?.ToString() ?? "";
+        await CargarContactosAsync();
+
+        if (contactoSeleccionado is null || contactos.All(contacto => contacto.Id != contactoSeleccionado.Id))
+        {
+            contactoSeleccionado = contactos.FirstOrDefault();
+        }
+
+        confirmarEliminarId = null;
+        mensaje = "";
+    }
+
+    private async Task CargarContactosAsync()
+    {
+        contactos = await Contactos.BuscarAsync(busqueda);
+    }
+
+    private async Task SeleccionarContactoAsync(int id)
+    {
+        contactoSeleccionado = await Contactos.ObtenerAsync(id);
+        editando = false;
+        confirmarEliminarId = null;
+        mensaje = "";
+    }
+
+    private void NuevoContacto()
+    {
+        formulario = new Contacto();
+        editando = true;
+        confirmarEliminarId = null;
+        mensaje = "";
+    }
+
+    private void EditarSeleccionado()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        formulario = Copiar(contactoSeleccionado);
+        editando = true;
+        confirmarEliminarId = null;
+        mensaje = "";
+    }
+
+    private async Task GuardarContactoAsync()
+    {
+        Contacto guardado = await Contactos.GuardarAsync(formulario);
+        await CargarContactosAsync();
+        contactoSeleccionado = await Contactos.ObtenerAsync(guardado.Id);
+        formulario = new Contacto();
+        editando = false;
+        confirmarEliminarId = null;
+        mensaje = "Contacto guardado correctamente.";
+    }
+
+ private async Task CancelarEdicionAsync()
+    {
+        formulario = new Contacto();
+        editando = false;
+        await CargarContactosAsync();
+        contactoSeleccionado ??= contactos.FirstOrDefault();
+    }
+
+    private void PedirConfirmacionEliminar()
+    {
+        confirmarEliminarId = contactoSeleccionado?.Id;
+        mensaje = "";
+    }
+
+    private async Task EliminarSeleccionadoAsync()
+    {
+        if (contactoSeleccionado is null)
+        {
+            return;
+        }
+
+        await Contactos.EliminarAsync(contactoSeleccionado.Id);
+        await CargarContactosAsync();
+        contactoSeleccionado = contactos.FirstOrDefault();
+        confirmarEliminarId = null;
+        mensaje = "Contacto eliminado correctamente.";
+    }
+
+    private static Contacto Copiar(Contacto contacto) => new()
+    {
+        Id = contacto.Id,
+        Nombre = contacto.Nombre,
+        Apellido = contacto.Apellido,
+        Telefono = contacto.Telefono,
+        Email = contacto.Email,
+        Empresa = contacto.Empresa,
+        Cargo = contacto.Cargo,
+        Direccion = contacto.Direccion,
+        FechaNacimiento = contacto.FechaNacimiento,
+        Notas = contacto.Notas
+    };
+
+    private static string MostrarDato(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? "Sin datos" : valor;
+
+    private static string MostrarFecha(DateOnly? fecha) =>
+        fecha?.ToString("dd/MM/yyyy") ?? "Sin datos";
+
+    private static string MostrarEmpresa(string? empresa) =>
+        string.IsNullOrWhiteSpace(empresa) ? "" : $"en {empresa}";
+}
+

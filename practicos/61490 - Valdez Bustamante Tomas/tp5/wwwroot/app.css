@@ -1,0 +1,50 @@
+html, body {
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+h1:focus {
+    outline: none;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.contacts-page {
+    block-size: calc(100dvb - 1.1rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.contact-shell {
+    flex: 1 1 0;
+    flex-wrap: nowrap;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.contact-shell > [class*="col-"] {
+    block-size: calc(100% - var(--bs-gutter-y, 1rem));
+    min-height: 0;
+    overflow: hidden;
+}
+
+.contact-list-panel {
+    min-height: 0;
+}
+
+.contact-list-body {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.list-group.flex-grow-1 {
+    min-height: 0;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.list-group-item-action {
+    cursor: pointer;
+}

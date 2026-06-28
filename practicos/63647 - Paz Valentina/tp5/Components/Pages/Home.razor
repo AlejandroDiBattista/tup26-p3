@@ -1,0 +1,409 @@
+@page "/"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using tp5.Data
+@using tp5.Models
+@inject AgendaContext Db
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+<header class="border-bottom border-success-subtle bg-success-subtle mb-4">
+    <div class="container-fluid px-4 py-3 d-flex align-items-center gap-3">
+        <i class="bi bi-person-vcard fs-1 text-success"></i>
+        <div>
+            <h1 class="h3 fw-bold mb-0">AgendaWeb</h1>
+            <p class="text-secondary mb-0">Administración de contactos</p>
+        </div>
+    </div>
+</header>
+
+@if (contactos is null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2">Cargando contactos...</p>
+    </div>
+}
+else
+{
+    <main class="container-fluid px-4 pb-4">
+        <div class="row g-4">
+
+            <div class="col-lg-5">
+                <section class="border rounded bg-white p-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4 mb-0">
+                            Contactos
+                            <span class="badge text-bg-success">
+                                @ContactosFiltrados.Count()
+                            </span>
+                        </h2>
+
+                        <button type="button"
+                                class="btn btn-success"
+                                disabled="@Ocupado"
+                                @onclick="NuevoContacto">
+                            <i class="bi bi-person-plus me-1"></i>
+                            Nuevo
+                        </button>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="search"
+                               class="form-control"
+                               placeholder="Buscar por nombre o apellido..."
+                               @bind="textoBusqueda"
+                               @bind:event="oninput" />
+                    </div>
+
+                    <div class="list-group">
+                        @foreach (var contacto in ContactosFiltrados)
+                        {
+                            <button type="button"
+                                    class="list-group-item list-group-item-action"
+                                    disabled="@Ocupado"
+                                    @onclick="() => SeleccionarContacto(contacto)">
+                                <div class="fw-bold">
+                                    @contacto.Nombre @contacto.Apellido
+                                </div>
+                                <small class="text-secondary">
+                                    @contacto.Telefono · @contacto.Email
+                                </small>
+                            </button>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-7">
+                <section class="border rounded bg-white p-4 shadow-sm">
+                    @if (modoNuevo)
+                    {
+                        <h2 class="h4 mb-4">Nuevo contacto</h2>
+                        <FormularioContacto Contacto="nuevoContacto" />
+
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="alert alert-danger">@mensajeError</div>
+                        }
+
+                        <button class="btn btn-success"
+                                @onclick="GuardarContacto">
+                            <i class="bi bi-check-lg me-1"></i>
+                            Guardar
+                        </button>
+                        <button class="btn btn-secondary ms-2"
+                                @onclick="CancelarNuevo">
+                            Cancelar
+                        </button>
+                    }
+                    else if (modoEditar)
+                    {
+                        <h2 class="h4 mb-4">Editar contacto</h2>
+                        <FormularioContacto Contacto="contactoEditado" />
+
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="alert alert-danger">@mensajeError</div>
+                        }
+
+                        <button class="btn btn-success"
+                                @onclick="GuardarEdicion">
+                            Guardar cambios
+                        </button>
+                        <button class="btn btn-secondary ms-2"
+                                @onclick="CancelarEdicion">
+                            Cancelar
+                        </button>
+                    }
+                    else if (contactoSeleccionado is null)
+                    {
+                        <div class="text-center text-secondary py-5">
+                            <i class="bi bi-person-vcard display-4"></i>
+                            <p class="mt-3">
+                                Seleccioná un contacto para ver sus datos.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="bg-primary text-white rounded-circle
+                                        d-flex align-items-center justify-content-center me-3"
+                                 style="width: 55px; height: 55px;">
+                                <i class="bi bi-person fs-3"></i>
+                            </div>
+                            <div>
+                                <h2 class="h3 mb-0">
+                                    @contactoSeleccionado.Nombre
+                                    @contactoSeleccionado.Apellido
+                                </h2>
+                                <span class="text-secondary">
+                                    @contactoSeleccionado.Cargo
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <strong>Teléfono</strong>
+                                <div>@contactoSeleccionado.Telefono</div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Email</strong>
+                                <div>@contactoSeleccionado.Email</div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Empresa</strong>
+                                <div>@MostrarDato(contactoSeleccionado.Empresa)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Cargo</strong>
+                                <div>@MostrarDato(contactoSeleccionado.Cargo)</div>
+                            </div>
+                            <div class="col-12">
+                                <strong>Dirección</strong>
+                                <div>@MostrarDato(contactoSeleccionado.Direccion)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Fecha de nacimiento</strong>
+                                <div>
+                                    @(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "Sin información")
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <strong>Notas</strong>
+                                <div>@MostrarDato(contactoSeleccionado.Notas)</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-outline-success"
+                                @onclick="EditarContacto">
+                        
+                            Editar
+                        </button>
+                        <button class="btn btn-danger ms-2"
+                                @onclick="ConfirmarEliminacion">
+                            
+                            Eliminar
+                        </button>
+
+                        @if (confirmandoEliminacion)
+                        {
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <p class="mb-3">
+                                    ¿Seguro que querés eliminar este contacto?
+                                </p>
+                                <button class="btn btn-danger"
+                                        @onclick="EliminarContacto">
+                                    Sí, eliminar
+                                </button>
+                                <button class="border border-success-subtle rounded bg-white p-4 shadow-sm"
+                                        @onclick="CancelarEliminacion">
+                                    Cancelar
+                                </button>
+                            </div>
+                        }
+                    }
+                </section>
+            </div>
+
+        </div>
+    </main>
+}
+
+@code {
+    private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+    private Contacto nuevoContacto = new();
+    private Contacto contactoEditado = new();
+
+    private string textoBusqueda = "";
+    private string mensajeError = "";
+    private bool modoNuevo;
+    private bool modoEditar;
+    private bool confirmandoEliminacion;
+
+    private bool Ocupado =>
+        modoNuevo || modoEditar || confirmandoEliminacion;
+
+    private IEnumerable<Contacto> ContactosFiltrados =>
+        contactos?.Where(c =>
+            string.IsNullOrWhiteSpace(textoBusqueda) ||
+            $"{c.Nombre} {c.Apellido}".Contains(
+                textoBusqueda.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+        ?? Enumerable.Empty<Contacto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
+    {
+        contactos = await Db.Contactos
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        if (Ocupado)
+            return;
+
+        contactoSeleccionado = contacto;
+        mensajeError = "";
+    }
+
+    private void NuevoContacto()
+    {
+        nuevoContacto = new();
+        contactoSeleccionado = null;
+        mensajeError = "";
+        modoEditar = false;
+        modoNuevo = true;
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (!DatosValidos(nuevoContacto))
+        {
+            mensajeError =
+                "Nombre, apellido, teléfono y email son obligatorios.";
+            return;
+        }
+
+        Db.Contactos.Add(nuevoContacto);
+        await Db.SaveChangesAsync();
+
+        int id = nuevoContacto.Id;
+        await CargarContactos();
+
+        contactoSeleccionado =
+            contactos?.FirstOrDefault(c => c.Id == id);
+
+        modoNuevo = false;
+        mensajeError = "";
+    }
+
+    private void CancelarNuevo()
+    {
+        modoNuevo = false;
+        mensajeError = "";
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null)
+            return;
+
+        mensajeError = "";
+        contactoEditado = CopiarContacto(contactoSeleccionado);
+        modoEditar = true;
+    }
+
+    private async Task GuardarEdicion()
+    {
+        if (!DatosValidos(contactoEditado))
+        {
+            mensajeError =
+                "Nombre, apellido, teléfono y email son obligatorios.";
+            return;
+        }
+
+        var contactoDb =
+            await Db.Contactos.FindAsync(contactoEditado.Id);
+
+        if (contactoDb is null)
+        {
+            mensajeError = "No se encontró el contacto.";
+            return;
+        }
+
+        CopiarDatos(contactoEditado, contactoDb);
+        await Db.SaveChangesAsync();
+        await CargarContactos();
+
+        contactoSeleccionado = contactos?
+            .FirstOrDefault(c => c.Id == contactoEditado.Id);
+
+        modoEditar = false;
+        mensajeError = "";
+    }
+
+    private void CancelarEdicion()
+    {
+        modoEditar = false;
+        mensajeError = "";
+    }
+
+    private void ConfirmarEliminacion()
+    {
+        confirmandoEliminacion = true;
+    }
+
+    private void CancelarEliminacion()
+    {
+        confirmandoEliminacion = false;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado is null)
+            return;
+
+        var contactoDb =
+            await Db.Contactos.FindAsync(contactoSeleccionado.Id);
+
+        if (contactoDb is null)
+            return;
+
+        Db.Contactos.Remove(contactoDb);
+        await Db.SaveChangesAsync();
+
+        contactoSeleccionado = null;
+        confirmandoEliminacion = false;
+        await CargarContactos();
+    }
+
+    private static bool DatosValidos(Contacto contacto)
+    {
+        return !string.IsNullOrWhiteSpace(contacto.Nombre) &&
+               !string.IsNullOrWhiteSpace(contacto.Apellido) &&
+               !string.IsNullOrWhiteSpace(contacto.Telefono) &&
+               !string.IsNullOrWhiteSpace(contacto.Email);
+    }
+
+    private static Contacto CopiarContacto(Contacto origen)
+    {
+        var copia = new Contacto();
+        CopiarDatos(origen, copia);
+        return copia;
+    }
+
+    private static void CopiarDatos(Contacto origen, Contacto destino)
+    {
+        destino.Id = origen.Id;
+        destino.Nombre = origen.Nombre;
+        destino.Apellido = origen.Apellido;
+        destino.Telefono = origen.Telefono;
+        destino.Email = origen.Email;
+        destino.Empresa = origen.Empresa;
+        destino.Cargo = origen.Cargo;
+        destino.Direccion = origen.Direccion;
+        destino.FechaNacimiento = origen.FechaNacimiento;
+        destino.Notas = origen.Notas;
+    }
+
+    private static string MostrarDato(string dato)
+    {
+        return string.IsNullOrWhiteSpace(dato)
+            ? "Sin información"
+            : dato;
+    }
+}

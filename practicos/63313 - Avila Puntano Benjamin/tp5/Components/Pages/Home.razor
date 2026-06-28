@@ -1,0 +1,82 @@
+@page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@inject AgendaDbContext Db
+
+<PageTitle>AgendaWeb</PageTitle>
+
+<h3>Agenda de contactos</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <a href="/nuevo" class="btn btn-success mb-2">Nuevo contacto</a>
+        <input class="form-control mb-2" placeholder="Buscar..." @bind="busqueda" @bind:event="oninput" />
+
+        <div class="list-group">
+            @foreach (var c in ContactosFiltrados)
+            {
+                <button class="list-group-item list-group-item-action @(seleccionado?.Id == c.Id ? "active" : "")" @onclick="() => seleccionado = c">
+                <div style="display:flex; align-items:center;">
+                <div class="avatar">@c.Nombre[0]</div>
+            <div>
+                <strong>@c.Nombre @c.Apellido</strong><br/>
+                <small>@c.Telefono</small>
+            </div>
+    </div>
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-8">
+  @if (seleccionado == null)
+    {<p>Selecciona un contacto</p>}
+  else
+        {
+        <div class="card p-3">
+        <div class="avatar avatar-lg mb-2">@seleccionado.Nombre[0]</div>
+                <h4>@seleccionado.Nombre @seleccionado.Apellido</h4>
+                <p>Telef: @seleccionado.Telefono</p>
+                <p>Email: @seleccionado.Email</p>
+                @if (!string.IsNullOrEmpty(seleccionado.Empresa))
+                { <p>Empresa: @seleccionado.Empresa</p> }
+                @if (!string.IsNullOrEmpty(seleccionado.Cargo))
+                { <p>Cargo: @seleccionado.Cargo</p> }
+                @if (!string.IsNullOrEmpty(seleccionado.Direccion))
+                { <p>Direccion: @seleccionado.Direccion</p> }
+                @if (seleccionado.FechaNacimiento.HasValue)
+                { <p>Nacimiento: @seleccionado.FechaNacimiento</p>}
+                @if (!string.IsNullOrEmpty(seleccionado.Notas))
+                { <p>Notas: @seleccionado.Notas</p>}
+        <div class="mt-2">
+        <a href="/editar/@seleccionado.Id" class="btn btn-primary btn-sm me-2">Editar</a>
+        <button class="btn btn-danger btn-sm" @onclick="Eliminar">Eliminar</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    List<Contacto> contactos = new();
+    Contacto? seleccionado;
+    string busqueda = "";
+
+    List<Contacto> ContactosFiltrados => contactos
+    .Where(c => string.IsNullOrEmpty(busqueda) ||
+     c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+     c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+    .ToList();
+
+    protected override void OnInitialized()
+    {
+    contactos = Db.Contactos.ToList();}
+
+    void Eliminar()
+    {
+        if (seleccionado == null) return;
+        Db.Contactos.Remove(seleccionado);
+        Db.SaveChanges();
+        contactos = Db.Contactos.ToList();
+        seleccionado = null;}
+}

@@ -1,0 +1,65 @@
+@prompt = No por mucho madrugar
+@temperature = 1
+
+
+### OpenAI
+@openaiUrl = https://api.openai.com/v1/chat/completions
+@openaiApiKey = {{$dotenv OPENAI_API_KEY}}
+@openaiModel = gpt-5.5
+
+POST {{openaiUrl}}
+Content-Type: application/json
+Authorization: Bearer {{openaiApiKey}}
+
+{
+  "model": "{{openaiModel}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{{prompt}}"
+    }
+  ],
+  "temperature": {{temperature}},
+}
+
+
+### Gemini con formato OpenAI
+@geminiUrl = https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+@geminiApiKey = {{$dotenv GEMINI_API_KEY}}
+@geminiModel = gemini-2.5-flash
+
+POST {{geminiUrl}}
+Content-Type: application/json
+Authorization: Bearer {{geminiApiKey}}
+
+{
+  "model": "{{geminiModel}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{{prompt}}"
+    }
+  ],
+  "temperature": {{temperature}},
+}
+
+
+### Groq con formato OpenAI
+@groqUrl = https://api.groq.com/openai/v1/chat/completions
+@groqApiKey = {{$dotenv GROQ_API_KEY}}
+@groqModel = qwen/qwen3.6-27b
+
+POST {{groqUrl}}
+Content-Type: application/json
+Authorization: Bearer {{groqApiKey}}
+
+{
+  "model": "{{groqModel}}",
+  "messages": [
+    {
+      "role": "user",
+      "content": "{{prompt}}"
+    }
+  ],
+  "temperature": {{temperature}},
+}

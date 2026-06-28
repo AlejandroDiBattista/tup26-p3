@@ -1,0 +1,139 @@
+body {
+    background-color: #0a192f; 
+    color: #ffffff;
+}
+
+.agenda-header {
+    background-color: #4f8fa8;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.agenda-header h1 {
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+    color: #ffffff;
+}
+
+.agenda-header p {
+    color: #b8c5d6;
+    margin: 0;
+}
+
+.panel {
+    background-color: #3b82a0;
+    border-radius: 12px;
+    border: 1px solid #2f6f88;
+    height: 100%;
+    color: white;
+}
+
+.contact-list .list-group-item {
+    background-color: transparent;
+    color: white;
+    border: none;
+    border-bottom: 1px solid #233554;
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.contact-list .list-group-item.active {
+    background-color: #1d4ed8;
+    color: white;
+}
+
+.contact-list .list-group-item:hover {
+    background-color: #233554;
+    cursor: pointer;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+    background-color: #2563eb;
+    color: white;
+}
+
+.avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 1.4rem;
+}
+
+.contact-name {
+    font-weight: 600;
+    margin-bottom: 0;
+    color: #1e3a5f;
+}
+
+.contact-sub {
+    color: #b8c5d6;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.search-box .form-control {
+    border-radius: 8px;
+    background-color: #233554;
+    border: 1px solid #3b4f70;
+    color: white;
+}
+
+.search-box .form-control::placeholder {
+    color: #b8c5d6;
+}
+
+.detail-field {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #233554;
+}
+
+.detail-field i {
+    color: #60a5fa;
+    font-size: 1.1rem;
+    width: 24px;
+}
+
+.detail-field-label {
+    font-weight: 600;
+    width: 110px;
+    flex-shrink: 0;
+    color: #93c5fd;
+}
+.contact-list-container {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.form-dark {
+    background-color: #233554;
+    border: 1px solid #3b4f70;
+    color: white;
+}
+
+.form-dark:focus {
+    background-color: #2d4a6e;
+    border-color: #60a5fa;
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25);
+}
+
+.form-dark::placeholder {
+    color: #b8c5d6;
+}

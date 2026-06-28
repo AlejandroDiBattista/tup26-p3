@@ -7,15 +7,18 @@
     "telefono": "(381)527-6836",
     "gitHub": "joacoavila9",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Sin scroll en maestro; revisar modo oscuro",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -31,10 +34,13 @@
       "🔴",
       "🔴",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -45,15 +51,18 @@
     "telefono": "(381)412-4723",
     "gitHub": "kariiedith9315",
     "nota": 1,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🔴"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -64,15 +73,18 @@
     "telefono": "(381)341-9689",
     "gitHub": "nahuelc19",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Edita en caja de diálogo en lugar de hacerlo en el detalle",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -83,15 +95,18 @@
     "telefono": "(381)678-0335",
     "gitHub": "tomicor979-lgtm",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; mejorar uso del espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -102,15 +117,18 @@
     "telefono": "(381)665-0808",
     "gitHub": "josias57455",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -121,15 +139,18 @@
     "telefono": "(381)334-9851",
     "gitHub": "ulisesfuensalida-ui",
     "nota": 8,
-    "observaciones": "",
+    "observaciones": "No funciona: no muestra detalle, no busca y no edita",
     "practicos": [
       "🟢",
       "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -140,15 +161,18 @@
     "telefono": "(381)456-4405",
     "gitHub": "ataliagg",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Sin scroll en maestro; botones de edición fuera del modo mostrar; edita dentro del detalle",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -159,15 +183,18 @@
     "telefono": "(381)683-1233",
     "gitHub": "ignas11",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "No edita; sin scroll en maestro; muestra mensaje de error al final",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -183,10 +210,13 @@
       "🟢",
       "🔴",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -197,15 +227,18 @@
     "telefono": "(381)550-7143",
     "gitHub": "luchex1525",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "Mal formato; sin CSS",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -220,11 +253,14 @@
     "practicos": [
       "🟢",
       "🟢",
+      "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -235,15 +271,18 @@
     "telefono": "(381)576-0069",
     "gitHub": "tutu-04",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; botones duplicados para cancelar/guardar",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -259,10 +298,13 @@
       "🟢",
       "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -273,15 +315,18 @@
     "telefono": "(381)572-4096",
     "gitHub": "santiagopaez-2",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "Mal uso del espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -292,15 +337,18 @@
     "telefono": "(381)353-0060",
     "gitHub": "naimp074",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "No usa bien el espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴"
+      "🟢",
+      "🟢",
+      "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -311,15 +359,18 @@
     "telefono": "(381)599-6422",
     "gitHub": "valepaz11",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "No edita; solo muestra cancelar/guardar",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -330,15 +381,18 @@
     "telefono": "(381)332-4401",
     "gitHub": "nicopereyra255-ship-it",
     "nota": 8,
-    "observaciones": "",
+    "observaciones": "Edición mal ubicada arriba; no alterna mostrar/editar; no cancela",
     "practicos": [
-      "🔴",
       "🟢",
       "🟢",
-      "🔴"
+      "🟢",
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -349,15 +403,18 @@
     "telefono": "(381)552-8065",
     "gitHub": "valentinapereyra03",
     "nota": 5,
-    "observaciones": "",
+    "observaciones": "Sin scroll en maestro; debe mostrar el detalle sin botón; botones editar/borrar deben estar en el detalle",
     "practicos": [
       "🔴",
       "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "🟢",
+      "🟢"
     ],
     "examenes": [
-      "🟡"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -368,15 +425,18 @@
     "telefono": "(381)350-0777",
     "gitHub": "lucho-bot",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Sin scroll en maestro; no cancela al seleccionar",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -387,15 +447,18 @@
     "telefono": "(381)627-2271",
     "gitHub": "luccardp",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Sin scroll en maestro; edición en página aparte en lugar de alternar mostrar/editar",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -406,15 +469,18 @@
     "telefono": "(381)533-1344",
     "gitHub": "ignaciorosconi",
     "nota": 4,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
     "practicos": [
       "🔴",
       "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟡"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -425,15 +491,18 @@
     "telefono": "(381)355-5126",
     "gitHub": "lucasosag1",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "No alterna entre mostrar detalle y editar; no cancela al seleccionar; no tiene búsqueda en caliente",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -444,15 +513,18 @@
     "telefono": "(381)200-7473",
     "gitHub": "jeerepazz",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal uso del espacio vertical",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -463,15 +535,18 @@
     "telefono": "(381)675-3624",
     "gitHub": "lisandropaz",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; mejorar uso del espacio vertical",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -482,15 +557,18 @@
     "telefono": "(381)246-3725",
     "gitHub": "suarezsofia541-alt",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Edición en página separada en lugar de en el detalle; no tiene búsqueda en caliente",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -501,15 +579,18 @@
     "telefono": "(381)303-1034",
     "gitHub": "tomas-valdez-bustamante",
     "nota": 6,
-    "observaciones": "",
+    "observaciones": "No inicia con la pantalla inicial; sin scroll en maestro",
     "practicos": [
       "🟢",
       "🟢",
       "🔴",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -520,15 +601,18 @@
     "telefono": "(381)676-6267",
     "gitHub": "xtomi2456",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
     "practicos": [
+      "🟢",
+      "🟢",
+      "🟢",
       "🔴",
       "🟢",
-      "🟢",
-      "🔴"
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -539,15 +623,18 @@
     "telefono": "(381)502-5082",
     "gitHub": "nahuelalmaraz957-ops",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; edita en otra pantalla en lugar de a la derecha",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -563,10 +650,13 @@
       "🟢",
       "🔴",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -577,15 +667,18 @@
     "telefono": "(381)581-4086",
     "gitHub": "hernancarpalvarez28",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Muestra la pantalla del enunciado",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -596,15 +689,18 @@
     "telefono": "(381)329-6643",
     "gitHub": "santiagobnj-avila-pun",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal uso del espacio vertical; edición en otra página en lugar de a la derecha",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -615,15 +711,18 @@
     "telefono": "(381)351-9652",
     "gitHub": "julianbajre-png",
     "nota": 7,
-    "observaciones": "",
+    "observaciones": "No edita ni busca; solo muestra datos",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -634,15 +733,18 @@
     "telefono": "(381)505-9048",
     "gitHub": "abrahambenega",
     "nota": 6,
-    "observaciones": "",
+    "observaciones": "Correcto; mejorar uso del espacio vertical y acentos",
     "practicos": [
-      "🔴",
-      "🔴",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "🟢",
+      "🟢",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -657,11 +759,14 @@
     "practicos": [
       "🟢",
       "🟢",
+      "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟡"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -672,15 +777,18 @@
     "telefono": "(381)605-7383",
     "gitHub": "vincent-coffe",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal scroll interno en maestro; mal uso del espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴"
+      "🟢",
+      "🟢",
+      "🟢"
     ],
     "examenes": [
-      "🟡"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -691,15 +799,18 @@
     "telefono": "(381)632-5727",
     "gitHub": "juancarrer11",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal layout; no tiene búsqueda en caliente; no cancela la edición",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -715,10 +826,13 @@
       "🟢",
       "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -729,15 +843,18 @@
     "telefono": "(381)606-0586",
     "gitHub": "guillecortes01",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; revisar bordes",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -753,10 +870,13 @@
       "🔴",
       "🟢",
       "🟢",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -767,15 +887,18 @@
     "telefono": "(381)558-9063",
     "gitHub": "devjuancruz003-com",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Al editar no oculta el detalle; al seleccionar no cancela la edición",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -786,15 +909,18 @@
     "telefono": "(381)617-9958",
     "gitHub": "josesimondiaz",
     "nota": 6,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
+      "🔴",
       "🟢",
-      "🟢"
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -810,10 +936,13 @@
       "🟢",
       "🔴",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -824,15 +953,18 @@
     "telefono": "(381)647-5597",
     "gitHub": "rociogalvani",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "No presentado",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟠",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -848,10 +980,13 @@
       "🔴",
       "🟢",
       "🟢",
+      "🟢",
+      "🔴",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -864,13 +999,16 @@
     "nota": 7,
     "observaciones": "",
     "practicos": [
+      "🟢",
+      "🟢",
+      "🟢",
       "🔴",
       "🔴",
-      "🔴",
-      "🔴"
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -881,15 +1019,18 @@
     "telefono": "(381)390-5024",
     "gitHub": "tomasgomez18",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "No ocupa el espacio vertical; no muestra detalle de solo lectura",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -900,15 +1041,18 @@
     "telefono": "(381)612-5571",
     "gitHub": "emmanuelgr-web",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical; muestra mensaje de error; no inicia con la pantalla del sistema",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -919,15 +1063,18 @@
     "telefono": "(381)604-1868",
     "gitHub": "owning01",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "El campo de búsqueda genera scroll; revisar modo oscuro",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -943,10 +1090,13 @@
       "🟢",
       "🟢",
       "🔴",
-      "🟢"
+      "🟢",
+      "🔴",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -962,10 +1112,13 @@
       "🔴",
       "🟢",
       "🟢",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -976,15 +1129,18 @@
     "telefono": "(381)208-9907",
     "gitHub": "tatianaherrera-commits",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Layout roto; sin scroll en maestro; el detalle queda debajo del maestro",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1000,10 +1156,13 @@
       "🟢",
       "🟢",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1019,10 +1178,13 @@
       "🔴",
       "🔴",
       "🔴",
+      "🔴",
+      "🔴",
       "🔴"
     ],
     "examenes": [
-      "🔴"
+      "🔴",
+      "⚪"
     ]
   },
   {
@@ -1033,15 +1195,18 @@
     "telefono": "(381)589-1439",
     "gitHub": "fabriciolazarte27",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1052,15 +1217,18 @@
     "telefono": "(381)555-5202",
     "gitHub": "ignaciolezana25",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Edición en caja de diálogo en lugar de a la derecha",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1071,15 +1239,18 @@
     "telefono": "(381)360-4566",
     "gitHub": "leandro-progam",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; revisar bordes",
     "practicos": [
       "🟢",
       "🟢",
-      "🔴",
-      "🟢"
+      "🟢",
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1090,15 +1261,18 @@
     "telefono": "(381)354-0133",
     "gitHub": "mmore-cloud",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "El campo de búsqueda genera scroll vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1109,15 +1283,18 @@
     "telefono": "(381)201-7153",
     "gitHub": "lumedina23",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; mal uso del espacio vertical",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1128,15 +1305,18 @@
     "telefono": "(381)208-1031",
     "gitHub": "gonzalomiranda456",
     "nota": 7,
-    "observaciones": "",
+    "observaciones": "No cancela al seleccionar",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1147,15 +1327,18 @@
     "telefono": "(381)416-0720",
     "gitHub": "lazaro2005-ml",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Edición mal ubicada abajo; mal scroll en maestro",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1166,15 +1349,18 @@
     "telefono": "(381)301-0206",
     "gitHub": "facumoran",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; revisar modo oscuro",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1190,10 +1376,13 @@
       "🔴",
       "🔴",
       "🔴",
-      "🔴"
+      "🔴",
+      "🔴",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1204,15 +1393,18 @@
     "telefono": "(381)360-2873",
     "gitHub": "vall19-git",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Correcto; botones duplicados para cancelar/guardar",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🟢"
+      "🟢",
+      "🟢",
+      "⚪"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1228,10 +1420,13 @@
       "🟢",
       "🟢",
       "🟢",
-      "🔴"
+      "🔴",
+      "🔴",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1242,15 +1437,18 @@
     "telefono": "(381)342-9672",
     "gitHub": "sofisanchez126",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1261,15 +1459,18 @@
     "telefono": "(381)612-1173",
     "gitHub": "nahum-saravia",
     "nota": 10,
-    "observaciones": "",
+    "observaciones": "No funciona; AmbiguousMatchException: la solicitud coincide con múltiples endpoints",
     "practicos": [
+      "🟢",
+      "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   },
   {
@@ -1280,15 +1481,18 @@
     "telefono": "(381)448-3445",
     "gitHub": "mariajosethompson0-eng",
     "nota": 9,
-    "observaciones": "",
+    "observaciones": "Correcto",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴"
+      "🟢",
+      "🟢",
+      "🟤"
     ],
     "examenes": [
-      "🟢"
+      "🟢",
+      "⚪"
     ]
   }
 ]

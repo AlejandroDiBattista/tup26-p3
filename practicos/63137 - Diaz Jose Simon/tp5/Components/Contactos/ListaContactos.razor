@@ -1,0 +1,29 @@
+<div class="list-group">
+    @foreach (Contacto contacto in Contactos)
+    {
+        <ItemContacto
+            Contacto="contacto"
+            Activo="contacto.Id == ContactoIdSeleccionado"
+            OnSeleccionar="OnContactoSeleccionado"
+            @key="contacto.Id" />
+    }
+</div>
+
+@if (Contactos.Count == 0)
+{
+    <div class="text-center text-muted py-4">
+        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+        <span>No se encontraron contactos.</span>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IReadOnlyList<Contacto> Contactos { get; set; } = [];
+
+    [Parameter]
+    public int? ContactoIdSeleccionado { get; set; }
+
+    [Parameter]
+    public EventCallback<Contacto> OnContactoSeleccionado { get; set; }
+}
