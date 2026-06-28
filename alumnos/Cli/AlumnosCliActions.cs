@@ -680,7 +680,10 @@ static class AlumnosCliActions {
             string proyectoDetalle = string.IsNullOrWhiteSpace(resultado.Captura.Proyecto)
                 ? string.Empty
                 : $" | proyecto: {resultado.Captura.Proyecto}";
-            log($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | {etiqueta}{proyectoDetalle}");
+            string archivoDetalle = string.IsNullOrWhiteSpace(resultado.Captura.Archivo)
+                ? string.Empty
+                : $" | archivo: {Path.GetFileName(resultado.Captura.Archivo)}";
+            log($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | {etiqueta}{proyectoDetalle}{archivoDetalle}");
             foreach (string mensaje in resultado.Captura.Mensajes) {
                 Log.Print($"  {mensaje}");
             }

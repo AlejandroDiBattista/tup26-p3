@@ -6,7 +6,12 @@ namespace Tup26.AlumnosApp;
 static class CapturaTerminalPracticos {
     const int Columnas = 100;
     const int Filas = 30;
-    const int TiempoMaximoCapturaMs = 12_000;
+    const int TiempoMaximoArranqueMs = 8_000;
+    const int TiempoMaximoRespuestaMs = 20_000;
+    const int IntervaloSondeoMs = 500;
+    const int PausaEntreTeclasMs = 120;
+    const int MaximoIntentosFoco = 3;
+    const string MensajePrueba = "generar quicksort";
     const string NombreCapturaTp6 = "captura-tp6.png";
 
     public static CapturaPantallaResultado CapturarTp6(string rutaPractico, bool forzar) {
@@ -34,9 +39,18 @@ static class CapturaTerminalPracticos {
 
         string? transcripcion = null;
         try {
-            transcripcion = CapturarSalidaPty(rutaPractico);
+            CapturaTerminalInteractivaResultado resultado = CapturarSalidaPty(rutaPractico);
+            transcripcion = resultado.Transcripcion;
             string pantalla = TerminalBuffer.Renderizar(transcripcion, Columnas, Filas);
             RenderizarPngAsync(pantalla, rutaCaptura).GetAwaiter().GetResult();
+
+            if (!resultado.RespuestaDetectada) {
+                return new(
+                    EstadoCapturaPantalla.Error,
+                    Path.GetFileName(asistente),
+                    rutaCaptura,
+                    ["No se detectó respuesta luego de 20 segundos."]);
+            }
 
             return new(
                 EstadoCapturaPantalla.Capturada,
@@ -73,11 +87,12 @@ static class CapturaTerminalPracticos {
             AppPaths.ComparacionRutas);
     }
 
-    static string CapturarSalidaPty(string rutaPractico) {
+    static CapturaTerminalInteractivaResultado CapturarSalidaPty(string rutaPractico) {
         string rutaTranscripcion = Path.Combine(Path.GetTempPath(), $"tp6-captura-{Guid.NewGuid():N}.ansi");
         ProcessStartInfo startInfo = new() {
             FileName = "script",
             WorkingDirectory = rutaPractico,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
@@ -90,6 +105,7 @@ static class CapturaTerminalPracticos {
         startInfo.Environment["OPENAI_API_KEY"] = ObtenerVariable("OPENAI_API_KEY", "no-requiere-key");
         startInfo.Environment["OPENAI_MODEL"] = ObtenerVariable("OPENAI_MODEL", "gpt-5.4-mini");
         startInfo.ArgumentList.Add("-q");
+        startInfo.ArgumentList.Add("-F");
         startInfo.ArgumentList.Add(rutaTranscripcion);
         startInfo.ArgumentList.Add("dotnet");
         startInfo.ArgumentList.Add("run");
@@ -102,9 +118,9 @@ static class CapturaTerminalPracticos {
             Task<string> stdout = proceso.StandardOutput.ReadToEndAsync();
             Task<string> stderr = proceso.StandardError.ReadToEndAsync();
 
-            if (!proceso.WaitForExit(TiempoMaximoCapturaMs)) {
-                MatarProceso(proceso);
-            }
+            bool mensajeEnviado = EsperarArranqueYEnviarMensaje(proceso, rutaTranscripcion);
+            bool respuestaDetectada = mensajeEnviado && EsperarRespuesta(proceso, rutaTranscripcion);
+            MatarProceso(proceso);
 
             string salidaProceso = stdout.GetAwaiter().GetResult();
             string errorProceso = stderr.GetAwaiter().GetResult();
@@ -120,7 +136,7 @@ static class CapturaTerminalPracticos {
                 throw new InvalidOperationException("La pseudo-terminal no produjo salida para capturar.");
             }
 
-            return transcripcion;
+            return new(transcripcion, respuestaDetectada);
         } finally {
             try {
                 if (File.Exists(rutaTranscripcion)) {
@@ -129,6 +145,182 @@ static class CapturaTerminalPracticos {
             } catch {
             }
         }
+    }
+
+    static bool EsperarArranqueYEnviarMensaje(Process proceso, string rutaTranscripcion) {
+        DateTime limite = DateTime.UtcNow.AddMilliseconds(TiempoMaximoArranqueMs);
+
+        while (!proceso.HasExited && DateTime.UtcNow < limite) {
+            string pantalla = PantallaActual(rutaTranscripcion);
+            if (PantallaListaParaInteractuar(pantalla)) {
+                EnviarMensaje(proceso, pantalla, prefijoTeclas: string.Empty, escribirTexto: true);
+                return true;
+            }
+
+            Thread.Sleep(IntervaloSondeoMs);
+        }
+
+        return false;
+    }
+
+    static bool EsperarRespuesta(Process proceso, string rutaTranscripcion) {
+        DateTime limite = DateTime.UtcNow.AddMilliseconds(TiempoMaximoRespuestaMs);
+        DateTime proximoFallback = DateTime.UtcNow.AddSeconds(3);
+        int intentosFallback = 0;
+        while (!proceso.HasExited && DateTime.UtcNow < limite) {
+            string pantalla = PantallaActual(rutaTranscripcion);
+            if (RespuestaDetectada(pantalla)) {
+                return true;
+            }
+
+            if (DateTime.UtcNow >= proximoFallback && intentosFallback < MaximoIntentosFoco) {
+                EnviarMensaje(
+                    proceso,
+                    pantalla,
+                    prefijoTeclas: PrefijoFocoFallback(intentosFallback),
+                    escribirTexto: true);
+                intentosFallback++;
+                proximoFallback = DateTime.UtcNow.AddSeconds(4);
+            }
+
+            Thread.Sleep(IntervaloSondeoMs);
+        }
+
+        return RespuestaDetectada(PantallaActual(rutaTranscripcion));
+    }
+
+    static string PrefijoFocoFallback(int intento) =>
+        intento switch {
+            0 => "\u001b[Z",
+            1 => "\t",
+            _ => "\u001b[Z\u001b[Z"
+        };
+
+    static void EnviarMensaje(Process proceso, string pantalla, string prefijoTeclas, bool escribirTexto) {
+        if (proceso.HasExited) {
+            return;
+        }
+
+        try {
+            EnviarClickEntrada(proceso, pantalla);
+            EnviarTeclas(proceso, prefijoTeclas);
+
+            if (escribirTexto) {
+                foreach (char ch in MensajePrueba) {
+                    proceso.StandardInput.Write(ch);
+                    proceso.StandardInput.Flush();
+                    Thread.Sleep(10);
+                }
+
+                Thread.Sleep(PausaEntreTeclasMs);
+            }
+
+            proceso.StandardInput.Write("\r");
+            proceso.StandardInput.Flush();
+        } catch (InvalidOperationException) {
+        } catch (IOException) {
+        }
+    }
+
+    static void EnviarClickEntrada(Process proceso, string pantalla) {
+        (int x, int y) = CoordenadasEntrada(pantalla);
+        proceso.StandardInput.Write($"\u001b[<0;{x};{y}M");
+        proceso.StandardInput.Flush();
+        Thread.Sleep(PausaEntreTeclasMs);
+        proceso.StandardInput.Write($"\u001b[<0;{x};{y}m");
+        proceso.StandardInput.Flush();
+        Thread.Sleep(PausaEntreTeclasMs);
+    }
+
+    static (int X, int Y) CoordenadasEntrada(string pantalla) {
+        string[] lineas = pantalla.Split('\n');
+        for (int indice = lineas.Length - 1; indice >= 0; indice--) {
+            if (indice < Filas / 2) {
+                break;
+            }
+
+            string linea = lineas[indice];
+            if (linea.Contains("Mensaje", StringComparison.OrdinalIgnoreCase) ||
+                linea.Contains("Entrada", StringComparison.OrdinalIgnoreCase) ||
+                linea.Contains("consulta", StringComparison.OrdinalIgnoreCase)) {
+                return (4, Math.Clamp(indice + 2, 1, Filas));
+            }
+        }
+
+        return (4, Math.Max(1, Filas - 5));
+    }
+
+    static void EnviarTeclas(Process proceso, string teclas) {
+        for (int indice = 0; indice < teclas.Length; indice++) {
+            if (teclas[indice] == '\u001b' && indice + 2 < teclas.Length && teclas[indice + 1] == '[') {
+                proceso.StandardInput.Write(teclas.Substring(indice, 3));
+                indice += 2;
+            } else {
+                proceso.StandardInput.Write(teclas[indice]);
+            }
+
+            proceso.StandardInput.Flush();
+            Thread.Sleep(PausaEntreTeclasMs);
+        }
+    }
+
+    static string PantallaActual(string rutaTranscripcion) {
+        string transcripcion = LeerTranscripcion(rutaTranscripcion);
+        return string.IsNullOrWhiteSpace(transcripcion)
+            ? string.Empty
+            : TerminalBuffer.Renderizar(transcripcion, Columnas, Filas);
+    }
+
+    static string LeerTranscripcion(string rutaTranscripcion) {
+        try {
+            return File.Exists(rutaTranscripcion)
+                ? File.ReadAllText(rutaTranscripcion)
+                : string.Empty;
+        } catch (IOException) {
+            return string.Empty;
+        }
+    }
+
+    static bool PantallaListaParaInteractuar(string pantalla) =>
+        !string.IsNullOrWhiteSpace(pantalla) &&
+        (
+            pantalla.Contains("Enviar", StringComparison.OrdinalIgnoreCase) ||
+            pantalla.Contains("mensaje", StringComparison.OrdinalIgnoreCase) ||
+            pantalla.Contains("consulta", StringComparison.OrdinalIgnoreCase) ||
+            pantalla.Contains("Enter", StringComparison.OrdinalIgnoreCase)
+        );
+
+    static bool RespuestaDetectada(string pantalla) {
+        int indiceMensaje = pantalla.IndexOf(MensajePrueba, StringComparison.OrdinalIgnoreCase);
+        if (indiceMensaje < 0) {
+            return false;
+        }
+
+        string despuesDelMensaje = pantalla[(indiceMensaje + MensajePrueba.Length)..];
+        if (despuesDelMensaje.Contains("Error", StringComparison.OrdinalIgnoreCase) ||
+            despuesDelMensaje.Contains("Exception", StringComparison.OrdinalIgnoreCase) ||
+            despuesDelMensaje.Contains("No se pudo", StringComparison.OrdinalIgnoreCase)) {
+            return true;
+        }
+
+        string normalizado = NormalizarContenidoRespuesta(despuesDelMensaje);
+        return normalizado.Count(char.IsLetterOrDigit) >= 30;
+    }
+
+    static string NormalizarContenidoRespuesta(string texto) {
+        string normalizado = texto;
+        foreach (string etiqueta in new[] {
+            "Asistente", "Assistant", "Vos", "Usuario", "User", "Enviar", "Mensaje", "Tu Mensaje"
+        }) {
+            normalizado = normalizado.Replace(etiqueta, string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return new string(normalizado
+            .Where(ch =>
+                char.IsLetterOrDigit(ch) ||
+                char.IsWhiteSpace(ch) ||
+                ch is '_' or '-' or '+' or '*' or '/' or '=' or '<' or '>' or '(' or ')' or '{' or '}' or '[' or ']')
+            .ToArray());
     }
 
     static string ObtenerVariable(string nombre, string valorPorDefecto) =>
@@ -148,9 +340,9 @@ static class CapturaTerminalPracticos {
 
     static async Task RenderizarPngAsync(string pantalla, string rutaCaptura) {
         using IPlaywright playwright = await Playwright.CreateAsync();
-        await using IBrowser browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
+        await using IBrowser browser = await LanzarBrowserAsync(playwright);
         IPage page = await browser.NewPageAsync(new() {
-            ViewportSize = new ViewportSize { Width = 1100, Height = 720 },
+            ViewportSize = new ViewportSize { Width = 1320, Height = 860 },
             DeviceScaleFactor = 1
         });
 
@@ -161,8 +353,19 @@ static class CapturaTerminalPracticos {
         });
     }
 
+    static async Task<IBrowser> LanzarBrowserAsync(IPlaywright playwright) {
+        try {
+            return await playwright.Chromium.LaunchAsync(new() {
+                Channel = "chrome",
+                Headless = true
+            });
+        } catch {
+            return await playwright.Chromium.LaunchAsync(new() { Headless = true });
+        }
+    }
+
     static string HtmlTerminal(string pantalla) {
-        string contenido = WebUtility.HtmlEncode(pantalla);
+        string contenido = HtmlCeldas(pantalla);
         return $$"""
 <!doctype html>
 <html>
@@ -171,8 +374,8 @@ static class CapturaTerminalPracticos {
 <style>
 html, body {
   margin: 0;
-  width: 1100px;
-  height: 720px;
+  width: 1320px;
+  height: 860px;
   background: #151515;
 }
 body {
@@ -180,8 +383,8 @@ body {
   place-items: center;
 }
 .terminal {
-  width: 1040px;
-  height: 660px;
+  width: 1240px;
+  height: 800px;
   box-sizing: border-box;
   overflow: hidden;
   background: #1f1f1f;
@@ -189,16 +392,45 @@ body {
   border: 1px solid #3a3a3a;
   border-radius: 6px;
   padding: 18px 20px;
-  font: 20px/1.25 "SFMono-Regular", "Menlo", "Consolas", monospace;
-  white-space: pre;
+  font: 20px/1.25 "Menlo", "Monaco", "Consolas", monospace;
+  white-space: normal;
+}
+.line {
+  height: 25px;
+  white-space: nowrap;
+}
+.cell {
+  display: inline-block;
+  width: 12px;
+  height: 25px;
+  overflow: visible;
+  text-align: left;
 }
 </style>
 </head>
 <body>
-<pre class="terminal">{{contenido}}</pre>
+<div class="terminal">{{contenido}}</div>
 </body>
 </html>
 """;
+    }
+
+    static string HtmlCeldas(string pantalla) {
+        StringBuilder html = new();
+        string[] lineas = pantalla.Split('\n');
+        foreach (string linea in lineas) {
+            html.Append("<div class=\"line\">");
+            foreach (char ch in linea.TrimEnd('\r')) {
+                string contenido = ch == ' ' ? "&nbsp;" : WebUtility.HtmlEncode(ch.ToString());
+                html.Append("<span class=\"cell\">");
+                html.Append(contenido);
+                html.Append("</span>");
+            }
+
+            html.AppendLine("</div>");
+        }
+
+        return html.ToString();
     }
 
     static IReadOnlyList<string> ResumirError(Exception ex, string? transcripcion) {
@@ -213,6 +445,8 @@ body {
 
         return mensajes;
     }
+
+    readonly record struct CapturaTerminalInteractivaResultado(string Transcripcion, bool RespuestaDetectada);
 
     sealed class TerminalBuffer {
         readonly char[,] celdas;
@@ -244,6 +478,17 @@ body {
                     continue;
                 }
 
+                if (char.IsHighSurrogate(ch) && i + 1 < entrada.Length && char.IsLowSurrogate(entrada[i + 1])) {
+                    ProcesarCaracter(' ');
+                    i++;
+                    continue;
+                }
+
+                if (char.IsSurrogate(ch)) {
+                    ProcesarCaracter(' ');
+                    continue;
+                }
+
                 ProcesarCaracter(ch);
             }
         }
@@ -270,6 +515,14 @@ body {
                 return fin;
             }
 
+            if (tipo == ']') {
+                return ConsumirSecuenciaTexto(entrada, indice + 1);
+            }
+
+            if (tipo is 'P' or '_' or '^') {
+                return ConsumirSecuenciaTexto(entrada, indice + 1);
+            }
+
             if (tipo == 'c') {
                 LimpiarTodo();
             } else if (tipo == '7') {
@@ -281,6 +534,20 @@ body {
             }
 
             return indice;
+        }
+
+        static int ConsumirSecuenciaTexto(string entrada, int inicio) {
+            for (int indice = inicio; indice < entrada.Length; indice++) {
+                if (entrada[indice] == '\a') {
+                    return indice;
+                }
+
+                if (entrada[indice] == '\u001b' && indice + 1 < entrada.Length && entrada[indice + 1] == '\\') {
+                    return indice + 1;
+                }
+            }
+
+            return entrada.Length - 1;
         }
 
         static bool EsFinalCsi(char ch) => ch is >= '@' and <= '~';

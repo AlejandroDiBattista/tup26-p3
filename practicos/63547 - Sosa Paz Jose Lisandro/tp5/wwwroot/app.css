@@ -17,7 +17,7 @@ a, .btn-link {
 }
 
 .content {
-    padding-top: 1.1rem;
+    padding-top: .5rem;
 }
 
 h1:focus {
@@ -64,23 +64,26 @@ h1:focus {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: .5rem;
 }
 
 .agenda-header h1 {
     margin: 0;
-    font-size: 1.7rem;
+    font-size: 1.35rem;
 }
 
 .agenda-header p {
-    margin: .2rem 0 0;
+    margin: 0;
     color: #6c757d;
+    font-size: .9rem;
 }
 
 .agenda-layout {
     display: grid;
     grid-template-columns: 330px 1fr;
-    gap: 1rem;
+    gap: .75rem;
+    height: calc(100vh - 82px);
+    min-height: 480px;
 }
 
 .agenda-master,
@@ -88,27 +91,33 @@ h1:focus {
     border: 1px solid #dee2e6;
     border-radius: 6px;
     background: #fff;
-    padding: 1rem;
+    padding: .75rem;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.agenda-detail {
+    overflow: auto;
 }
 
 .contact-list {
     display: flex;
     flex-direction: column;
-    gap: .35rem;
-    max-height: calc(100vh - 220px);
+    gap: .25rem;
+    height: calc(100% - 46px);
     overflow: auto;
 }
 
 .contact-item {
     display: grid;
-    grid-template-columns: 42px 1fr;
-    gap: .65rem;
+    grid-template-columns: 34px 1fr;
+    gap: .5rem;
     align-items: center;
     width: 100%;
     border: 1px solid transparent;
     border-radius: 6px;
     background: transparent;
-    padding: .55rem;
+    padding: .35rem .45rem;
     text-align: left;
 }
 
@@ -131,48 +140,49 @@ h1:focus {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: #dbeafe;
     color: #0d6efd;
     font-weight: 700;
-    font-size: .85rem;
+    font-size: .78rem;
 }
 
 .contact-avatar.big {
-    width: 58px;
-    height: 58px;
-    font-size: 1.1rem;
+    width: 44px;
+    height: 44px;
+    font-size: .95rem;
 }
 
 .detail-title {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: .75rem;
+    margin-bottom: .5rem;
 }
 
 .detail-title h2 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.2rem;
 }
 
 .detail-title p {
-    margin: .25rem 0 0;
+    margin: 0;
     color: #6c757d;
+    font-size: .9rem;
 }
 
 .top-actions {
     justify-content: flex-end;
-    margin-bottom: 1rem;
+    margin-bottom: .5rem;
 }
 
 .actions {
     display: flex;
     justify-content: flex-end;
     gap: .5rem;
-    margin-top: 1rem;
+    margin-top: .75rem;
 }
 
 .contact-detail-list {
@@ -184,7 +194,7 @@ h1:focus {
 .contact-detail-list dt,
 .contact-detail-list dd {
     border-top: 1px solid #f0f0f0;
-    padding: .75rem 0;
+    padding: .48rem 0;
 }
 
 .contact-detail-list dt {
@@ -198,7 +208,11 @@ h1:focus {
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
+    gap: .65rem .85rem;
+}
+
+.form-label {
+    margin-bottom: .25rem;
 }
 
 .form-notes {
@@ -208,6 +222,7 @@ h1:focus {
 @media (max-width: 900px) {
     .agenda-layout {
         grid-template-columns: 1fr;
+        height: auto;
     }
 
     .contact-detail-list,

@@ -18,11 +18,6 @@
         </button>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(mensaje))
-    {
-        <div class="alert alert-info py-2">@mensaje</div>
-    }
-
     <div class="contenedor-agenda">
         <section class="panel-lista">
             <div class="buscador">
@@ -58,19 +53,19 @@
                 <EditForm Model="contactoFormulario" OnValidSubmit="GuardarContacto">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nombre *</label>
+                            <label class="form-label">Nombre</label>
                             <InputText class="form-control" @bind-Value="contactoFormulario.Nombre" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Apellido *</label>
+                            <label class="form-label">Apellido</label>
                             <InputText class="form-control" @bind-Value="contactoFormulario.Apellido" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Telefono *</label>
+                            <label class="form-label">Telefono</label>
                             <InputText class="form-control" @bind-Value="contactoFormulario.Telefono" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email *</label>
+                            <label class="form-label">Email</label>
                             <InputText class="form-control" @bind-Value="contactoFormulario.Email" />
                         </div>
                         <div class="col-md-6">
@@ -149,7 +144,6 @@
     Contacto? contactoSeleccionado;
     Contacto contactoFormulario = new();
     string busqueda = "";
-    string mensaje = "";
     bool modoEdicion = false;
 
     protected override async Task OnInitializedAsync()
@@ -188,14 +182,12 @@
     {
         contactoSeleccionado = contacto;
         modoEdicion = false;
-        mensaje = "";
     }
 
     void NuevoContacto()
     {
         contactoFormulario = new Contacto();
         modoEdicion = true;
-        mensaje = "";
     }
 
     void EditarContacto(Contacto contacto)
@@ -215,28 +207,19 @@
         };
 
         modoEdicion = true;
-        mensaje = "";
     }
 
     async Task GuardarContacto()
     {
-        if (!DatosObligatoriosCompletos())
-        {
-            mensaje = "Completa nombre, apellido, telefono y email.";
-            return;
-        }
-
         await using var contexto = await FabricaContexto.CreateDbContextAsync();
 
         if (contactoFormulario.Id == 0)
         {
             contexto.Contactos.Add(contactoFormulario);
-            mensaje = "Contacto agregado correctamente.";
         }
         else
         {
             contexto.Contactos.Update(contactoFormulario);
-            mensaje = "Contacto actualizado correctamente.";
         }
 
         await contexto.SaveChangesAsync();
@@ -251,7 +234,6 @@
         contexto.Contactos.Remove(contacto);
         await contexto.SaveChangesAsync();
 
-        mensaje = "Contacto eliminado correctamente.";
         contactoSeleccionado = null;
         await CargarContactos();
     }
@@ -259,15 +241,6 @@
     void CancelarEdicion()
     {
         modoEdicion = false;
-        mensaje = "";
-    }
-
-    bool DatosObligatoriosCompletos()
-    {
-        return !string.IsNullOrWhiteSpace(contactoFormulario.Nombre) &&
-               !string.IsNullOrWhiteSpace(contactoFormulario.Apellido) &&
-               !string.IsNullOrWhiteSpace(contactoFormulario.Telefono) &&
-               !string.IsNullOrWhiteSpace(contactoFormulario.Email);
     }
 
     string Iniciales(Contacto contacto)
