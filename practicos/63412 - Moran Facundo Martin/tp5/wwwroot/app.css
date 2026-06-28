@@ -393,20 +393,20 @@ body {
     }
 }
 
-/* Tema oscuro con acentos rosas */
+/* Tema claro inspirado en detalle.jpg */
 :root {
-    --agenda-bg: #0d1117;
-    --agenda-surface: #151923;
-    --agenda-surface-soft: #1c2230;
-    --agenda-surface-hover: #251c2b;
-    --agenda-border: #f472b6;
-    --agenda-border-soft: rgba(244, 114, 182, .38);
-    --agenda-pink: #f472b6;
-    --agenda-pink-strong: #ec4899;
-    --agenda-teal: #2dd4bf;
-    --agenda-text: #f8fafc;
-    --agenda-muted: #a7b0c0;
-    --agenda-danger: #fb7185;
+    --agenda-bg: #f5f7fb;
+    --agenda-surface: #ffffff;
+    --agenda-surface-soft: #ffffff;
+    --agenda-surface-hover: #eef5ff;
+    --agenda-border: #d9e0ea;
+    --agenda-border-soft: #e4e9f1;
+    --agenda-pink: #0d6efd;
+    --agenda-pink-strong: #0d6efd;
+    --agenda-pink-hover: #0b5ed7;
+    --agenda-text: #172033;
+    --agenda-muted: #667085;
+    --agenda-danger: #dc3545;
 }
 
 body {
@@ -437,12 +437,12 @@ body {
 .agenda-workspace {
     border-color: var(--agenda-border);
     background: var(--agenda-surface);
-    box-shadow: 0 22px 70px rgba(0, 0, 0, .38), 0 0 0 1px rgba(244, 114, 182, .12);
+    box-shadow: 0 18px 50px rgba(36, 47, 74, .08);
 }
 
 .agenda-master {
     border-right-color: var(--agenda-border-soft);
-    background: #10141d;
+    background: #ffffff;
 }
 
 .agenda-detail {
@@ -459,21 +459,22 @@ body {
 }
 
 .contact-row {
-    border-color: rgba(244, 114, 182, .18);
+    border-color: transparent;
     color: var(--agenda-text);
 }
 
 .contact-row:hover,
 .contact-row.active {
-    border-color: var(--agenda-border);
+    border-color: #cfe3ff;
     background: var(--agenda-surface-hover);
     box-shadow: inset 3px 0 0 var(--agenda-pink);
 }
 
 .contact-avatar,
 .detail-avatar {
-    background: linear-gradient(135deg, var(--agenda-pink-strong), #8b5cf6);
-    color: #ffffff;
+    border: 1px solid #cfe3ff;
+    background: #e7f1ff;
+    color: var(--agenda-pink);
 }
 
 .info-item,
@@ -487,27 +488,27 @@ body {
 }
 
 .delete-confirmation {
-    background: #2a1721;
+    background: #fff7f7;
     border-color: var(--agenda-danger);
 }
 
 .delete-confirmation p {
-    color: #fecdd3;
+    color: #8a3030;
 }
 
 .form-control,
 .form-select {
     border-color: var(--agenda-border-soft);
-    background-color: #0f141e;
+    background-color: #ffffff;
     color: var(--agenda-text);
 }
 
 .form-control:focus,
 .form-select:focus {
     border-color: var(--agenda-pink);
-    background-color: #111827;
+    background-color: #ffffff;
     color: var(--agenda-text);
-    box-shadow: 0 0 0 .2rem rgba(244, 114, 182, .22);
+    box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .18);
 }
 
 .form-floating > label {
@@ -531,8 +532,8 @@ body {
 
 .btn-primary:hover,
 .btn-primary:focus {
-    border-color: #f9a8d4;
-    background: #db2777;
+    border-color: var(--agenda-pink-hover);
+    background: var(--agenda-pink-hover);
     color: #ffffff;
 }
 
@@ -545,19 +546,19 @@ body {
 .btn-outline-primary:focus {
     border-color: var(--agenda-pink);
     background: var(--agenda-pink);
-    color: #111827;
+    color: #ffffff;
 }
 
 .btn-outline-secondary {
-    border-color: rgba(167, 176, 192, .5);
+    border-color: #d0d5dd;
     color: var(--agenda-muted);
 }
 
 .btn-outline-secondary:hover,
 .btn-outline-secondary:focus {
-    border-color: var(--agenda-teal);
-    background: var(--agenda-teal);
-    color: #061016;
+    border-color: #98a2b3;
+    background: #f2f4f7;
+    color: var(--agenda-text);
 }
 
 .btn-outline-danger {
@@ -570,14 +571,14 @@ body {
 .btn-danger {
     border-color: var(--agenda-danger);
     background: var(--agenda-danger);
-    color: #19070d;
+    color: #ffffff;
 }
 
 .alert-danger,
 .validation-message {
     border-color: var(--agenda-danger);
-    background: #2a1721;
-    color: #fecdd3;
+    background: #fff7f7;
+    color: #8a3030;
 }
 
 @media (max-width: 860px) {
@@ -640,15 +641,15 @@ body {
 
 .contact-row:hover,
 .contact-row.active {
-    border-color: var(--agenda-border-soft);
-    background: rgba(244, 114, 182, .08);
+    border-color: #cfe3ff;
+    background: #eef5ff;
     box-shadow: none;
 }
 
 .contact-avatar,
 .detail-avatar {
-    border: 1px solid var(--agenda-border-soft);
-    background: transparent;
+    border: 1px solid #cfe3ff;
+    background: #e7f1ff;
     color: var(--agenda-pink);
 }
 
