@@ -13,12 +13,10 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
-
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-
-var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
+var proveedor = Environment.GetEnvironmentVariable("PROVEEDOR") ?? "OLLAMA";
+var url = Environment.GetEnvironmentVariable("URL") ?? "http://localhost:11434/v1";
+var modelo = Environment.GetEnvironmentVariable("MODELO") ?? "qwen2.5-coder:7b";
+var apiKey = Environment.GetEnvironmentVariable("API_KEY"); // ← del .env, nunca hardcodeada
 
 Console.WriteLine($"Proveedor: {proveedor}");
 
@@ -124,7 +122,7 @@ async void Enviar()
 
     if (texto.StartsWith("escribir-archivo"))
     {
-        // formato: escribir-archivo|ruta|contenido
+        // formato: escribir-archivo/ruta/contenido
         var partes = texto.Split('|');
 
         if (partes.Length == 3)
