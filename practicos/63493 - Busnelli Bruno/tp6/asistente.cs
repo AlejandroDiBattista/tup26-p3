@@ -1,10 +1,11 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
-#:property PublishAot=false
 
 using Microsoft.Extensions.AI;
+using System.ComponentModel;
 using OpenAI;
 using System.ClientModel;
 using Terminal.Gui.App;
@@ -33,11 +34,46 @@ if (string.IsNullOrWhiteSpace(modelo)) {
     return;
 }
 
-IChatClient chat = new OpenAIClient(
+IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
+
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
+
+[Description("Devuelve el contenido de un archivo de texto.")]
+static string LeerArchivo([Description("Ruta del archivo a leer.")] string ruta)
+{
+    return File.ReadAllText(ruta);
+}
+
+[Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+static string EscribirArchivo(
+    [Description("Ruta del archivo a escribir.")] string ruta,
+    [Description("Contenido que se escribirá en el archivo.")] string contenido)
+{
+    File.WriteAllText(ruta, contenido);
+    return $"Archivo escrito correctamente: {ruta}";
+}
+
+[Description("Lista los archivos y carpetas de un directorio. Si el usuario dice 'esta carpeta', usar la ruta '.'.")]
+static string ListarArchivos([Description("Ruta del directorio a listar. Usar '.' para la carpeta actual.")] string ruta = ".")
+{
+    return string.Join("\n", Directory.EnumerateFileSystemEntries(ruta));
+}
+
+var opcionesChat = new ChatOptions
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(LeerArchivo),
+        AIFunctionFactory.Create(EscribirArchivo),
+        AIFunctionFactory.Create(ListarArchivos)
+    ]
+};
 
 const string pregunta = "Definí recursividad";
 
@@ -60,11 +96,11 @@ string ObtenerConversacion() {
     }));
 }
 
-var respuesta = await chat.GetResponseAsync(mensajes);
-
+var respuesta = await chat.GetResponseAsync(mensajes, opcionesChat);
 mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
 
 using IApplication app = Application.Create().Init();
+
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
     Width = Dim.Fill(),
@@ -90,7 +126,6 @@ var botonEnviar = new Button {
     X = Pos.AnchorEnd(12),
     Y = Pos.AnchorEnd(2),
     Text = "Enviar"
-
 };
 
 botonEnviar.Accepting += async (_, _) =>
@@ -111,8 +146,7 @@ botonEnviar.Accepting += async (_, _) =>
 
     mensajes.Add(new ChatMessage(ChatRole.Assistant, ""));
 
-    await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes))
-    {
+await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))    {
         respuestaCompleta += fragmento.Text;
 
         mensajes[^1] = new ChatMessage(ChatRole.Assistant, respuestaCompleta);
@@ -126,9 +160,5 @@ botonEnviar.Accepting += async (_, _) =>
 };
 
 ventana.Add(conversacion, entrada, botonEnviar);
-
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
 
 app.Run(ventana);
