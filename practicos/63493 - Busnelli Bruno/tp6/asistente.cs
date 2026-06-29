@@ -57,10 +57,31 @@ using var ventana = new Window {
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
-ventana.Add(new Markdown {
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}",
-    Width = Dim.Fill(), Height = Dim.Fill()
-});
+var conversacion = new Markdown
+{
+    X = 0,
+    Y = 0,
+    Width = Dim.Fill(),
+    Height = Dim.Fill(3),
+    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}"
+};
+
+var entrada = new TextField
+{
+    X = 0,
+    Y = Pos.AnchorEnd(2),
+    Width = Dim.Fill(14),
+    Height = 1
+};
+
+var botonEnviar = new Button
+{
+    X = Pos.AnchorEnd(12),
+    Y = Pos.AnchorEnd(2),
+    Text = "Enviar"
+};
+
+ventana.Add(conversacion, entrada, botonEnviar);
 
 // TODO: agregar el panel de conversación y el panel de entrada.
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
