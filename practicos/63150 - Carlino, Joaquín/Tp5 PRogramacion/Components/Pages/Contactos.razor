@@ -16,14 +16,14 @@
   </div>
 </div>
 
-<div class="row">
-  <div class="col-lg-4 mb-3">     @* PANEL MAESTRO *@
-    <div class="card">
-      <div class="card-body">
+<div class="row g-4 align-items-start">
+  <div class="col-lg-4 d-flex flex-column contactos-panel">     @* PANEL MAESTRO *@
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
         <input class="form-control mb-3" placeholder="Buscar contacto..."
                @bind="filtro" @bind:event="oninput" @bind:after="Refrescar" />
 
-        <div class="list-group">
+        <div class="list-group contactos-lista flex-grow-1">
           @foreach (var c in lista)
           {
             <button type="button"
@@ -47,7 +47,7 @@
   </div>
 
   <div class="col-lg-8">     @* PANEL DETALLE *@
-    <div class="card">
+    <div class="card h-100">
       <div class="card-body">
         @if (enEdicion)
         {
@@ -113,6 +113,7 @@
       </div>
     </div>
   </div>
+
 </div>
 
 @code {

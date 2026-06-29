@@ -1,0 +1,10 @@
+@page "/"
+@inject NavigationManager Navigation
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Navigation.NavigateTo(uri: "/contactos", replace: true);
+    }
+}
