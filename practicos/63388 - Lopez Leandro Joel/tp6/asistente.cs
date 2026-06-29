@@ -16,12 +16,20 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
-DotNetEnv.Env.Load();
+var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+
+var dir = Directory.GetCurrentDirectory();
+while (dir != null) {
+    var candidate = Path.Combine(dir, ".env");
+    if (File.Exists(candidate)) { envFile = candidate; break; }
+    dir = Path.GetDirectoryName(dir);
+}
+DotNetEnv.Env.Load(envFile);
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? "";
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "no-requiere-key";
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "llama3-8b-8192";
 
 IChatClient clienteBase = new OpenAIClient(
         new ApiKeyCredential(apiKey),
