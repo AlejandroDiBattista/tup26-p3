@@ -1,3 +1,15 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f1f5f9;
+}
+
+main {
+    flex: 1;
+}
+
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;

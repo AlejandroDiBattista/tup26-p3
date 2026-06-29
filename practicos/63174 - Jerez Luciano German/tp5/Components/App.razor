@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="Tp5-AgendaWeb.styles.css" />
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
-    <HeadOutlet />
+    <link rel="stylesheet" href="wwwroot/lib/bootstrap/dist/css/app.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <HeadOutlet/>
 </head>
 <body>
-    <Routes />
-    <!-- ReconnectModal removed: add the component back and an appropriate @using for its namespace if needed -->
-    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <Routes/>
+    <ReconnectModal/>
+    <script src="@Assets[" _framework/blazor.web.js"]"></script>
 </body>
 
 </html>
