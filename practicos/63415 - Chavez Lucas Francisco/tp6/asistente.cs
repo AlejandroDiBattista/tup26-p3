@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -10,6 +11,7 @@ using System.ClientModel;
 using System.ComponentModel;
 using System.Text;
 using Terminal.Gui.App;
+using Terminal.Gui.Drivers;
 using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
@@ -31,21 +33,12 @@ try
         .AsIChatClient();
 
     var chatSession = new ChatSession(
-        new FunctionInvokingChatClient(chat),
+        chat.AsBuilder().UseFunctionInvocation().Build(),
         systemPrompt,
         tools);
 
     using IApplication app = Application.Create().Init();
-    using var ventana = new Window {
-        Title = $" Asistente IA · {config.Model} ",
-        Width = Dim.Fill(), Height = Dim.Fill()
-    };
-
-    ventana.Add(new Markdown {
-        Text = $"# Asistente IA\n\nProveedor: `{config.Provider}`\n\nModelo: `{config.Model}`\n\nHerramientas disponibles: `{tools.Count}`\n\nHistorial inicial: `{chatSession.MessageCount}` mensaje de sistema.\n\nLa interfaz de chat se implementa en los siguientes pasos.",
-        Width = Dim.Fill(), Height = Dim.Fill()
-    });
-
+    using var ventana = new AssistantWindow(app, chatSession, config);
     app.Run(ventana);
 }
 catch (Exception ex)
@@ -265,5 +258,238 @@ internal sealed class ChatSession
 
             throw;
         }
+    }
+}
+
+/// <summary>
+/// Ventana principal de la TUI: historial Markdown arriba y controles de entrada abajo.
+/// La clase solo coordina eventos de interfaz; el historial real queda en ChatSession.
+/// </summary>
+internal sealed class AssistantWindow : Window
+{
+    private readonly IApplication _app;
+    private readonly ChatSession _chatSession;
+    private readonly Markdown _conversation;
+    private readonly TextField _input;
+    private readonly Button _sendButton;
+    private readonly Label _status;
+    private readonly StringBuilder _markdown = new();
+    private int _currentAssistantStart = -1;
+    private bool _isSending;
+    private bool _autoScroll = true;
+
+    public AssistantWindow(IApplication app, ChatSession chatSession, AssistantConfig config)
+    {
+        _app = app;
+        _chatSession = chatSession;
+
+        Title = $" Asistente IA · {config.Provider} · {config.Model} ";
+        X = 0;
+        Y = 0;
+        Width = Dim.Fill();
+        Height = Dim.Fill();
+
+        _conversation = new Markdown
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill(4),
+            CanFocus = true
+        };
+
+        var inputPanel = new FrameView
+        {
+            Title = "Mensaje",
+            X = 0,
+            Y = Pos.Bottom(_conversation),
+            Width = Dim.Fill(),
+            Height = 4
+        };
+
+        _input = new TextField
+        {
+            X = 1,
+            Y = 1,
+            Width = Dim.Fill(14),
+            Height = 1,
+            CanFocus = true
+        };
+
+        _sendButton = new Button
+        {
+            Text = "Enviar",
+            X = Pos.Right(_input) + 1,
+            Y = 1,
+            Width = 10,
+            IsDefault = true
+        };
+
+        _status = new Label
+        {
+            Text = "Listo",
+            X = 1,
+            Y = 2,
+            Width = Dim.Fill(),
+            Height = 1
+        };
+
+        inputPanel.Add(_input, _sendButton, _status);
+        Add(_conversation, inputPanel);
+        AppendTurn("Asistente", "Hola. Soy tu asistente de programacion. Escribi un mensaje y presiona Enter.");
+        WireEvents();
+    }
+
+    private void WireEvents()
+    {
+        _sendButton.Accepting += (_, args) =>
+        {
+            args.Handled = true;
+            _ = SendCurrentMessageAsync();
+        };
+
+        _input.KeyDown += (_, args) =>
+        {
+            if (args.KeyCode == KeyCode.Enter)
+            {
+                args.Handled = true;
+                _ = SendCurrentMessageAsync();
+            }
+        };
+
+        _conversation.KeyDown += (_, _) => _autoScroll = false;
+        _conversation.MouseEvent += (_, _) => _autoScroll = false;
+
+        KeyDown += (_, args) =>
+        {
+            if (args.KeyCode == KeyCode.Esc)
+            {
+                args.Handled = true;
+                _app.RequestStop();
+            }
+        };
+    }
+
+    private async Task SendCurrentMessageAsync()
+    {
+        if (_isSending)
+            return;
+
+        var userText = _input.Text?.ToString()?.Trim() ?? string.Empty;
+        if (userText.Length == 0)
+        {
+            _status.Text = "Escribi un mensaje antes de enviar.";
+            return;
+        }
+
+        SetSending(true);
+        _autoScroll = true;
+        _input.Text = string.Empty;
+        AppendTurn("Vos", userText);
+        BeginAssistantTurn();
+
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            var finalResponse = await _chatSession.SendAsync(userText, delta =>
+            {
+                _app.Invoke(() => AppendAssistantDelta(delta));
+            }, timeout.Token);
+
+            _app.Invoke(() =>
+            {
+                ReplaceCurrentAssistantText(finalResponse);
+                _status.Text = "Listo";
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            _app.Invoke(() =>
+            {
+                ReplaceCurrentAssistantText("La respuesta supero el tiempo de espera. Revisa la conexion o el proveedor configurado.");
+                _status.Text = "Tiempo agotado";
+            });
+        }
+        catch (Exception ex)
+        {
+            _app.Invoke(() =>
+            {
+                ReplaceCurrentAssistantText($"No pude completar la respuesta: {ex.Message}");
+                _status.Text = "Error";
+            });
+        }
+        finally
+        {
+            _app.Invoke(() => SetSending(false));
+        }
+    }
+
+    private void SetSending(bool sending)
+    {
+        _isSending = sending;
+        _input.Enabled = !sending;
+        _sendButton.Enabled = !sending;
+        _status.Text = sending ? "El asistente esta respondiendo..." : _status.Text;
+
+        if (!sending)
+            _input.SetFocus();
+
+        SetNeedsDraw();
+    }
+
+    private void AppendTurn(string role, string content)
+    {
+        _markdown.Append("## ").Append(role).AppendLine();
+        _markdown.AppendLine();
+        _markdown.AppendLine(content.TrimEnd());
+        _markdown.AppendLine();
+        RenderConversation();
+    }
+
+    private void BeginAssistantTurn()
+    {
+        _markdown.Append("## Asistente").AppendLine();
+        _markdown.AppendLine();
+        _currentAssistantStart = _markdown.Length;
+        _markdown.Append("_Pensando..._").AppendLine();
+        _markdown.AppendLine();
+        RenderConversation();
+    }
+
+    private void AppendAssistantDelta(string delta)
+    {
+        if (_currentAssistantStart < 0)
+            return;
+
+        var current = _markdown.ToString(_currentAssistantStart, _markdown.Length - _currentAssistantStart);
+        if (current.StartsWith("_Pensando..._", StringComparison.Ordinal))
+        {
+            _markdown.Remove(_currentAssistantStart, current.Length);
+        }
+
+        _markdown.Append(delta);
+        RenderConversation();
+    }
+
+    private void ReplaceCurrentAssistantText(string text)
+    {
+        if (_currentAssistantStart < 0)
+            return;
+
+        _markdown.Remove(_currentAssistantStart, _markdown.Length - _currentAssistantStart);
+        _markdown.AppendLine(text.TrimEnd());
+        _markdown.AppendLine();
+        _currentAssistantStart = -1;
+        RenderConversation();
+    }
+
+    private void RenderConversation()
+    {
+        _conversation.Text = _markdown.ToString();
+
+        if (_autoScroll)
+            _conversation.SetNeedsDraw();
+
+        SetNeedsDraw();
     }
 }
