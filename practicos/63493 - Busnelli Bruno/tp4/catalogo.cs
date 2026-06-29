@@ -2,15 +2,19 @@
 #:property PublishAot=false
 
 using System.Net.Http.Json;
+using System.Text;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
 
-ProductoDto producto;
+// ── Consulta inicial al servidor ──────────────────────────────────────────
+
+List<ProductoDto> productos;
 
 try
 {
     using var http = new HttpClient();
-    producto = await CargarProductoAsync(http);
+
+    productos = await CargarProductosAsync(http);
 }
 catch (HttpRequestException ex)
 {
@@ -19,38 +23,57 @@ catch (HttpRequestException ex)
     return;
 }
 
+// ── Interfaz TUI ──────────────────────────────────────────────────────────
+
 using IApplication app = Application.Create().Init();
 
 using Window ventana = new()
 {
-    Title = " Catalogo REST "
+    Title = " Catálogo REST "
 };
 
-var detalleProducto = new Label
+StringBuilder texto = new();
+
+texto.AppendLine("# PRODUCTOS");
+texto.AppendLine();
+
+foreach (ProductoDto producto in productos)
 {
-    Text = $"""
-            # PRODUCTO
+    texto.AppendLine($"[{producto.Id}]");
+    texto.AppendLine($"Código : {producto.Codigo}");
+    texto.AppendLine($"Nombre : {producto.Nombre}");
+    texto.AppendLine($"Precio : ${producto.Precio:N2}");
+    texto.AppendLine($"Stock  : {producto.Stock}");
+    texto.AppendLine();
+}
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  :  {producto.Stock,10}
-            """,
-    X = 4,
-    Y = 2,
+Label listaProductos = new()
+{
+    Text = texto.ToString(),
+    X = 2,
+    Y = 1
 };
 
-ventana.Add(detalleProducto);
+ventana.Add(listaProductos);
 
 app.Run(ventana);
 
-static async Task<ProductoDto> CargarProductoAsync(HttpClient http)
-{
-    const string url = "http://localhost:5050/producto";
+// ── Cliente REST ──────────────────────────────────────────────────────────
 
-    return await http.GetFromJsonAsync<ProductoDto>(url)
-        ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
+{
+    const string url = "http://localhost:5050/productos";
+
+    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
+           ?? [];
 }
 
-record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
+// ── DTO ───────────────────────────────────────────────────────────────────
+
+record ProductoDto(
+    int Id,
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
+);
