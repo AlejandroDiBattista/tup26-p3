@@ -4,26 +4,18 @@
 
 using Microsoft.EntityFrameworkCore;
 
-// ── Configuración ──────────────────────────────────────────────────────────
-
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<CatalogoDb>(opt =>
-    opt.UseSqlite("Data Source=catalogo.db"));
-
+builder.Services.AddDbContext<CatalogoDb>(opt => opt.UseSqlite("Data Source=catalogo.db"));
 builder.Services.AddScoped<CatalogoRepositorio>();
 
 var app = builder.Build();
-
-// ── Inicialización de la base de datos ────────────────────────────────────
 
 using (var scope = app.Services.CreateScope())
 {
     var repositorio = scope.ServiceProvider.GetRequiredService<CatalogoRepositorio>();
     repositorio.Iniciar();
 }
-
-// ── Endpoints ─────────────────────────────────────────────────────────────
 
 app.MapGet("/producto", (CatalogoRepositorio repositorio) =>
 {
@@ -35,33 +27,9 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) =>
     return Results.Ok(producto);
 });
 
-app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
-{
-    return Results.Ok(repositorio.ListarProductos());
-});
-
-app.MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =>
-{
-    var producto = repositorio.BuscarProducto(id);
-
-    if (producto is null)
-        return Results.NotFound();
-
-    return Results.Ok(producto);
-});
-
 app.Run("http://localhost:5050");
 
-
-// ── Modelos ───────────────────────────────────────────────────────────────
-
-record class Producto(
-    int Id,
-    string Codigo,
-    string Nombre,
-    decimal Precio,
-    int Stock
-);
+record class Producto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
 
 record class MovimientoDeProducto(
     int Id,
@@ -78,32 +46,20 @@ enum TipoMovimiento
     Ajuste
 }
 
-
-// ── DbContext ─────────────────────────────────────────────────────────────
-
 class CatalogoDb : DbContext
 {
-    public CatalogoDb(DbContextOptions<CatalogoDb> options)
-        : base(options)
-    {
-    }
+    public CatalogoDb(DbContextOptions<CatalogoDb> options) : base(options) { }
 
     public DbSet<Producto> Productos => Set<Producto>();
 
     public DbSet<MovimientoDeProducto> Movimientos => Set<MovimientoDeProducto>();
 }
 
-
-// ── Repositorio ───────────────────────────────────────────────────────────
-
 class CatalogoRepositorio
 {
     private readonly CatalogoDb db;
 
-    public CatalogoRepositorio(CatalogoDb db)
-    {
-        this.db = db;
-    }
+    public CatalogoRepositorio(CatalogoDb db) => this.db = db;
 
     public void Iniciar()
     {
@@ -111,33 +67,11 @@ class CatalogoRepositorio
 
         if (!db.Productos.Any())
         {
-            db.Productos.AddRange(
-                new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100),
-                new Producto(2, "P002", "Azucar 1kg", 1200m, 80),
-                new Producto(3, "P003", "Cafe Molido 250g", 3500m, 35)
-            );
-
+            db.Productos.Add(new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100));
             db.SaveChanges();
         }
     }
 
-    public Producto? TraerProducto()
-    {
-        return db.Productos
-            .OrderBy(p => p.Id)
-            .FirstOrDefault();
-    }
-
-    public List<Producto> ListarProductos()
-    {
-        return db.Productos
-            .OrderBy(p => p.Codigo)
-            .ToList();
-    }
-
-    public Producto? BuscarProducto(int id)
-    {
-        return db.Productos
-            .FirstOrDefault(p => p.Id == id);
-    }
+    public Producto? TraerProducto() =>
+        db.Productos.OrderBy(p => p.Id).FirstOrDefault();
 }

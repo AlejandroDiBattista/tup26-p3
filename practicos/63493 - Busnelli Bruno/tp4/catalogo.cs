@@ -5,15 +5,12 @@ using System.Net.Http.Json;
 using Terminal.Gui.App;
 using Terminal.Gui.Views;
 
-// ── Consulta inicial al servidor ──────────────────────────────────────────
-
-List<ProductoDto> productos;
+ProductoDto producto;
 
 try
 {
     using var http = new HttpClient();
-
-    productos = await CargarProductosAsync(http);
+    producto = await CargarProductoAsync(http);
 }
 catch (HttpRequestException ex)
 {
@@ -22,60 +19,38 @@ catch (HttpRequestException ex)
     return;
 }
 
-// ── Interfaz TUI ──────────────────────────────────────────────────────────
-
 using IApplication app = Application.Create().Init();
 
 using Window ventana = new()
 {
-    Title = " Catálogo REST "
+    Title = " Catalogo REST "
 };
 
-string texto = """
-# PRODUCTOS
-
-""";
-
-foreach (ProductoDto producto in productos)
+var detalleProducto = new Label
 {
-    texto +=
-$"""
-[{producto.Id}]
-Código : {producto.Codigo}
-Nombre : {producto.Nombre}
-Precio : ${producto.Precio:N2}
-Stock  : {producto.Stock}
+    Text = $"""
+            # PRODUCTO
 
-""";
-}
-
-var listaProductos = new Label
-{
-    Text = texto,
-    X = 2,
-    Y = 1
+            - Id     : {producto.Id}
+            - Código : {producto.Codigo}
+            - Nombre : {producto.Nombre}
+            - Precio : ${producto.Precio,10:N2}
+            - Stock  :  {producto.Stock,10}
+            """,
+    X = 4,
+    Y = 2,
 };
 
-ventana.Add(listaProductos);
+ventana.Add(detalleProducto);
 
 app.Run(ventana);
 
-// ── Cliente REST ──────────────────────────────────────────────────────────
-
-static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
+static async Task<ProductoDto> CargarProductoAsync(HttpClient http)
 {
-    const string url = "http://localhost:5050/productos";
+    const string url = "http://localhost:5050/producto";
 
-    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
-        ?? [];
+    return await http.GetFromJsonAsync<ProductoDto>(url)
+        ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
 }
 
-// ── DTO ───────────────────────────────────────────────────────────────────
-
-record ProductoDto(
-    int Id,
-    string Codigo,
-    string Nombre,
-    decimal Precio,
-    int Stock
-);
+record ProductoDto(int Id, string Codigo, string Nombre, decimal Precio, int Stock);
