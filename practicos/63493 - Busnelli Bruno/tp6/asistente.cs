@@ -128,7 +128,7 @@ var botonEnviar = new Button {
     Text = "Enviar"
 };
 
-botonEnviar.Accepting += async (_, _) =>
+async Task EnviarMensaje()
 {
     var texto = entrada.Text.ToString();
 
@@ -146,19 +146,27 @@ botonEnviar.Accepting += async (_, _) =>
 
     mensajes.Add(new ChatMessage(ChatRole.Assistant, ""));
 
-await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))    {
+    await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
+    {
         respuestaCompleta += fragmento.Text;
-
         mensajes[^1] = new ChatMessage(ChatRole.Assistant, respuestaCompleta);
-
         conversacion.Text = ObtenerConversacion();
         conversacion.SetNeedsDraw();
     }
 
     entrada.Enabled = true;
     botonEnviar.Enabled = true;
+}
+
+botonEnviar.Accepting += async (_, _) =>
+{
+    await EnviarMensaje();
 };
 
+entrada.Accepting += async (_, _) =>
+{
+    await EnviarMensaje();
+};
 ventana.Add(conversacion, entrada, botonEnviar);
 
 app.Run(ventana);
