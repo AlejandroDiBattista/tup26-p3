@@ -1,0 +1,2 @@
+Hola profesor.
+Este archivo fue creado por el asistente usando function calling.

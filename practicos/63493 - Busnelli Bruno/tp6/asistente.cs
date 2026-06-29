@@ -3,7 +3,7 @@
 #:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
-
+using Terminal.Gui.Input;
 using Microsoft.Extensions.AI;
 using System.ComponentModel;
 using OpenAI;
@@ -128,13 +128,19 @@ var botonEnviar = new Button {
     Text = "Enviar"
 };
 
+bool enviando = false;
+
 async Task EnviarMensaje()
 {
+    if (enviando)
+        return;
+
     var texto = entrada.Text.ToString();
 
     if (string.IsNullOrWhiteSpace(texto))
         return;
 
+    enviando = true;
     entrada.Text = "";
     entrada.Enabled = false;
     botonEnviar.Enabled = false;
@@ -143,19 +149,25 @@ async Task EnviarMensaje()
     conversacion.Text = ObtenerConversacion();
 
     var respuestaCompleta = "";
+var textoBase = ObtenerConversacion();
 
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, ""));
+await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
+{
+    respuestaCompleta += fragmento.Text;
 
-    await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
+    var textoParcial = $"{textoBase}\n\n# Asistente\n\n{respuestaCompleta}";
+
+    app.Invoke(() =>
     {
-        respuestaCompleta += fragmento.Text;
-        mensajes[^1] = new ChatMessage(ChatRole.Assistant, respuestaCompleta);
-        conversacion.Text = ObtenerConversacion();
+        conversacion.Text = textoParcial;
         conversacion.SetNeedsDraw();
-    }
+    });
+}
 
+mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
     entrada.Enabled = true;
     botonEnviar.Enabled = true;
+    enviando = false;
 }
 
 botonEnviar.Accepting += async (_, _) =>
@@ -168,5 +180,12 @@ entrada.Accepting += async (_, _) =>
     await EnviarMensaje();
 };
 ventana.Add(conversacion, entrada, botonEnviar);
-
+ventana.KeyDown += (_, e) =>
+{
+    if (e.KeyCode == Key.Esc)
+    {
+        app.RequestStop();
+        e.Handled = true;
+    }
+};
 app.Run(ventana);
