@@ -1,5 +1,6 @@
 @page "/contactos"
 @rendermode InteractiveServer
+
 @using tp5.Models
 @inject AgendaDbContext Db
 
@@ -18,10 +19,16 @@
 }
 else
 {
-    <div class="mb-3">
+    <div class="mb-3 d-flex gap-2">
         <button class="btn btn-primary" @onclick="NuevoContacto">
             Nuevo contacto
         </button>
+
+        <input class="form-control"
+               placeholder="Buscar por nombre, apellido, teléfono o email..."
+               @bind="busqueda"
+               @bind:event="oninput"
+               @bind:after="AplicarBusqueda" />
     </div>
 
     <div class="row">
@@ -32,13 +39,22 @@ else
                 </div>
 
                 <div class="list-group list-group-flush">
-                    @foreach (var contacto in contactos)
+                    @if (contactosFiltrados.Count == 0)
                     {
-                        <button class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
-                                @onclick="() => SeleccionarContacto(contacto)">
-                            <div class="fw-bold">@contacto.Apellido, @contacto.Nombre</div>
-                            <small>@contacto.Telefono</small>
-                        </button>
+                        <div class="list-group-item text-muted">
+                            No hay contactos para mostrar.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var contacto in contactosFiltrados)
+                        {
+                            <button class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                                    @onclick="() => SeleccionarContacto(contacto)">
+                                <div class="fw-bold">@contacto.Apellido, @contacto.Nombre</div>
+                                <small>@contacto.Telefono</small>
+                            </button>
+                        }
                     }
                 </div>
             </div>
@@ -122,9 +138,15 @@ else
                     <div class="card-header fw-bold d-flex justify-content-between align-items-center">
                         <span>Detalle del contacto</span>
 
-                        <button class="btn btn-sm btn-warning" @onclick="EditarContacto">
-                            Editar
-                        </button>
+                        <div>
+                            <button class="btn btn-sm btn-warning me-2" @onclick="EditarContacto">
+                                Editar
+                            </button>
+
+                            <button class="btn btn-sm btn-danger" @onclick="EliminarContacto">
+                                Eliminar
+                            </button>
+                        </div>
                     </div>
 
                     <div class="card-body">
@@ -152,11 +174,13 @@ else
 
 @code {
     private List<Contacto>? contactos;
+    private List<Contacto> contactosFiltrados = [];
     private Contacto? contactoSeleccionado;
     private Contacto contactoFormulario = new();
 
     private bool editando;
     private string mensaje = "";
+    private string busqueda = "";
 
     protected override void OnInitialized()
     {
@@ -170,7 +194,38 @@ else
             .ThenBy(c => c.Nombre)
             .ToList();
 
-        contactoSeleccionado ??= contactos.FirstOrDefault();
+        AplicarBusqueda();
+
+        contactoSeleccionado ??= contactosFiltrados.FirstOrDefault();
+    }
+
+    private void AplicarBusqueda()
+    {
+        if (contactos is null)
+            return;
+
+        IEnumerable<Contacto> consulta = contactos;
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            consulta = consulta.Where(c =>
+                c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Telefono.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Email.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        contactosFiltrados = consulta
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .ToList();
+
+        if (contactoSeleccionado is not null &&
+            !contactosFiltrados.Any(c => c.Id == contactoSeleccionado.Id))
+        {
+            contactoSeleccionado = contactosFiltrados.FirstOrDefault();
+        }
     }
 
     private void SeleccionarContacto(Contacto contacto)
@@ -259,6 +314,29 @@ else
 
         editando = false;
         contactoSeleccionado = null;
+        CargarContactos();
+    }
+
+    private void EliminarContacto()
+    {
+        if (contactoSeleccionado is null)
+            return;
+
+        Contacto? existente = Db.Contactos.Find(contactoSeleccionado.Id);
+
+        if (existente is null)
+        {
+            mensaje = "No se encontró el contacto a eliminar.";
+            return;
+        }
+
+        Db.Contactos.Remove(existente);
+        Db.SaveChanges();
+
+        mensaje = "Contacto eliminado correctamente.";
+        editando = false;
+        contactoSeleccionado = null;
+
         CargarContactos();
     }
 
