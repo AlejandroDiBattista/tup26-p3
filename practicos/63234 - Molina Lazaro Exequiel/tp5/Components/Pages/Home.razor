@@ -1,5 +1,4 @@
-div@page "/"
-@rendermode InteractiveServer
+@page "/"
 @inject AgendaDbContext Db
 @inject NavigationManager Nav
 @using tp5.Models
@@ -64,13 +63,87 @@ div@page "/"
 
         <div class="col-md-8">
             <div class="panel p-4">
-
-                @if (actual == null)
+@if (modoEdicion || modoNuevo)
+{
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="d-flex gap-3 align-items-center">
+            <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(modelo.Nombre ?? "?", modelo.Apellido ?? "")">
+                @AvatarHelper.Iniciales(modelo.Nombre ?? "?", modelo.Apellido ?? "")
+            </div>
+            <div>
+                <h4 class="mb-0">@(modoNuevo ? "Nuevo contacto" : "Editar contacto")</h4>
+                @if (!modoNuevo && actual is not null)
                 {
-                    <p class="text-muted">Seleccioná un contacto de la lista</p>
+                    <p class="mb-0 text-muted">Modificá los datos de <span class="text-primary">@actual.Nombre @actual.Apellido</span></p>
                 }
-                else
-                {
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+            <button class="btn btn-primary" @onclick="GuardarCambios">
+                <i class="bi bi-floppy me-1"></i>Guardar cambios
+            </button>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Nombre" placeholder="Nombre" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Apellido <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Apellido" placeholder="Apellido" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Empresa</label>
+            <input class="form-control" @bind="modelo.Empresa" placeholder="Empresa" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Cargo</label>
+            <input class="form-control" @bind="modelo.Cargo" placeholder="Cargo" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Teléfono <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Telefono" placeholder="Teléfono" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Email" placeholder="Email" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Dirección</label>
+            <input class="form-control" @bind="modelo.Direccion" placeholder="Dirección" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Fecha de nacimiento</label>
+            <input type="date" class="form-control"
+                   value="@(modelo.FechaNacimiento?.ToString("yyyy-MM-dd"))"
+                   @onchange="@(e => modelo.FechaNacimiento = e.Value is string s && !string.IsNullOrEmpty(s) ? DateOnly.Parse(s) : null)" />
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-semibold">Notas</label>
+            <textarea class="form-control" rows="4" @bind="modelo.Notas" placeholder="Notas adicionales..."></textarea>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+        <button class="btn btn-primary" @onclick="GuardarCambios">
+            <i class="bi bi-floppy me-1"></i>Guardar cambios
+        </button>
+    </div>
+}
+else if (actual == null)
+{
+    <p class="text-muted">Seleccioná un contacto de la lista</p>
+}
+else
+{
                     <div class="d-flex justify-content-between align-items-start mb-3">
 
                         <div class="d-flex gap-3 align-items-center">
@@ -146,7 +219,9 @@ div@page "/"
     List<Contacto> listaContactos = new();
     Contacto? actual;
     string textoBusqueda = "";
-
+bool modoEdicion = false;
+bool modoNuevo = false;
+Contacto modelo = new();
     protected override async Task OnInitializedAsync()
     {
         listaContactos = await Db.Contactos.ToListAsync();
@@ -173,15 +248,59 @@ div@page "/"
         actual = null;
     }
 
-    void IrAEditar()
+     void IrAEditar()
+     {
+         if (actual is null) return;
+     modelo = new Contacto
     {
-        if (actual != null)
-            Nav.NavigateTo("/editar/" + actual.Id);
+        Id = actual.Id,
+        Nombre = actual.Nombre,
+        Apellido = actual.Apellido,
+        Telefono = actual.Telefono,
+        Email = actual.Email,
+        Empresa = actual.Empresa,
+        Cargo = actual.Cargo,
+        Direccion = actual.Direccion,
+        FechaNacimiento = actual.FechaNacimiento,
+        Notas = actual.Notas
+    };
+    modoEdicion = true;
+    modoNuevo = false;
     }
 
     void Nuevo()
     {
-        Nav.NavigateTo("/nuevo");
+         modelo = new Contacto();
+    actual = null;
+    modoNuevo = true;
+    modoEdicion = false;
     }
+
+void CancelarEdicion()
+{
+    modoEdicion = false;
+    modoNuevo = false;
+}
+
+async Task GuardarCambios()
+{
+    if (modoNuevo)
+    {
+        Db.Contactos.Add(modelo);
+        await Db.SaveChangesAsync();
+        listaContactos = await Db.Contactos.ToListAsync();
+        actual = listaContactos.FirstOrDefault(c => c.Id == modelo.Id);
+    }
+    else
+    {
+        Db.Contactos.Update(modelo);
+        await Db.SaveChangesAsync();
+        var idx = listaContactos.FindIndex(c => c.Id == modelo.Id);
+        if (idx >= 0) listaContactos[idx] = modelo;
+        actual = modelo;
+    }
+    modoEdicion = false;
+    modoNuevo = false;
+}
 }
 
