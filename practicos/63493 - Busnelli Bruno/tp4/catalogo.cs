@@ -51,9 +51,9 @@ public sealed class CatalogoWindow : Runnable
 
                 new MenuBarItem("_Productos",
                 [
-                    new MenuItem("_Agregar", "F2", MostrarPendiente),
-                    new MenuItem("_Modificar", "F3", MostrarPendiente),
-                    new MenuItem("_Eliminar", "Del", MostrarPendiente)
+                    new MenuItem("_Agregar", "F2", AgregarProducto),
+                    new MenuItem("_Modificar", "F3", ModificarProducto),
+                    new MenuItem("_Eliminar", "Del", EliminarProducto)
                 ]),
 
                 new MenuBarItem("_Movimientos",
@@ -232,9 +232,105 @@ public sealed class CatalogoWindow : Runnable
         return productosFiltrados[selectedIndex];
     }
 
+    private void AgregarProducto()
+    {
+        ProductoDialog dialog = new();
+        App!.Run(dialog);
+
+        if (dialog.Producto is null)
+        {
+            AplicarFiltro("Alta cancelada.");
+            return;
+        }
+
+        try
+        {
+            CatalogoApi.CrearProductoAsync(http, dialog.Producto).GetAwaiter().GetResult();
+            CargarProductos();
+            AplicarFiltro("Producto agregado correctamente.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "OK");
+        }
+    }
+
+    private void ModificarProducto()
+    {
+        ProductoDto? seleccionado = ProductoSeleccionado();
+
+        if (seleccionado is null)
+        {
+            MessageBox.Query(App!, "Modificar", "No hay producto seleccionado.", "OK");
+            return;
+        }
+
+        ProductoDialog dialog = new(new ProductoInputDto(
+            seleccionado.Codigo,
+            seleccionado.Nombre,
+            seleccionado.Precio,
+            seleccionado.Stock
+        ));
+
+        App!.Run(dialog);
+
+        if (dialog.Producto is null)
+        {
+            AplicarFiltro("Modificacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            CatalogoApi.ModificarProductoAsync(http, seleccionado.Id, dialog.Producto).GetAwaiter().GetResult();
+            CargarProductos();
+            AplicarFiltro("Producto modificado correctamente.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "OK");
+        }
+    }
+
+    private void EliminarProducto()
+    {
+        ProductoDto? seleccionado = ProductoSeleccionado();
+
+        if (seleccionado is null)
+        {
+            MessageBox.Query(App!, "Eliminar", "No hay producto seleccionado.", "OK");
+            return;
+        }
+
+        int respuesta = MessageBox.Query(
+            App!,
+            "Eliminar producto",
+            $"Desea eliminar '{seleccionado.Nombre}'?",
+            "Si",
+            "No"
+        ) ?? 1;
+
+        if (respuesta != 0)
+        {
+            AplicarFiltro("Eliminacion cancelada.");
+            return;
+        }
+
+        try
+        {
+            CatalogoApi.EliminarProductoAsync(http, seleccionado.Id).GetAwaiter().GetResult();
+            CargarProductos();
+            AplicarFiltro("Producto eliminado correctamente.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "OK");
+        }
+    }
+
     private void MostrarPendiente()
     {
-        MessageBox.Query(App!, "Pendiente", "Esta funcion se agregara en los proximos commits.", "OK");
+        MessageBox.Query(App!, "Pendiente", "Esta funcion se agregara en el proximo commit.", "OK");
     }
 
     private void MostrarAcercaDe()
@@ -260,7 +356,189 @@ public sealed class CatalogoWindow : Runnable
             return true;
         }
 
+        if (key == Key.F2)
+        {
+            AgregarProducto();
+            return true;
+        }
+
+        if (key == Key.F3)
+        {
+            ModificarProducto();
+            return true;
+        }
+
+        if (key == Key.Delete)
+        {
+            EliminarProducto();
+            return true;
+        }
+
         return base.OnKeyDown(key);
+    }
+}
+
+public sealed class ProductoDialog : Dialog
+{
+    public ProductoInputDto? Producto { get; private set; }
+
+    private readonly TextField codigoField;
+    private readonly TextField nombreField;
+    private readonly TextField precioField;
+    private readonly TextField stockField;
+
+    public ProductoDialog(ProductoInputDto? producto = null)
+    {
+        Title = producto is null ? "Agregar producto" : "Modificar producto";
+        Width = 60;
+        Height = 14;
+
+        Add(new Label()
+        {
+            Text = "Codigo:",
+            X = 1,
+            Y = 1
+        });
+
+        codigoField = new TextField()
+        {
+            X = 15,
+            Y = 1,
+            Width = 35,
+            Text = producto?.Codigo ?? ""
+        };
+
+        Add(codigoField);
+
+        Add(new Label()
+        {
+            Text = "Nombre:",
+            X = 1,
+            Y = 3
+        });
+
+        nombreField = new TextField()
+        {
+            X = 15,
+            Y = 3,
+            Width = 35,
+            Text = producto?.Nombre ?? ""
+        };
+
+        Add(nombreField);
+
+        Add(new Label()
+        {
+            Text = "Precio:",
+            X = 1,
+            Y = 5
+        });
+
+        precioField = new TextField()
+        {
+            X = 15,
+            Y = 5,
+            Width = 35,
+            Text = producto?.Precio.ToString() ?? "0"
+        };
+
+        Add(precioField);
+
+        Add(new Label()
+        {
+            Text = "Stock:",
+            X = 1,
+            Y = 7
+        });
+
+        stockField = new TextField()
+        {
+            X = 15,
+            Y = 7,
+            Width = 35,
+            Text = producto?.Stock.ToString() ?? "0"
+        };
+
+        Add(stockField);
+
+        Button guardar = new()
+        {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+
+        guardar.Accepting += (_, e) =>
+        {
+            Guardar();
+            e.Handled = true;
+        };
+
+        Button cancelar = new()
+        {
+            Text = "_Cancelar"
+        };
+
+        cancelar.Accepting += (_, e) =>
+        {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        AddButton(guardar);
+        AddButton(cancelar);
+    }
+
+    private void Guardar()
+    {
+        string codigo = codigoField.Text.ToString() ?? "";
+        string nombre = nombreField.Text.ToString() ?? "";
+        string precioTexto = precioField.Text.ToString() ?? "";
+        string stockTexto = stockField.Text.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(codigo))
+        {
+            MessageBox.ErrorQuery(App!, "Error", "El codigo es obligatorio.", "OK");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            MessageBox.ErrorQuery(App!, "Error", "El nombre es obligatorio.", "OK");
+            return;
+        }
+
+        if (!decimal.TryParse(precioTexto, out decimal precio))
+        {
+            MessageBox.ErrorQuery(App!, "Error", "El precio debe ser numerico.", "OK");
+            return;
+        }
+
+        if (!int.TryParse(stockTexto, out int stock))
+        {
+            MessageBox.ErrorQuery(App!, "Error", "El stock debe ser numerico.", "OK");
+            return;
+        }
+
+        if (precio < 0)
+        {
+            MessageBox.ErrorQuery(App!, "Error", "El precio no puede ser negativo.", "OK");
+            return;
+        }
+
+        if (stock < 0)
+        {
+            MessageBox.ErrorQuery(App!, "Error", "El stock no puede ser negativo.", "OK");
+            return;
+        }
+
+        Producto = new ProductoInputDto(
+            codigo.Trim(),
+            nombre.Trim(),
+            precio,
+            stock
+        );
+
+        App!.RequestStop();
     }
 }
 
@@ -307,7 +585,7 @@ static class CatalogoApi
     }
 }
 
-record ProductoDto(
+public record ProductoDto(
     int Id,
     string Codigo,
     string Nombre,
@@ -315,7 +593,7 @@ record ProductoDto(
     int Stock
 );
 
-record ProductoInputDto(
+public record ProductoInputDto(
     string Codigo,
     string Nombre,
     decimal Precio,
