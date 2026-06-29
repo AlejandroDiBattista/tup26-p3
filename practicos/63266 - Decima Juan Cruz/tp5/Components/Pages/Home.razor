@@ -224,6 +224,7 @@
                 FechaNacimiento = contactoSeleccionado.FechaNacimiento,
                 Notas = contactoSeleccionado.Notas
             };
+            contactoSeleccionado = null;
             mostrarFormulario = true;
         }
     }
@@ -231,6 +232,11 @@
     private void CancelarFormulario()
     {
         mostrarFormulario = false;
+
+        if(esModoEdicion && elContacto != null)
+        {
+            contactoSeleccionado = contactos?.FirstOrDefault(c => c.Id == elContacto.Id);
+        }  
     }
 
     private async Task GuardarContacto()
