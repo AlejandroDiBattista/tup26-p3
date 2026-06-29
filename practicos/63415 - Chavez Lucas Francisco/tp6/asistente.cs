@@ -22,6 +22,7 @@ try
 
     var config = AssistantConfig.FromEnvironment(args);
     var systemPrompt = File.ReadAllText(SystemPromptFileName);
+    var tools = ProjectFileTools.Create(Directory.GetCurrentDirectory());
 
     IChatClient chat = new OpenAIClient(
             new ApiKeyCredential(config.ApiKey),
@@ -41,7 +42,7 @@ try
     };
 
     ventana.Add(new Markdown {
-        Text = $"# Asistente IA\n\nProveedor: `{config.Provider}`\n\nModelo: `{config.Model}`\n\nLa interfaz de chat se implementa en los siguientes pasos.",
+        Text = $"# Asistente IA\n\nProveedor: `{config.Provider}`\n\nModelo: `{config.Model}`\n\nHerramientas disponibles: `{tools.Count}`\n\nLa interfaz de chat se implementa en los siguientes pasos.",
         Width = Dim.Fill(), Height = Dim.Fill()
     });
 
@@ -94,5 +95,113 @@ internal sealed record AssistantConfig(string Provider, Uri Endpoint, string Api
             throw new InvalidOperationException($"La URL configurada no es valida: {rawUrl}");
 
         return endpoint;
+    }
+}
+
+/// <summary>
+/// Herramientas expuestas al modelo para operar sobre archivos del proyecto.
+/// Cada funcion resuelve rutas dentro del directorio actual para evitar escrituras accidentales fuera del TP.
+/// </summary>
+internal sealed class ProjectFileTools
+{
+    private readonly string _rootDirectory;
+
+    private ProjectFileTools(string rootDirectory)
+    {
+        _rootDirectory = Path.GetFullPath(rootDirectory);
+    }
+
+    public static IReadOnlyList<AITool> Create(string rootDirectory)
+    {
+        var tools = new ProjectFileTools(rootDirectory);
+        return
+        [
+            AIFunctionFactory.Create(tools.ReadTextFile, "leer-archivo", "Devuelve el contenido de un archivo de texto del proyecto."),
+            AIFunctionFactory.Create(tools.WriteTextFile, "escribir-archivo", "Crea o sobrescribe un archivo de texto del proyecto."),
+            AIFunctionFactory.Create(tools.ListDirectory, "listar-archivos", "Lista archivos y carpetas de un directorio del proyecto.")
+        ];
+    }
+
+    private string ReadTextFile([Description("Ruta relativa del archivo a leer.")] string ruta)
+    {
+        try
+        {
+            var fullPath = ResolveProjectPath(ruta);
+            if (!File.Exists(fullPath))
+                return $"No existe el archivo '{ruta}'.";
+
+            return File.ReadAllText(fullPath);
+        }
+        catch (Exception ex)
+        {
+            return $"No pude leer '{ruta}': {ex.Message}";
+        }
+    }
+
+    private string WriteTextFile(
+        [Description("Ruta relativa del archivo a crear o sobrescribir.")] string ruta,
+        [Description("Contenido completo que se escribira en el archivo.")] string contenido)
+    {
+        try
+        {
+            var fullPath = ResolveProjectPath(ruta);
+            var directory = Path.GetDirectoryName(fullPath);
+
+            if (!string.IsNullOrWhiteSpace(directory))
+                Directory.CreateDirectory(directory);
+
+            File.WriteAllText(fullPath, contenido);
+            return $"Archivo '{ruta}' guardado correctamente.";
+        }
+        catch (Exception ex)
+        {
+            return $"No pude escribir '{ruta}': {ex.Message}";
+        }
+    }
+
+    private string ListDirectory([Description("Ruta relativa del directorio a listar. Usar '.' para el directorio actual.")] string ruta)
+    {
+        try
+        {
+            var fullPath = ResolveProjectPath(string.IsNullOrWhiteSpace(ruta) ? "." : ruta);
+            if (!Directory.Exists(fullPath))
+                return $"No existe el directorio '{ruta}'.";
+
+            var directories = Directory.GetDirectories(fullPath)
+                .OrderBy(Path.GetFileName)
+                .Select(path => $"[dir]  {Path.GetRelativePath(_rootDirectory, path)}/");
+
+            var files = Directory.GetFiles(fullPath)
+                .OrderBy(Path.GetFileName)
+                .Select(path => $"[file] {Path.GetRelativePath(_rootDirectory, path)}");
+
+            var entries = directories.Concat(files).ToArray();
+            return entries.Length == 0
+                ? $"El directorio '{ruta}' esta vacio."
+                : string.Join(Environment.NewLine, entries);
+        }
+        catch (Exception ex)
+        {
+            return $"No pude listar '{ruta}': {ex.Message}";
+        }
+    }
+
+    private string ResolveProjectPath(string ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta))
+            throw new ArgumentException("La ruta no puede estar vacia.");
+
+        var candidate = Path.GetFullPath(Path.Combine(_rootDirectory, ruta));
+        var rootWithSeparator = _rootDirectory.EndsWith(Path.DirectorySeparatorChar)
+            ? _rootDirectory
+            : _rootDirectory + Path.DirectorySeparatorChar;
+
+        if (candidate != _rootDirectory &&
+            !candidate.StartsWith(rootWithSeparator, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("La ruta debe quedar dentro del directorio del proyecto.");
+        }
+
+        return candidate;
     }
 }
