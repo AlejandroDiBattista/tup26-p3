@@ -18,6 +18,7 @@ public sealed class CatalogoWindow : Runnable
 
     private readonly List<ProductoDto> productos = [];
     private readonly List<ProductoDto> productosFiltrados = [];
+    private readonly List<MovimientoDto> movimientos = [];
 
     private TextField buscarField = null!;
     private TextView productosView = null!;
@@ -58,7 +59,7 @@ public sealed class CatalogoWindow : Runnable
 
                 new MenuBarItem("_Movimientos",
                 [
-                    new MenuItem("_Registrar movimiento", "F4", MostrarPendiente)
+                    new MenuItem("_Registrar movimiento", "F4", RegistrarMovimiento)
                 ]),
 
                 new MenuBarItem("_Ayuda",
@@ -88,6 +89,7 @@ public sealed class CatalogoWindow : Runnable
         {
             selectedIndex = 0;
             AplicarFiltro("Busqueda actualizada.");
+            CargarMovimientosSeleccionado();
         };
 
         Add(buscarField);
@@ -113,7 +115,7 @@ public sealed class CatalogoWindow : Runnable
 
         FrameView panelDetalle = new()
         {
-            Title = "Detalle",
+            Title = "Detalle e historial",
             X = Pos.Right(panelProductos),
             Y = 3,
             Width = Dim.Fill(),
@@ -150,6 +152,35 @@ public sealed class CatalogoWindow : Runnable
 
             selectedIndex = 0;
             AplicarFiltro("Productos cargados correctamente.");
+            CargarMovimientosSeleccionado();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "OK");
+        }
+    }
+
+    private void CargarMovimientosSeleccionado()
+    {
+        movimientos.Clear();
+
+        ProductoDto? producto = ProductoSeleccionado();
+
+        if (producto is null)
+        {
+            RefrescarVista("No hay producto seleccionado.");
+            return;
+        }
+
+        try
+        {
+            movimientos.AddRange(
+                CatalogoApi.ListarMovimientosAsync(http, producto.Id)
+                    .GetAwaiter()
+                    .GetResult()
+            );
+
+            RefrescarVista($"Producto seleccionado: {producto.Nombre}");
         }
         catch (Exception ex)
         {
@@ -202,6 +233,9 @@ public sealed class CatalogoWindow : Runnable
             sb.AppendLine($"{cursor}{p.Codigo} | {p.Nombre} | ${p.Precio:N2} | Stock: {p.Stock}");
         }
 
+        sb.AppendLine();
+        sb.AppendLine("F2: agregar | F3: modificar | Del: eliminar | F4: movimiento");
+
         return sb.ToString();
     }
 
@@ -212,16 +246,30 @@ public sealed class CatalogoWindow : Runnable
         if (producto is null)
             return "No hay producto seleccionado.";
 
-        return $"""
-        Id: {producto.Id}
-        Codigo: {producto.Codigo}
-        Nombre: {producto.Nombre}
-        Precio: ${producto.Precio:N2}
-        Stock actual: {producto.Stock}
+        StringBuilder sb = new();
 
-        Historial de movimientos:
-        Se agregara en el proximo commit.
-        """;
+        sb.AppendLine($"Id: {producto.Id}");
+        sb.AppendLine($"Codigo: {producto.Codigo}");
+        sb.AppendLine($"Nombre: {producto.Nombre}");
+        sb.AppendLine($"Precio: ${producto.Precio:N2}");
+        sb.AppendLine($"Stock actual: {producto.Stock}");
+        sb.AppendLine();
+        sb.AppendLine("Historial de movimientos:");
+        sb.AppendLine();
+
+        if (movimientos.Count == 0)
+        {
+            sb.AppendLine("No hay movimientos registrados.");
+        }
+        else
+        {
+            foreach (MovimientoDto m in movimientos)
+            {
+                sb.AppendLine($"{m.Fecha:g} | {m.Tipo} | Cantidad: {m.Cantidad}");
+            }
+        }
+
+        return sb.ToString();
     }
 
     private ProductoDto? ProductoSeleccionado()
@@ -328,9 +376,39 @@ public sealed class CatalogoWindow : Runnable
         }
     }
 
-    private void MostrarPendiente()
+    private void RegistrarMovimiento()
     {
-        MessageBox.Query(App!, "Pendiente", "Esta funcion se agregara en el proximo commit.", "OK");
+        ProductoDto? seleccionado = ProductoSeleccionado();
+
+        if (seleccionado is null)
+        {
+            MessageBox.Query(App!, "Movimiento", "No hay producto seleccionado.", "OK");
+            return;
+        }
+
+        MovimientoDialog dialog = new();
+        App!.Run(dialog);
+
+        if (dialog.Movimiento is null)
+        {
+            AplicarFiltro("Movimiento cancelado.");
+            return;
+        }
+
+        try
+        {
+            CatalogoApi.RegistrarMovimientoAsync(http, seleccionado.Id, dialog.Movimiento)
+                .GetAwaiter()
+                .GetResult();
+
+            CargarProductos();
+            CargarMovimientosSeleccionado();
+            AplicarFiltro("Movimiento registrado correctamente.");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery(App!, "Error", ex.Message, "OK");
+        }
     }
 
     private void MostrarAcercaDe()
@@ -374,6 +452,12 @@ public sealed class CatalogoWindow : Runnable
             return true;
         }
 
+        if (key == Key.F4)
+        {
+            RegistrarMovimiento();
+            return true;
+        }
+
         return base.OnKeyDown(key);
     }
 }
@@ -393,12 +477,7 @@ public sealed class ProductoDialog : Dialog
         Width = 60;
         Height = 14;
 
-        Add(new Label()
-        {
-            Text = "Codigo:",
-            X = 1,
-            Y = 1
-        });
+        Add(new Label() { Text = "Codigo:", X = 1, Y = 1 });
 
         codigoField = new TextField()
         {
@@ -410,12 +489,7 @@ public sealed class ProductoDialog : Dialog
 
         Add(codigoField);
 
-        Add(new Label()
-        {
-            Text = "Nombre:",
-            X = 1,
-            Y = 3
-        });
+        Add(new Label() { Text = "Nombre:", X = 1, Y = 3 });
 
         nombreField = new TextField()
         {
@@ -427,12 +501,7 @@ public sealed class ProductoDialog : Dialog
 
         Add(nombreField);
 
-        Add(new Label()
-        {
-            Text = "Precio:",
-            X = 1,
-            Y = 5
-        });
+        Add(new Label() { Text = "Precio:", X = 1, Y = 5 });
 
         precioField = new TextField()
         {
@@ -444,12 +513,7 @@ public sealed class ProductoDialog : Dialog
 
         Add(precioField);
 
-        Add(new Label()
-        {
-            Text = "Stock:",
-            X = 1,
-            Y = 7
-        });
+        Add(new Label() { Text = "Stock:", X = 1, Y = 7 });
 
         stockField = new TextField()
         {
@@ -461,11 +525,7 @@ public sealed class ProductoDialog : Dialog
 
         Add(stockField);
 
-        Button guardar = new()
-        {
-            Text = "_Guardar",
-            IsDefault = true
-        };
+        Button guardar = new() { Text = "_Guardar", IsDefault = true };
 
         guardar.Accepting += (_, e) =>
         {
@@ -473,10 +533,7 @@ public sealed class ProductoDialog : Dialog
             e.Handled = true;
         };
 
-        Button cancelar = new()
-        {
-            Text = "_Cancelar"
-        };
+        Button cancelar = new() { Text = "_Cancelar" };
 
         cancelar.Accepting += (_, e) =>
         {
@@ -519,25 +576,122 @@ public sealed class ProductoDialog : Dialog
             return;
         }
 
-        if (precio < 0)
+        Producto = new ProductoInputDto(codigo.Trim(), nombre.Trim(), precio, stock);
+        App!.RequestStop();
+    }
+}
+
+public sealed class MovimientoDialog : Dialog
+{
+    public MovimientoInputDto? Movimiento { get; private set; }
+
+    private readonly TextField tipoField;
+    private readonly TextField cantidadField;
+
+    public MovimientoDialog()
+    {
+        Title = "Registrar movimiento";
+        Width = 65;
+        Height = 12;
+
+        Add(new Label()
         {
-            MessageBox.ErrorQuery(App!, "Error", "El precio no puede ser negativo.", "OK");
+            Text = "Tipo (Compra/Venta/Ajuste):",
+            X = 1,
+            Y = 1
+        });
+
+        tipoField = new TextField()
+        {
+            X = 30,
+            Y = 1,
+            Width = 25,
+            Text = "Compra"
+        };
+
+        Add(tipoField);
+
+        Add(new Label()
+        {
+            Text = "Cantidad:",
+            X = 1,
+            Y = 3
+        });
+
+        cantidadField = new TextField()
+        {
+            X = 30,
+            Y = 3,
+            Width = 25,
+            Text = "1"
+        };
+
+        Add(cantidadField);
+
+        Add(new Label()
+        {
+            Text = "Compra suma stock, Venta descuenta, Ajuste establece stock.",
+            X = 1,
+            Y = 5
+        });
+
+        Button guardar = new()
+        {
+            Text = "_Guardar",
+            IsDefault = true
+        };
+
+        guardar.Accepting += (_, e) =>
+        {
+            Guardar();
+            e.Handled = true;
+        };
+
+        Button cancelar = new()
+        {
+            Text = "_Cancelar"
+        };
+
+        cancelar.Accepting += (_, e) =>
+        {
+            App!.RequestStop();
+            e.Handled = true;
+        };
+
+        AddButton(guardar);
+        AddButton(cancelar);
+    }
+
+    private void Guardar()
+    {
+        string tipoTexto = tipoField.Text.ToString() ?? "";
+        string cantidadTexto = cantidadField.Text.ToString() ?? "";
+
+        if (!Enum.TryParse(tipoTexto, true, out TipoMovimientoDto tipo))
+        {
+            MessageBox.ErrorQuery(
+                App!,
+                "Error",
+                "El tipo debe ser Compra, Venta o Ajuste.",
+                "OK"
+            );
+
             return;
         }
 
-        if (stock < 0)
+        if (!int.TryParse(cantidadTexto, out int cantidad) || cantidad <= 0)
         {
-            MessageBox.ErrorQuery(App!, "Error", "El stock no puede ser negativo.", "OK");
+            MessageBox.ErrorQuery(
+                App!,
+                "Error",
+                "La cantidad debe ser un numero positivo.",
+                "OK"
+            );
+
             return;
         }
 
-        Producto = new ProductoInputDto(
-            codigo.Trim(),
-            nombre.Trim(),
-            precio,
-            stock
-        );
-
+        Movimiento = new MovimientoInputDto(tipo, cantidad);
         App!.RequestStop();
     }
 }
@@ -583,6 +737,20 @@ static class CatalogoApi
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException(await response.Content.ReadAsStringAsync());
     }
+
+    public static async Task<List<MovimientoDto>> ListarMovimientosAsync(HttpClient http, int productoId)
+    {
+        return await http.GetFromJsonAsync<List<MovimientoDto>>($"{BaseUrl}/productos/{productoId}/movimientos") ?? [];
+    }
+
+    public static async Task RegistrarMovimientoAsync(HttpClient http, int productoId, MovimientoInputDto input)
+    {
+        HttpResponseMessage response =
+            await http.PostAsJsonAsync($"{BaseUrl}/productos/{productoId}/movimientos", input);
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException(await response.Content.ReadAsStringAsync());
+    }
 }
 
 public record ProductoDto(
@@ -599,3 +767,23 @@ public record ProductoInputDto(
     decimal Precio,
     int Stock
 );
+
+public record MovimientoDto(
+    int Id,
+    int ProductoId,
+    TipoMovimientoDto Tipo,
+    int Cantidad,
+    DateTime Fecha
+);
+
+public record MovimientoInputDto(
+    TipoMovimientoDto Tipo,
+    int Cantidad
+);
+
+public enum TipoMovimientoDto
+{
+    Compra,
+    Venta,
+    Ajuste
+}

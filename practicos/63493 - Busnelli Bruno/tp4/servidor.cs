@@ -75,6 +75,29 @@ app.MapDelete("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =
     return Results.NoContent();
 });
 
+app.MapGet("/productos/{productoId:int}/movimientos", (int productoId, CatalogoRepositorio repositorio) =>
+{
+    Producto? producto = repositorio.BuscarProducto(productoId);
+
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(repositorio.ListarMovimientos(productoId));
+});
+
+app.MapPost("/productos/{productoId:int}/movimientos", (int productoId, MovimientoInput input, CatalogoRepositorio repositorio) =>
+{
+    if (input.Cantidad <= 0)
+        return Results.BadRequest("La cantidad debe ser positiva.");
+
+    MovimientoDeProducto? movimiento = repositorio.RegistrarMovimiento(productoId, input);
+
+    if (movimiento is null)
+        return Results.NotFound();
+
+    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+});
+
 app.Run("http://localhost:5050");
 
 static string? ValidarProducto(ProductoInput input)
@@ -121,6 +144,8 @@ class MovimientoDeProducto
 
     public DateTime Fecha { get; set; }
 }
+
+record class MovimientoInput(TipoMovimiento Tipo, int Cantidad);
 
 enum TipoMovimiento
 {
@@ -216,5 +241,47 @@ class CatalogoRepositorio
         db.SaveChanges();
 
         return true;
+    }
+
+    public List<MovimientoDeProducto> ListarMovimientos(int productoId)
+    {
+        return db.Movimientos
+            .Where(m => m.ProductoId == productoId)
+            .OrderByDescending(m => m.Fecha)
+            .ToList();
+    }
+
+    public MovimientoDeProducto? RegistrarMovimiento(int productoId, MovimientoInput input)
+    {
+        Producto? producto = BuscarProducto(productoId);
+
+        if (producto is null)
+            return null;
+
+        if (input.Tipo == TipoMovimiento.Compra)
+        {
+            producto.Stock += input.Cantidad;
+        }
+        else if (input.Tipo == TipoMovimiento.Venta)
+        {
+            producto.Stock -= input.Cantidad;
+        }
+        else if (input.Tipo == TipoMovimiento.Ajuste)
+        {
+            producto.Stock = input.Cantidad;
+        }
+
+        MovimientoDeProducto movimiento = new()
+        {
+            ProductoId = productoId,
+            Tipo = input.Tipo,
+            Cantidad = input.Cantidad,
+            Fecha = DateTime.Now
+        };
+
+        db.Movimientos.Add(movimiento);
+        db.SaveChanges();
+
+        return movimiento;
     }
 }
