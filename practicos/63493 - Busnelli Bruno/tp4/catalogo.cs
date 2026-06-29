@@ -7,13 +7,13 @@ using Terminal.Gui.Views;
 
 // ── Consulta inicial al servidor ──────────────────────────────────────────
 
-ProductoDto producto;
+List<ProductoDto> productos;
 
 try
 {
     using var http = new HttpClient();
 
-    producto = await CargarProductoAsync(http);
+    productos = await CargarProductosAsync(http);
 }
 catch (HttpRequestException ex)
 {
@@ -28,39 +28,46 @@ using IApplication app = Application.Create().Init();
 
 using Window ventana = new()
 {
-    Title = " Catalogo REST "
+    Title = " Catálogo REST "
 };
 
-// Panel maestro/detalle (se implementará en próximos commits)
+string texto = """
+# PRODUCTOS
 
-var detalleProducto = new Label
+""";
+
+foreach (ProductoDto producto in productos)
 {
-    Text = $"""
-            # PRODUCTO
+    texto +=
+$"""
+[{producto.Id}]
+Código : {producto.Codigo}
+Nombre : {producto.Nombre}
+Precio : ${producto.Precio:N2}
+Stock  : {producto.Stock}
 
-            - Id     : {producto.Id}
-            - Código : {producto.Codigo}
-            - Nombre : {producto.Nombre}
-            - Precio : ${producto.Precio,10:N2}
-            - Stock  : {producto.Stock,10}
-            """,
+""";
+}
 
-    X = 4,
-    Y = 2
+var listaProductos = new Label
+{
+    Text = texto,
+    X = 2,
+    Y = 1
 };
 
-ventana.Add(detalleProducto);
+ventana.Add(listaProductos);
 
 app.Run(ventana);
 
 // ── Cliente REST ──────────────────────────────────────────────────────────
 
-static async Task<ProductoDto> CargarProductoAsync(HttpClient http)
+static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
 {
-    const string url = "http://localhost:5050/producto";
+    const string url = "http://localhost:5050/productos";
 
-    return await http.GetFromJsonAsync<ProductoDto>(url)
-        ?? throw new HttpRequestException("El servidor devolvió un producto vacío");
+    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
+        ?? [];
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────

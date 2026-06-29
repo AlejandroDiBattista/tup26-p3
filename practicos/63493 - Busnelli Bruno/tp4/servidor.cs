@@ -35,6 +35,21 @@ app.MapGet("/producto", (CatalogoRepositorio repositorio) =>
     return Results.Ok(producto);
 });
 
+app.MapGet("/productos", (CatalogoRepositorio repositorio) =>
+{
+    return Results.Ok(repositorio.ListarProductos());
+});
+
+app.MapGet("/productos/{id:int}", (int id, CatalogoRepositorio repositorio) =>
+{
+    var producto = repositorio.BuscarProducto(id);
+
+    if (producto is null)
+        return Results.NotFound();
+
+    return Results.Ok(producto);
+});
+
 app.Run("http://localhost:5050");
 
 
@@ -96,14 +111,10 @@ class CatalogoRepositorio
 
         if (!db.Productos.Any())
         {
-            db.Productos.Add(
-                new Producto(
-                    1,
-                    "P001",
-                    "Yerba Mate 500g",
-                    1500m,
-                    100
-                )
+            db.Productos.AddRange(
+                new Producto(1, "P001", "Yerba Mate 500g", 1500m, 100),
+                new Producto(2, "P002", "Azucar 1kg", 1200m, 80),
+                new Producto(3, "P003", "Cafe Molido 250g", 3500m, 35)
             );
 
             db.SaveChanges();
@@ -115,5 +126,18 @@ class CatalogoRepositorio
         return db.Productos
             .OrderBy(p => p.Id)
             .FirstOrDefault();
+    }
+
+    public List<Producto> ListarProductos()
+    {
+        return db.Productos
+            .OrderBy(p => p.Codigo)
+            .ToList();
+    }
+
+    public Producto? BuscarProducto(int id)
+    {
+        return db.Productos
+            .FirstOrDefault(p => p.Id == id);
     }
 }
