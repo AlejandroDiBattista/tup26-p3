@@ -1,200 +1,237 @@
 @page "/"
 @rendermode InteractiveServer
 
-@using tp5.Models
-@using tp5.Data
 @using Microsoft.EntityFrameworkCore
+@using tp5.Data
+@using tp5.Models
 
 @inject AgendaDbContext Db
-<h1>Agenda de Contactos</h1>
 
-<button class="btn btn-success mb-3"
-        @onclick="MostrarFormulario">
-    <i class="bi bi-plus-circle"></i>
-    Nuevo Contacto
-</button>
+<style>
+    html, body { height: 100%; overflow: hidden !important; background: #f8f9fa; }
+    .agenda-page { height: 100vh; display: flex; flex-direction: column; gap: 1rem; padding: .5rem; overflow: hidden; box-sizing: border-box; }
+    .agenda-header { display: flex; flex: 0 0 auto; flex-direction: row; align-items: center; justify-content: space-between; padding: 1.25rem; }
+    .agenda-header h1 { font-size: 2rem; font-weight: 700; }
+    .agenda-layout { flex: 1 1 0; min-height: 0; overflow: hidden; margin-left: 0; margin-right: 0; }
+    .agenda-column, .agenda-panel, .agenda-list-panel .card-body, .agenda-content-panel .card-body { height: 100%; min-height: 0; }
+    .agenda-panel, .agenda-list-panel .card-body, .agenda-content-panel .card-body { overflow: hidden; }
+    .agenda-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+    .agenda-contact-item { display: flex; align-items: center; gap: .75rem; padding: .85rem; border-left: 3px solid transparent; }
+    .agenda-contact-item-selected { background-color: #eaf3ff; border-left-color: #0d6efd; }
+    .agenda-avatar { width: 4.75rem; height: 4.75rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; background: #dbeafe; color: #0d6efd; font-size: 1.75rem; font-weight: 700; border: 1px solid #c7dcff; }
+    .agenda-avatar-sm { width: 2.5rem; height: 2.5rem; font-size: .95rem; }
+    .agenda-detail { display: flex; flex-direction: column; }
+    .agenda-detail-row { display: grid; grid-template-columns: 1.75rem 8rem 1fr; gap: .75rem; align-items: start; padding: 1rem 0; border-bottom: 1px solid #dee2e6; }
+    .agenda-detail-row:last-child { border-bottom: 0; }
+</style>
 
-@if (mostrandoFormulario)
-{
-    <div class="card mb-3">
-        <div class="card-header">
-            Nuevo Contacto
+<div class="agenda-page">
+    <div class="card agenda-header shadow-sm">
+        <div>
+            <h1 class="mb-1"> Mi agenda Nico</h1>
+            <p class="text-muted mb-0">@(mostrandoFormulario ? editando ? "Editar informacion de contacto" : "Crear nuevo contacto" : "Contactos personales y profesionales")</p>
         </div>
-
-        <div class="card-body">
-
-            <input class="form-control mb-2"
-                   placeholder="Nombre"
-                   @bind="nuevoContacto.Nombre" />
-
-            <input class="form-control mb-2"
-                   placeholder="Apellido"
-                   @bind="nuevoContacto.Apellido" />
-
-            <input class="form-control mb-2"
-                   placeholder="Teléfono"
-                   @bind="nuevoContacto.Telefono" />
-
-            <input class="form-control mb-2"
-                   placeholder="Email"
-                   @bind="nuevoContacto.Email" />
-
-            @if (editando)
-{
-    <button class="btn btn-warning"
-            @onclick="GuardarCambios">
-        Guardar Cambios
-    </button>
-}
-else
-{
-    <button class="btn btn-primary"
-            @onclick="GuardarContacto">
-        Guardar
-    </button>
-}
-
-        </div>
-    </div>
-}
-<div class="row">
-    <div class="col-4">
-
-        <input class="form-control mb-3"
-               placeholder="Buscar contacto..."
-               @bind="textoBusqueda" />
-
-        <div class="list-group">
-
-            @foreach (var contacto in contactos.Where(c =>
-                string.IsNullOrWhiteSpace(textoBusqueda) ||
-                $"{c.Nombre} {c.Apellido}".Contains(textoBusqueda,
-                StringComparison.OrdinalIgnoreCase)))
-            {
-                <button class="list-group-item list-group-item-action"
-                        @onclick="() => Seleccionar(contacto)">
-                    @contacto.Nombre @contacto.Apellido
-                </button>
-            }
-
-        </div>
+        <button class="btn btn-primary" @onclick="MostrarFormulario"><i class="bi bi-plus-lg me-1"></i> Nuevo Contacto</button>
     </div>
 
-    <div class="col-8">
-
-        @if (contactoSeleccionado != null)
-        {
-            <div class="card">
-
-                <div class="card-header">
-                    <h3>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h3>
-                </div>
-
-                <div class="card-body">
-
-                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
-                    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
-                    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
-                    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
-                    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
-                    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
-
-                    <div class="mt-3">
-
-                       <button class="btn btn-primary me-2"
-                        @onclick="EditarContacto">
-                        <i class="bi bi-pencil"></i>
-                         Editar
-                    </button>
-
-                        <button class="btn btn-danger"
-                                @onclick="EliminarContacto">
-                            <i class="bi bi-trash"></i>
-                            Eliminar
-                        </button>
-
+    <div class="row g-3 agenda-layout">
+        <div class="col-12 col-md-4 agenda-column d-flex">
+            <div class="card agenda-panel agenda-list-panel shadow-sm flex-fill">
+                <div class="card-body d-flex flex-column h-100">
+                    <input class="form-control mb-3" placeholder="Buscar contacto..." @bind="textoBusqueda" @bind:event="oninput" />
+                    <div class="list-group agenda-list flex-grow-1">
+                        @foreach (var contacto in contactos.Where(c => string.IsNullOrWhiteSpace(textoBusqueda) || $"{c.Nombre} {c.Apellido}".Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var seleccionado = contactoSeleccionado?.Id == contacto.Id && !mostrandoFormulario;
+                            <button class="list-group-item list-group-item-action agenda-contact-item @(seleccionado ? "agenda-contact-item-selected" : "")" @onclick="() => Seleccionar(contacto)">
+                                <span class="agenda-avatar agenda-avatar-sm">@Iniciales(contacto)</span>
+                                <span><span class="fw-semibold d-block">@contacto.Nombre @contacto.Apellido</span><small class="text-muted">@TextoSecundario(contacto)</small></span>
+                            </button>
+                        }
                     </div>
-
                 </div>
-
             </div>
-        }
+        </div>
 
+        <div class="col-12 col-md-8 agenda-column">
+            @if (mostrandoFormulario)
+            {
+                <div class="card agenda-panel agenda-content-panel shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="agenda-avatar">@Iniciales(nuevoContacto)</span>
+                                <div>
+                                    <h2 class="h3 mb-1">@(editando ? "Editar contacto" : "Nuevo Contacto")</h2>
+                                    <p class="text-muted mb-0">@(editando && contactoSeleccionado != null ? $"Modifica los datos de {contactoSeleccionado.Nombre} {contactoSeleccionado.Apellido}" : "Complete los datos del contacto")</p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary" @onclick="Cancelar">Cancelar</button>
+                                <button class='@(editando ? "btn btn-danger" : "btn btn-primary")' @onclick="Guardar"><i class="bi bi-save me-1"></i> @(editando ? "Guardar cambios" : "Guardar")</button>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-6"><label class="form-label fw-semibold">Nombre</label><input class="form-control" @bind="nuevoContacto.Nombre" /></div>
+                            <div class="col-12 col-lg-6"><label class="form-label fw-semibold">Apellido</label><input class="form-control" @bind="nuevoContacto.Apellido" /></div>
+                            <div class="col-12 col-lg-6"><label class="form-label fw-semibold">Telefono</label><input class="form-control" @bind="nuevoContacto.Telefono" /></div>
+                            <div class="col-12 col-lg-6"><label class="form-label fw-semibold">Email</label><input class="form-control" @bind="nuevoContacto.Email" /></div>
+                            <div class="col-12 col-lg-6"><label class="form-label fw-semibold">Empresa</label><input class="form-control" @bind="nuevoContacto.Empresa" /></div>
+                            <div class="col-12 col-lg-6"><label class="form-label fw-semibold">Cargo</label><input class="form-control" @bind="nuevoContacto.Cargo" /></div>
+                            <div class="col-12"><label class="form-label fw-semibold">Direccion</label><input class="form-control" @bind="nuevoContacto.Direccion" /></div>
+                            <div class="col-12"><label class="form-label fw-semibold">Notas</label><textarea class="form-control" rows="4" @bind="nuevoContacto.Notas"></textarea></div>
+                        </div>
+                        <hr />
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-outline-secondary" @onclick="Cancelar">Cancelar</button>
+                            <button class='@(editando ? "btn btn-danger" : "btn btn-primary")' @onclick="Guardar"><i class="bi bi-save me-1"></i> @(editando ? "Guardar cambios" : "Guardar")</button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (contactoSeleccionado != null)
+            {
+                <div class="card agenda-panel agenda-content-panel shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="agenda-avatar">@Iniciales(contactoSeleccionado)</span>
+                                <div>
+                                    <h2 class="h3 mb-1">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+                                    <p class="text-primary fw-semibold mb-1">@TextoSecundario(contactoSeleccionado)</p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-dark" @onclick="EditarContacto"><i class="bi bi-pencil me-1"></i> Editar</button>
+                                <button class="btn btn-outline-danger" @onclick="EliminarContacto"><i class="bi bi-trash me-1"></i> Eliminar</button>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <div class="agenda-detail">
+                            <div class="agenda-detail-row"><i class="bi bi-envelope"></i><strong>Email</strong><span>@contactoSeleccionado.Email</span></div>
+                            <div class="agenda-detail-row"><i class="bi bi-telephone"></i><strong>Telefono</strong><span>@contactoSeleccionado.Telefono</span></div>
+                            <div class="agenda-detail-row"><i class="bi bi-building"></i><strong>Empresa</strong><span>@contactoSeleccionado.Empresa</span></div>
+                            <div class="agenda-detail-row"><i class="bi bi-briefcase"></i><strong>Cargo</strong><span>@contactoSeleccionado.Cargo</span></div>
+                            <div class="agenda-detail-row"><i class="bi bi-geo-alt"></i><strong>Direccion</strong><span>@contactoSeleccionado.Direccion</span></div>
+                            <div class="agenda-detail-row"><i class="bi bi-card-text"></i><strong>Notas</strong><span>@contactoSeleccionado.Notas</span></div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card agenda-panel agenda-content-panel shadow-sm">
+                    <div class="card-body d-flex align-items-center justify-content-center text-muted">Seleccione un contacto para ver el detalle.</div>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
 @code {
-
     private List<Contacto> contactos = [];
     private Contacto? contactoSeleccionado;
-    private string textoBusqueda = "";
-
-    private bool mostrandoFormulario = false;
     private Contacto nuevoContacto = new();
+    private string textoBusqueda = "";
+    private bool mostrandoFormulario = false;
     private bool editando = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos.ToListAsync();
+        contactoSeleccionado = contactos.FirstOrDefault();
+    }
+
     private void MostrarFormulario()
     {
         nuevoContacto = new Contacto();
         mostrandoFormulario = true;
+        editando = false;
+    }
+
+    private async Task Guardar()
+    {
+        if (editando)
+            await GuardarCambios();
+        else
+            await GuardarContacto();
     }
 
     private async Task GuardarContacto()
     {
         Db.Contactos.Add(nuevoContacto);
-
         await Db.SaveChangesAsync();
-
         contactos = await Db.Contactos.ToListAsync();
-
         contactoSeleccionado = nuevoContacto;
-
         mostrandoFormulario = false;
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        contactos = await Db.Contactos.ToListAsync();
-
-        contactoSeleccionado = contactos.FirstOrDefault();
     }
 
     private void Seleccionar(Contacto contacto)
     {
         contactoSeleccionado = contacto;
+        mostrandoFormulario = false;
+        editando = false;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado == null)
+            return;
+
+        nuevoContacto = contactoSeleccionado;
+        mostrandoFormulario = true;
+        editando = true;
+    }
+
+    private async Task GuardarCambios()
+    {
+        await Db.SaveChangesAsync();
+        contactos = await Db.Contactos.ToListAsync();
+        mostrandoFormulario = false;
+        editando = false;
     }
 
     private async Task EliminarContacto()
     {
-        Console.WriteLine("SE HIZO CLICK EN ELIMINAR");
-
         if (contactoSeleccionado == null)
             return;
 
         Db.Contactos.Remove(contactoSeleccionado);
-
         await Db.SaveChangesAsync();
-
         contactos = await Db.Contactos.ToListAsync();
-
         contactoSeleccionado = contactos.FirstOrDefault();
+        mostrandoFormulario = false;
+        editando = false;
     }
-    private void EditarContacto()
-{
-    if (contactoSeleccionado == null)
-        return;
 
-    nuevoContacto = contactoSeleccionado;
-    mostrandoFormulario = true;
-    editando = true;
+    private void Cancelar()
+    {
+        mostrandoFormulario = false;
+        editando = false;
+        nuevoContacto = new Contacto();
+    }
+
+    private static string Iniciales(Contacto contacto)
+    {
+        var nombre = string.IsNullOrWhiteSpace(contacto.Nombre) ? "" : contacto.Nombre.Trim()[0].ToString();
+        var apellido = string.IsNullOrWhiteSpace(contacto.Apellido) ? "" : contacto.Apellido.Trim()[0].ToString();
+        var iniciales = $"{nombre}{apellido}";
+        return string.IsNullOrWhiteSpace(iniciales) ? "?" : iniciales.ToUpperInvariant();
+    }
+
+    private static string TextoSecundario(Contacto contacto)
+    {
+        if (!string.IsNullOrWhiteSpace(contacto.Empresa))
+            return contacto.Empresa;
+
+        if (!string.IsNullOrWhiteSpace(contacto.Email))
+            return contacto.Email;
+
+        return "Sin empresa";
+    }
 }
 
-private async Task GuardarCambios()
-{
-    await Db.SaveChangesAsync();
-
-    contactos = await Db.Contactos.ToListAsync();
-
-    mostrandoFormulario = false;
-    editando = false;
-}
-}
