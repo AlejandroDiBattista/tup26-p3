@@ -1,12 +1,12 @@
 <div class="fila-campo">
-    <i class="bi @Icono icono-campo"></i>
+    <i class="bi @Icono icono-campo" aria-hidden="true"></i>
 
     <div class="contenido-fila">
         <span class="etiqueta-fila">@Etiqueta</span>
 
-        @if (EsEnlace)
+        @if (!string.IsNullOrWhiteSpace(Href))
         {
-            <a class="valor-enlace" href="mailto:@Valor">@Valor</a>
+            <a class="valor-enlace" href="@Href">@Valor</a>
         }
         else
         {
@@ -21,4 +21,21 @@
     [Parameter] public string? Valor { get; set; }
 
     [Parameter] public bool EsEnlace { get; set; } = false;
+    [Parameter] public string TipoEnlace { get; set; } = "";
+
+    private string Href
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Valor))
+                return "";
+
+            return TipoEnlace.ToLowerInvariant() switch
+            {
+                "email" => $"mailto:{Valor}",
+                "telefono" => $"tel:{Valor}",
+                _ => EsEnlace ? $"mailto:{Valor}" : ""
+            };
+        }
+    }
 }

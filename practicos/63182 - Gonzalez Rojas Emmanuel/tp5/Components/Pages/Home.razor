@@ -207,8 +207,8 @@
                     </div>
 
                     <div class="detail-grid">
-                        <FilaCampo Icono="bi-envelope" Etiqueta="Email" Valor="@contactoSeleccionado.Email" EsEnlace="true" />
-                        <FilaCampo Icono="bi-telephone" Etiqueta="Teléfono" Valor="@contactoSeleccionado.Telefono" />
+                        <FilaCampo Icono="bi-envelope" Etiqueta="Email" Valor="@contactoSeleccionado.Email" TipoEnlace="email" />
+                        <FilaCampo Icono="bi-telephone" Etiqueta="Teléfono" Valor="@contactoSeleccionado.Telefono" TipoEnlace="telefono" />
                         @if (!string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa))
                         {
                             <FilaCampo Icono="bi-building" Etiqueta="Empresa" Valor="@contactoSeleccionado.Empresa" />
