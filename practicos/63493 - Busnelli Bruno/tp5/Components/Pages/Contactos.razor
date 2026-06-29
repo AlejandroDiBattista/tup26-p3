@@ -5,7 +5,7 @@
 
 <PageTitle>Contactos</PageTitle>
 
-<h3>Agenda de contactos</h3>
+<h3 class="mb-4">Agenda de contactos</h3>
 
 @if (contactos is null)
 {
@@ -13,32 +13,66 @@
 }
 else
 {
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-            </tr>
-        </thead>
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header fw-bold">
+                    Contactos
+                </div>
 
-        <tbody>
-        @foreach (var contacto in contactos)
-        {
-            <tr>
-                <td>@contacto.Nombre</td>
-                <td>@contacto.Apellido</td>
-                <td>@contacto.Telefono</td>
-                <td>@contacto.Email</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+                <div class="list-group list-group-flush">
+                    @foreach (var contacto in contactos)
+                    {
+                        <button class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                                @onclick="() => SeleccionarContacto(contacto)">
+                            <div class="fw-bold">@contacto.Apellido, @contacto.Nombre</div>
+                            <small>@contacto.Telefono</small>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            @if (contactoSeleccionado is null)
+            {
+                <div class="alert alert-info">
+                    Seleccioná un contacto para ver el detalle.
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header fw-bold">
+                        Detalle del contacto
+                    </div>
+
+                    <div class="card-body">
+                        <h4>@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h4>
+
+                        <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                        <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+                        <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+                        <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+                        <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+
+                        @if (contactoSeleccionado.FechaNacimiento is not null)
+                        {
+                            <p><strong>Fecha de nacimiento:</strong> @contactoSeleccionado.FechaNacimiento</p>
+                        }
+
+                        <p><strong>Notas:</strong></p>
+                        <p>@contactoSeleccionado.Notas</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 }
 
 @code {
     private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
 
     protected override void OnInitialized()
     {
@@ -46,5 +80,12 @@ else
             .OrderBy(c => c.Apellido)
             .ThenBy(c => c.Nombre)
             .ToList();
+
+        contactoSeleccionado = contactos.FirstOrDefault();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
     }
 }
