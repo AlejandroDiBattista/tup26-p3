@@ -91,26 +91,38 @@ class VentanaChat : Window {
         return base.OnKeyDown(key);
     }
 
+    void ActualizarInterfaz(Action accion) {
+        App!.Invoke(accion);
+    }
+
     async Task Enviar() {
         if (ocupado) return;
         var texto = entrada.Text?.Trim();
         if (string.IsNullOrEmpty(texto)) return;
 
         ocupado = true;
-        entrada.Enabled = false;
-        boton.Enabled = false;
-        entrada.Text = "";
+        ActualizarInterfaz(() => {
+            entrada.Enabled = false;
+            boton.Enabled = false;
+            entrada.Text = "";
+        });
 
         historial.Add(new(ChatRole.User, texto));
         conversacion.Append($"\n\n### Vos\n\n{texto}\n\n### Asistente\n\n");
-        panel.Text = conversacion.ToString();
+        ActualizarInterfaz(() => {
+            panel.Text = conversacion.ToString();
+            panel.SetNeedsDraw();
+        });
 
         try {
             var respuesta = new StringBuilder();
             await foreach (var item in chat.GetStreamingResponseAsync(historial, opciones)) {
                 if (item.Text is not null) {
                     respuesta.Append(item.Text);
-                    panel.Text = conversacion + respuesta.ToString();
+                    ActualizarInterfaz(() => {
+                        panel.Text = conversacion + respuesta.ToString();
+                        panel.SetNeedsDraw();
+                    });
                 }
             }
 
@@ -118,12 +130,17 @@ class VentanaChat : Window {
             conversacion.Append(respuesta);
         } catch (Exception ex) {
             conversacion.Append($"\n\n*Error: {ex.Message}*");
-            panel.Text = conversacion.ToString();
+            ActualizarInterfaz(() => {
+                panel.Text = conversacion.ToString();
+                panel.SetNeedsDraw();
+            });
         } finally {
-            ocupado = false;
-            entrada.Enabled = true;
-            boton.Enabled = true;
-            entrada.SetFocus();
+            ActualizarInterfaz(() => {
+                ocupado = false;
+                entrada.Enabled = true;
+                boton.Enabled = true;
+                entrada.SetFocus();
+            });
         }
     }
 }

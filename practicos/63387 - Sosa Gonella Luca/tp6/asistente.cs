@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -35,7 +36,7 @@ var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 // BLOQUE 4: CREAR EL CLIENTE DE CHAT
 // =====================================================
 
-IChatClient chat = new OpenAIClient(
+IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(
             apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions
@@ -44,6 +45,10 @@ IChatClient chat = new OpenAIClient(
         })
     .GetChatClient(modelo)
     .AsIChatClient();
+
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
 
 // =====================================================
 // BLOQUE 5: HISTORIAL DE MENSAJES
@@ -99,6 +104,12 @@ var herramientas = new[]
             return "Archivo guardado correctamente.";
         },
         "escribir-archivo")
+};
+
+var opciones = new ChatOptions
+{
+    Tools = herramientas,
+    ToolMode = ChatToolMode.Auto
 };
 
 // =====================================================
@@ -168,12 +179,19 @@ var botonEnviar = new Button
 // BLOQUE 12: ENVÍO DE MENSAJES
 // =====================================================
 
+bool enviando = false;
+
 botonEnviar.Accepting += async (s, e) =>
 {
+    if (enviando)
+        return;
+
     var texto = entrada.Text.ToString();
 
     if (string.IsNullOrWhiteSpace(texto))
         return;
+
+    enviando = true;
 
     // Agregar mensaje del usuario al historial
 
@@ -184,42 +202,69 @@ botonEnviar.Accepting += async (s, e) =>
 
     // Mostrar mensaje del usuario
 
-    conversacion.Text +=
-        $"\n\n# Vos\n\n{texto}";
+    app.Invoke(() =>
+    {
+        conversacion.Text +=
+            $"\n\n# Vos\n\n{texto}";
 
-    // Limpiar entrada
+        // Limpiar entrada
 
-    entrada.Text = "";
+        entrada.Text = "";
 
-    // Deshabilitar controles
+        // Deshabilitar controles
 
-    entrada.Enabled = false;
-    botonEnviar.Enabled = false;
+        entrada.Enabled = false;
+        botonEnviar.Enabled = false;
 
-    conversacion.Text += "\n\n# Asistente\n\n";
+        conversacion.Text += "\n\n# Asistente\n\n";
+        conversacion.SetNeedsDraw();
+    });
 
     // Respuesta en streaming
 
     string respuestaCompleta = "";
 
-    await foreach (var fragmento in
-        chat.GetStreamingResponseAsync(
-            mensajes, new ChatOptions { Tools = herramientas })) { 
-                respuestaCompleta += fragmento.Text;
-                conversacion.Text += fragmento.Text;
+    try
+    {
+        await foreach (var fragmento in
+            chat.GetStreamingResponseAsync(
+                mensajes, opciones)) { 
+                    var textoFragmento = fragmento.Text ?? "";
+                    respuestaCompleta += textoFragmento;
+                    app.Invoke(() =>
+                    {
+                        conversacion.Text += textoFragmento;
+                        conversacion.SetNeedsDraw();
+                    });
+        }
+
+        // Guardar respuesta en el historial
+
+        mensajes.Add(
+            new ChatMessage(
+                ChatRole.Assistant,
+                respuestaCompleta));
     }
+    catch (Exception ex)
+    {
+        app.Invoke(() =>
+        {
+            conversacion.Text += $"\n\n# Error\n\n{ex.Message}";
+            conversacion.SetNeedsDraw();
+        });
+    }
+    finally
+    {
+        // Habilitar controles nuevamente
 
-    // Guardar respuesta en el historial
-
-    mensajes.Add(
-        new ChatMessage(
-            ChatRole.Assistant,
-            respuestaCompleta));
-
-    // Habilitar controles nuevamente
-
-    entrada.Enabled = true;
-    botonEnviar.Enabled = true;
+        app.Invoke(() =>
+        {
+            enviando = false;
+            entrada.Enabled = true;
+            botonEnviar.Enabled = true;
+            entrada.SetFocus();
+        });
+    }
 };
 
 // =====================================================

@@ -55,6 +55,7 @@ ChatOptions opciones = new()
 };
 
 StringBuilder conversacion = new();
+bool enviando = false;
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window
@@ -124,14 +125,19 @@ async Task EnviarMensajeAsync()
 {
     var textoUsuario = entrada.Text?.ToString()?.Trim();
 
-    if (string.IsNullOrWhiteSpace(textoUsuario) || !entrada.Enabled)
+    if (string.IsNullOrWhiteSpace(textoUsuario) || enviando)
     {
         return;
     }
 
-    entrada.Text = string.Empty;
-    entrada.Enabled = false;
-    enviar.Enabled = false;
+    enviando = true;
+
+    app.Invoke(() =>
+    {
+        entrada.Text = string.Empty;
+        entrada.Enabled = false;
+        enviar.Enabled = false;
+    });
 
     mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
     conversacion.AppendLine("## Vos");
@@ -169,16 +175,23 @@ async Task EnviarMensajeAsync()
     }
     finally
     {
-        entrada.Enabled = true;
-        enviar.Enabled = true;
-        entrada.SetFocus();
+        app.Invoke(() =>
+        {
+            enviando = false;
+            entrada.Enabled = true;
+            enviar.Enabled = true;
+            entrada.SetFocus();
+        });
     }
 }
 
 void ActualizarHistorial()
 {
-    historial.Text = conversacion.ToString();
-    historial.SetNeedsDraw();
+    app.Invoke(() =>
+    {
+        historial.Text = conversacion.ToString();
+        historial.SetNeedsDraw();
+    });
 }
 
 static Uri NormalizarEndpoint(string url)

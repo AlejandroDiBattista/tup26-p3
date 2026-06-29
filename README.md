@@ -1,77 +1,126 @@
-# Segundo parcial - Programacion III
+# Segundo parcial - Programación III
 
-El segundo parcial va a consistir en la defensa de los trabajos practicos 5 y 6.
+El segundo parcial consiste en la defensa de los trabajos prácticos 5 y 6.
 
-La defensa consiste en realizar en vivo una modificacion sobre el sistema desarrollado por cada alumno. La modificacion se indicara en el momento de la defensa y sera concreta: no implicara desarrollar funcionalidad nueva, sino corregir o ajustar aspectos del sistema presentado.
+Durante la defensa, cada estudiante deberá realizar en vivo una modificación sobre el sistema que presentó. La consigna se indicará en el momento y será acotada: no se pedirá desarrollar una funcionalidad nueva, sino corregir o ajustar aspectos del sistema entregado.
 
-Cada alumno dispondra de una computadora provista por la catedra y tendra 15 minutos para realizar los cambios y documentarlos.
+Cada estudiante dispondrá de una computadora provista por la cátedra y tendrá 15 minutos para realizar los cambios y documentarlos.
 
-Los alumnos que se encuentran en condiciones promocionales son aquellos que, al momento de esta comunicacion, tienen nota de promocion y el Trabajo Practico 5 presentado. La falta de presentacion del Trabajo Practico 6 no los excluye en este momento, porque el plazo de presentacion de ese trabajo todavia no esta cerrado.
+Están en condiciones de promocionar quienes, al momento de esta comunicación, tienen nota de promoción y presentaron el Trabajo Práctico 5. La falta de presentación del Trabajo Práctico 6 no excluye a nadie de este listado por ahora, porque el plazo de entrega de ese trabajo todavía no está cerrado.
 
-Los siguientes alumnos se encuentran en condiciones promocionales y deben revisar el estado indicado para el Trabajo Practico 5. Cuando haya observaciones, deberan corregirlas y presentarlas hasta el lunes 29 de junio de 2026 a las 21:00.
+Los siguientes estudiantes se encuentran en condiciones de promocionar y deben revisar el estado indicado para el Trabajo Práctico 5. Cuando haya observaciones, deberán corregirlas y presentar los cambios hasta el lunes 29 de junio de 2026 a las 21:00.
 
-La correccion debe entregarse mediante un pull request con los cambios realizados. El pull request debe contener solamente las correcciones solicitadas para esta instancia.
+La corrección debe entregarse mediante un pull request con los cambios realizados. El pull request debe incluir solamente las correcciones solicitadas para esta instancia.
 
-Oportunamente se informara el calendario con el dia y horario en que cada alumno debera defender el trabajo.
+El calendario de defensas, con día y horario para cada estudiante, se informará más adelante.
 
-## Condicion del TP6
+## Condición del TP6
 
-El Trabajo Practico 6 formara parte de la defensa del segundo parcial, pero su ausencia no invalida este listado mientras el plazo de presentacion no este cerrado. La condicion final se verificara cuando corresponda cerrar la instancia.
+El Trabajo Práctico 6 formará parte de la defensa del segundo parcial. Su ausencia no invalida este listado mientras el plazo de entrega no esté cerrado. La condición final se verificará al cerrar la instancia.
 
 ## Correcciones a realizar
 
-Cada alumno debe revisar la observacion indicada. Si se informa una falla, debe corregirla para que el TP5 pueda considerarse aprobado en esta instancia.
+---
 
-### C7
+# Evaluacion TP6
 
-| Legajo | Estudiante | Estado / observacion del TP5 |
-| ------ | ---------- | ---------------------------- |
-| 63456 | Ávila Lahr, Joaquín | Sin scroll en maestro; revisar modo oscuro |
-| 63402 | Condori, Nahuel Ariel | No muestra el modo solo lectura, edita en forma directa. |
-| 63419 | Coronel, Tomás | Correcto; mejorar uso del espacio vertical |
-| 63241 | Cortez, Josías | Correcto |
-| 63776 | Fuensalida, Ulises Nahuel | No funciona: no muestra detalle, no busca y no edita |
-| 63396 | Gil Garau, Atalía Trinidad | Sin scroll en maestro; botones de edición fuera del modo mostrar; edita dentro del detalle |
-| 63457 | González Dupuy, Ignacio | No edita; sin scroll en maestro; muestra mensaje de error al final |
-| 63174 | Jerez, Luciano Germán | Mal formato; sin CSS |
-| 63700 | Jiménez, Nelson Maximiliano | Sin observaciones registradas. |
-| 63399 | Lazarte, Gonzalo Romeo | Correcto; botones duplicados para cancelar/guardar |
-| 63350 | Páez Carabajal, Santiago | Mal uso del espacio vertical |
-| 61581 | Paz, Naim Federico | No usa bien el espacio vertical |
-| 63647 | Paz, Valentina | No edita; solo muestra cancelar/guardar |
-| 63389 | Pereyra Petroni, Nicolas | Edición mal ubicada arriba; no alterna mostrar/editar; no cancela |
-| 63354 | Perondi, Luciano | Sin scroll en maestro; no cancela al seleccionar |
-| 63393 | Ritorto, Lucca | Sin scroll en maestro; edición en página aparte en lugar de alternar mostrar/editar |
-| 63387 | Sosa Gonella, Luca | No alterna entre mostrar detalle y editar; no cancela al seleccionar; no tiene búsqueda en caliente |
-| 63546 | Sosa Paz, Jeremías | Mal uso del espacio vertical |
-| 63547 | Sosa Paz, José Lisandro | Correcto; mejorar uso del espacio vertical |
-| 63447 | Suárez, Sofía Celeste | Edición en página separada en lugar de en el detalle; no tiene búsqueda en caliente |
-| 63397 | Vercellone, Tomás | Mal scroll en maestro; mal uso del espacio vertical |
+Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
-### C9
 
-| Legajo | Estudiante | Estado / observacion del TP5 |
-| ------ | ---------- | ---------------------------- |
-| 63385 | Almaraz Sintora, Nahuel | Mal scroll en maestro; edita en otra pantalla en lugar de a la derecha |
-| 63300 | Álvarez, Hernán Fabricio | Muestra la pantalla del enunciado |
-| 63313 | Ávila Puntano, Benjamín | Mal uso del espacio vertical; edición en otra página en lugar de a la derecha |
-| 63150 | Carlino, Joaquín | Mal scroll interno en maestro; mal uso del espacio vertical |
-| 63341 | Carrer, Juan Cruz | Mal layout; no tiene búsqueda en caliente; no cancela la edición |
-| 63218 | Cortés, Guillermo Augusto | correcto |
-| 63266 | Decima, Juan Cruz | Al editar no oculta el detalle; al seleccionar no cancela la edición |
-| 63737 | Galván, Rocío Julieta | resolver scroll de la pantalla |
-| 61489 | Gómez, Tomás | No ocupa el espacio vertical; no muestra detalle de solo lectura |
-| 63182 | González Rojas, Emmanuel | Mal scroll en maestro; mal uso del espacio vertical; muestra mensaje de error; no inicia con la pantalla del sistema |
-| 63717 | González, Octavio | buscar se desplaza, rotulo negro sobre negro, modo oscuro, mal acentos. |
-| 63231 | Herrera, Rocío Tatiana | Layout roto; sin scroll en maestro; el detalle queda debajo del maestro |
-| 63219 | Lazarte, Sergio Fabricio | correcto |
-| 63297 | Lezana, Juan Ignacio | Edición en caja de diálogo en lugar de a la derecha |
-| 63388 | López, Leandro Joel | Correcto; revisar bordes |
-| 63213 | Marina Noguera, Morena Giovann | El campo de búsqueda genera scroll vertical |
-| 63494 | Medina, Lourdes Natalia | Correcto; mal uso del espacio vertical |
-| 63234 | Molina, Lázaro Exequiel | Edición mal ubicada abajo; mal scroll en maestro |
-| 63412 | Morán, Facundo Martín | Correcto; revisar modo oscuro |
-| 63220 | Pérez Del Rien, Valentina | Correcto; botones duplicados para cancelar/guardar |
-| 63216 | Sánchez, Sofía Micaela | no funcion scroll en maestro ni detalle, sencible a los acentos. |
-| 63207 | Saravia, César Nahum | No funciona; AmbiguousMatchException: la solicitud coincide con múltiples endpoints |
-| 61026 | Thompson, María José | correcto |
+## Funciona de primera (trabajo aprobado)
+
+> Estos trabajos funcionaron de primera. 
+
+63207   Saravia, César Nahum             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63219   Lazarte, Sergio Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63231   Herrera, Rocío Tatiana           🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto
+63241   Cortez, Josías                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto
+63268   Condori, Karina Edith            🟢🟢🟢🟢🟢🟢   🟢⚪   No     9    1  correcto
+63297   Lezana, Juan Ignacio             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63300   Álvarez, Hernán Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63313   Ávila Puntano, Benjamín          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63341   Carrer, Juan Cruz                🟢🟢🟢🟢🟢🟢   🟢⚪   No    21   10  correcto
+63354   Perondi, Luciano                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63399   Lazarte, Gonzalo Romeo           🟢🟢🟢🟢🟢🟢   🟢⚪   No    24   10  correcto
+63402   Condori, Nahuel Ariel            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto
+63419   Coronel, Tomás                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  correcto
+63494   Medina, Lourdes Natalia          🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63546   Sosa Paz, Jeremías               🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto
+63547   Sosa Paz, José Lisandro          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63420   Pereyra, Valentina Nazaret       🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  correcto
+63208   Rosconi, Ignacio Federico        🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  correcto
+
+
+## Corregido problema subsanables (trabajo aprobado)
+
+> Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
+
+61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
+61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
+63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)
+63350   Páez Carabajal, Santiago         🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  correcto (faltaba DotNetEnv)
+63385   Almaraz Sintora, Nahuel          🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (lee mal api_key)
+63387   Sosa Gonella, Luca               🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (fallaba streaming)
+63388   López, Leandro Joel              🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (lee mal .env)
+63396   Gil Garau, Atalía Trinidad       🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (fallaba proveedor)
+63412   Morán, Facundo Martín            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba proveedor)
+63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba streaming)
+63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto (fallaba streaming)
+63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
+63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
+
+
+
+## No implementa las herramientas (Recuperar)
+
+> No cumple consigna, no implementa las funcioes (corregir )
+
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟤   🟢⚪   No    28   10  No implementa las herramientas
+63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
+63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7  No implementa las herramientas
+63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    13   10  No implementa las herramientas
+61489   Gómez, Tomás                     🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9  No implementa las herramientas
+63717   González, Octavio                🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9  No implementa las herramientas
+63213   Marina Noguera, Morena Giovann   🟢🟢🟢🟢🟢🟤   🟢⚪   No    30    9  No implementa las herramientas
+63397   Vercellone, Tomás                🟢🟢🟢🔴🟢🟤   🟢⚪   No    24    9  No implementa las herramientas
+
+## No compila (recuperar)
+
+> No compila (corregir)
+
+63234   Molina, Lázaro Exequiel          🟢🟢🟢🟢🟢🟠   🟢⚪   No    27   10  No compila
+
+## No presentaron (recuperar)
+
+> No presentaron (presenta para promocionar)
+
+63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🔴   🟢⚪   No    18    8
+63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    20   10
+63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🔴   🟢⚪   No    25    7
+63647   Paz, Valentina                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    25   10
+63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🔴   🟢⚪   No    26    8
+
+
+## No presentaron 
+
+> No presentaron y no estan en condiciones de recuperar.
+
+63205   Navarro Aragón, Facundo          🔴🔴🔴🔴🔴🔴   🟢⚪   No    22   10
+63415   Chávez, Lucas Francisco          🔴🔴🔴🔴🔴🔴   🟢⚪   No    17    8
+61577   González, Lucas Alfredo          🟢🔴🔴🔴🔴🔴   🟢⚪   No    25   10
+63217   Altamiranda Borquez, Bian        🟢🔴🔴🔴🔴🔴   🟢⚪   No    26    8
+61641   Figueroa, Nahuel Ramón           🟢🔴🔴🔴🔴🔴   🟢⚪   No    19    4
+63211   Montero, Luca                    🟢🟢🔴🔴🔴🔴   🟢⚪   No    19   10
+63425   Holmquist, Jeremy                🟢🟢🔴🔴🔴🔴   🟢⚪   No    16    6
+63461   Cativa, Facundo Simón            🟢🟢🔴🔴🔴🔴   🟢⚪   No    18    8
+61161   González, Thomas Ezequiel        🟢🟢🔴🟢🔴🔴   🟢⚪   No    20    5
+63776   Fuensalida, Ulises Nahuel        🟢🟢🔴🔴🟢🔴   🟢⚪   No    17    8
+61490   Valdez Bustamante, Tomás         🟢🟢🔴🟢🟢🔴   🟢⚪   No    34    6
+64016   Cura, Rocío Aylen                🔴🟢🟢🔴🔴🔴   🟢⚪   No    17    7
+62844   Guzmán, Luciano Leonel           🔴🟢🟢🔴🔴🔴   🟢⚪   No    16   10
+61057   Getar, Thomas                    🟢🟢🟢🔴🔴🔴   🟢⚪   No    23    7
+63493   Busnelli, Bruno                  🟢🟢🟢🔴🔴🔴   🟢⚪   No    14   10
+63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
+

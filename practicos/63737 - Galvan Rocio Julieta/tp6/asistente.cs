@@ -84,6 +84,7 @@ List<ChatMessage> mensajes = [
 ];
 
 string textoConversacion = "# Asistente IA\n\nEscribí un mensaje para comenzar.";
+bool enviando = false;
 
 using IApplication app = Application.Create().Init();
 
@@ -119,23 +120,26 @@ async Task EnviarMensaje()
 {
     string texto = entrada.Text?.ToString() ?? "";
 
-    if (string.IsNullOrWhiteSpace(texto)) {
+    if (string.IsNullOrWhiteSpace(texto) || enviando) {
         return;
     }
 
-    entrada.Text = "";
-    entrada.Enabled = false;
-    botonEnviar.Enabled = false;
+    enviando = true;
+
+    app.Invoke(() =>
+    {
+        entrada.Text = "";
+        entrada.Enabled = false;
+        botonEnviar.Enabled = false;
+    });
 
     textoConversacion += $"\n\n# Vos\n\n{texto}";
-    conversacion.Text = textoConversacion;
-    conversacion.SetNeedsDraw();
+    ActualizarConversacion();
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
     textoConversacion += "\n\n# Asistente\n\n";
-    conversacion.Text = textoConversacion;
-    conversacion.SetNeedsDraw();
+    ActualizarConversacion();
 
     string respuestaCompleta = "";
 
@@ -143,26 +147,40 @@ async Task EnviarMensaje()
     {
         await foreach (var parte in chat.GetStreamingResponseAsync(mensajes, opciones))
         {
-            respuestaCompleta += parte.Text;
-            textoConversacion += parte.Text;
-
-            conversacion.Text = textoConversacion;
-            conversacion.SetNeedsDraw();
+            var textoParte = parte.Text ?? "";
+            respuestaCompleta += textoParte;
+            textoConversacion += textoParte;
+            ActualizarConversacion();
         }
+
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
     }
     catch (Exception ex)
     {
         respuestaCompleta = $"Error: {ex.Message}";
         textoConversacion += $"Error: {ex.Message}";
+        ActualizarConversacion();
+        mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
+    }
+    finally
+    {
+        app.Invoke(() =>
+        {
+            enviando = false;
+            entrada.Enabled = true;
+            botonEnviar.Enabled = true;
+            entrada.SetFocus();
+        });
+    }
+}
+
+void ActualizarConversacion()
+{
+    app.Invoke(() =>
+    {
         conversacion.Text = textoConversacion;
         conversacion.SetNeedsDraw();
-    }
-
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaCompleta));
-
-    entrada.Enabled = true;
-    botonEnviar.Enabled = true;
-    entrada.SetFocus();
+    });
 }
 
 botonEnviar.Accepting += async (sender, e) => {

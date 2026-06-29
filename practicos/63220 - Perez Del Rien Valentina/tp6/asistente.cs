@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -19,11 +20,15 @@ var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen2.5-coder:7b";
 
-IChatClient chat = new OpenAIClient(
+IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
         new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
+
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
 
 [Description("Devuelve el contenido de un archivo de texto")]
 string LeerArchivo([Description("ruta del archivo")] string ruta)
@@ -94,12 +99,14 @@ ventana.Add(vistaMarkdown, campoEntrada, botonEnviar);
 string historialPantalla = "Escribí un mensaje para comenzar.\n\n---\n\n";
 vistaMarkdown.Text = historialPantalla;
 
+bool procesando = false;
 
 async Task EnviarMensaje()
 {
     var textoUsuario = (string)campoEntrada.Text;
-    if (string.IsNullOrWhiteSpace(textoUsuario)) return;
+    if (procesando || string.IsNullOrWhiteSpace(textoUsuario)) return;
 
+    procesando = true;
     app.Invoke(() => {
         campoEntrada.Enabled = false;
         botonEnviar.Enabled = false;
@@ -108,7 +115,10 @@ async Task EnviarMensaje()
 
     mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
     historialPantalla += $"# Vos\n\n{textoUsuario}\n\n# Asistente\n\n";
-    vistaMarkdown.Text = historialPantalla;
+    app.Invoke(() => {
+        vistaMarkdown.Text = historialPantalla;
+        vistaMarkdown.SetNeedsDraw();
+    });
     
     try 
     {
@@ -118,9 +128,9 @@ async Task EnviarMensaje()
         await foreach (var fragmento in respuestaStream)
         {
             respuestaCompleta += fragmento.Text;
-            vistaMarkdown.Text = historialPantalla + respuestaCompleta;
             
             app.Invoke(() => {
+                vistaMarkdown.Text = historialPantalla + respuestaCompleta;
                 vistaMarkdown.SetNeedsDraw();
             });
         }
@@ -131,19 +141,26 @@ async Task EnviarMensaje()
     catch (Exception ex)
     {
         historialPantalla += $"*Error: {ex.Message}*\n\n";
-        vistaMarkdown.Text = historialPantalla;
+        app.Invoke(() => {
+            vistaMarkdown.Text = historialPantalla;
+            vistaMarkdown.SetNeedsDraw();
+        });
     }
-
-    app.Invoke(() => {
-        campoEntrada.Enabled = true;
-        botonEnviar.Enabled = true;
-        campoEntrada.SetFocus(); 
-        vistaMarkdown.SetNeedsDraw();
-    });
+    finally
+    {
+        app.Invoke(() => {
+            procesando = false;
+            campoEntrada.Enabled = true;
+            botonEnviar.Enabled = true;
+            campoEntrada.SetFocus(); 
+            vistaMarkdown.SetNeedsDraw();
+        });
+    }
 }
 
 botonEnviar.Accepting += (s, e) => {
-    _ = Task.Run(EnviarMensaje);
+    _ = EnviarMensaje();
+    e.Handled = true;
 };
 
 ventana.KeyDown += (s, e) => {

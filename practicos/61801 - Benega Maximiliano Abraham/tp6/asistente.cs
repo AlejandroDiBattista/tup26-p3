@@ -1,5 +1,6 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
+#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -19,6 +20,9 @@ var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/qwen3.6-27b";
+url ??= proveedor == "OPENAI"
+    ? "https://api.openai.com/v1"
+    : "https://api.groq.com/openai/v1";
 
 // Lista de herramientas del sistema de archivos mapeadas como tipo AITool
 var herramientas = new List<AITool>
@@ -29,11 +33,15 @@ var herramientas = new List<AITool>
 };
 
 // Cliente base de chat compatible con OpenAI
-IChatClient chat = new OpenAIClient(
+IChatClient chatBase = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url ?? "https://api.groq.com/openai/v1") })
+        new OpenAIClientOptions { Endpoint = new Uri(url) })
     .GetChatClient(modelo)
     .AsIChatClient();
+
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
 
 // 2. Historial de Conversación
 List<ChatMessage> mensajes = [];
@@ -82,23 +90,29 @@ ventana.Add(panelConversacion, panelEntrada);
 
 // 4. Lógica de Envío de Mensajes y Streaming
 string historialMarkdown = "";
+bool enviando = false;
 
 async Task EnviarMensajeUsuario()
 {
     var textoUsuario = campoTexto.Text.Trim();
-    if (string.IsNullOrEmpty(textoUsuario)) return;
+    if (string.IsNullOrEmpty(textoUsuario) || enviando) return;
 
-    campoTexto.Enabled = false;
-    botonEnviar.Enabled = false;
-    campoTexto.Text = string.Empty;
+    enviando = true;
+
+    app.Invoke(() =>
+    {
+        campoTexto.Enabled = false;
+        botonEnviar.Enabled = false;
+        campoTexto.Text = string.Empty;
+    });
 
     mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
     historialMarkdown += $"\n\n# Vos\n{textoUsuario}\n\n# Asistente\n";
-    panelConversacion.Text = historialMarkdown;
+    ActualizarConversacion(historialMarkdown);
 
     try
     {
-        var opcionesChat = new ChatOptions { Tools = herramientas };
+        var opcionesChat = new ChatOptions { Tools = herramientas, ToolMode = ChatToolMode.Auto };
         string respuestaAcumulada = "";
 
         await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
@@ -106,9 +120,7 @@ async Task EnviarMensajeUsuario()
             if (fragmento.Text != null)
             {
                 respuestaAcumulada += fragmento.Text;
-                panelConversacion.Text = historialMarkdown + respuestaAcumulada;
-                
-                panelConversacion.SetNeedsDraw();
+                ActualizarConversacion(historialMarkdown + respuestaAcumulada);
             }
         }
 
@@ -118,14 +130,27 @@ async Task EnviarMensajeUsuario()
     catch (Exception ex)
     {
         historialMarkdown += $"*Error al conectar con la IA: {ex.Message}*";
-        panelConversacion.Text = historialMarkdown;
+        ActualizarConversacion(historialMarkdown);
     }
     finally
     {
-        campoTexto.Enabled = true;
-        botonEnviar.Enabled = true;
-        campoTexto.SetFocus();
+        app.Invoke(() =>
+        {
+            enviando = false;
+            campoTexto.Enabled = true;
+            botonEnviar.Enabled = true;
+            campoTexto.SetFocus();
+        });
     }
+}
+
+void ActualizarConversacion(string texto)
+{
+    app.Invoke(() =>
+    {
+        panelConversacion.Text = texto;
+        panelConversacion.SetNeedsDraw();
+    });
 }
 
 // 5. Manejo de Eventos A PRUEBA DE BALAS mediante comparación de strings

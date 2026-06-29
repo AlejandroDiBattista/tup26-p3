@@ -91,32 +91,46 @@ var botonEnviar = new Button
 ventana.Add(historial);
 ventana.Add(entrada);
 ventana.Add(botonEnviar);
+
+bool enviando = false;
+
 void AgregarAlHistorial(string textoNuevo)
 {
-    bool estabaAlFondo =
-        historial.Viewport.Y + historial.Viewport.Height >= historial.GetContentSize().Height;
+    app.Invoke(() =>
+    {
+        bool estabaAlFondo =
+            historial.Viewport.Y + historial.Viewport.Height >= historial.GetContentSize().Height;
 
-    historial.Text += textoNuevo;
+        historial.Text += textoNuevo;
 
-    if (estabaAlFondo)
-        historial.ScrollVertical(int.MaxValue);
+        if (estabaAlFondo)
+            historial.ScrollVertical(int.MaxValue);
 
-    historial.SetNeedsDraw();
+        historial.SetNeedsDraw();
+    });
 }
 
 async Task EnviarMensaje()
 {
+    if (enviando)
+        return;
+
     var texto = entrada.Text?.ToString()?.Trim();
 
     if (string.IsNullOrWhiteSpace(texto))
         return;
 
-    entrada.Text = "";
+    enviando = true;
+
+    app.Invoke(() =>
+    {
+        entrada.Text = "";
+        botonEnviar.Enabled = false;
+        entrada.Enabled = false;
+    });
+
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
     AgregarAlHistorial($"\n# Vos\n\n{texto}\n");
-
-    botonEnviar.Enabled = false;
-    entrada.Enabled = false;
 
     try
     {
@@ -140,9 +154,16 @@ async Task EnviarMensaje()
     {
         AgregarAlHistorial($"\n# Error\n\n{ex.Message}\n");
     }
-
-    botonEnviar.Enabled = true;
-    entrada.Enabled = true;
+    finally
+    {
+        app.Invoke(() =>
+        {
+            enviando = false;
+            botonEnviar.Enabled = true;
+            entrada.Enabled = true;
+            entrada.SetFocus();
+        });
+    }
 }
 
 entrada.Accepting += async (_, _) => await EnviarMensaje();

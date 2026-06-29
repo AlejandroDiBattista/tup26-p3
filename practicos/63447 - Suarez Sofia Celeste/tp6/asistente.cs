@@ -147,47 +147,73 @@ ventana.KeyDown += (sender, key) =>
 async Task EnviarMensaje()
 {
     if (enviando)
-      return;
-      enviando = true;
+        return;
 
     var texto = input.Text?.ToString()?.Trim();
     if (string.IsNullOrWhiteSpace(texto))
-    {
-        enviando = false;
         return;
-    }
+
+    enviando = true;
     
-    input.Text = "";
+    app.Invoke(() =>
+    {
+        input.Text = "";
+        input.Enabled = false;
+        botonEnviar.Enabled = false;
+    });
+
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
 
 
     historialMarkdown += $"\n# Usuario\n\n{texto}\n";
-    conversacion.Text = historialMarkdown;
-
-    input.Enabled = false;
-    botonEnviar.Enabled = false;
+    app.Invoke(() =>
+    {
+        conversacion.Text = historialMarkdown;
+        conversacion.SetNeedsDraw();
+    });
 
     string respuestaCompleta = "";
 
-    await foreach (var update in chat.GetStreamingResponseAsync(mensajes))
+    try
     {
-        respuestaCompleta += update.Text ?? "";
+        await foreach (var update in chat.GetStreamingResponseAsync(mensajes, herramientas))
+        {
+            respuestaCompleta += update.Text ?? "";
+            app.Invoke(() =>
+            {
+                conversacion.Text = historialMarkdown + "\n# Asistente\n\n" + respuestaCompleta;
+                conversacion.SetNeedsDraw();
+            });
+        }
+
+        historialMarkdown += $"\n# Asistente\n\n{respuestaCompleta}\n";
+        mensajes.Add( new ChatMessage(ChatRole.Assistant, respuestaCompleta));
+
         app.Invoke(() =>
         {
-            conversacion.Text = historialMarkdown + "\n# Asistente\n\n" + respuestaCompleta;
+            conversacion.Text = historialMarkdown;
+            conversacion.SetNeedsDraw();
         });
     }
-
-    historialMarkdown += $"\n# Asistente\n\n{respuestaCompleta}\n";
-    conversacion.Text = historialMarkdown;
-
-    mensajes.Add( new ChatMessage(ChatRole.Assistant, respuestaCompleta));
-
-    input.Enabled = true;
-    botonEnviar.Enabled = true;
-
-    input.SetFocus();
-    enviando = false;
+    catch (Exception ex)
+    {
+        historialMarkdown += $"\n# Error\n\n{ex.Message}\n";
+        app.Invoke(() =>
+        {
+            conversacion.Text = historialMarkdown;
+            conversacion.SetNeedsDraw();
+        });
+    }
+    finally
+    {
+        app.Invoke(() =>
+        {
+            input.Enabled = true;
+            botonEnviar.Enabled = true;
+            input.SetFocus();
+            enviando = false;
+        });
+    }
 }
 
 app.Run(ventana);
