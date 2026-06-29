@@ -101,16 +101,28 @@ botonEnviar.Accepting += async (_, _) =>
         return;
 
     entrada.Text = "";
+    entrada.Enabled = false;
+    botonEnviar.Enabled = false;
 
     mensajes.Add(new ChatMessage(ChatRole.User, texto));
-
     conversacion.Text = ObtenerConversacion();
 
-    var respuestaIA = await chat.GetResponseAsync(mensajes);
+    var respuestaCompleta = "";
 
-    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaIA.Text));
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, ""));
 
-    conversacion.Text = ObtenerConversacion();
+    await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes))
+    {
+        respuestaCompleta += fragmento.Text;
+
+        mensajes[^1] = new ChatMessage(ChatRole.Assistant, respuestaCompleta);
+
+        conversacion.Text = ObtenerConversacion();
+        conversacion.SetNeedsDraw();
+    }
+
+    entrada.Enabled = true;
+    botonEnviar.Enabled = true;
 };
 
 ventana.Add(conversacion, entrada, botonEnviar);
