@@ -30,10 +30,10 @@ try
         .GetChatClient(config.Model)
         .AsIChatClient();
 
-    var mensajes = new List<ChatMessage>
-    {
-        new(ChatRole.System, systemPrompt)
-    };
+    var chatSession = new ChatSession(
+        new FunctionInvokingChatClient(chat),
+        systemPrompt,
+        tools);
 
     using IApplication app = Application.Create().Init();
     using var ventana = new Window {
@@ -42,7 +42,7 @@ try
     };
 
     ventana.Add(new Markdown {
-        Text = $"# Asistente IA\n\nProveedor: `{config.Provider}`\n\nModelo: `{config.Model}`\n\nHerramientas disponibles: `{tools.Count}`\n\nLa interfaz de chat se implementa en los siguientes pasos.",
+        Text = $"# Asistente IA\n\nProveedor: `{config.Provider}`\n\nModelo: `{config.Model}`\n\nHerramientas disponibles: `{tools.Count}`\n\nHistorial inicial: `{chatSession.MessageCount}` mensaje de sistema.\n\nLa interfaz de chat se implementa en los siguientes pasos.",
         Width = Dim.Fill(), Height = Dim.Fill()
     });
 
@@ -203,5 +203,67 @@ internal sealed class ProjectFileTools
         }
 
         return candidate;
+    }
+}
+
+/// <summary>
+/// Mantiene la conversacion completa y envia cada consulta con streaming.
+/// Si la llamada falla, retira del historial el mensaje de usuario que no tuvo respuesta.
+/// </summary>
+internal sealed class ChatSession
+{
+    private readonly IChatClient _chat;
+    private readonly List<ChatMessage> _messages;
+    private readonly ChatOptions _options;
+
+    public ChatSession(IChatClient chat, string systemPrompt, IReadOnlyList<AITool> tools)
+    {
+        _chat = chat;
+        _messages = [new ChatMessage(ChatRole.System, systemPrompt)];
+        _options = new ChatOptions
+        {
+            Tools = [.. tools]
+        };
+    }
+
+    public int MessageCount => _messages.Count;
+
+    public async Task<string> SendAsync(
+        string userMessage,
+        Action<string> onDelta,
+        CancellationToken cancellationToken = default)
+    {
+        var cleanMessage = userMessage.Trim();
+        if (cleanMessage.Length == 0)
+            return string.Empty;
+
+        _messages.Add(new ChatMessage(ChatRole.User, cleanMessage));
+        var response = new StringBuilder();
+
+        try
+        {
+            await foreach (var update in _chat.GetStreamingResponseAsync(_messages, _options, cancellationToken))
+            {
+                if (string.IsNullOrEmpty(update.Text))
+                    continue;
+
+                response.Append(update.Text);
+                onDelta(update.Text);
+            }
+
+            var assistantMessage = response.ToString().TrimEnd();
+            if (assistantMessage.Length == 0)
+                assistantMessage = "El modelo no devolvio contenido de texto.";
+
+            _messages.Add(new ChatMessage(ChatRole.Assistant, assistantMessage));
+            return assistantMessage;
+        }
+        catch
+        {
+            if (_messages.Count > 0 && _messages[^1].Role == ChatRole.User)
+                _messages.RemoveAt(_messages.Count - 1);
+
+            throw;
+        }
     }
 }
