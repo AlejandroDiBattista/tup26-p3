@@ -15,12 +15,7 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 
-var rutaEnv = Path.Combine(Directory.GetCurrentDirectory(), ".env");
-if (!File.Exists(rutaEnv))
-    rutaEnv = Path.Combine(AppContext.BaseDirectory, ".env");
-DotNetEnv.Env.Load(rutaEnv);
-
-var proveedor = (args.Length > 0 ? args[0] : "gemini").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? "";
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "";
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gemini-2.5-flash";

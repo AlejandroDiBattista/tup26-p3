@@ -57,7 +57,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63345   García, Franco Tomás            (381)207-5701   francotms                  🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (mal api_key)
 61057   Getar, Thomas                   (381)336-2147   thomasgetar                🟢🟢🟢🔴🔴🔴   🟢⚪   No    23    7
 61489   Gómez, Tomás                    (381)390-5024   tomasgomez18               🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9  No implementa las herramientas
-63182   González Rojas, Emmanuel        (381)612-5571   emmanuelgr-web             🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  ClientResultException
+63182   González Rojas, Emmanuel        (381)612-5571   emmanuelgr-web             🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba api_key)
 63717   González, Octavio               (381)604-1868   owning01                   🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9  No implementa las herramientas
 61161   González, Thomas Ezequiel       (381)369-9891   kobinee                    🟢🟢🔴🟢🔴🔴   🟢⚪   No    20    5
 62844   Guzmán, Luciano Leonel          (388)665-1248   lucianoleonelguzman        🔴🟢🟢🔴🔴🔴   🟢⚪   No    16   10

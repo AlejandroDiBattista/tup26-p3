@@ -56,6 +56,7 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 > Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
 
 61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
+63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  ClientResultException
 61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
 61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
 63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)

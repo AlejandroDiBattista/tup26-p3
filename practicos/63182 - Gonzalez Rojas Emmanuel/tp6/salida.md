@@ -1,13 +1,23 @@
 # IAWizard
-Model: gemini-2.5-flash
-Date: 28/06/2026 22:07
+Model: gpt-5.5
+Date: 29/06/2026 09:02
 ---
 
-[ YO | 22:08:01 ]
-quicksort recursivo
+[ YO | 09:02:48 ]
+hace factorial en fac.js
 
-[ ERROR | 22:08:02 ]
-ClientResultException: Service request failed.
-Status: 400 (Bad Request)
+[ ASISTENTE | 09:02:58 ]
+Listo. Creé `fac.js` con una función `factorial(n)`.
 
+Uso:
+
+```bash
+node fac.js 5
+```
+
+Salida:
+
+```bash
+120
+```
 

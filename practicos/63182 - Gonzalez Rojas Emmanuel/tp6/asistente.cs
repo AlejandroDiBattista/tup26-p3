@@ -20,22 +20,18 @@ using Terminal.Gui.Views;
 // =================== CONFIGURACION ====================
 DotNetEnv.Env.Load();
 
-var urlApi   = Environment.GetEnvironmentVariable("GEMINI_API_URL") ?? "";
-var clave    = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? "";
-var modeloIA = Environment.GetEnvironmentVariable("GEMINI_MODEL")   ?? "gemini-2.5-flash";
-
-if (string.IsNullOrEmpty(clave)) {
-    Console.Error.WriteLine("Falta GEMINI_API_KEY en .env ");
-    Environment.Exit(1);
-}
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? "";
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "";
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gemini-2.5-flash";
 
 
 // ================== CLIENTE DE IA ====================
 
 IChatClient clienteBase = new OpenAIClient(
-        new ApiKeyCredential(clave),
-        new OpenAIClientOptions { Endpoint = new Uri(urlApi) })
-    .GetChatClient(modeloIA)
+        new ApiKeyCredential(apiKey),
+        new OpenAIClientOptions { Endpoint = new Uri(url) })
+    .GetChatClient(modelo)
     .AsIChatClient();
 
 IChatClient cliente = new ChatClientBuilder(clienteBase)
@@ -77,12 +73,12 @@ var historial = new List<ChatMessage> {
 
 var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
-    $"# IAWizard\nModel: {modeloIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
+    $"# IAWizard\nModel: {modelo}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
 
 
 // =============================================
 using IApplication app = Application.Create().Init();
-app.Run(new VentanaAsistente(app, cliente, historial, opciones, modeloIA, archivoSalida));
+app.Run(new VentanaAsistente(app, cliente, historial, opciones, modelo, archivoSalida));
 
 
 // ================== VENTANA PRINCIPAL ====================
