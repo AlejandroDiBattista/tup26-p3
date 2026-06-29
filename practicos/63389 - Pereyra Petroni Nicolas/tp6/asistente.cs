@@ -217,8 +217,4 @@ panelEntrada.Add(entrada);
 panelEntrada.Add(botonEnviar);
 ventana.Add(panelEntrada);
 
-// TODO: agregar el panel de conversación y el panel de entrada.
-// TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
-// TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
-
 app.Run(ventana);

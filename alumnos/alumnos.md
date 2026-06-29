@@ -12,7 +12,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto
 63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🔴🔴🟢🔴   🟢⚪   No    17    8
 63396   Gil Garau, Atalía Trinidad      (381)456-4405   ataliagg                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
-63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟤   🟢⚪   No    28   10  No implementa las herramientas
+63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  Correcto (mal proveedor)
 61577   González, Lucas Alfredo         (381)669-4386   lucasgonzaa                🟢🔴🔴🔴🔴🔴   🟢⚪   No    25   10
 63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
 63700   Jiménez, Nelson Maximiliano     (381)639-2861   maximilianojimnez          🟢🟢🟢🟢🟢🔴   🟢⚪   No    26    8
@@ -20,11 +20,11 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63211   Montero, Luca                   (381)528-7848   monteroluca007             🟢🟢🔴🔴🔴🔴   🟢⚪   No    19   10
 63350   Páez Carabajal, Santiago        (381)572-4096   santiagopaez-2             🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  correcto (faltaba DotNetEnv)
 61581   Paz, Naim Federico              (381)353-0060   naimp074                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba stream)
-63647   Paz, Valentina                  (381)599-6422   valepaz11                  🟢🟢🟢🟢🟢🔴   🟢⚪   No    25   10
-63389   Pereyra Petroni, Nicolas        (381)332-4401   nicopereyra255-ship-it     🟢🟢🟢🟢🟢🔴   🟢⚪   No    18    8
+63647   Paz, Valentina                  (381)599-6422   valepaz11                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10
+63389   Pereyra Petroni, Nicolas        (381)332-4401   nicopereyra255-ship-it     🟢🟢🟢🟢🟢🟢   🟢⚪   No    18    8  correcto (tenia el comentario)
 63420   Pereyra, Valentina Nazaret      (381)552-8065   valentinapereyra03         🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  correcto
 63354   Perondi, Luciano                (381)350-0777   lucho-bot                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
-63393   Ritorto, Lucca                  (381)627-2271   luccardp                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    20   10
+63393   Ritorto, Lucca                  (381)627-2271   luccardp                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    20   10  correcto (mantenia comentario)
 63208   Rosconi, Ignacio Federico       (381)533-1344   ignaciorosconi             🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  correcto
 63387   Sosa Gonella, Luca              (381)355-5126   lucasosag1                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (fallaba stream)
 63546   Sosa Paz, Jeremías              (381)200-7473   jeerepazz                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto

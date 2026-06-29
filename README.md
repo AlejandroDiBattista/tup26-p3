@@ -47,6 +47,7 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 63494   Medina, Lourdes Natalia          🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
 63546   Sosa Paz, Jeremías               🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto
 63547   Sosa Paz, José Lisandro          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🟢   🟢⚪   No    18    8  correcto (mantenia comentario)
 63420   Pereyra, Valentina Nazaret       🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  correcto
 63208   Rosconi, Ignacio Federico        🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  correcto
 
@@ -55,8 +56,9 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
 > Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
 
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
 61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
-63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  ClientResultException
+63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (mal proveedor)
 61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
 61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
 63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)
@@ -69,16 +71,15 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba streaming)
 63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto (fallaba streaming)
 63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+63647   Paz, Valentina                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (no borro comentario)
 63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
 63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
 
 
-
 ## No implementa las herramientas (Recuperar)
 
-> No cumple consigna, no implementa las funcioes (corregir )
+> No cumple consigna, no implementa las funciones (corregir )
 
-63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟤   🟢⚪   No    28   10  No implementa las herramientas
 63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
 63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7  No implementa las herramientas
 63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    13   10  No implementa las herramientas
@@ -97,10 +98,8 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
 > No presentaron (presenta para promocionar)
 
-63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🔴   🟢⚪   No    18    8
 63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    20   10
 63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🔴   🟢⚪   No    25    7
-63647   Paz, Valentina                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    25   10
 63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🔴   🟢⚪   No    26    8
 
 

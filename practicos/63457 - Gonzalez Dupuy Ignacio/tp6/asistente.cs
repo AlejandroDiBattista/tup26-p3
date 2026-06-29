@@ -14,10 +14,9 @@ using Terminal.Gui.Input;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
-DotNetEnv.Env.Load(".env.ejemplo");
-DotNetEnv.Env.Load(".env");
+DotNetEnv.Env.Load();
 
-string proveedor = (args.Length > 0 ? args[0] : "grok").ToUpperInvariant();
+string proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 string? url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 string? apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 string? modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
