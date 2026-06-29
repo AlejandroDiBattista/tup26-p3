@@ -1,5 +1,5 @@
 @page "/contactos"
-
+@rendermode InteractiveServer
 @using tp5.Models
 @inject AgendaDbContext Db
 
@@ -7,12 +7,23 @@
 
 <h3 class="mb-4">Agenda de contactos</h3>
 
+@if (!string.IsNullOrWhiteSpace(mensaje))
+{
+    <div class="alert alert-info">@mensaje</div>
+}
+
 @if (contactos is null)
 {
     <p>Cargando contactos...</p>
 }
 else
 {
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="NuevoContacto">
+            Nuevo contacto
+        </button>
+    </div>
+
     <div class="row">
         <div class="col-md-5">
             <div class="card">
@@ -34,7 +45,72 @@ else
         </div>
 
         <div class="col-md-7">
-            @if (contactoSeleccionado is null)
+            @if (editando)
+            {
+                <div class="card">
+                    <div class="card-header fw-bold">
+                        @(contactoFormulario.Id == 0 ? "Nuevo contacto" : "Editar contacto")
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre *</label>
+                                <input class="form-control" @bind="contactoFormulario.Nombre" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido *</label>
+                                <input class="form-control" @bind="contactoFormulario.Apellido" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono *</label>
+                                <input class="form-control" @bind="contactoFormulario.Telefono" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                <input class="form-control" @bind="contactoFormulario.Email" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Empresa</label>
+                                <input class="form-control" @bind="contactoFormulario.Empresa" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cargo</label>
+                                <input class="form-control" @bind="contactoFormulario.Cargo" />
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input class="form-control" @bind="contactoFormulario.Direccion" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha de nacimiento</label>
+                                <input class="form-control" type="date" @bind="contactoFormulario.FechaNacimiento" />
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Notas</label>
+                                <textarea class="form-control" rows="4" @bind="contactoFormulario.Notas"></textarea>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-success me-2" @onclick="GuardarContacto">
+                            Guardar
+                        </button>
+
+                        <button class="btn btn-secondary" @onclick="CancelarEdicion">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            }
+            else if (contactoSeleccionado is null)
             {
                 <div class="alert alert-info">
                     Seleccioná un contacto para ver el detalle.
@@ -43,8 +119,12 @@ else
             else
             {
                 <div class="card">
-                    <div class="card-header fw-bold">
-                        Detalle del contacto
+                    <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                        <span>Detalle del contacto</span>
+
+                        <button class="btn btn-sm btn-warning" @onclick="EditarContacto">
+                            Editar
+                        </button>
                     </div>
 
                     <div class="card-body">
@@ -73,19 +153,118 @@ else
 @code {
     private List<Contacto>? contactos;
     private Contacto? contactoSeleccionado;
+    private Contacto contactoFormulario = new();
+
+    private bool editando;
+    private string mensaje = "";
 
     protected override void OnInitialized()
+    {
+        CargarContactos();
+    }
+
+    private void CargarContactos()
     {
         contactos = Db.Contactos
             .OrderBy(c => c.Apellido)
             .ThenBy(c => c.Nombre)
             .ToList();
 
-        contactoSeleccionado = contactos.FirstOrDefault();
+        contactoSeleccionado ??= contactos.FirstOrDefault();
     }
 
     private void SeleccionarContacto(Contacto contacto)
     {
         contactoSeleccionado = contacto;
+        editando = false;
+        mensaje = "";
+    }
+
+    private void NuevoContacto()
+    {
+        contactoFormulario = new Contacto();
+        editando = true;
+        mensaje = "";
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoSeleccionado is null)
+            return;
+
+        contactoFormulario = new Contacto
+        {
+            Id = contactoSeleccionado.Id,
+            Nombre = contactoSeleccionado.Nombre,
+            Apellido = contactoSeleccionado.Apellido,
+            Telefono = contactoSeleccionado.Telefono,
+            Email = contactoSeleccionado.Email,
+            Empresa = contactoSeleccionado.Empresa,
+            Cargo = contactoSeleccionado.Cargo,
+            Direccion = contactoSeleccionado.Direccion,
+            FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+            Notas = contactoSeleccionado.Notas
+        };
+
+        editando = true;
+        mensaje = "";
+    }
+
+    private void GuardarContacto()
+    {
+        if (string.IsNullOrWhiteSpace(contactoFormulario.Nombre) ||
+            string.IsNullOrWhiteSpace(contactoFormulario.Apellido) ||
+            string.IsNullOrWhiteSpace(contactoFormulario.Telefono) ||
+            string.IsNullOrWhiteSpace(contactoFormulario.Email))
+        {
+            mensaje = "Nombre, apellido, teléfono y email son obligatorios.";
+            return;
+        }
+
+        if (!contactoFormulario.Email.Contains("@"))
+        {
+            mensaje = "El email debe contener @.";
+            return;
+        }
+
+        if (contactoFormulario.Id == 0)
+        {
+            Db.Contactos.Add(contactoFormulario);
+            mensaje = "Contacto creado correctamente.";
+        }
+        else
+        {
+            Contacto? existente = Db.Contactos.Find(contactoFormulario.Id);
+
+            if (existente is null)
+            {
+                mensaje = "No se encontró el contacto a modificar.";
+                return;
+            }
+
+            existente.Nombre = contactoFormulario.Nombre;
+            existente.Apellido = contactoFormulario.Apellido;
+            existente.Telefono = contactoFormulario.Telefono;
+            existente.Email = contactoFormulario.Email;
+            existente.Empresa = contactoFormulario.Empresa;
+            existente.Cargo = contactoFormulario.Cargo;
+            existente.Direccion = contactoFormulario.Direccion;
+            existente.FechaNacimiento = contactoFormulario.FechaNacimiento;
+            existente.Notas = contactoFormulario.Notas;
+
+            mensaje = "Contacto modificado correctamente.";
+        }
+
+        Db.SaveChanges();
+
+        editando = false;
+        contactoSeleccionado = null;
+        CargarContactos();
+    }
+
+    private void CancelarEdicion()
+    {
+        editando = false;
+        mensaje = "Edición cancelada.";
     }
 }
