@@ -18,20 +18,17 @@ var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 
-if (string.IsNullOrWhiteSpace(url))
-{
+if (string.IsNullOrWhiteSpace(url)) {
     Console.Error.WriteLine($"Falta configurar {proveedor}_API_URL en el archivo .env");
     return;
 }
 
-if (string.IsNullOrWhiteSpace(apiKey) && proveedor != "OLLAMA")
-{
+if (string.IsNullOrWhiteSpace(apiKey) && proveedor != "OLLAMA") {
     Console.Error.WriteLine($"Falta configurar {proveedor}_API_KEY en el archivo .env");
     return;
 }
 
-if (string.IsNullOrWhiteSpace(modelo))
-{
+if (string.IsNullOrWhiteSpace(modelo)) {
     Console.Error.WriteLine($"Falta configurar {proveedor}_MODEL en el archivo .env");
     return;
 }
@@ -49,36 +46,71 @@ List<ChatMessage> mensajes = [
     new(ChatRole.User, pregunta)
 ];
 
+string ObtenerConversacion() {
+    return string.Join("\n\n", mensajes.Select(m => {
+        var titulo = m.Role == ChatRole.User
+            ? "# Vos"
+            : m.Role == ChatRole.Assistant
+                ? "# Asistente"
+                : "";
+
+        return titulo == ""
+            ? ""
+            : $"{titulo}\n\n{m.Text}";
+    }));
+}
+
 var respuesta = await chat.GetResponseAsync(mensajes);
+
+mensajes.Add(new ChatMessage(ChatRole.Assistant, respuesta.Text));
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
-    Width = Dim.Fill(), Height = Dim.Fill()
+    Width = Dim.Fill(),
+    Height = Dim.Fill()
 };
 
-var conversacion = new Markdown
-{
+var conversacion = new Markdown {
     X = 0,
     Y = 0,
     Width = Dim.Fill(),
     Height = Dim.Fill(3),
-    Text = $"# Vos\n\n{pregunta}\n\n# Asistente\n\n{respuesta.Text}"
+    Text = ObtenerConversacion()
 };
 
-var entrada = new TextField
-{
+var entrada = new TextField {
     X = 0,
     Y = Pos.AnchorEnd(2),
     Width = Dim.Fill(14),
     Height = 1
 };
 
-var botonEnviar = new Button
-{
+var botonEnviar = new Button {
     X = Pos.AnchorEnd(12),
     Y = Pos.AnchorEnd(2),
     Text = "Enviar"
+
+};
+
+botonEnviar.Accepting += async (_, _) =>
+{
+    var texto = entrada.Text.ToString();
+
+    if (string.IsNullOrWhiteSpace(texto))
+        return;
+
+    entrada.Text = "";
+
+    mensajes.Add(new ChatMessage(ChatRole.User, texto));
+
+    conversacion.Text = ObtenerConversacion();
+
+    var respuestaIA = await chat.GetResponseAsync(mensajes);
+
+    mensajes.Add(new ChatMessage(ChatRole.Assistant, respuestaIA.Text));
+
+    conversacion.Text = ObtenerConversacion();
 };
 
 ventana.Add(conversacion, entrada, botonEnviar);
