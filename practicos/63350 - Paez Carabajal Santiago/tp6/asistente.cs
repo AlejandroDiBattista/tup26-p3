@@ -14,21 +14,16 @@ using Terminal.Gui.Views;
 // 1. CARGA DE VARIABLES MANUAL (.env.ejemplo)
 // Leo línea por línea el archivo de configuración para sacar las credenciales de Groq
 // sin tener que dejar la API key expuesta directamente metida en el código fuente.
-var lineasEnv = File.ReadAllLines(".env.ejemplo");
-string url = "";
-string apiKey = "";
-string modelo = "llama3-8b-8192";
+DotNetEnv.Env.Load();
 
-foreach (var linea in lineasEnv)
-{
-    if (linea.StartsWith("GROQ_API_URL=")) url = linea.Split('=')[1].Trim();
-    if (linea.StartsWith("GROQ_API_KEY=")) apiKey = linea.Split('=')[1].Trim();
-    if (linea.StartsWith("GROQ_MODEL=")) modelo = linea.Split('=')[1].Trim();
-}
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 
 // Limpio el final de la URL si viene con la ruta de completado para que no falle el cliente de OpenAI
-if (url.EndsWith("/chat/completions"))
-{
+if (url.EndsWith("/chat/completions")) {
     url = url.Replace("/chat/completions", "");
 }
 

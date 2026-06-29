@@ -18,17 +18,8 @@ using System.Collections.Generic;
 
 DotNetEnv.Env.Load();
 
-var testKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-if (string.IsNullOrWhiteSpace(testKey) || testKey.Contains("<tu_clave"))
-{
-    Console.WriteLine("\n[ERROR CRÍTICO DEL BÚNKER] 🚨");
-    Console.WriteLine("El programa no puede leer tu clave de Gemini.");
-    Console.WriteLine("1. Verificá que el archivo se llame EXACTAMENTE '.env' (sin .txt oculto).");
-    Console.WriteLine("2. Verificá que hayas guardado el archivo con Ctrl + S.");
-    Environment.Exit(1);
-}
 // -------------------------------
-var proveedor = (args.Length > 0 ? args[0] : "gemini").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";

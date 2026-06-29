@@ -25,17 +25,11 @@ DotNetEnv.Env.Load();
 // BLOQUE 3: OBTENER URL, API KEY Y MODELO
 // =====================================================
 
-var proveedor = (args.Length > 0 ? args[0] : "openai")
-    .ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 
-var url = Environment.GetEnvironmentVariable(
-    $"{proveedor}_API_URL");
-
-var apiKey = Environment.GetEnvironmentVariable(
-    $"{proveedor}_API_KEY");
-
-var modelo = Environment.GetEnvironmentVariable(
-    $"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 
 // =====================================================
 // BLOQUE 4: CREAR EL CLIENTE DE CHAT
@@ -111,8 +105,7 @@ var herramientas = new[]
 // BLOQUE 7: INICIALIZAR TERMINAL.GUI
 // =====================================================
 
-using IApplication app =
-    Application.Create().Init();
+using IApplication app = Application.Create().Init();
 
 // =====================================================
 // BLOQUE 8: VENTANA PRINCIPAL
@@ -203,8 +196,7 @@ botonEnviar.Accepting += async (s, e) =>
     entrada.Enabled = false;
     botonEnviar.Enabled = false;
 
-    conversacion.Text +=
-        "\n\n# Asistente\n\n";
+    conversacion.Text += "\n\n# Asistente\n\n";
 
     // Respuesta en streaming
 
@@ -212,15 +204,9 @@ botonEnviar.Accepting += async (s, e) =>
 
     await foreach (var fragmento in
         chat.GetStreamingResponseAsync(
-            mensajes,
-            new ChatOptions
-            {
-                Tools = herramientas
-            }))
-    {
-        respuestaCompleta += fragmento.Text;
-
-        conversacion.Text += fragmento.Text;
+            mensajes, new ChatOptions { Tools = herramientas })) { 
+                respuestaCompleta += fragmento.Text;
+                conversacion.Text += fragmento.Text;
     }
 
     // Guardar respuesta en el historial

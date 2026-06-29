@@ -17,9 +17,10 @@ using Terminal.Gui;
 // Cargamos variables desde .env
 DotNetEnv.Env.Load();
 
-var url = Environment.GetEnvironmentVariable("GROQ_API_URL") ?? "https://api.groq.com/openai/v1/";
-var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
-var modelo = Environment.GetEnvironmentVariable("GROQ_MODEL") ?? "llama-3.3-70b-versatile";
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
 List<ChatMessage> mensajes = File.Exists("historial.json") 
     ? JsonSerializer.Deserialize<List<ChatMessage>>(File.ReadAllText("historial.json")) 
@@ -35,8 +36,8 @@ Application.Init();
 var ventana = new Window($" AsistenteIA · Groq ({modelo}) ") { Width = Dim.Fill(), Height = Dim.Fill() };
 
 var vistaMarkdown = new TextView { Width = Dim.Fill(), Height = Dim.Fill() - 2, Text = "Escribí y presioná Enviar." };
-var campoTexto = new TextField { X = 1, Y = Pos.AnchorEnd(1), Width = Dim.Fill() - 10, Height = 1 };
-var botonEnviar = new Button { X = Pos.Right(campoTexto), Y = Pos.AnchorEnd(1), Text = "Enviar" };
+var campoTexto    = new TextField { X = 1, Y = Pos.AnchorEnd(1), Width = Dim.Fill() - 10, Height = 1 };
+var botonEnviar   = new Button { X = Pos.Right(campoTexto), Y = Pos.AnchorEnd(1), Text = "Enviar" };
 
 botonEnviar.Clicked += async () => {
     var texto = campoTexto.Text.ToString();

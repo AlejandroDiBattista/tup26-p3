@@ -174,7 +174,7 @@ sealed class VentanaPrincipal : Window
                 }
 
                 respuesta.Append(fragmento.Text);
-                Application.Invoke(() => ActualizarUltimoTurno(respuesta.ToString()));
+                App!.Invoke(() => ActualizarUltimoTurno(respuesta.ToString()));
             }
 
             var respuestaFinal = fragmentos.ToChatResponse();
@@ -182,11 +182,11 @@ sealed class VentanaPrincipal : Window
             if (string.IsNullOrWhiteSpace(textoFinal))
             {
                 textoFinal = "No se recibio texto del modelo.";
-                Application.Invoke(() => ActualizarUltimoTurno(textoFinal));
+                App!.Invoke(() => ActualizarUltimoTurno(textoFinal));
             }
             else
             {
-                Application.Invoke(() => ActualizarUltimoTurno(textoFinal));
+                App!.Invoke(() => ActualizarUltimoTurno(textoFinal));
             }
 
             mensajes.AddMessages(respuestaFinal);
@@ -194,12 +194,12 @@ sealed class VentanaPrincipal : Window
         catch (Exception ex)
         {
             var error = $"No se pudo obtener respuesta del modelo.\n\n`{ex.Message}`";
-            Application.Invoke(() => ActualizarUltimoTurno(error));
+            App!.Invoke(() => ActualizarUltimoTurno(error));
             mensajes.Add(new ChatMessage(ChatRole.Assistant, error));
         }
         finally
         {
-            Application.Invoke(() =>
+            App!.Invoke(() =>
             {
                 respondiendo = false;
                 entrada.Enabled = true;

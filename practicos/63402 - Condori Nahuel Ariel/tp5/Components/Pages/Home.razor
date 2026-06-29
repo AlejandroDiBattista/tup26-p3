@@ -76,12 +76,92 @@
         </aside>
 
         <section class="detail-panel">
-            @if (!mostrandoEditor)
+            @if (seleccionado is null && !mostrandoEditor)
             {
                 <div class="empty-detail">
                     <span class="empty-detail-icon"><i class="bi bi-person-lines-fill"></i></span>
                     <h2>Selecciona un contacto</h2>
                     <p>Elegi una persona de la lista para ver y editar toda su informacion.</p>
+                </div>
+            }
+            else if (!mostrandoEditor && seleccionado is not null)
+            {
+                <div class="detail-heading">
+                    <div class="detail-identity">
+                        <span class="avatar avatar-large">@Iniciales(seleccionado)</span>
+                        <div>
+                            <span class="eyebrow">Ficha de contacto</span>
+                            <h2>@seleccionado.Nombre @seleccionado.Apellido</h2>
+                            @if (!string.IsNullOrWhiteSpace(seleccionado.Cargo) ||
+                                 !string.IsNullOrWhiteSpace(seleccionado.Empresa))
+                            {
+                                <p>@Puesto(seleccionado)</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="detail-actions">
+                        <button class="btn btn-outline-primary" @onclick="EditarSeleccionado">
+                            <i class="bi bi-pencil-square"></i> Editar
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="EliminarContacto" disabled="@guardando">
+                            <i class="bi bi-trash3"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="detail-content">
+                    <section class="info-section">
+                        <h3>Informacion de contacto</h3>
+                        <div class="info-grid">
+                            <article class="info-item">
+                                <i class="bi bi-telephone"></i>
+                                <div>
+                                    <span>Telefono</span>
+                                    <strong>@seleccionado.Telefono</strong>
+                                </div>
+                            </article>
+                            <article class="info-item">
+                                <i class="bi bi-envelope"></i>
+                                <div>
+                                    <span>Correo electronico</span>
+                                    <strong>@seleccionado.Email</strong>
+                                </div>
+                            </article>
+                            <article class="info-item">
+                                <i class="bi bi-building"></i>
+                                <div>
+                                    <span>Empresa</span>
+                                    <strong>@MostrarDato(seleccionado.Empresa)</strong>
+                                </div>
+                            </article>
+                            <article class="info-item">
+                                <i class="bi bi-briefcase"></i>
+                                <div>
+                                    <span>Cargo</span>
+                                    <strong>@MostrarDato(seleccionado.Cargo)</strong>
+                                </div>
+                            </article>
+                            <article class="info-item info-wide">
+                                <i class="bi bi-geo-alt"></i>
+                                <div>
+                                    <span>Direccion</span>
+                                    <strong>@MostrarDato(seleccionado.Direccion)</strong>
+                                </div>
+                            </article>
+                            <article class="info-item">
+                                <i class="bi bi-calendar-event"></i>
+                                <div>
+                                    <span>Fecha de nacimiento</span>
+                                    <strong>@MostrarFecha(seleccionado.FechaNacimiento)</strong>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section class="notes-section">
+                        <h3>Notas</h3>
+                        <p>@MostrarDato(seleccionado.Notas)</p>
+                    </section>
                 </div>
             }
             else
@@ -211,7 +291,7 @@
             if (seleccionarId.HasValue)
             {
                 seleccionado = contactos.FirstOrDefault(c => c.Id == seleccionarId.Value);
-                mostrandoEditor = seleccionado is not null;
+                mostrandoEditor = false;
                 if (seleccionado is not null)
                 {
                     modelo = Copiar(seleccionado);
@@ -220,7 +300,7 @@
             else if (seleccionado is not null)
             {
                 seleccionado = contactos.FirstOrDefault(c => c.Id == seleccionado.Id);
-                mostrandoEditor = seleccionado is not null;
+                mostrandoEditor = false;
                 if (seleccionado is not null)
                 {
                     modelo = Copiar(seleccionado);
@@ -253,13 +333,24 @@
     {
         seleccionado = contacto;
         modelo = Copiar(contacto);
-        mostrandoEditor = true;
+        mostrandoEditor = false;
     }
 
     private void NuevoContacto()
     {
         seleccionado = null;
         modelo = new Contacto();
+        mostrandoEditor = true;
+    }
+
+    private void EditarSeleccionado()
+    {
+        if (seleccionado is null)
+        {
+            return;
+        }
+
+        modelo = Copiar(seleccionado);
         mostrandoEditor = true;
     }
 
@@ -302,6 +393,7 @@
         }
 
         modelo = Copiar(seleccionado);
+        mostrandoEditor = false;
     }
 
     private async Task EliminarContacto()
@@ -351,4 +443,10 @@
 
     private static string Puesto(Contacto contacto) =>
         string.Join(" - ", new[] { contacto.Cargo, contacto.Empresa }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    private static string MostrarDato(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? "Sin cargar" : valor;
+
+    private static string MostrarFecha(DateOnly? fecha) =>
+        fecha?.ToString("dd/MM/yyyy") ?? "Sin cargar";
 }

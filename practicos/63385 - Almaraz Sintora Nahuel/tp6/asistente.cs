@@ -16,24 +16,14 @@ using System.Text;
 using System.Drawing;
 using System.ComponentModel;
 
-var raiz = EncontrarRaizAplicacion(Directory.GetCurrentDirectory());
-DotNetEnv.Env.Load(Path.Combine(raiz, ".env"));
+const string raiz = ".";
 
-ConfiguracionApi configuracion;
-try
-{
-    configuracion = CargarConfiguracion(args);
-}
-catch (InvalidOperationException ex)
-{
-    Console.Error.WriteLine(ex.Message);
-    return;
-}
+DotNetEnv.Env.Load();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 
-var proveedor = configuracion.Proveedor;
-var url = configuracion.Url;
-var apiKey = configuracion.ApiKey;
-var modelo = configuracion.Modelo;
+var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),

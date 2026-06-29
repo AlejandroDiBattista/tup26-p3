@@ -14,7 +14,7 @@ using Terminal.Gui.Views;
 using Terminal.Gui.Input;
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "groq").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";

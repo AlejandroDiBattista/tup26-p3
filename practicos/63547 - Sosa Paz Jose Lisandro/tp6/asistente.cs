@@ -288,7 +288,7 @@ sealed class VentanaPrincipal : Window
                 {
                     acumulado.Append(fragmento.Text);
                     historial[^1] = respuesta with { Texto = acumulado.ToString() };
-                    Application.Invoke(Renderizar);
+                    App!.Invoke(Renderizar);
                 }
             }
 
@@ -299,11 +299,11 @@ sealed class VentanaPrincipal : Window
             var error = $"No se pudo obtener respuesta: {ex.Message}";
             historial[^1] = respuesta with { Texto = error };
             mensajes.Add(new ChatMessage(ChatRole.Assistant, error));
-            Application.Invoke(Renderizar);
+            App!.Invoke(Renderizar);
         }
         finally
         {
-            Application.Invoke(() =>
+            App!.Invoke(() =>
             {
                 entrada.Enabled = true;
                 enviar.Enabled = true;

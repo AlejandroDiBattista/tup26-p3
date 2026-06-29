@@ -76,3 +76,17 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
     height: 64px;
     font-size: 1.5rem;
 }
+
+.row.agenda-row {
+    height: calc(100vh - 120px);
+}
+
+.agenda-lista {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.agenda-detalle {
+    height: 100%;
+    overflow-y: auto;
+}

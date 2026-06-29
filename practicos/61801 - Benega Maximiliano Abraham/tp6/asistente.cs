@@ -13,9 +13,9 @@ using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
 // 1. Inicialización y Carga de Configuración desde el .env
-DotNetEnv.Env.Load(".env.ejemplo");
+DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "groq").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/qwen3.6-27b";
@@ -138,7 +138,7 @@ campoTexto.KeyDown += async (s, e) => {
     string teclaStr = e?.ToString()?.ToUpperInvariant() ?? "";
     if (teclaStr.Contains("ENTER") || teclaStr.Contains("RETURN"))
     {
-        e.Handled = true;
+        e?.Handled = true;
         await EnviarMensajeUsuario();
     }
 };
@@ -147,13 +147,13 @@ ventana.KeyDown += (s, e) => {
     string teclaStr = e?.ToString()?.ToUpperInvariant() ?? "";
     if (teclaStr.Contains("ESC") || teclaStr.Contains("ESCAPE"))
     {
-        e.Handled = true;
-        app.RequestStop();
+        e?.Handled = true;
+        app!.RequestStop();
     }
 };
 
 // Ejecución de la aplicación de terminal
-app.Run(ventana);
+app!.Run(ventana);
 
 
 // --- IMPLEMENTACIÓN DE LAS HERRAMIENTAS (Function Calling) ---

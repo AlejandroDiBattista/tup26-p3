@@ -18,7 +18,7 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 // Define proveedor a usar en este caso Gemini
-var proveedor = (args.Length > 0 ? args[0] : "gemini").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gemini-2.5-flash";

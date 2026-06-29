@@ -14,10 +14,11 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var proveedor = "OLLAMA";
-var url = "http://localhost:11434/v1";
-var modelo = "qwen2.5-coder:7b";
-var apiKey = "ollama";
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+
+var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
 
 Console.WriteLine($"Proveedor: {proveedor}");
 
