@@ -14,7 +14,7 @@ try
 {
     using var http = new HttpClient();
 
-    productos = await CargarProductosAsync(http);
+    productos = await CatalogoApi.ListarProductosAsync(http);
 }
 catch (HttpRequestException ex)
 {
@@ -60,18 +60,64 @@ app.Run(ventana);
 
 // ── Cliente REST ──────────────────────────────────────────────────────────
 
-static async Task<List<ProductoDto>> CargarProductosAsync(HttpClient http)
+static class CatalogoApi
 {
-    const string url = "http://localhost:5050/productos";
+    private const string BaseUrl = "http://localhost:5050";
 
-    return await http.GetFromJsonAsync<List<ProductoDto>>(url)
-           ?? [];
+    public static async Task<List<ProductoDto>> ListarProductosAsync(HttpClient http)
+    {
+        return await http.GetFromJsonAsync<List<ProductoDto>>($"{BaseUrl}/productos")
+               ?? [];
+    }
+
+    public static async Task<ProductoDto?> BuscarProductoAsync(HttpClient http, int id)
+    {
+        return await http.GetFromJsonAsync<ProductoDto>($"{BaseUrl}/productos/{id}");
+    }
+
+    public static async Task<ProductoDto?> CrearProductoAsync(HttpClient http, ProductoInputDto input)
+    {
+        HttpResponseMessage response =
+            await http.PostAsJsonAsync($"{BaseUrl}/productos", input);
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException(await response.Content.ReadAsStringAsync());
+
+        return await response.Content.ReadFromJsonAsync<ProductoDto>();
+    }
+
+    public static async Task<ProductoDto?> ModificarProductoAsync(HttpClient http, int id, ProductoInputDto input)
+    {
+        HttpResponseMessage response =
+            await http.PutAsJsonAsync($"{BaseUrl}/productos/{id}", input);
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException(await response.Content.ReadAsStringAsync());
+
+        return await response.Content.ReadFromJsonAsync<ProductoDto>();
+    }
+
+    public static async Task EliminarProductoAsync(HttpClient http, int id)
+    {
+        HttpResponseMessage response =
+            await http.DeleteAsync($"{BaseUrl}/productos/{id}");
+
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException(await response.Content.ReadAsStringAsync());
+    }
 }
 
 // ── DTO ───────────────────────────────────────────────────────────────────
 
 record ProductoDto(
     int Id,
+    string Codigo,
+    string Nombre,
+    decimal Precio,
+    int Stock
+);
+
+record ProductoInputDto(
     string Codigo,
     string Nombre,
     decimal Precio,
