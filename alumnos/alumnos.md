@@ -75,7 +75,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63205   Navarro Aragón, Facundo         (381)466-6665   facundonavarroaragon       🔴🔴🔴🔴🔴🔴   🟢⚪   No    22   10
 63220   Pérez Del Rien, Valentina       (381)360-2873   vall19-git                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba stream)
 63232   Roldan, Enzo Joaquín            (381)565-4292   roldanebzo                 🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
-63216   Sánchez, Sofía Micaela          (381)342-9672   sofisanchez126             🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  error 404
+63216   Sánchez, Sofía Micaela          (381)342-9672   sofisanchez126             🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  correcto
 63207   Saravia, César Nahum            (381)612-1173   nahum-saravia              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
 61026   Thompson, María José            (381)448-3445   mariajosethompson0-eng     🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
 ```

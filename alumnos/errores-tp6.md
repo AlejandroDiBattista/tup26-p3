@@ -1,81 +1,94 @@
-# Sin leer-archivo
-61581
-63137
-61801
-63182
-63208
-63207
-63219
-63216
-63220
-63268
-63231
-63218
-63297
-63300
-63385
-63313
-63341
-63266
-63412
-63387
-63388
-63234
-63241
-63389
-63354
-63345
-63420
-63350
-63418
-63402
-63396
-63419
-63399
-63546
-63456
-63737
-63494
-63447
-63547
+# Evaluacion TP6
 
-## Con "TODO:"
-61161
-61577
-61641
-61057
-61490
-61907
-62844
-63217
-63205
-63211
-63232
-63389
-63393
-63425
-63647
-63418
-63415
-63776
-63700
-63461
-64016
-63493
+## Funciona de primera
+
+> Estos trabajos funcionaron de primera.
+
+63207   Saravia, César Nahum             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63219   Lazarte, Sergio Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63231   Herrera, Rocío Tatiana           🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto
+63241   Cortez, Josías                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto
+63268   Condori, Karina Edith            🟢🟢🟢🟢🟢🟢   🟢⚪   No     9    1  correcto
+63297   Lezana, Juan Ignacio             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63300   Álvarez, Hernán Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63313   Ávila Puntano, Benjamín          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63341   Carrer, Juan Cruz                🟢🟢🟢🟢🟢🟢   🟢⚪   No    21   10  correcto
+63354   Perondi, Luciano                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63399   Lazarte, Gonzalo Romeo           🟢🟢🟢🟢🟢🟢   🟢⚪   No    24   10  correcto
+63402   Condori, Nahuel Ariel            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto
+63419   Coronel, Tomás                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  correcto
+63494   Medina, Lourdes Natalia          🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63546   Sosa Paz, Jeremías               🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto
+63547   Sosa Paz, José Lisandro          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63420   Pereyra, Valentina Nazaret       🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  correcto
+63208   Rosconi, Ignacio Federico        🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  correcto
 
 
-63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟤   🟢⚪   No    28   10
-63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9
-63222   Bajre Martínez, Julián          (381)351-9652   julianbajre-png            🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7
-63150   Carlino, Joaquín                (381)605-7383   vincent-coffe              🟢🟢🟢🟢🟢🟤   🟢⚪   No    13   10  16
-61489   Gómez, Tomás                    (381)390-5024   tomasgomez18               🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9
-63717   González, Octavio               (381)604-1868   owning01                   🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9
-63213   Marina Noguera, Morena Giovann  (381)354-0133   mmore-cloud                🟢🟢🟢🟢🟢🟤   🟢⚪   No    30    9
-61026   Thompson, María José            (381)448-3445   mariajosethompson0-eng     🟢🟢🟢🟢🟢🟤   🟢⚪   No    26    9  No implementa agente, solo asistente.
+## Corregido problema subsanables
 
+> Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
 
-63456   Ávila Lahr, Joaquín             (381)527-6836   joacoavila9                🟢🟢🟢🟢🟢🟠   🟢⚪   No    26   10  error 134
-63387   Sosa Gonella, Luca              (381)355-5126   lucasosag1                 🟢🟢🟢🟢🟢🟠   🟢⚪   No    22    9  error 134
-63447   Suárez, Sofía Celeste           (381)246-3725   suarezsofia541-alt         🟢🟢🟢🟢🟢🟠   🟢⚪   No    29   10  error 134
-63137   Díaz, José Simón                (381)617-9958   josesimondiaz              🟢🟢🔴🟢🟢🟠   🟢⚪   No    29    6  falla 2do intento. Error 134
-63220   Pérez Del Rien, Valentina       (381)360-2873   vall19-git                 🟢🟢🟢🟢🟢🟠   🟢⚪   No    31   10  error codigo 134
+61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
+61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
+63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)
+63350   Páez Carabajal, Santiago         🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  correcto (faltaba DotNetEnv)
+63385   Almaraz Sintora, Nahuel          🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (lee mal api_key)
+63387   Sosa Gonella, Luca               🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (fallaba streaming)
+63388   López, Leandro Joel              🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (lee mal .env)
+63396   Gil Garau, Atalía Trinidad       🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (fallaba proveedor)
+63412   Morán, Facundo Martín            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba proveedor)
+63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba streaming)
+63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto (fallaba streaming)
+63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
+63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
+
+## No implementa las herramientas
+
+> No cumple consigna, no implementa las funcioes (corregir )
+
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟤   🟢⚪   No    28   10  No implementa las herramientas
+63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
+63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7  No implementa las herramientas
+63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    13   10  No implementa las herramientas
+61489   Gómez, Tomás                     🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9  No implementa las herramientas
+63717   González, Octavio                🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9  No implementa las herramientas
+63213   Marina Noguera, Morena Giovann   🟢🟢🟢🟢🟢🟤   🟢⚪   No    30    9  No implementa las herramientas
+63397   Vercellone, Tomás                🟢🟢🟢🔴🟢🟤   🟢⚪   No    24    9  No implementa las herramientas
+
+## No compila
+
+> No compila (corregir)
+
+63234   Molina, Lázaro Exequiel          🟢🟢🟢🟢🟢🟠   🟢⚪   No    27   10  No compila
+
+## No presentaron (recuperar)
+
+> No presentaron (presenta para promocionar)
+
+63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🔴   🟢⚪   No    18    8
+63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    20   10
+63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🔴   🟢⚪   No    25    7
+63647   Paz, Valentina                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    25   10
+63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🔴   🟢⚪   No    26    8
+
+## No presentaron 
+
+> No presentaron 
+63205   Navarro Aragón, Facundo          🔴🔴🔴🔴🔴🔴   🟢⚪   No    22   10
+63415   Chávez, Lucas Francisco          🔴🔴🔴🔴🔴🔴   🟢⚪   No    17    8
+61577   González, Lucas Alfredo          🟢🔴🔴🔴🔴🔴   🟢⚪   No    25   10
+63217   Altamiranda Borquez, Bian        🟢🔴🔴🔴🔴🔴   🟢⚪   No    26    8
+61641   Figueroa, Nahuel Ramón           🟢🔴🔴🔴🔴🔴   🟢⚪   No    19    4
+63211   Montero, Luca                    🟢🟢🔴🔴🔴🔴   🟢⚪   No    19   10
+63425   Holmquist, Jeremy                🟢🟢🔴🔴🔴🔴   🟢⚪   No    16    6
+63461   Cativa, Facundo Simón            🟢🟢🔴🔴🔴🔴   🟢⚪   No    18    8
+61161   González, Thomas Ezequiel        🟢🟢🔴🟢🔴🔴   🟢⚪   No    20    5
+63776   Fuensalida, Ulises Nahuel        🟢🟢🔴🔴🟢🔴   🟢⚪   No    17    8
+61490   Valdez Bustamante, Tomás         🟢🟢🔴🟢🟢🔴   🟢⚪   No    34    6
+64016   Cura, Rocío Aylen                🔴🟢🟢🔴🔴🔴   🟢⚪   No    17    7
+62844   Guzmán, Luciano Leonel           🔴🟢🟢🔴🔴🔴   🟢⚪   No    16   10
+61057   Getar, Thomas                    🟢🟢🟢🔴🔴🔴   🟢⚪   No    23    7
+63493   Busnelli, Bruno                  🟢🟢🟢🔴🔴🔴   🟢⚪   No    14   10
+63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
