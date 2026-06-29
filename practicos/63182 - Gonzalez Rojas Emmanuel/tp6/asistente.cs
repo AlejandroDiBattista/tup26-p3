@@ -20,18 +20,22 @@ using Terminal.Gui.Views;
 // =================== CONFIGURACION ====================
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL") ?? "";
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "";
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gemini-2.5-flash";
+var urlApi   = Environment.GetEnvironmentVariable("GEMINI_API_URL") ?? "";
+var clave    = Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? "";
+var modeloIA = Environment.GetEnvironmentVariable("GEMINI_MODEL")   ?? "gemini-2.5-flash";
+
+if (string.IsNullOrEmpty(clave)) {
+    Console.Error.WriteLine("Falta GEMINI_API_KEY en .env ");
+    Environment.Exit(1);
+}
 
 
 // ================== CLIENTE DE IA ====================
 
 IChatClient clienteBase = new OpenAIClient(
-        new ApiKeyCredential(apiKey),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
-    .GetChatClient(modelo)
+        new ApiKeyCredential(clave),
+        new OpenAIClientOptions { Endpoint = new Uri(urlApi) })
+    .GetChatClient(modeloIA)
     .AsIChatClient();
 
 IChatClient cliente = new ChatClientBuilder(clienteBase)
@@ -73,12 +77,12 @@ var historial = new List<ChatMessage> {
 
 var archivoSalida = "salida.md";
 File.WriteAllText(archivoSalida,
-    $"# IAWizard\nModel: {modelo}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
+    $"# IAWizard\nModel: {modeloIA}\nDate: {DateTime.Now:dd/MM/yyyy HH:mm}\n---\n\n");
 
 
 // =============================================
 using IApplication app = Application.Create().Init();
-app.Run(new VentanaAsistente(app, cliente, historial, opciones, modelo, archivoSalida));
+app.Run(new VentanaAsistente(app, cliente, historial, opciones, modeloIA, archivoSalida));
 
 
 // ================== VENTANA PRINCIPAL ====================
@@ -115,37 +119,35 @@ class VentanaAsistente : Window {
         Height = Dim.Fill();
 
 
-        _vistaChat = new Markdown {
-            X      = 0,
-            Y      = 0,
-            Width  = Dim.Fill(),
-            Height = Dim.Fill() - 6
-        };
+_vistaChat = new Markdown {
+    X      = 0,
+    Y      = 0,
+    Width  = Dim.Fill(),
+    Height = Dim.Fill() - 3  
+};
 
-    
-        _estado = new Label {
-            Text   = " Escribí tu mensaje y presioná Enter. ESC para salir.",
-            X      = 0,
-            Y      = Pos.Bottom(_vistaChat),
-            Width  = Dim.Fill(),
-            Height = 1
-        };
+_estado = new Label {
+    Text   = " Escribí tu mensaje y presioná Enter. ESC para salir.",
+    X      = 0,
+    Y      = Pos.Bottom(_vistaChat),
+    Width  = Dim.Fill(),
+    Height = 1
+};
 
+_campoTexto = new TextField {
+    Text   = "",
+    X      = 0,
+    Y      = Pos.Bottom(_estado),
+    Width  = Dim.Fill(),
+    Height = 1
+};
 
-        _campoTexto = new TextField {
-            Text   = "",
-            X      = 0,
-            Y      = Pos.Bottom(_estado),
-            Width  = Dim.Fill() - 2,
-            Height = 3
-        };
-
-        var boton = new Button {
-            Text      = "ENVIAR",
-            X         = Pos.Right(_campoTexto) + 1,
-            Y         = Pos.Bottom(_estado),
-            IsDefault = true
-        };
+var boton = new Button {
+    Text      = "[ ENVIAR ]",
+    X         = Pos.Center(),
+    Y         = Pos.Bottom(_campoTexto),
+    IsDefault = true
+};
 
         _campoTexto.KeyDown += async (_, e) => {
             if (e.KeyCode == KeyCode.Enter && !string.IsNullOrWhiteSpace(_campoTexto.Text)) {
@@ -186,12 +188,12 @@ class VentanaAsistente : Window {
         _campoTexto.Enabled = false;
 
         // MOSTRAR MENSAJE DEL USUARIO
-        _textoAcumulado.AppendLine($"# ── YO\n{texto}\n");
+        _textoAcumulado.AppendLine($"# YO\n{texto}\n");
         _app.Invoke(() => _vistaChat.Text = _textoAcumulado.ToString());
         File.AppendAllText(_archivoSalida, $"[ YO | {DateTime.Now:HH:mm:ss} ]\n{texto}\n\n");
 
         _historial.Add(new(ChatRole.User, texto));
-        _textoAcumulado.AppendLine("# ── ASISTENTE\n");
+        _textoAcumulado.AppendLine("# ASISTENTE\n");
         _app.Invoke(() => {
             _vistaChat.Text = _textoAcumulado.ToString();
             _estado.Text    = "Escribiendo...";
@@ -252,4 +254,5 @@ class VentanaAsistente : Window {
     }
 
 }
+
 
