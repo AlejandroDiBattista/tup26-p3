@@ -109,13 +109,18 @@ class Producto
 
 record class ProductoInput(string Codigo, string Nombre, decimal Precio, int Stock);
 
-record class MovimientoDeProducto(
-    int Id,
-    int ProductoId,
-    TipoMovimiento Tipo,
-    int Cantidad,
-    DateTime Fecha
-);
+class MovimientoDeProducto
+{
+    public int Id { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public TipoMovimiento Tipo { get; set; }
+
+    public int Cantidad { get; set; }
+
+    public DateTime Fecha { get; set; }
+}
 
 enum TipoMovimiento
 {
@@ -146,32 +151,26 @@ class CatalogoRepositorio
         if (!db.Productos.Any())
         {
             db.Productos.AddRange(
-    new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 },
-    new Producto { Codigo = "P002", Nombre = "Azucar 1kg", Precio = 1200m, Stock = 80 },
-    new Producto { Codigo = "P003", Nombre = "Cafe Molido 250g", Precio = 3500m, Stock = 35 }
-);
+                new Producto { Codigo = "P001", Nombre = "Yerba Mate 500g", Precio = 1500m, Stock = 100 },
+                new Producto { Codigo = "P002", Nombre = "Azucar 1kg", Precio = 1200m, Stock = 80 },
+                new Producto { Codigo = "P003", Nombre = "Cafe Molido 250g", Precio = 3500m, Stock = 35 }
+            );
 
             db.SaveChanges();
         }
     }
 
     public List<Producto> ListarProductos() =>
-        db.Productos
-            .OrderBy(p => p.Codigo)
-            .ToList();
+        db.Productos.OrderBy(p => p.Codigo).ToList();
 
     public Producto? BuscarProducto(int id) =>
-        db.Productos
-            .FirstOrDefault(p => p.Id == id);
+        db.Productos.FirstOrDefault(p => p.Id == id);
 
     public bool ExisteCodigo(string codigo) =>
         db.Productos.Any(p => p.Codigo.ToLower() == codigo.Trim().ToLower());
 
     public bool ExisteCodigoEnOtroProducto(string codigo, int id) =>
-        db.Productos.Any(p =>
-            p.Id != id &&
-            p.Codigo.ToLower() == codigo.Trim().ToLower()
-        );
+        db.Productos.Any(p => p.Id != id && p.Codigo.ToLower() == codigo.Trim().ToLower());
 
     public Producto CrearProducto(ProductoInput input)
     {
