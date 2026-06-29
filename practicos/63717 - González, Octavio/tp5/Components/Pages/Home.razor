@@ -1,5 +1,4 @@
 @page "/"
-@using Microsoft.VisualBasic
 @rendermode InteractiveServer
 @inject Repositorio Repositorio
 
@@ -284,8 +283,8 @@
     async Task CrearContacto(Contacto c)
     {
         await Repositorio.AgregarContacto(c);
-        contactos = await Repositorio.TraerContactos(); // Refresca la lista
-        nuevoContacto = new Contacto(); // Resetea el formulario
+        contactos = await Repositorio.TraerContactos(); 
+        nuevoContacto = new Contacto(); 
         Ocultar();
     }
 
@@ -300,7 +299,9 @@
     async Task EliminarContacto(int id)
     {
         await Repositorio.Eliminar(id);
-        contactos = await Repositorio.TraerContactos(); // Refresca la lista
+        contactos = await Repositorio.TraerContactos();
+        Contactoseleccionado = null;
+        editar = false; 
     }
 
 
@@ -313,15 +314,4 @@
     {
         agregar = false;
     }
-
-    public record class UIContacto(int id,
-    string nombre,
-    string apellido,
-    string telefono,
-    string email,
-    string empresa,
-    string cargo,
-    string direccion,
-    DateOnly? fechaNacimiento,
-    string notas);
 }
