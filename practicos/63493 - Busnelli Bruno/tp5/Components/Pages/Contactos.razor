@@ -1,0 +1,50 @@
+@page "/contactos"
+
+@using tp5.Models
+@inject AgendaDbContext Db
+
+<PageTitle>Contactos</PageTitle>
+
+<h3>Agenda de contactos</h3>
+
+@if (contactos is null)
+{
+    <p>Cargando contactos...</p>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var contacto in contactos)
+        {
+            <tr>
+                <td>@contacto.Nombre</td>
+                <td>@contacto.Apellido</td>
+                <td>@contacto.Telefono</td>
+                <td>@contacto.Email</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Contacto>? contactos;
+
+    protected override void OnInitialized()
+    {
+        contactos = Db.Contactos
+            .OrderBy(c => c.Apellido)
+            .ThenBy(c => c.Nombre)
+            .ToList();
+    }
+}
