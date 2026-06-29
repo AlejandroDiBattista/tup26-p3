@@ -14,9 +14,27 @@ using Terminal.Gui.Views;
 DotNetEnv.Env.Load();
 
 var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
+
+if (string.IsNullOrWhiteSpace(url))
+{
+    Console.Error.WriteLine($"Falta configurar {proveedor}_API_URL en el archivo .env");
+    return;
+}
+
+if (string.IsNullOrWhiteSpace(apiKey) && proveedor != "OLLAMA")
+{
+    Console.Error.WriteLine($"Falta configurar {proveedor}_API_KEY en el archivo .env");
+    return;
+}
+
+if (string.IsNullOrWhiteSpace(modelo))
+{
+    Console.Error.WriteLine($"Falta configurar {proveedor}_MODEL en el archivo .env");
+    return;
+}
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
