@@ -26,6 +26,17 @@ try
     var systemPrompt = File.ReadAllText(SystemPromptFileName);
     var tools = ProjectFileTools.Create(Directory.GetCurrentDirectory());
 
+    if (args.Contains("--check", StringComparer.OrdinalIgnoreCase))
+    {
+        Console.WriteLine("Configuracion OK.");
+        Console.WriteLine($"Proveedor: {config.Provider}");
+        Console.WriteLine($"Endpoint: {config.Endpoint}");
+        Console.WriteLine($"Modelo: {config.Model}");
+        Console.WriteLine($"Prompt de sistema: {SystemPromptFileName} ({systemPrompt.Length} caracteres)");
+        Console.WriteLine($"Herramientas: {tools.Count}");
+        return;
+    }
+
     IChatClient chat = new OpenAIClient(
             new ApiKeyCredential(config.ApiKey),
             new OpenAIClientOptions { Endpoint = config.Endpoint })
@@ -55,7 +66,8 @@ internal sealed record AssistantConfig(string Provider, Uri Endpoint, string Api
 {
     public static AssistantConfig FromEnvironment(string[] args)
     {
-        var provider = (args.Length > 0 ? args[0] : "OPENAI").Trim().ToUpperInvariant();
+        var providerArgument = args.FirstOrDefault(arg => !arg.StartsWith("--", StringComparison.Ordinal));
+        var provider = (providerArgument ?? "OPENAI").Trim().ToUpperInvariant();
         var rawUrl = Environment.GetEnvironmentVariable($"{provider}_API_URL");
         var apiKey = Environment.GetEnvironmentVariable($"{provider}_API_KEY");
         var model = Environment.GetEnvironmentVariable($"{provider}_MODEL");
@@ -488,7 +500,10 @@ internal sealed class AssistantWindow : Window
         _conversation.Text = _markdown.ToString();
 
         if (_autoScroll)
+        {
+            _conversation.ScrollVertical(int.MaxValue);
             _conversation.SetNeedsDraw();
+        }
 
         SetNeedsDraw();
     }
