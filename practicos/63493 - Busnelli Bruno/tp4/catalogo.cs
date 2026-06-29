@@ -410,7 +410,26 @@ public sealed class CatalogoWindow : Runnable
             MessageBox.ErrorQuery(App!, "Error", ex.Message, "OK");
         }
     }
+    private void MoverSeleccion(int direccion)
+{
+    if (productosFiltrados.Count == 0)
+        return;
 
+    selectedIndex += direccion;
+
+    if (selectedIndex < 0)
+        selectedIndex = 0;
+
+    if (selectedIndex >= productosFiltrados.Count)
+        selectedIndex = productosFiltrados.Count - 1;
+
+    CargarMovimientosSeleccionado();
+
+    ProductoDto? producto = ProductoSeleccionado();
+
+    if (producto is not null)
+        RefrescarVista($"Seleccionado: {producto.Nombre}");
+}
     private void MostrarAcercaDe()
     {
         MessageBox.Query(
@@ -426,40 +445,52 @@ public sealed class CatalogoWindow : Runnable
         App!.RequestStop();
     }
 
-    protected override bool OnKeyDown(Key key)
+ protected override bool OnKeyDown(Key key)
+{
+    if (key == Key.Q.WithCtrl)
     {
-        if (key == Key.Q.WithCtrl)
-        {
-            SolicitarSalir();
-            return true;
-        }
-
-        if (key == Key.F2)
-        {
-            AgregarProducto();
-            return true;
-        }
-
-        if (key == Key.F3)
-        {
-            ModificarProducto();
-            return true;
-        }
-
-        if (key == Key.Delete)
-        {
-            EliminarProducto();
-            return true;
-        }
-
-        if (key == Key.F4)
-        {
-            RegistrarMovimiento();
-            return true;
-        }
-
-        return base.OnKeyDown(key);
+        SolicitarSalir();
+        return true;
     }
+
+    if (key == Key.F2)
+    {
+        AgregarProducto();
+        return true;
+    }
+
+    if (key == Key.F3 || key == Key.Enter)
+    {
+        ModificarProducto();
+        return true;
+    }
+
+    if (key == Key.Delete)
+    {
+        EliminarProducto();
+        return true;
+    }
+
+    if (key == Key.F4)
+    {
+        RegistrarMovimiento();
+        return true;
+    }
+
+    if (key == Key.CursorUp)
+    {
+        MoverSeleccion(-1);
+        return true;
+    }
+
+    if (key == Key.CursorDown)
+    {
+        MoverSeleccion(1);
+        return true;
+    }
+
+    return base.OnKeyDown(key);
+}
 }
 
 public sealed class ProductoDialog : Dialog

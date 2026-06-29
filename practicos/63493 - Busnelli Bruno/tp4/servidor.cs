@@ -90,12 +90,19 @@ app.MapPost("/productos/{productoId:int}/movimientos", (int productoId, Movimien
     if (input.Cantidad <= 0)
         return Results.BadRequest("La cantidad debe ser positiva.");
 
-    MovimientoDeProducto? movimiento = repositorio.RegistrarMovimiento(productoId, input);
+    try
+    {
+        MovimientoDeProducto? movimiento = repositorio.RegistrarMovimiento(productoId, input);
 
-    if (movimiento is null)
-        return Results.NotFound();
+        if (movimiento is null)
+            return Results.NotFound();
 
-    return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+        return Results.Created($"/productos/{productoId}/movimientos/{movimiento.Id}", movimiento);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
 });
 
 app.Run("http://localhost:5050");
@@ -251,37 +258,40 @@ class CatalogoRepositorio
             .ToList();
     }
 
-    public MovimientoDeProducto? RegistrarMovimiento(int productoId, MovimientoInput input)
+ public MovimientoDeProducto? RegistrarMovimiento(int productoId, MovimientoInput input)
+{
+    Producto? producto = BuscarProducto(productoId);
+
+    if (producto is null)
+        return null;
+
+    if (input.Tipo == TipoMovimiento.Compra)
     {
-        Producto? producto = BuscarProducto(productoId);
-
-        if (producto is null)
-            return null;
-
-        if (input.Tipo == TipoMovimiento.Compra)
-        {
-            producto.Stock += input.Cantidad;
-        }
-        else if (input.Tipo == TipoMovimiento.Venta)
-        {
-            producto.Stock -= input.Cantidad;
-        }
-        else if (input.Tipo == TipoMovimiento.Ajuste)
-        {
-            producto.Stock = input.Cantidad;
-        }
-
-        MovimientoDeProducto movimiento = new()
-        {
-            ProductoId = productoId,
-            Tipo = input.Tipo,
-            Cantidad = input.Cantidad,
-            Fecha = DateTime.Now
-        };
-
-        db.Movimientos.Add(movimiento);
-        db.SaveChanges();
-
-        return movimiento;
+        producto.Stock += input.Cantidad;
     }
+    else if (input.Tipo == TipoMovimiento.Venta)
+    {
+        if (input.Cantidad > producto.Stock)
+            throw new InvalidOperationException("No hay stock suficiente para registrar la venta.");
+
+        producto.Stock -= input.Cantidad;
+    }
+    else if (input.Tipo == TipoMovimiento.Ajuste)
+    {
+        producto.Stock = input.Cantidad;
+    }
+
+    MovimientoDeProducto movimiento = new()
+    {
+        ProductoId = productoId,
+        Tipo = input.Tipo,
+        Cantidad = input.Cantidad,
+        Fecha = DateTime.Now
+    };
+
+    db.Movimientos.Add(movimiento);
+    db.SaveChanges();
+
+    return movimiento;
+}
 }
