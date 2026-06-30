@@ -59,7 +59,7 @@ var opciones = new ChatOptions
 
 List<ChatMessage> mensajes =
 [
-    new(ChatRole.System, CargarMensajeSistema(rutaProyecto))
+    new(ChatRole.System, CargarMensajeSistema(rutaProducto))
 ];
 using IApplication app = Application.Create().Init();
 using var ventana = new VentanaAsistente(app, chat, opciones, mensajes, modelo, proveedor);
@@ -290,6 +290,67 @@ class VentanaAsistente : Window
         panelConversacion.Viewport = panelConversacion.Viewport with { Y = y };
     }
 }
+static class HerramientasArchivos
+{
+    [Description("lee el contenido de un archivo de texto.")]
+    public static string LeerArchivo([Description("ruta del archivo a leer.")] string ruta)
+    {
+        var rutaSegura = ResolverRuta(ruta);
 
+        if (!File.Exists(rutaSegura))
+        {
+            return $"No existe el archivo: {ruta}";
+        }
+
+        return File.ReadAllText(rutaSegura);
+    }
+
+    [Description("Crea o sobrescribe un archivo con el contenido indicado.")]
+    public static string EscribirArchivo(
+        [Description("ruta del archivo a crear o sobrescribir.")] string ruta,
+        [Description("contenido que se escribira en el archivo.")] string contenido)
+    {
+        var rutaSegura = ResolverRuta(ruta);
+        var carpeta = Path.GetDirectoryName(rutaSegura);
+
+        if (!string.IsNullOrWhiteSpace(carpeta))
+        {
+            Directory.CreateDirectory(carpeta);
+        }
+
+        File.WriteAllText(rutaSegura, contenido);
+        return $"Archivo escrito correctamente: {ruta}";
+    }
+
+    [Description("Lista archivos y carpetas de un directorio.")]
+    public static string ListarArchivos([Description("Ruta del directorio a listar.")] string ruta)
+    {
+        var rutaSegura = ResolverRuta(ruta);
+
+        if (!Directory.Exists(rutaSegura))
+        {
+            return $"No existe el directorio: {ruta}";
+        }
+
+        var entradas = Directory.EnumerateFileSystemEntries(rutaSegura)
+            .Select(entrada =>
+            {
+                var nombre = Path.GetFileName(entrada);
+                return Directory.Exists(entrada) ? $"[carpeta] {nombre}" : $"[archivo] {nombre}";
+            });
+
+        return string.Join(Environment.NewLine, entradas);
+    }
+
+    private static string ResolverRuta(string ruta)
+    {
+        if (string.IsNullOrWhiteSpace(ruta))
+        {
+            return Directory.GetCurrentDirectory();
+        }
+
+        return Path.GetFullPath(ruta);
+    }
+}
 
 
