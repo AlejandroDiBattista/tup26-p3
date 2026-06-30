@@ -1,8 +1,9 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
-#:package Microsoft.Extensions.AI.OpenAI@10.4.0
+#:package Microsoft.Extensions.AI@10.7.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
+#:package Google.GenAI
 
 using Microsoft.Extensions.AI;
 using OpenAI;
@@ -13,16 +14,19 @@ using Terminal.Gui.Views;
 
 DotNetEnv.Env.Load();
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
+// ------------------config -------------------------------------
+var url    = Environment.GetEnvironmentVariable("GEMINI_API_URL");
+var apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+var modelo = Environment.GetEnvironmentVariable("GEMINI_MODEL");
 
 IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new ApiKeyCredential(apiKey!),
+        new OpenAIClientOptions { Endpoint = new Uri(url!) })
     .GetChatClient(modelo)
     .AsIChatClient();
+
+
+// ---------------------------------------------------------------
 
 const string pregunta = "Definí recursividad";
 
@@ -44,8 +48,18 @@ ventana.Add(new Markdown {
     Width = Dim.Fill(), Height = Dim.Fill()
 });
 
-// TODO: agregar el panel de conversación y el panel de entrada.
+// Panel de conversación y el panel de entrada.
+
+
+
+
+
+
+
 // TODO: enviar mensajes con 'chat' y conservarlos en 'mensajes'.
 // TODO: mostrar la respuesta con chat.GetStreamingResponseAsync(mensajes).
+
+
+
 
 app.Run(ventana);
