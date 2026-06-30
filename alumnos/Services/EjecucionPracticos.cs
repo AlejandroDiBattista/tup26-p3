@@ -216,6 +216,7 @@ static class EjecucionPracticos {
     static IReadOnlyList<string> ArgumentosEjecucion(int numeroTp) =>
         numeroTp switch {
             1 or 2 => ["--help"],
+            6 => ["openai"],
             _ => []
         };
 

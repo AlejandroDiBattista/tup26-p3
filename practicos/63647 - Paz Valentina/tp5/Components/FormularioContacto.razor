@@ -1,0 +1,53 @@
+@using tp5.Models
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <label class="form-label">Nombre</label>
+        <input class="form-control" @bind="Contacto.Nombre" />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Apellido</label>
+        <input class="form-control" @bind="Contacto.Apellido" />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Teléfono</label>
+        <input class="form-control" @bind="Contacto.Telefono" />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" @bind="Contacto.Email" />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Empresa</label>
+        <input class="form-control" @bind="Contacto.Empresa" />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Cargo</label>
+        <input class="form-control" @bind="Contacto.Cargo" />
+    </div>
+
+    <div class="col-12">
+        <label class="form-label">Dirección</label>
+        <input class="form-control" @bind="Contacto.Direccion" />
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label">Fecha de nacimiento</label>
+        <input type="date" class="form-control" @bind="Contacto.FechaNacimiento" />
+    </div>
+
+    <div class="col-12">
+        <label class="form-label">Notas</label>
+        <textarea class="form-control" rows="3" @bind="Contacto.Notas"></textarea>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Contacto Contacto { get; set; } = new();
+}

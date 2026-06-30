@@ -110,6 +110,8 @@ static class CapturaTerminalPracticos {
         startInfo.ArgumentList.Add("dotnet");
         startInfo.ArgumentList.Add("run");
         startInfo.ArgumentList.Add("asistente.cs");
+        startInfo.ArgumentList.Add("--");
+        startInfo.ArgumentList.Add("openai");
 
         try {
             using Process proceso = Process.Start(startInfo)

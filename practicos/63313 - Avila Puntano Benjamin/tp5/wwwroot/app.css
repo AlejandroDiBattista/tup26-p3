@@ -21,7 +21,7 @@ h1:focus {
 }
 
 .blazor-error-boundary::after {
-    content: "An error has occurred."
+    content: "An error has occurred.";
 }
 
 .darker-border-checkbox.form-check-input {
@@ -38,62 +38,62 @@ h1:focus {
 }
 
 body {
-    background-color: #0f0f1a;
-    color: #e0e0e0;
+    background-color: #f8f9fa;
+    color: #212529;
 }
 
 h1, h2, h3, h4, h5, h6, label, p, strong, li {
-    color: #e0e0e0;
+    color: #212529;
 }
 
 .card {
-    background-color: #1a1a2e;
-    border: 2px solid #7c3aed;
+    background-color: #ffffff;
+    border: 2px solid #b6d4fe;
 }
 
 .card-header {
-    background-color: transparent;
-    border-bottom: 2px solid #7c3aed;
-    color: #e0e0e0;
+    background-color: #e9f2ff;
+    border-bottom: 2px solid #b6d4fe;
+    color: #212529;
 }
 
 .list-group-item {
-    background-color: #1a1a2e;
-    border: 1px solid #7c3aed;
-    color: #cccccc;
+    background-color: #ffffff;
+    border: 1px solid #b6d4fe;
+    color: #495057;
 }
 
 .list-group-item:hover {
-    background-color: #2a2a4e;
-    color: #ffffff;
+    background-color: #dbeafe;
+    color: #212529;
 }
 
 .list-group-item.active {
-    background-color: #2e2e5e;
-    border-color: #7c3aed;
-    color: #ffffff;
+    background-color: #cfe2ff;
+    border-color: #9ec5fe;
+    color: #212529;
     font-weight: bold;
 }
 
 .form-control {
-    background-color: #0f0f1a !important;
-    border: 1px solid #7c3aed !important;
-    color: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    color: #212529 !important;
 }
 
 .form-control:focus {
-    background-color: #1a1a2e !important;
-    border-color: #a855f7 !important;
-    box-shadow: 0 0 5px rgba(124, 58, 237, 0.5) !important;
-    color: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.25) !important;
+    color: #212529 !important;
 }
 
 .form-control::placeholder {
-    color: #888888 !important;
+    color: #6c757d !important;
 }
 
 .text-muted {
-    color: #888888 !important;
+    color: #6c757d !important;
 }
 
 .avatar {
@@ -105,7 +105,7 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
     justify-content: center;
     font-weight: bold;
     color: #ffffff;
-    background-color: #7c3aed;
+    background-color: #0d6efd;
     margin-right: 15px;
     flex-shrink: 0;
 }
@@ -120,7 +120,7 @@ h1, h2, h3, h4, h5, h6, label, p, strong, li {
     justify-content: center;
     font-weight: bold;
     color: #ffffff;
-    background-color: #7c3aed;
+    background-color: #0d6efd;
     margin-bottom: 15px;
 }
 

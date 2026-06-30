@@ -12,7 +12,7 @@
         <input type="text" placeholder="Buscar..." @bind="busqueda" />
         <button class="btn-azul" @onclick="Buscar">Buscar</button>
         <button class="btn-azul" @onclick="NuevoContacto">+ Nuevo</button>
-
+<div class="lista-contactos">
         @foreach (var c in contactos)
         {
             <div class="item-contacto @(seleccionado?.Id == c.Id ? "seleccionado" : "")"
@@ -21,7 +21,9 @@
                 <small>@c.Email</small>
             </div>
         }
+ </div>
 
+        <div class="pie-lista">@contactos.Count contacto(s)</div>
         <div class="pie-lista">@contactos.Count contacto(s)</div>
     </div>
 

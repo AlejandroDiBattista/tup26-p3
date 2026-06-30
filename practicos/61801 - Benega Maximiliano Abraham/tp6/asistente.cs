@@ -1,6 +1,5 @@
 #!/usr/bin/env -S dotnet run
 #:package DotNetEnv@*
-#:package Microsoft.Extensions.AI@10.4.0
 #:package Microsoft.Extensions.AI.OpenAI@10.4.0
 #:package Terminal.Gui@2.4.3
 #:property PublishAot=false
@@ -13,18 +12,13 @@ using Terminal.Gui.App;
 using Terminal.Gui.ViewBase;
 using Terminal.Gui.Views;
 
-// 1. Inicialización y Carga de Configuración desde el .env
-DotNetEnv.Env.Load();
+DotNetEnv.Env.Load(".env.ejemplo");
 
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var proveedor = (args.Length > 0 ? args[0] : "groq").ToUpperInvariant();
 var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
 var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "qwen/qwen3.6-27b";
-url ??= proveedor == "OPENAI"
-    ? "https://api.openai.com/v1"
-    : "https://api.groq.com/openai/v1";
 
-// Lista de herramientas del sistema de archivos mapeadas como tipo AITool
 var herramientas = new List<AITool>
 {
     AIFunctionFactory.Create(LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo de texto"),
@@ -32,18 +26,13 @@ var herramientas = new List<AITool>
     AIFunctionFactory.Create(ListarArchivos, "listar-archivos", "Lista los archivos y carpetas de un directorio")
 };
 
-// Cliente base de chat compatible con OpenAI
-IChatClient chatBase = new OpenAIClient(
+
+IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = new Uri(url) })
+        new OpenAIClientOptions { Endpoint = new Uri(url ?? "https://api.groq.com/openai/v1") })
     .GetChatClient(modelo)
     .AsIChatClient();
 
-IChatClient chat = new ChatClientBuilder(chatBase)
-    .UseFunctionInvocation()
-    .Build();
-
-// 2. Historial de Conversación
 List<ChatMessage> mensajes = [];
 
 if (File.Exists("AGENTS.md"))
@@ -55,7 +44,6 @@ else
     mensajes.Add(new ChatMessage(ChatRole.System, "Sos un asistente útil de terminal. Disponés de herramientas para leer, escribir y listar archivos."));
 }
 
-// 3. Inicialización de la Interfaz Gráfica de Terminal (TUI)
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
@@ -88,31 +76,24 @@ var botonEnviar = new Button {
 panelEntrada.Add(campoTexto, botonEnviar);
 ventana.Add(panelConversacion, panelEntrada);
 
-// 4. Lógica de Envío de Mensajes y Streaming
 string historialMarkdown = "";
-bool enviando = false;
 
 async Task EnviarMensajeUsuario()
 {
     var textoUsuario = campoTexto.Text.Trim();
-    if (string.IsNullOrEmpty(textoUsuario) || enviando) return;
+    if (string.IsNullOrEmpty(textoUsuario)) return;
 
-    enviando = true;
-
-    app.Invoke(() =>
-    {
-        campoTexto.Enabled = false;
-        botonEnviar.Enabled = false;
-        campoTexto.Text = string.Empty;
-    });
+    campoTexto.Enabled = false;
+    botonEnviar.Enabled = false;
+    campoTexto.Text = string.Empty;
 
     mensajes.Add(new ChatMessage(ChatRole.User, textoUsuario));
     historialMarkdown += $"\n\n# Vos\n{textoUsuario}\n\n# Asistente\n";
-    ActualizarConversacion(historialMarkdown);
+    panelConversacion.Text = historialMarkdown;
 
     try
     {
-        var opcionesChat = new ChatOptions { Tools = herramientas, ToolMode = ChatToolMode.Auto };
+        var opcionesChat = new ChatOptions { Tools = herramientas };
         string respuestaAcumulada = "";
 
         await foreach (var fragmento in chat.GetStreamingResponseAsync(mensajes, opcionesChat))
@@ -120,7 +101,9 @@ async Task EnviarMensajeUsuario()
             if (fragmento.Text != null)
             {
                 respuestaAcumulada += fragmento.Text;
-                ActualizarConversacion(historialMarkdown + respuestaAcumulada);
+                panelConversacion.Text = historialMarkdown + respuestaAcumulada;
+                
+                panelConversacion.SetNeedsDraw();
             }
         }
 
@@ -130,40 +113,25 @@ async Task EnviarMensajeUsuario()
     catch (Exception ex)
     {
         historialMarkdown += $"*Error al conectar con la IA: {ex.Message}*";
-        ActualizarConversacion(historialMarkdown);
+        panelConversacion.Text = historialMarkdown;
     }
     finally
     {
-        app.Invoke(() =>
-        {
-            enviando = false;
-            campoTexto.Enabled = true;
-            botonEnviar.Enabled = true;
-            campoTexto.SetFocus();
-        });
+        campoTexto.Enabled = true;
+        botonEnviar.Enabled = true;
+        campoTexto.SetFocus();
     }
 }
 
-void ActualizarConversacion(string texto)
-{
-    app.Invoke(() =>
-    {
-        panelConversacion.Text = texto;
-        panelConversacion.SetNeedsDraw();
-    });
-}
-
-// 5. Manejo de Eventos A PRUEBA DE BALAS mediante comparación de strings
 botonEnviar.Accepting += async (s, e) => {
     await EnviarMensajeUsuario();
 };
 
 campoTexto.KeyDown += async (s, e) => {
-    // Convertimos la tecla a string (suele devolver "Enter", "Return" o similar)
     string teclaStr = e?.ToString()?.ToUpperInvariant() ?? "";
     if (teclaStr.Contains("ENTER") || teclaStr.Contains("RETURN"))
     {
-        e?.Handled = true;
+        e.Handled = true;
         await EnviarMensajeUsuario();
     }
 };
@@ -172,16 +140,13 @@ ventana.KeyDown += (s, e) => {
     string teclaStr = e?.ToString()?.ToUpperInvariant() ?? "";
     if (teclaStr.Contains("ESC") || teclaStr.Contains("ESCAPE"))
     {
-        e?.Handled = true;
-        app!.RequestStop();
+        e.Handled = true;
+        app.RequestStop();
     }
 };
 
-// Ejecución de la aplicación de terminal
-app!.Run(ventana);
+app.Run(ventana);
 
-
-// --- IMPLEMENTACIÓN DE LAS HERRAMIENTAS (Function Calling) ---
 
 static string LeerArchivo([Description("Ruta del archivo de texto a leer")] string ruta)
 {

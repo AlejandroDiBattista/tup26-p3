@@ -140,3 +140,26 @@ body {
     width: 110px;
     flex-shrink: 0;
 }
+.agenda-layout {
+    overflow: hidden;
+}
+
+.agenda-header {
+    flex-shrink: 0;
+}
+
+.agenda-columns {
+    overflow: hidden;
+}
+
+.agenda-master {
+    overflow: hidden;
+}
+
+.agenda-master .panel {
+    overflow: hidden;
+}
+
+.agenda-detail {
+    overflow-y: auto;
+}

@@ -59,22 +59,24 @@ else
                                @bind:event="oninput" />
                     </div>
 
-                    <div class="list-group">
-                        @foreach (var contacto in ContactosFiltrados)
-                        {
-                            <button type="button"
-                                    class="list-group-item list-group-item-action"
-                                    disabled="@Ocupado"
-                                    @onclick="() => SeleccionarContacto(contacto)">
-                                <div class="fw-bold">
-                                    @contacto.Nombre @contacto.Apellido
-                                </div>
-                                <small class="text-secondary">
-                                    @contacto.Telefono · @contacto.Email
-                                </small>
-                            </button>
-                        }
-                    </div>
+                    <div style="max-height:500px; overflow-y:auto;">
+    <div class="list-group">
+        @foreach (var contacto in ContactosFiltrados)
+        {
+            <button type="button"
+                    class="list-group-item list-group-item-action"
+                    disabled="@Ocupado"
+                    @onclick="() => SeleccionarContacto(contacto)">
+                <div class="fw-bold">
+                    @contacto.Nombre @contacto.Apellido
+                </div>
+                <small class="text-secondary">
+                    @contacto.Telefono · @contacto.Email
+                </small>
+            </button>
+        }
+    </div>
+</div>
                 </section>
             </div>
 
@@ -185,28 +187,13 @@ else
                         
                             Editar
                         </button>
-                        <button class="btn btn-danger ms-2"
-                                @onclick="ConfirmarEliminacion">
-                            
-                            Eliminar
-                        </button>
 
-                        @if (confirmandoEliminacion)
-                        {
-                            <div class="alert alert-warning mt-3 mb-0">
-                                <p class="mb-3">
-                                    ¿Seguro que querés eliminar este contacto?
-                                </p>
-                                <button class="btn btn-danger"
-                                        @onclick="EliminarContacto">
-                                    Sí, eliminar
-                                </button>
-                                <button class="border border-success-subtle rounded bg-white p-4 shadow-sm"
-                                        @onclick="CancelarEliminacion">
-                                    Cancelar
-                                </button>
-                            </div>
-                        }
+                        <button class="btn btn-danger ms-2"
+                                @onclick="EliminarContacto">
+                           <i class="bi bi-trash me-1"></i>
+                            Eliminar
+                      </button>
+                        
                     }
                 </section>
             </div>
@@ -225,10 +212,10 @@ else
     private string mensajeError = "";
     private bool modoNuevo;
     private bool modoEditar;
-    private bool confirmandoEliminacion;
+   
 
     private bool Ocupado =>
-        modoNuevo || modoEditar || confirmandoEliminacion;
+        modoNuevo || modoEditar;
 
     private IEnumerable<Contacto> ContactosFiltrados =>
         contactos?.Where(c =>
@@ -342,16 +329,6 @@ else
         mensajeError = "";
     }
 
-    private void ConfirmarEliminacion()
-    {
-        confirmandoEliminacion = true;
-    }
-
-    private void CancelarEliminacion()
-    {
-        confirmandoEliminacion = false;
-    }
-
     private async Task EliminarContacto()
     {
         if (contactoSeleccionado is null)
@@ -367,7 +344,6 @@ else
         await Db.SaveChangesAsync();
 
         contactoSeleccionado = null;
-        confirmandoEliminacion = false;
         await CargarContactos();
     }
 

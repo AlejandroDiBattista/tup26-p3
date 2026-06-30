@@ -26,7 +26,7 @@ var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY") ?? "";
 var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gemini-2.5-flash";
 
 
-// ================== CLIENTE DE IA ====================
+// ================= CLIENTE DE IA ====================
 
 IChatClient clienteBase = new OpenAIClient(
         new ApiKeyCredential(apiKey),
@@ -119,7 +119,7 @@ class VentanaAsistente : Window {
             X      = 0,
             Y      = 0,
             Width  = Dim.Fill(),
-            Height = Dim.Fill() - 6
+            Height = Dim.Fill() - 3
         };
 
     
@@ -136,14 +136,14 @@ class VentanaAsistente : Window {
             Text   = "",
             X      = 0,
             Y      = Pos.Bottom(_estado),
-            Width  = Dim.Fill() - 2,
-            Height = 3
+            Width  = Dim.Fill(),
+            Height = 1
         };
 
         var boton = new Button {
             Text      = "ENVIAR",
-            X         = Pos.Right(_campoTexto) + 1,
-            Y         = Pos.Bottom(_estado),
+            X         = Pos.Center(),
+            Y         = Pos.Bottom(_campoTexto),
             IsDefault = true
         };
 
@@ -252,4 +252,3 @@ class VentanaAsistente : Window {
     }
 
 }
-

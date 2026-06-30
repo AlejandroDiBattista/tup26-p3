@@ -834,7 +834,7 @@ static class AlumnosCliActions {
         Console.ReadKey(intercept: true);
         AnsiConsole.Clear();
 
-        int codigoSalida = EjecutarObjetivoEnTerminal(rutaPractico, objetivo);
+        int codigoSalida = EjecutarObjetivoEnTerminal(rutaPractico, objetivo, numeroTp);
         AnsiConsole.WriteLine();
         if (codigoSalida == 0) {
             Log.Success($"TP{numeroTp} finalizó correctamente.");
@@ -845,7 +845,7 @@ static class AlumnosCliActions {
         return codigoSalida;
     }
 
-    static int EjecutarObjetivoEnTerminal(string rutaPractico, string objetivo) {
+    static int EjecutarObjetivoEnTerminal(string rutaPractico, string objetivo, int numeroTp) {
         bool esProyecto = string.Equals(Path.GetExtension(objetivo), ".csproj", StringComparison.OrdinalIgnoreCase);
         string objetivoRelativo = Path.GetRelativePath(rutaPractico, objetivo);
 
@@ -865,6 +865,10 @@ static class AlumnosCliActions {
         if (esProyecto) {
             startInfo.ArgumentList.Add("--no-launch-profile");
             startInfo.ArgumentList.Add("-p:EnableSourceControlManagerQueries=false");
+        }
+        if (numeroTp == 6) {
+            startInfo.ArgumentList.Add("--");
+            startInfo.ArgumentList.Add("openai");
         }
 
         ConsoleCancelEventHandler ignorarCtrlC = (_, e) => e.Cancel = true;

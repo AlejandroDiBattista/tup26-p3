@@ -56,12 +56,14 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
 > Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
 
-63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
 61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
-63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (mal proveedor)
 61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
 61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
+63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
+63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    13   10  correcto
+63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (mal proveedor)
 63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)
+63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
 63350   Páez Carabajal, Santiago         🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  correcto (faltaba DotNetEnv)
 63385   Almaraz Sintora, Nahuel          🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (lee mal api_key)
 63387   Sosa Gonella, Luca               🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (fallaba streaming)
@@ -70,10 +72,9 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 63412   Morán, Facundo Martín            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba proveedor)
 63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba streaming)
 63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto (fallaba streaming)
-63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
 63647   Paz, Valentina                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (no borro comentario)
-63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
-63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
+63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
 
 
 ## No implementa las herramientas (Recuperar)
@@ -82,7 +83,6 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
 63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
 63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7  No implementa las herramientas
-63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    13   10  No implementa las herramientas
 61489   Gómez, Tomás                     🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9  No implementa las herramientas
 63717   González, Octavio                🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9  No implementa las herramientas
 63213   Marina Noguera, Morena Giovann   🟢🟢🟢🟢🟢🟤   🟢⚪   No    30    9  No implementa las herramientas

@@ -6,31 +6,38 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="container-fluid mt-3">
-    <div class="row">
-        <div class="col-md-4 border-end" style="height: 90vh; overflow-y: auto;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>Agenda</h2>
-                <button class="btn btn-primary btn-sm" @onclick="NuevoContacto">+ Nuevo contacto</button>
+<div class="container-fluid vh-100 overflow-hidden bg-light">
+    <div class="row h-100">
+        
+        <div class="col-12 col-md-4 d-flex flex-column h-100 border-end pt-3 pb-0 bg-white">
+            
+            <div class="flex-shrink-0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="mb-0">Agenda</h2>
+                    <button class="btn btn-primary btn-sm" @onclick="NuevoContacto">+ Nuevo contacto</button>
+                </div>
+                <input type="text" class="form-control mb-3" placeholder="Buscar por nombre o apellido..." @bind="terminoBusqueda" @bind:event="oninput" />
             </div>
 
-            <input type="text" class="form-control mb-3" placeholder="Buscar por nombre o apellido..." @bind="terminoBusqueda" @bind:event="oninput" />
-
-            <div class="list-group">
+            <div class="list-group flex-grow-1 overflow-y-auto pb-3" style="min-height: 0;">
                 @foreach (var c in ContactosFiltrados)
                 {
-                    <button type="button" class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id && !modoEdicion ? "active" : "")" @onclick="() => SeleccionarContacto(c)">
-                        <div class="fw-bold">@c.Nombre @c.Apellido</div>
-                        <small>@c.Empresa</small>
+                    <button type="button" class="list-group-item list-group-item-action border-0 border-bottom text-start @(contactoSeleccionado?.Id == c.Id && !modoEdicion ? "active" : "")" @onclick="() => SeleccionarContacto(c)" style="height: 70px;">
+                        <div class="fw-bold text-truncate">@c.Nombre @c.Apellido</div>
+                        <div class="text-truncate">
+                            <small class="@(contactoSeleccionado?.Id == c.Id && !modoEdicion ? "text-white" : "text-muted")">
+                                @(string.IsNullOrWhiteSpace(c.Empresa) ? "Sin empresa" : c.Empresa)
+                            </small>
+                        </div>
                     </button>
                 }
             </div>
         </div>
 
-        <div class="col-md-8">
+        <div class="col-12 col-md-8 h-100 overflow-y-auto pt-3 pb-4">
             @if (modoEdicion)
             {
-                <div class="card shadow-sm border-primary">
+                <div class="card shadow-sm border-primary mb-3">
                     <div class="card-header bg-primary text-white">
                         <h4 class="mb-0">@(contactoEdicion.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h4>
                     </div>
@@ -71,7 +78,7 @@
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label">Notas</label>
-                                    <InputTextArea class="form-control" @bind-Value="contactoEdicion.Notas"></InputTextArea>
+                                    <InputTextArea class="form-control" @bind-Value="contactoEdicion.Notas" style="height: 100px;"></InputTextArea>
                                 </div>
                             </div>
                             <div class="mt-4 d-flex justify-content-end gap-2">
@@ -86,30 +93,55 @@
             {
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <button class="btn btn-outline-danger btn-sm float-end ms-2" @onclick="EliminarContacto"> Eliminar</button>
-                        <button class="btn btn-outline-secondary btn-sm float-end" @onclick="PrepararEdicion"> Editar</button>
-                        
-                        <h3 class="card-title text-primary">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h3>
-                        <h6 class="card-subtitle mb-3 text-muted">@contactoSeleccionado.Empresa - @contactoSeleccionado.Cargo</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
-                                <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <h3 class="card-title text-primary fw-bold mb-0">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h3>
+                                <h6 class="card-subtitle mt-1 text-muted">@contactoSeleccionado.Empresa - @contactoSeleccionado.Cargo</h6>
                             </div>
-                            <div class="col-md-6">
-                                <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
-                                <p><strong>Nacimiento:</strong> @contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy")</p>
+                            <div>
+                                <button class="btn btn-outline-secondary btn-sm me-2" @onclick="PrepararEdicion">Editar</button>
+                                <button class="btn btn-outline-danger btn-sm" @onclick="EliminarContacto">Eliminar</button>
                             </div>
                         </div>
-                        <hr />
-                        <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light">
+                                    <p class="mb-1 text-muted small">Email</p>
+                                    <p class="mb-0 fw-medium">@contactoSeleccionado.Email</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light">
+                                    <p class="mb-1 text-muted small">Teléfono</p>
+                                    <p class="mb-0 fw-medium">@contactoSeleccionado.Telefono</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light">
+                                    <p class="mb-1 text-muted small">Dirección</p>
+                                    <p class="mb-0 fw-medium">@(string.IsNullOrEmpty(contactoSeleccionado.Direccion) ? "-" : contactoSeleccionado.Direccion)</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded bg-light">
+                                    <p class="mb-1 text-muted small">Nacimiento</p>
+                                    <p class="mb-0 fw-medium">@(contactoSeleccionado.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "-")</p>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-4" />
+                        <h6 class="text-muted small">Notas</h6>
+                        <p class="mb-0 bg-light p-3 border rounded">@(string.IsNullOrEmpty(contactoSeleccionado.Notas) ? "Sin notas adicionales." : contactoSeleccionado.Notas)</p>
                     </div>
                 </div>
             }
             else
             {
-                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-                    <h4>Seleccione un contacto de la lista.</h4>
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                    <i class="bi bi-person-lines-fill mb-3" style="font-size: 4rem; opacity: 0.2;"></i>
+                    <h4>Seleccione un contacto de la lista</h4>
+                    <p>O agregue uno nuevo para comenzar.</p>
                 </div>
             }
         </div>

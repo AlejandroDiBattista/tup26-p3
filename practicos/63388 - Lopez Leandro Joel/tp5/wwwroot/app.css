@@ -87,13 +87,14 @@ html, body {
 .tracking-wide { letter-spacing: 0.05em; }
 
 .input-group-text {
-    border: 1px solid var(--border) !important;
+    border: 1px solid var(--border);
+    border-right: none !important;
     color: var(--text-light) !important;
 }
 
 .form-control {
     border: 1px solid var(--border) !important;
-    border-radius: 8px !important;
+    border-radius: 8px;
     font-size: 13px;
     transition: all 0.2s ease;
 }
@@ -397,7 +398,7 @@ html, body {
 }
 
 .form-control, .form-select, textarea {
-    border-radius: 8px !important;
+    border-radius: 8px;
     border: 1px solid var(--border) !important;
     transition: all 0.2s ease;
 }

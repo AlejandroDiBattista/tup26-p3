@@ -129,12 +129,12 @@
                     <p><strong>Correo electrónico:</strong> @contactoSeleccionado.Email</p>
                     <p><strong>Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "No especificada" : contactoSeleccionado.Empresa)</p>
                     <p><strong>Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "No especificado" :
-                                            contactoSeleccionado.Cargo)</p>
+                                                                                            contactoSeleccionado.Cargo)</p>
                         <p><strong>Dirección:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Direccion) ? "No especificada" : contactoSeleccionado.Direccion)</p>
                         <p><strong>Fecha de Nacimiento:</strong> @(contactoSeleccionado.FechaNacimiento?.ToShortDateString() ??
-                                                        "No especificada")</p>
+                                                                                                                "No especificada")</p>
                             <p><strong>Notas:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Notas) ? "-" :
-                                                                                contactoSeleccionado.Notas)</p>
+                                                                                                                                                contactoSeleccionado.Notas)</p>
                                 <hr />
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-warning" @onclick="MostrarFormularioEditar">
@@ -175,6 +175,7 @@
 
     private void SeleccionarContacto(Contacto contacto)
     {
+        mostrarFormulario = false;
         contactoSeleccionado = contacto;
     }
 
@@ -223,6 +224,7 @@
                 FechaNacimiento = contactoSeleccionado.FechaNacimiento,
                 Notas = contactoSeleccionado.Notas
             };
+            contactoSeleccionado = null;
             mostrarFormulario = true;
         }
     }
@@ -230,6 +232,11 @@
     private void CancelarFormulario()
     {
         mostrarFormulario = false;
+
+        if(esModoEdicion && elContacto != null)
+        {
+            contactoSeleccionado = contactos?.FirstOrDefault(c => c.Id == elContacto.Id);
+        }  
     }
 
     private async Task GuardarContacto()
