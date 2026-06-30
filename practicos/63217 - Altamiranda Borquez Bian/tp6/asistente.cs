@@ -37,5 +37,30 @@ if(string.IsNullOrWhiteSpace(apiKey)&& proveedor != "OLLAMA") {
 var rutaProducto= Directory.GetCurrentDirectory();
 var endpoint= NormalizarEndpoint(url);
 
+IChatClient chatBase = new OpenAIClient(
+        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
+        new OpenAIClientOptions { Endpoint = endpoint })
+    .GetChatClient(modelo)
+    .AsIChatClient();
+
+IChatClient chat = new ChatClientBuilder(chatBase)
+    .UseFunctionInvocation()
+    .Build();
+
+var opciones = new ChatOptions
+{
+    Tools =
+    [
+        AIFunctionFactory.Create(HerramientasArchivos.LeerArchivo, "leer-archivo", "Devuelve el contenido de un archivo de texto."),
+        AIFunctionFactory.Create(HerramientasArchivos.EscribirArchivo, "escribir-archivo", "Crea o sobrescribe un archivo con el contenido indicado."),
+        AIFunctionFactory.Create(HerramientasArchivos.ListarArchivos, "listar-archivos", "Lista archivos y carpetas de un directorio.")
+    ]
+};
+
+List<ChatMessage> mensajes =
+[
+    new(ChatRole.System, CargarMensajeSistema(rutaProyecto))
+];
+
 
 
