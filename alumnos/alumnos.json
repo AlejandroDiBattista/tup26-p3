@@ -7,7 +7,8 @@
     "telefono": "(381)527-6836",
     "gitHub": "joacoavila9",
     "nota": 10,
-    "observaciones": "Sin scroll en maestro; revisar modo oscuro",
+    "recuperacion": "01/07/2026 10:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -29,6 +30,7 @@
     "telefono": "(381)301-3490",
     "gitHub": "lucaschavez10lc-ai",
     "nota": 8,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🔴",
@@ -36,7 +38,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -51,14 +53,15 @@
     "telefono": "(381)412-4723",
     "gitHub": "kariiedith9315",
     "nota": 1,
-    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
+    "recuperacion": "01/07/2026 12:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -73,14 +76,15 @@
     "telefono": "(381)341-9689",
     "gitHub": "nahuelc19",
     "nota": 10,
-    "observaciones": "Edita en caja de diálogo en lugar de hacerlo en el detalle",
+    "recuperacion": "01/07/2026 10:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -95,14 +99,15 @@
     "telefono": "(381)678-0335",
     "gitHub": "tomicor979-lgtm",
     "nota": 10,
-    "observaciones": "Correcto; mejorar uso del espacio vertical",
+    "recuperacion": "01/07/2026 10:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -117,7 +122,8 @@
     "telefono": "(381)665-0808",
     "gitHub": "josias57455",
     "nota": 10,
-    "observaciones": "Correcto",
+    "recuperacion": "01/07/2026 10:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -139,14 +145,15 @@
     "telefono": "(381)334-9851",
     "gitHub": "ulisesfuensalida-ui",
     "nota": 8,
-    "observaciones": "No funciona: no muestra detalle, no busca y no edita",
+    "recuperacion": "01/07/2026 10:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🔴",
       "🔴",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -161,7 +168,8 @@
     "telefono": "(381)456-4405",
     "gitHub": "ataliagg",
     "nota": 10,
-    "observaciones": "Sin scroll en maestro; botones de edición fuera del modo mostrar; edita dentro del detalle",
+    "recuperacion": "01/07/2026 10:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -183,14 +191,15 @@
     "telefono": "(381)683-1233",
     "gitHub": "ignas11",
     "nota": 10,
-    "observaciones": "No edita; sin scroll en maestro; muestra mensaje de error al final",
+    "recuperacion": "01/07/2026 11:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -205,6 +214,7 @@
     "telefono": "(381)669-4386",
     "gitHub": "lucasgonzaa",
     "nota": 10,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -212,7 +222,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -227,7 +237,8 @@
     "telefono": "(381)550-7143",
     "gitHub": "luchex1525",
     "nota": 9,
-    "observaciones": "Mal formato; sin CSS",
+    "recuperacion": "01/07/2026 11:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -249,14 +260,15 @@
     "telefono": "(381)639-2861",
     "gitHub": "maximilianojimnez",
     "nota": 8,
+    "recuperacion": "01/07/2026 11:20",
     "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴",
-      "🔴",
-      "⚪"
+      "🟢",
+      "🟢",
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -271,14 +283,15 @@
     "telefono": "(381)576-0069",
     "gitHub": "tutu-04",
     "nota": 10,
-    "observaciones": "Correcto; botones duplicados para cancelar/guardar",
+    "recuperacion": "01/07/2026 11:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -293,6 +306,7 @@
     "telefono": "(381)528-7848",
     "gitHub": "monteroluca007",
     "nota": 10,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -300,7 +314,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -315,14 +329,15 @@
     "telefono": "(381)572-4096",
     "gitHub": "santiagopaez-2",
     "nota": 9,
-    "observaciones": "Mal uso del espacio vertical",
+    "recuperacion": "01/07/2026 11:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -337,7 +352,8 @@
     "telefono": "(381)353-0060",
     "gitHub": "naimp074",
     "nota": 10,
-    "observaciones": "No usa bien el espacio vertical",
+    "recuperacion": "01/07/2026 11:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -359,14 +375,15 @@
     "telefono": "(381)599-6422",
     "gitHub": "valepaz11",
     "nota": 10,
-    "observaciones": "No edita; solo muestra cancelar/guardar",
+    "recuperacion": "02/07/2026 10:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -381,14 +398,15 @@
     "telefono": "(381)332-4401",
     "gitHub": "nicopereyra255-ship-it",
     "nota": 8,
-    "observaciones": "Edición mal ubicada arriba; no alterna mostrar/editar; no cancela",
+    "recuperacion": "02/07/2026 10:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -403,7 +421,8 @@
     "telefono": "(381)552-8065",
     "gitHub": "valentinapereyra03",
     "nota": 5,
-    "observaciones": "Sin scroll en maestro; debe mostrar el detalle sin botón; botones editar/borrar deben estar en el detalle",
+    "recuperacion": "",
+    "observaciones": "",
     "practicos": [
       "🔴",
       "🟢",
@@ -425,14 +444,15 @@
     "telefono": "(381)350-0777",
     "gitHub": "lucho-bot",
     "nota": 10,
-    "observaciones": "Sin scroll en maestro; no cancela al seleccionar",
+    "recuperacion": "02/07/2026 10:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -447,14 +467,15 @@
     "telefono": "(381)627-2271",
     "gitHub": "luccardp",
     "nota": 10,
-    "observaciones": "Sin scroll en maestro; edición en página aparte en lugar de alternar mostrar/editar",
+    "recuperacion": "02/07/2026 10:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -469,14 +490,15 @@
     "telefono": "(381)533-1344",
     "gitHub": "ignaciorosconi",
     "nota": 4,
-    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
+    "recuperacion": "",
+    "observaciones": "",
     "practicos": [
       "🔴",
       "🟢",
       "🔴",
       "🔴",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -491,14 +513,15 @@
     "telefono": "(381)355-5126",
     "gitHub": "lucasosag1",
     "nota": 9,
-    "observaciones": "No alterna entre mostrar detalle y editar; no cancela al seleccionar; no tiene búsqueda en caliente",
+    "recuperacion": "02/07/2026 10:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -513,7 +536,8 @@
     "telefono": "(381)200-7473",
     "gitHub": "jeerepazz",
     "nota": 10,
-    "observaciones": "Mal uso del espacio vertical",
+    "recuperacion": "02/07/2026 10:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -535,7 +559,8 @@
     "telefono": "(381)675-3624",
     "gitHub": "lisandropaz",
     "nota": 10,
-    "observaciones": "Correcto; mejorar uso del espacio vertical",
+    "recuperacion": "02/07/2026 11:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -557,14 +582,15 @@
     "telefono": "(381)246-3725",
     "gitHub": "suarezsofia541-alt",
     "nota": 10,
-    "observaciones": "Edición en página separada en lugar de en el detalle; no tiene búsqueda en caliente",
+    "recuperacion": "02/07/2026 11:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -579,14 +605,15 @@
     "telefono": "(381)303-1034",
     "gitHub": "tomas-valdez-bustamante",
     "nota": 6,
-    "observaciones": "No inicia con la pantalla inicial; sin scroll en maestro",
+    "recuperacion": "02/07/2026 11:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🔴",
       "🟢",
       "🟢",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -601,14 +628,15 @@
     "telefono": "(381)676-6267",
     "gitHub": "xtomi2456",
     "nota": 9,
-    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
+    "recuperacion": "02/07/2026 11:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴",
       "🟢",
-      "⚪"
+      "🟢",
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -623,7 +651,8 @@
     "telefono": "(381)502-5082",
     "gitHub": "nahuelalmaraz957-ops",
     "nota": 10,
-    "observaciones": "Mal scroll en maestro; edita en otra pantalla en lugar de a la derecha",
+    "recuperacion": "01/07/2026 08:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -645,14 +674,15 @@
     "telefono": "(381)581-3104",
     "gitHub": "sofiaaltamiranda22",
     "nota": 8,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
       "🔴",
       "🔴",
       "🔴",
-      "🔴",
-      "⚪"
+      "🟢",
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -667,14 +697,15 @@
     "telefono": "(381)581-4086",
     "gitHub": "hernancarpalvarez28",
     "nota": 10,
-    "observaciones": "Muestra la pantalla del enunciado",
+    "recuperacion": "01/07/2026 08:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -689,14 +720,15 @@
     "telefono": "(381)329-6643",
     "gitHub": "santiagobnj-avila-pun",
     "nota": 10,
-    "observaciones": "Mal uso del espacio vertical; edición en otra página en lugar de a la derecha",
+    "recuperacion": "01/07/2026 08:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -711,14 +743,15 @@
     "telefono": "(381)351-9652",
     "gitHub": "julianbajre-png",
     "nota": 7,
-    "observaciones": "No edita ni busca; solo muestra datos",
+    "recuperacion": "01/07/2026 08:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -733,14 +766,15 @@
     "telefono": "(381)505-9048",
     "gitHub": "abrahambenega",
     "nota": 6,
-    "observaciones": "Correcto; mejorar uso del espacio vertical y acentos",
+    "recuperacion": "01/07/2026 08:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "🟤"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -755,14 +789,15 @@
     "telefono": "(381)366-0607",
     "gitHub": "brunobusnelli",
     "nota": 10,
+    "recuperacion": "01/07/2026 08:40",
     "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
-      "🔴",
-      "🔴",
-      "⚪"
+      "🟢",
+      "🟢",
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -777,7 +812,8 @@
     "telefono": "(381)605-7383",
     "gitHub": "vincent-coffe",
     "nota": 10,
-    "observaciones": "Mal scroll interno en maestro; mal uso del espacio vertical",
+    "recuperacion": "01/07/2026 09:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -799,7 +835,8 @@
     "telefono": "(381)632-5727",
     "gitHub": "juancarrer11",
     "nota": 10,
-    "observaciones": "Mal layout; no tiene búsqueda en caliente; no cancela la edición",
+    "recuperacion": "01/07/2026 09:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -821,6 +858,7 @@
     "telefono": "(381)391-4222",
     "gitHub": "cativafacundo9-gif",
     "nota": 8,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -828,7 +866,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -843,14 +881,15 @@
     "telefono": "(381)606-0586",
     "gitHub": "guillecortes01",
     "nota": 10,
-    "observaciones": "Correcto; revisar bordes",
+    "recuperacion": "01/07/2026 09:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -865,14 +904,15 @@
     "telefono": "(381)478-8799",
     "gitHub": "rocura26",
     "nota": 7,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🔴",
       "🟢",
       "🟢",
       "🔴",
-      "🔴",
-      "⚪"
+      "🟢",
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -887,14 +927,15 @@
     "telefono": "(381)558-9063",
     "gitHub": "devjuancruz003-com",
     "nota": 10,
-    "observaciones": "Al editar no oculta el detalle; al seleccionar no cancela la edición",
+    "recuperacion": "01/07/2026 09:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -909,14 +950,15 @@
     "telefono": "(381)617-9958",
     "gitHub": "josesimondiaz",
     "nota": 6,
-    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
+    "recuperacion": "01/07/2026 09:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🔴",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -931,6 +973,7 @@
     "telefono": "(381)353-2589",
     "gitHub": "figueroanahuel16",
     "nota": 4,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -938,7 +981,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "🟤"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -953,14 +996,15 @@
     "telefono": "(381)647-5597",
     "gitHub": "rociogalvani",
     "nota": 10,
-    "observaciones": "No presentado",
+    "recuperacion": "01/07/2026 09:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "🟠",
-      "🟤"
+      "🟢",
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -975,13 +1019,14 @@
     "telefono": "(381)207-5701",
     "gitHub": "francotms",
     "nota": 10,
+    "recuperacion": "02/07/2026 08:00",
     "observaciones": "",
     "practicos": [
       "🔴",
       "🟢",
       "🟢",
       "🟢",
-      "🔴",
+      "🟢",
       "🟢"
     ],
     "examenes": [
@@ -997,6 +1042,7 @@
     "telefono": "(381)336-2147",
     "gitHub": "thomasgetar",
     "nota": 7,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -1004,7 +1050,7 @@
       "🟢",
       "🔴",
       "🔴",
-      "🟤"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -1019,14 +1065,15 @@
     "telefono": "(381)390-5024",
     "gitHub": "tomasgomez18",
     "nota": 9,
-    "observaciones": "No ocupa el espacio vertical; no muestra detalle de solo lectura",
+    "recuperacion": "02/07/2026 08:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1041,7 +1088,8 @@
     "telefono": "(381)612-5571",
     "gitHub": "emmanuelgr-web",
     "nota": 10,
-    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical; muestra mensaje de error; no inicia con la pantalla del sistema",
+    "recuperacion": "02/07/2026 08:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -1063,7 +1111,8 @@
     "telefono": "(381)604-1868",
     "gitHub": "owning01",
     "nota": 9,
-    "observaciones": "El campo de búsqueda genera scroll; revisar modo oscuro",
+    "recuperacion": "02/07/2026 08:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -1085,6 +1134,7 @@
     "telefono": "(381)369-9891",
     "gitHub": "kobinee",
     "nota": 5,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -1092,7 +1142,7 @@
       "🔴",
       "🟢",
       "🔴",
-      "🟤"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -1107,6 +1157,7 @@
     "telefono": "(388)665-1248",
     "gitHub": "lucianoleonelguzman",
     "nota": 10,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🔴",
@@ -1114,7 +1165,7 @@
       "🟢",
       "🔴",
       "🔴",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -1129,14 +1180,15 @@
     "telefono": "(381)208-9907",
     "gitHub": "tatianaherrera-commits",
     "nota": 10,
-    "observaciones": "Layout roto; sin scroll en maestro; el detalle queda debajo del maestro",
+    "recuperacion": "02/07/2026 08:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1151,6 +1203,7 @@
     "telefono": "(381)522-4955",
     "gitHub": "jeremy-holmquist",
     "nota": 6,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -1158,7 +1211,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -1173,6 +1226,7 @@
     "telefono": "(381)457-6547",
     "gitHub": "guadalupekargachin",
     "nota": 1,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🔴",
@@ -1195,14 +1249,15 @@
     "telefono": "(381)589-1439",
     "gitHub": "fabriciolazarte27",
     "nota": 10,
-    "observaciones": "Correcto",
+    "recuperacion": "02/07/2026 08:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1217,14 +1272,15 @@
     "telefono": "(381)555-5202",
     "gitHub": "ignaciolezana25",
     "nota": 10,
-    "observaciones": "Edición en caja de diálogo en lugar de a la derecha",
+    "recuperacion": "02/07/2026 09:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1239,14 +1295,15 @@
     "telefono": "(381)360-4566",
     "gitHub": "leandro-progam",
     "nota": 10,
-    "observaciones": "Correcto; revisar bordes",
+    "recuperacion": "02/07/2026 09:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1261,14 +1318,15 @@
     "telefono": "(381)354-0133",
     "gitHub": "mmore-cloud",
     "nota": 9,
-    "observaciones": "El campo de búsqueda genera scroll vertical",
+    "recuperacion": "02/07/2026 09:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "🟤"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1283,14 +1341,15 @@
     "telefono": "(381)201-7153",
     "gitHub": "lumedina23",
     "nota": 10,
-    "observaciones": "Correcto; mal uso del espacio vertical",
+    "recuperacion": "02/07/2026 09:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1305,14 +1364,15 @@
     "telefono": "(381)208-1031",
     "gitHub": "gonzalomiranda456",
     "nota": 7,
-    "observaciones": "No cancela al seleccionar",
+    "recuperacion": "02/07/2026 09:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1327,14 +1387,15 @@
     "telefono": "(381)416-0720",
     "gitHub": "lazaro2005-ml",
     "nota": 10,
-    "observaciones": "Edición mal ubicada abajo; mal scroll en maestro",
+    "recuperacion": "02/07/2026 09:40",
+    "observaciones": "no edita datos",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1349,7 +1410,8 @@
     "telefono": "(381)301-0206",
     "gitHub": "facumoran",
     "nota": 10,
-    "observaciones": "Correcto; revisar modo oscuro",
+    "recuperacion": "02/07/2026 12:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -1371,6 +1433,7 @@
     "telefono": "(381)466-6665",
     "gitHub": "facundonavarroaragon",
     "nota": 10,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🔴",
@@ -1378,7 +1441,7 @@
       "🔴",
       "🔴",
       "🔴",
-      "⚪"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -1393,14 +1456,15 @@
     "telefono": "(381)360-2873",
     "gitHub": "vall19-git",
     "nota": 10,
-    "observaciones": "Correcto; botones duplicados para cancelar/guardar",
+    "recuperacion": "02/07/2026 12:00",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "⚪"
+      "🟢"
     ],
     "examenes": [
       "🟢",
@@ -1415,6 +1479,7 @@
     "telefono": "(381)565-4292",
     "gitHub": "roldanebzo",
     "nota": 5,
+    "recuperacion": "",
     "observaciones": "",
     "practicos": [
       "🟢",
@@ -1422,7 +1487,7 @@
       "🟢",
       "🔴",
       "🔴",
-      "🟤"
+      "🔴"
     ],
     "examenes": [
       "🟢",
@@ -1437,7 +1502,8 @@
     "telefono": "(381)342-9672",
     "gitHub": "sofisanchez126",
     "nota": 10,
-    "observaciones": "Mal scroll en maestro; mal uso del espacio vertical",
+    "recuperacion": "02/07/2026 12:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -1459,7 +1525,8 @@
     "telefono": "(381)612-1173",
     "gitHub": "nahum-saravia",
     "nota": 10,
-    "observaciones": "No funciona; AmbiguousMatchException: la solicitud coincide con múltiples endpoints",
+    "recuperacion": "02/07/2026 12:20",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
@@ -1481,14 +1548,15 @@
     "telefono": "(381)448-3445",
     "gitHub": "mariajosethompson0-eng",
     "nota": 9,
-    "observaciones": "Correcto",
+    "recuperacion": "02/07/2026 12:40",
+    "observaciones": "",
     "practicos": [
       "🟢",
       "🟢",
       "🟢",
       "🟢",
       "🟢",
-      "🟤"
+      "🟢"
     ],
     "examenes": [
       "🟢",
