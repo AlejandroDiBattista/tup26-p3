@@ -1,0 +1,197 @@
+@page "/"
+@using AgendaWeb.Data
+@using AgendaWeb.Services
+@inject ContactoService ContactoService
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        
+        <div class="col-md-4 border-end">
+            <h3>Contactos</h3>
+            
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Buscar contacto..." 
+                       @bind="textoBusqueda" @bind:event="oninput" @onkeyup="BuscarContactos" />
+            </div>
+
+            <button class="btn btn-primary w-100 mb-3" @onclick="PrepararNuevoContacto">
+                <i class="bi bi-person-plus"></i> Nuevo Contacto
+            </button>
+
+            <div class="list-group" style="max-height: 70vh; overflow-y: auto;">
+                @if (contactos == null)
+                {
+                    <p><em>Cargando...</em></p>
+                }
+                else if (!contactos.Any())
+                {
+                    <p>No se encontraron contactos.</p>
+                }
+                else
+                {
+                    @foreach (var c in contactos)
+                    {
+                        <button type="button" 
+                                class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
+                                @onclick="() => SeleccionarContacto(c)">
+                            <strong>@c.Apellido, @c.Nombre</strong>
+                            <br/><small class="@(contactoSeleccionado?.Id == c.Id ? "text-white-50" : "text-muted")">@c.Empresa</small>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="col-md-8 ps-4">
+            @if (modoEdicion)
+            {
+                <h3>@(contactoEnEdicion.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h3>
+                <EditForm Model="contactoEnEdicion" OnValidSubmit="GuardarContacto">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <InputText class="form-control" @bind-Value="contactoEnEdicion.Nombre" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido *</label>
+                            <InputText class="form-control" @bind-Value="contactoEnEdicion.Apellido" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono *</label>
+                            <InputText class="form-control" @bind-Value="contactoEnEdicion.Telefono" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Correo electrónico *</label>
+                            <InputText class="form-control" @bind-Value="contactoEnEdicion.CorreoElectronico" />
+                        </div>
+                        </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+                    </div>
+                </EditForm>
+            }
+            else if (contactoSeleccionado != null)
+            {
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="card-title">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
+                        <h6 class="card-subtitle mb-3 text-muted">@contactoSeleccionado.Cargo en @contactoSeleccionado.Empresa</h6>
+                        
+                        <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+                        <p><strong>Correo:</strong> @contactoSeleccionado.CorreoElectronico</p>
+                        <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+                        <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+
+                        <div class="mt-4">
+                            <button class="btn btn-warning" @onclick="HabilitarEdicion">Editar</button>
+                            <button class="btn btn-danger" @onclick="EliminarContacto">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted mt-5">
+                    <h5>Selecciona un contacto de la lista para ver su detalle.</h5>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>
+
+@code {
+    private List<Contacto>? contactos;
+    private Contacto? contactoSeleccionado;
+    private Contacto contactoEnEdicion = new();
+    private string textoBusqueda = "";
+    private bool modoEdicion = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
+    {
+        contactos = await ContactoService.GetContactosAsync(textoBusqueda);
+    }
+
+    private async Task BuscarContactos()
+    {
+        await CargarContactos();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        modoEdicion = false;
+    }
+
+    private void PrepararNuevoContacto()
+    {
+        contactoEnEdicion = new Contacto(); // Objeto limpio
+        modoEdicion = true;
+    }
+
+    private void HabilitarEdicion()
+    {
+        if (contactoSeleccionado != null)
+        {
+            // Clonar el objeto para no modificar el de la lista directamente antes de guardar
+            contactoEnEdicion = new Contacto
+            {
+                Id = contactoSeleccionado.Id,
+                Nombre = contactoSeleccionado.Nombre,
+                Apellido = contactoSeleccionado.Apellido,
+                Telefono = contactoSeleccionado.Telefono,
+                CorreoElectronico = contactoSeleccionado.CorreoElectronico,
+                Empresa = contactoSeleccionado.Empresa,
+                Cargo = contactoSeleccionado.Cargo,
+                Direccion = contactoSeleccionado.Direccion,
+                FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+                Notas = contactoSeleccionado.Notas
+            };
+            modoEdicion = true;
+        }
+    }
+
+    private async Task GuardarContacto()
+    {
+        if (contactoEnEdicion.Id == 0)
+        {
+            await ContactoService.AddContactoAsync(contactoEnEdicion);
+        }
+        else
+        {
+            await ContactoService.UpdateContactoAsync(contactoEnEdicion);
+        }
+
+        modoEdicion = false;
+        await CargarContactos();
+        // Volver a seleccionar el contacto editado o el nuevo
+        contactoSeleccionado = contactos?.FirstOrDefault(c => c.CorreoElectronico == contactoEnEdicion.CorreoElectronico);
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado != null)
+        {
+            await ContactoService.DeleteContactoAsync(contactoSeleccionado.Id);
+            contactoSeleccionado = null;
+            await CargarContactos();
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        modoEdicion = false;
+    }
+}

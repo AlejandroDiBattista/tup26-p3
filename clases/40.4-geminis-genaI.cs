@@ -1,6 +1,7 @@
 #:package Google.GenAI@*
 #:package DotNetEnv@*
 #:property JsonSerializerIsReflectionEnabledByDefault=true
+#pragma warning disable CS8321
 
 using Google.GenAI;
 using Google.GenAI.Types;

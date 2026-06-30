@@ -26,6 +26,7 @@ dotnet run -- publicar-practico TP3 --forzar
 dotnet run -- revisar-presentaciones 3
 dotnet run -- revisar-presentaciones
 dotnet run -- verificar-compilacion TP5
+dotnet run -- ejecutar-tp6
 ```
 
 - En los comandos que reciben un práctico, se acepta `1`, `tp1` o `TP1`.
@@ -46,7 +47,7 @@ Los títulos de los PRs se normalizan automáticamente antes de revisarlos, desc
 - `bajar-prs`: descarga y sobrescribe todos los prácticos detectados en los PRs, y luego revisa automáticamente los TP presentados.
 - `cerrar-prs`: cierra todos los PRs abiertos.
 - `publicar-practico <tp> [--forzar]`: copia el enunciado del práctico indicado a la carpeta de cada alumno.
-- `publicar-apuntes`: ejecuta `publicar.py` con `apuntes/` como directorio de trabajo.
+- `publicar-apuntes`: publica el libro de apuntes en EPUB y PDF usando `apuntes/` como directorio de trabajo.
 
 Las carpetas de alumnos se crean o normalizan automáticamente antes de los comandos que las recorren o modifican.
 
@@ -69,7 +70,11 @@ Las carpetas de alumnos se crean o normalizan automáticamente antes de los coma
 	- `TP2`: presentado si agrega al menos 20 líneas respecto del enunciado.
 	- `TP3`: presentado si agrega al menos 50 líneas respecto del enunciado.
 	- `TP4`: presentado si agrega al menos 150 líneas respecto del enunciado.
+	- `TP5`: presentado si agrega al menos 200 líneas respecto del enunciado.
+	- `TP6`: presentado si agrega al menos 50 líneas respecto del enunciado.
 - `verificar-compilacion <tp>`: compila únicamente los trabajos entregados (`Aprobado`). Los que fallan pasan a `Revision` y muestran un resumen de errores; los que compilan conservan su estado.
+- `ejecutar-tp5 [legajo]`: ejecuta el TP5 presentado por un alumno, abre el navegador y luego permite registrar una observación.
+- `ejecutar-tp6 [legajo]`: ejecuta el TP6 presentado por un alumno en la terminal actual y luego permite registrar una observación.
 - `limpiar-archivos-temporales`: elimina `bin`, `obj`, `.vs`, cachés de compilación y temporales SQLite (`-wal`, `-shm`, `-journal`) dentro de `practicos/`, `enunciados/`, `clases/` y `experimentos/`.
 
 ## Archivos de referencia
@@ -83,4 +88,4 @@ Las carpetas de alumnos se crean o normalizan automáticamente antes de los coma
 - `ESTADO.md`: estado resumido generado para el repositorio.
 - `practicos/`: carpetas locales por alumno.
 - `enunciados/`: enunciados base de los trabajos prácticos.
-- `apuntes/`: fuentes y script de publicación de los apuntes.
+- `apuntes/`: fuentes y scripts de publicación de los apuntes.

@@ -636,6 +636,19 @@
       return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${encodedRepoPath(...segmentos)}`;
     }
 
+    function normalizePathToken(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[,\uFEFF]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function carpetaNombreAlumno(legajo, apellido, nombre) {
+      return normalizePathToken(`${legajo} - ${apellido} ${nombre}`);
+    }
+
     function localPracticosBasePath() {
       if (window.location.protocol === 'file:') {
         return '../practicos';
@@ -645,22 +658,26 @@
     }
 
     function fotoCandidates(carpetaNombre) {
-      const archivos = ['foto.jpg'];//, 'foto.jpeg', 'foto.png'];
-      const ubicaciones = ['', 'tp1/'];
+      const archivos = ['foto.jpg'];
+      const ubicaciones = ['', 'tp1'];
       const paths = [];
       const localBase = localPracticosBasePath();
 
       if (localBase) {
         for (const ubicacion of ubicaciones) {
           for (const archivo of archivos) {
-            paths.push(`${localBase}/${carpetaNombre}/${ubicacion}${archivo}`);
+            paths.push([localBase, carpetaNombre, ubicacion, archivo].filter(Boolean).join('/'));
           }
         }
       }
 
       for (const ubicacion of ubicaciones) {
         for (const archivo of archivos) {
-          paths.push(githubRawUrl('practicos', carpetaNombre, `${ubicacion}${archivo}`));
+          if (ubicacion) {
+            paths.push(githubRawUrl('practicos', carpetaNombre, ubicacion, archivo));
+          } else {
+            paths.push(githubRawUrl('practicos', carpetaNombre, archivo));
+          }
         }
       }
 
@@ -723,8 +740,7 @@
         const presente  = /^(si|sí|true|yes)$/i.test(presenteRaw);
         const asistencias = Number.parseInt(asistenciasRaw, 10);
 
-        // CarpetaNombre exactly mirrors C# CarpetaNombre property
-        const carpetaNombre = `${legajo} - ${apellido}, ${nombre}`;
+        const carpetaNombre = carpetaNombreAlumno(legajo, apellido, nombre);
         const fotoPaths     = fotoCandidates(carpetaNombre);
         const notaParts     = notaRaw
         const codigoLegajo  = notaParts.length >= 1 ? Number.parseInt(notaParts[0], 10) : null;
@@ -759,7 +775,7 @@
     }
 
     function extraerEstados(texto) {
-      return (texto.match(/[🟢🟡🟠🔴⚪🟤]/gu) || []).map(emoji => emoji === '⚪' ? '⚪️' : emoji);
+      return texto.match(/[🟢🟡🟠🔴⚪🟤]/gu) || [];
     }
 
     function contarEstados(texto) {
@@ -775,7 +791,7 @@
       }
 
       for (let indice = 0; indice < maxEstados; indice++) {
-        const columnaVacia = estadosPorAlumno.every(estados => (estados[indice] || '⚪️') === '⚪️');
+        const columnaVacia = estadosPorAlumno.every(estados => (estados[indice] || '⚪') === '⚪');
 
         if (columnaVacia) {
           return indice;
@@ -789,7 +805,7 @@
       const estados = extraerEstados(texto);
 
       while (estados.length < total) {
-        estados.push('⚪️');
+        estados.push('⚪');
       }
 
       return estados.slice(0, total);
@@ -802,7 +818,7 @@
         case '🟠': return 'Revisión';
         case '🔴': return 'Desaprobado';
         case '⚫️': return 'Mal';
-        case '⚪️': return 'Sin estado';
+        case '⚪': return 'Sin estado';
         default: return 'Sin estado';
       }
     }
@@ -841,7 +857,7 @@
         case 'sin_estado':
         case 'vacio':
         case 'vacia':
-          return '⚪️';
+          return '⚪';
         default:
           return null;
       }
@@ -1006,6 +1022,7 @@
     const activeAttendanceFilters = new Set(ATTENDANCE_FILTER_DEFINITIONS.map(filter => filter.value));
     let searchQuery  = '';
     let totalPracticos = 0;
+    let pendingRender = 0;
 
     function restoreFiltersState() {
       try {
@@ -1210,6 +1227,20 @@
         : `${visible.length} de ${total} alumno${total !== 1 ? 's' : ''}`;
     }
 
+    function renderSoon() {
+      window.clearTimeout(pendingRender);
+      pendingRender = window.setTimeout(() => {
+        pendingRender = 0;
+        render();
+      }, 140);
+    }
+
+    function renderNow() {
+      window.clearTimeout(pendingRender);
+      pendingRender = 0;
+      render();
+    }
+
     // ── Event listeners ───────────────────────────────────────────────────────
     const searchInput = document.getElementById('search');
 
@@ -1219,7 +1250,7 @@
     searchInput.addEventListener('input', e => {
       searchQuery = e.target.value.trim();
       persistFiltersState();
-      render();
+      renderSoon();
     });
 
     document.querySelectorAll('.tab').forEach(btn => {
@@ -1237,7 +1268,7 @@
         }
 
         persistFiltersState();
-        render();
+        renderNow();
       });
     });
 
@@ -1250,7 +1281,7 @@
       .then(async text => {
         allAlumnos = await Promise.all(parseAlumnos(text).map(resolveAlumnoPhoto));
         totalPracticos = calcularTotalPracticos(allAlumnos);
-        render();
+        renderNow();
       })
       .catch(() => {
         document.getElementById('grid').innerHTML = `

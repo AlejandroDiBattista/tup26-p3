@@ -9,15 +9,8 @@ readonly record struct CompilacionPracticoResultado(
 static class CompilacionPracticos {
     const int TiempoMaximoCompilacionMs = 180_000;
 
-    static readonly IReadOnlyDictionary<int, string[]> archivosPorPractico =
-        new Dictionary<int, string[]> {
-            [1] = ["sortx.cs"],
-            [3] = ["agenda.cs"],
-            [4] = ["servidor.cs", "catalogo.cs"]
-        };
-
     public static CompilacionPracticoResultado Verificar(string rutaPractico, int numeroTp) {
-        IReadOnlyList<string> objetivos = ObtenerObjetivos(rutaPractico, numeroTp);
+        IReadOnlyList<string> objetivos = ObjetivosPracticos.Obtener(rutaPractico, numeroTp);
         if (objetivos.Count == 0) {
             return new(false, [
                 new("sin objetivo", false, ["No se encontró un proyecto o archivo de entrada para compilar."])
@@ -32,51 +25,13 @@ static class CompilacionPracticos {
         return new(resultados.All(resultado => resultado.Exito), resultados);
     }
 
-    static IReadOnlyList<string> ObtenerObjetivos(string rutaPractico, int numeroTp) {
-        if (!Directory.Exists(rutaPractico)) {
-            return [];
-        }
-
-        List<string> proyectos = Directory
-            .EnumerateFiles(rutaPractico, "*.csproj", SearchOption.AllDirectories)
-            .Where(EsArchivoFuente)
-            .OrderBy(ruta => ruta, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        if (proyectos.Count > 0) {
-            return proyectos;
-        }
-
-        if (!archivosPorPractico.TryGetValue(numeroTp, out string[]? nombresEsperados)) {
-            return [];
-        }
-
-        List<string> archivos = Directory
-            .EnumerateFiles(rutaPractico, "*.cs", SearchOption.AllDirectories)
-            .Where(EsArchivoFuente)
-            .ToList();
-
-        return nombresEsperados
-            .Select(nombre => archivos.FirstOrDefault(
-                ruta => string.Equals(Path.GetFileName(ruta), nombre, StringComparison.OrdinalIgnoreCase)))
-            .Where(ruta => ruta is not null)
-            .Cast<string>()
-            .ToList();
-    }
-
     static CompilacionObjetivoResultado Compilar(string rutaPractico, string objetivo) {
-        string directorioTemporal = Path.Combine(
-            Path.GetTempPath(),
-            "tup26-compilacion",
-            Guid.NewGuid().ToString("N"));
-        string directorioFuente = Path.Combine(directorioTemporal, "fuente");
-
         try {
-            CopiarDirectorioFuente(rutaPractico, directorioFuente);
             string objetivoRelativo = Path.GetRelativePath(rutaPractico, objetivo);
 
             ProcessStartInfo startInfo = new() {
                 FileName = "dotnet",
-                WorkingDirectory = directorioFuente,
+                WorkingDirectory = rutaPractico,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -102,14 +57,16 @@ static class CompilacionPracticos {
 
             Task.WaitAll(salidaTask, errorTask);
             string salida = $"{salidaTask.Result}{Environment.NewLine}{errorTask.Result}";
-            string prefijoFuente = directorioFuente + Path.DirectorySeparatorChar;
-            if (prefijoFuente.StartsWith("/var/", StringComparison.Ordinal)) {
+            string prefijoPractico = Path.GetFullPath(rutaPractico).TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (prefijoPractico.StartsWith("/var/", StringComparison.Ordinal)) {
                 salida = salida.Replace(
-                    "/private" + prefijoFuente,
+                    "/private" + prefijoPractico,
                     string.Empty,
                     StringComparison.Ordinal);
             }
-            salida = salida.Replace(prefijoFuente, string.Empty, StringComparison.Ordinal);
+            salida = salida.Replace(prefijoPractico, string.Empty, StringComparison.Ordinal);
             bool exito = proceso.ExitCode == 0;
             return new(
                 Path.GetFileName(objetivo),
@@ -117,35 +74,6 @@ static class CompilacionPracticos {
                 exito ? [] : ResumirErrores(salida));
         } catch (Exception ex) {
             return new(Path.GetFileName(objetivo), false, [ex.Message]);
-        } finally {
-            try {
-                if (Directory.Exists(directorioTemporal)) {
-                    Directory.Delete(directorioTemporal, recursive: true);
-                }
-            } catch {
-                // Los artefactos temporales no deben ocultar el resultado de compilación.
-            }
-        }
-    }
-
-    static void CopiarDirectorioFuente(string origen, string destino) {
-        Directory.CreateDirectory(destino);
-
-        foreach (string archivo in Directory.EnumerateFiles(origen)) {
-            File.Copy(archivo, Path.Combine(destino, Path.GetFileName(archivo)));
-        }
-
-        foreach (string subdirectorio in Directory.EnumerateDirectories(origen)) {
-            string nombre = Path.GetFileName(subdirectorio);
-            if (nombre is "bin" or "obj" or ".vs") {
-                continue;
-            }
-
-            if (File.GetAttributes(subdirectorio).HasFlag(FileAttributes.ReparsePoint)) {
-                continue;
-            }
-
-            CopiarDirectorioFuente(subdirectorio, Path.Combine(destino, nombre));
         }
     }
 
@@ -173,8 +101,4 @@ static class CompilacionPracticos {
             .ToList();
     }
 
-    static bool EsArchivoFuente(string rutaArchivo) {
-        string[] partes = rutaArchivo.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        return !partes.Any(parte => parte is "bin" or "obj" or ".vs");
-    }
 }

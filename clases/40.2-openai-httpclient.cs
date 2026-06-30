@@ -1,4 +1,5 @@
 #:package DotNetEnv@*
+#pragma warning disable CS8321
 
 using System.Net.Http.Headers;
 using System.Text;
@@ -20,14 +21,14 @@ Console.OutputEncoding = Encoding.UTF8;
 Console.Clear();
 Console.WriteLine($"\n- | Proveedor: {proveedor} | Modelo: {MODELO} |---------------------\n\n");
 
-// Mostrar(await Completar("No por mucho madrugar..."));
+// Mostrar(await Completar("No por mucho madrugar...(responde en json {\"refran\": \"\", \"significado\": \"\"})"));
 // Mostrar(await Traducir("Todo lo que necesitas es atencion", "ingles"));
 // Mostrar( await ExtraerNombre("Mi nombre es Ada Lovelace y soy una pionera de la computación"));
 // Mostrar( await ExtraerFecha("La reunion es el proximo lunes"));
-// Mostrar( await PaginaWeb("Calculadora muy elegante con operaciones basicas y un diseño moderno"));
+    // Mostrar( axwait Consultar("Cuántos alumnos varones y mujeres hay en total?"));
+// Mostrar( await Programar("QuickSort ultrasencillo", "js"));
+Mostrar( await PaginaWeb("Un reloj analogico en tiempo real"));
 // Mostrar( await Resumir(agenda));
-// Mostrar( await Programar("calcule los 10 primeros números primos que sean mayores a 40. "));
-// Mostrar( await Consultar("Cuántos alumnos varones y mujeres hay en total?"));
 // Mostrar( await Consultar("que alumnos solo le solo le falta el tp5?"));
 
 // Mostrar( await Sentimiento("La verdad que el curso me re copo, aprendi un monton"));
@@ -37,7 +38,7 @@ Console.WriteLine($"\n- | Proveedor: {proveedor} | Modelo: {MODELO} |-----------
 // Mostrar( await Explicar("var r = Enumerable.Range(1, 10).Where(x => x % 2 == 0).Sum();"));
 // Mostrar( await Clasificar("No me llego la factura del mes pasado y me cobraron de mas"));
 
-Mostrar( await PaginaWeb("Muestre un reloj analogico en tiempo real que tenga una bola que rebote dentro de la esfera y cambie de color cada vez que rebote."));
+// Mostrar( await PaginaWeb("Muestre un reloj analogico en tiempo real"));
 
 
 async Task<string> Traducir(string texto, string idioma) {
@@ -49,7 +50,7 @@ async Task<string> ExtraerNombre(string texto) {
 } 
 
 async Task<string> ExtraerFecha(string texto) {
-    return await Completar($"Hoy es {DateTime.Now:yyyy-MM-dd}. Extrae la fecha relativa del siguiente texto: {texto}");
+    return await Completar($"Hoy es {DateTime.Now:yyyy-MM-dd}. Extrae la fecha relativa del siguiente texto: {texto}." );
 } 
 
 async Task<string> Resumir(string texto) {
@@ -59,12 +60,12 @@ async Task<string> Resumir(string texto) {
 async Task<string> Consultar(string texto) {
     var alumnos = File.ReadAllText("../alumnos/alumnos.md");
 
-    return await Completar($"Actua como un asistente de programacion y responde a la siguiente pregunta: {texto}\n\nTen en cuenta esta informacion de los alumnos:\n{alumnos}");
+    return await Completar($"Actua como un asistente de catedra y responde a la siguiente pregunta: {texto}\nTen en cuenta esta informacion de los alumnos:\n{alumnos}.");
 }
 
-async Task<string> Programar(string texto) {
-    var resultado = await Completar($"Escribe un programa en c# que {texto}. Solo dame el codigo sin explicaciones.");
-    File.WriteAllText("./40.0-programa.cs", resultado, Encoding.UTF8);
+async Task<string> Programar(string texto, string lenguaje="cs") {
+    var resultado = await Completar($"Escribe un programa en {lenguaje} que {texto}. Solo dame el codigo sin explicaciones.");
+    File.WriteAllText($"./40.0-programa.{lenguaje}", resultado, Encoding.UTF8);
     return resultado;
 }
 

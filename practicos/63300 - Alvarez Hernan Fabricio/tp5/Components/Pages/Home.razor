@@ -1,0 +1,309 @@
+@page "/"
+@using AgendaWeb.Services
+@using AgendaWeb.Data
+@using Microsoft.AspNetCore.Components.Web
+@inject ContactoService ContactoService
+@rendermode InteractiveServer
+
+<PageTitle>Agenda</PageTitle>
+
+<div class="agenda-shell">
+    <header class="agenda-header">
+        <div>
+            <h1>Agenda</h1>
+            <p>@(editando ? "Editar informacion de contacto" : "Contactos personales y profesionales")</p>
+        </div>
+
+        <button class="btn btn-primary agenda-main-button" @onclick="NuevoContacto">
+            <i class="bi bi-plus-lg"></i>
+            Nuevo contacto
+        </button>
+    </header>
+
+    <main class="agenda-layout">
+        <aside class="agenda-sidebar">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text"
+                       placeholder="Buscar contacto..."
+                       @oninput="@((ChangeEventArgs e) => BuscarContactos(e.Value?.ToString() ?? ""))" />
+            </div>
+
+            <div class="contact-list">
+                @if (contactos.Count == 0)
+                {
+                    <p class="empty-state">No hay contactos para mostrar.</p>
+                }
+                else
+                {
+                    @foreach (var contacto in contactos)
+                    {
+                        <button class="contact-item @(contactoSeleccionado?.Id == contacto.Id ? "selected" : "")"
+                                @onclick="@(() => SeleccionarContacto(contacto))">
+                            <span class="avatar avatar-small">@Iniciales(contacto)</span>
+                            <span>
+                                <strong>@NombreCompleto(contacto)</strong>
+                                <small>@EmpresaODefecto(contacto)</small>
+                            </span>
+                        </button>
+                    }
+                }
+            </div>
+        </aside>
+
+        <section class="agenda-detail">
+            @if (contactoSeleccionado == null)
+            {
+                <div class="placeholder-panel">
+                    <i class="bi bi-person-lines-fill"></i>
+                    <p>Selecciona un contacto para ver sus detalles.</p>
+                </div>
+            }
+            else if (!editando)
+            {
+                <div class="detail-header">
+                    <div class="detail-person">
+                        <span class="avatar avatar-large">@Iniciales(contactoSeleccionado)</span>
+                        <div>
+                            <h2>@NombreCompleto(contactoSeleccionado)</h2>
+                            <a href="mailto:@contactoSeleccionado.Email">@contactoSeleccionado.Email</a>
+                            <span class="tag">Contacto</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-actions">
+                        <button class="btn btn-outline-dark" @onclick="EditarContacto">
+                            <i class="bi bi-pencil"></i>
+                            Editar
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="EliminarContacto">
+                            <i class="bi bi-trash3"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-list">
+                    <div class="info-row">
+                        <i class="bi bi-envelope"></i>
+                        <strong>Email</strong>
+                        <span>@contactoSeleccionado.Email</span>
+                    </div>
+
+                    <div class="info-row">
+                        <i class="bi bi-telephone"></i>
+                        <strong>Telefono</strong>
+                        <span>@contactoSeleccionado.Telefono</span>
+                    </div>
+
+                    <div class="info-row">
+                        <i class="bi bi-building"></i>
+                        <strong>Empresa</strong>
+                        <span>@EmpresaODefecto(contactoSeleccionado)</span>
+                    </div>
+
+                    <div class="info-row">
+                        <i class="bi bi-briefcase"></i>
+                        <strong>Cargo</strong>
+                        <span>@TextoODefecto(contactoSeleccionado.Cargo)</span>
+                    </div>
+
+                    <div class="info-row">
+                        <i class="bi bi-geo-alt"></i>
+                        <strong>Direccion</strong>
+                        <span>@TextoODefecto(contactoSeleccionado.Direccion)</span>
+                    </div>
+
+                    @if (contactoSeleccionado.FechaNacimiento.HasValue)
+                    {
+                        <div class="info-row">
+                            <i class="bi bi-calendar-event"></i>
+                            <strong>Nacimiento</strong>
+                            <span>@contactoSeleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    }
+
+                    <div class="info-row align-start">
+                        <i class="bi bi-card-text"></i>
+                        <strong>Notas</strong>
+                        <span>@TextoODefecto(contactoSeleccionado.Notas)</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="edit-header">
+                    <div class="detail-person">
+                        <span class="avatar avatar-large">@Iniciales(contactoSeleccionado)</span>
+                        <div>
+                            <h2>Editar contacto</h2>
+                            <p>Modifica los datos de <span>@NombreCompleto(contactoSeleccionado)</span></p>
+                        </div>
+                    </div>
+
+                    <div class="detail-actions">
+                        <button class="btn btn-outline-dark" @onclick="CancelarEdicion">Cancelar</button>
+                        <button class="btn btn-danger" @onclick="GuardarCambios">
+                            <i class="bi bi-floppy"></i>
+                            Guardar cambios
+                        </button>
+                    </div>
+                </div>
+
+                <div class="edit-form">
+                    <div class="form-field">
+                        <label>Nombre</label>
+                        <input class="form-control" @bind="contactoSeleccionado.Nombre" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Apellido</label>
+                        <input class="form-control" @bind="contactoSeleccionado.Apellido" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Empresa</label>
+                        <input class="form-control" @bind="contactoSeleccionado.Empresa" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Cargo</label>
+                        <input class="form-control" @bind="contactoSeleccionado.Cargo" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Email</label>
+                        <input type="email" class="form-control" @bind="contactoSeleccionado.Email" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Telefono</label>
+                        <input type="tel" class="form-control" @bind="contactoSeleccionado.Telefono" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Direccion</label>
+                        <input class="form-control" @bind="contactoSeleccionado.Direccion" />
+                    </div>
+
+                    <div class="form-field">
+                        <label>Fecha de nacimiento</label>
+                        <input type="date" class="form-control" @bind="contactoSeleccionado.FechaNacimiento" />
+                    </div>
+
+                    <div class="form-field form-wide">
+                        <label>Notas</label>
+                        <textarea class="form-control" rows="5" @bind="contactoSeleccionado.Notas"></textarea>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-outline-dark" @onclick="CancelarEdicion">Cancelar</button>
+                        <button class="btn btn-primary" @onclick="GuardarCambios">
+                            <i class="bi bi-floppy"></i>
+                            Guardar cambios
+                        </button>
+                    </div>
+                </div>
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private List<Contacto> contactos = new();
+    private Contacto? contactoSeleccionado = null;
+    private bool editando = false;
+    private string busqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarContactos();
+    }
+
+    private async Task CargarContactos()
+    {
+        contactos = string.IsNullOrWhiteSpace(busqueda)
+            ? await ContactoService.ObtenerTodosAsync()
+            : await ContactoService.BuscarAsync(busqueda);
+    }
+
+    private async Task BuscarContactos(string termino)
+    {
+        busqueda = termino;
+        await CargarContactos();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
+        editando = false;
+    }
+
+    private void EditarContacto()
+    {
+        editando = true;
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (contactoSeleccionado == null)
+        {
+            return;
+        }
+
+        if (contactoSeleccionado.Id == 0)
+        {
+            await ContactoService.CrearAsync(contactoSeleccionado);
+        }
+        else
+        {
+            await ContactoService.ActualizarAsync(contactoSeleccionado);
+        }
+
+        editando = false;
+        await CargarContactos();
+    }
+
+    private void CancelarEdicion()
+    {
+        editando = false;
+    }
+
+    private void NuevoContacto()
+    {
+        contactoSeleccionado = new Contacto();
+        editando = true;
+    }
+
+    private async Task EliminarContacto()
+    {
+        if (contactoSeleccionado != null && await ContactoService.EliminarAsync(contactoSeleccionado.Id))
+        {
+            contactoSeleccionado = null;
+            await CargarContactos();
+        }
+    }
+
+    private static string NombreCompleto(Contacto contacto)
+    {
+        return $"{contacto.Nombre} {contacto.Apellido}".Trim();
+    }
+
+    private static string Iniciales(Contacto contacto)
+    {
+        var nombre = string.IsNullOrWhiteSpace(contacto.Nombre) ? "?" : contacto.Nombre.Trim()[0].ToString();
+        var apellido = string.IsNullOrWhiteSpace(contacto.Apellido) ? "" : contacto.Apellido.Trim()[0].ToString();
+
+        return $"{nombre}{apellido}".ToUpper();
+    }
+
+    private static string EmpresaODefecto(Contacto contacto)
+    {
+        return string.IsNullOrWhiteSpace(contacto.Empresa) ? "Independiente" : contacto.Empresa;
+    }
+
+    private static string TextoODefecto(string? texto)
+    {
+        return string.IsNullOrWhiteSpace(texto) ? "-" : texto;
+    }
+}

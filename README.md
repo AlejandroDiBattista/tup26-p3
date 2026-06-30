@@ -1,109 +1,126 @@
-﻿# TP6: AsistenteIA
-## Asistente de Chat por Terminal con Microsoft.Extensions.AI y Terminal.Gui
+# Segundo parcial - Programación III
 
-> [!IMPORTANT]
-> Plazo para entregar el TP6: **Jueves 25 de Junio hasta las 23:59hs**
->
-> *El trabajo es estrictamente individual y debe ser realizado en persona por el alumno*
+El segundo parcial consiste en la defensa de los trabajos prácticos 5 y 6.
 
-## Descripción general
+Durante la defensa, cada estudiante deberá realizar en vivo una modificación sobre el sistema que presentó. La consigna se indicará en el momento y será acotada: no se pedirá desarrollar una funcionalidad nueva, sino corregir o ajustar aspectos del sistema entregado.
 
-Desarrollar una aplicación de **consola interactiva** que funcione como un **asistente conversacional** apoyado en un modelo de lenguaje, construida con:
+Cada estudiante dispondrá de una computadora provista por la cátedra y tendrá 15 minutos para realizar los cambios y documentarlos.
 
-- **Terminal.Gui (v2)** — Interfaz de usuario en modo texto (TUI).
-- **Microsoft.Extensions.AI (MEAI)** — Abstracción `IChatClient` para conversar con el modelo.
-- **Proveedor compatible con OpenAI** — Acceso al modelo mediante una clave configurada por variable de entorno.
+Están en condiciones de promocionar quienes, al momento de esta comunicación, tienen nota de promoción y presentaron el Trabajo Práctico 5. La falta de presentación del Trabajo Práctico 6 no excluye a nadie de este listado por ahora, porque el plazo de entrega de ese trabajo todavía no está cerrado.
 
-El sistema debe permitir mantener una conversación con el asistente: el usuario escribe un mensaje, lo envía, y la respuesta del modelo se va mostrando **a medida que se genera** (streaming). La conversación se conserva durante toda la sesión para dar contexto a cada nueva pregunta.
+Los siguientes estudiantes se encuentran en condiciones de promocionar y deben revisar el estado indicado para el Trabajo Práctico 5. Cuando haya observaciones, deberán corregirlas y presentar los cambios hasta el lunes 29 de junio de 2026 a las 21:00.
 
----
+La corrección debe entregarse mediante un pull request con los cambios realizados. El pull request debe incluir solamente las correcciones solicitadas para esta instancia.
 
-## Modelo de la conversación
+El calendario de defensas, con día y horario para cada estudiante, se informará más adelante.
 
-La conversación es una secuencia de mensajes, cada uno con un **rol** que lo distingue dentro del diálogo. Los roles que intervienen son:
+## Condición del TP6
 
-| Rol         | Descripción                                                                 | Visible al usuario |
-|-------------|-----------------------------------------------------------------------------|:------------------:|
-| Sistema     | Instrucción inicial que define el comportamiento del asistente              | No                 |
-| Usuario     | Cada mensaje que escribe la persona                                         | Sí                 |
-| Asistente   | Cada respuesta que produce el modelo                                        | Sí                 |
+El Trabajo Práctico 6 formará parte de la defensa del segundo parcial. Su ausencia no invalida este listado mientras el plazo de entrega no esté cerrado. La condición final se verificará al cerrar la instancia.
 
-El mensaje de **sistema** se carga desde un archivo `AGENTS.md` ubicado junto a la aplicación, y fija el "carácter" del asistente (idioma, tono, preferencias de lenguaje de ejemplo, qué hacer cuando falta contexto). Mantener el prompt en un archivo aparte permite ajustarlo sin recompilar. Los mensajes de **usuario** y **asistente** se acumulan a lo largo de la sesión y se envían completos en cada consulta, de modo que el modelo recuerde lo conversado.
-
-El acceso al modelo se realiza mediante la abstracción `IChatClient` de **Microsoft.Extensions.AI**, sin acoplar la lógica de la aplicación a un proveedor concreto. La clave de la API se lee desde una **variable de entorno** (por ejemplo, cargada desde un archivo `.env`), nunca escrita en el código.
+## Correcciones a realizar
 
 ---
 
-## Funcionalidades requeridas
+# Evaluacion TP6
 
-La aplicación debe implementar la conversación con el asistente:
+Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
-- **Enviar mensaje:** tomar el texto que escribió el usuario y agregarlo a la conversación.
-- **Recibir respuesta en streaming:** mostrar la respuesta del modelo **fragmento a fragmento**, a medida que llega, sin esperar a que termine.
-- **Mantener contexto:** conservar el historial completo de la sesión para que cada nueva pregunta tenga en cuenta lo anterior.
-- **Renderizar Markdown:** mostrar la conversación con formato (encabezados por turno, bloques de código resaltados, etc.).
-- **Salir:** cerrar la aplicación de forma limpia con la tecla **Esc**.
 
----
+## Funciona de primera (trabajo aprobado)
 
-## Herramientas (function calling)
+> Estos trabajos funcionaron de primera. 
 
-El asistente debe poder **operar sobre el sistema de archivos** del proyecto a pedido del usuario. Para ello se exponen al modelo, mediante el mecanismo de *function calling* de **Microsoft.Extensions.AI**, las siguientes herramientas:
+63207   Saravia, César Nahum             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63219   Lazarte, Sergio Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63231   Herrera, Rocío Tatiana           🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto
+63241   Cortez, Josías                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto
+63268   Condori, Karina Edith            🟢🟢🟢🟢🟢🟢   🟢⚪   No     9    1  correcto
+63297   Lezana, Juan Ignacio             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63300   Álvarez, Hernán Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63313   Ávila Puntano, Benjamín          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63341   Carrer, Juan Cruz                🟢🟢🟢🟢🟢🟢   🟢⚪   No    21   10  correcto
+63354   Perondi, Luciano                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63399   Lazarte, Gonzalo Romeo           🟢🟢🟢🟢🟢🟢   🟢⚪   No    24   10  correcto
+63402   Condori, Nahuel Ariel            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto
+63419   Coronel, Tomás                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  correcto
+63494   Medina, Lourdes Natalia          🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63546   Sosa Paz, Jeremías               🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto
+63547   Sosa Paz, José Lisandro          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🟢   🟢⚪   No    18    8  correcto (mantenia comentario)
+63420   Pereyra, Valentina Nazaret       🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  correcto
+63208   Rosconi, Ignacio Federico        🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  correcto
 
-| Herramienta        | Descripción                                              | Parámetros            |
-|--------------------|----------------------------------------------------------|-----------------------|
-| `leer-archivo`     | Devuelve el contenido de un archivo de texto             | ruta del archivo      |
-| `escribir-archivo` | Crea o sobrescribe un archivo con el contenido indicado  | ruta y contenido      |
-| `listar-archivos`  | Lista los archivos (y carpetas) de un directorio         | ruta del directorio   |
 
-El modelo decide **cuándo** invocar cada herramienta a partir de lo que pide el usuario (por ejemplo: "leé `notas.txt`", "guardá esto en `salida.md`", "qué archivos hay en esta carpeta"). La aplicación debe ejecutar la función solicitada y devolver el resultado al modelo para que continúe la respuesta.
+## Corregido problema subsanables (trabajo aprobado)
 
-Las herramientas se definen como funciones de C# (con `AIFunctionFactory`) y se entregan al cliente a través de las `ChatOptions`, habilitando la invocación automática de funciones en el `IChatClient`.
+> Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
 
----
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
+61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
+63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (mal proveedor)
+61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
+63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)
+63350   Páez Carabajal, Santiago         🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  correcto (faltaba DotNetEnv)
+63385   Almaraz Sintora, Nahuel          🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (lee mal api_key)
+63387   Sosa Gonella, Luca               🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (fallaba streaming)
+63388   López, Leandro Joel              🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (lee mal .env)
+63396   Gil Garau, Atalía Trinidad       🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (fallaba proveedor)
+63412   Morán, Facundo Martín            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba proveedor)
+63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba streaming)
+63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto (fallaba streaming)
+63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+63647   Paz, Valentina                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (no borro comentario)
+63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
+63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
 
-## Diseño de interfaz
 
-La interfaz debe organizarse en una ventana de pantalla completa, dividida en dos zonas verticales:
+## No implementa las herramientas (Recuperar)
 
-- **Panel de conversación:** ocupa la mayor parte de la pantalla y muestra el historial del diálogo. Debe poder desplazarse (scroll) con mouse y teclado para releer mensajes anteriores.
-- **Panel de entrada:** un campo de texto donde el usuario escribe su mensaje, acompañado de un botón **Enviar**.
+> No cumple consigna, no implementa las funciones (corregir )
 
-![Ejemplo de la interfaz del asistente](image.png)
+63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
+63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7  No implementa las herramientas
+63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟤   🟢⚪   No    13   10  No implementa las herramientas
+61489   Gómez, Tomás                     🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9  No implementa las herramientas
+63717   González, Octavio                🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9  No implementa las herramientas
+63213   Marina Noguera, Morena Giovann   🟢🟢🟢🟢🟢🟤   🟢⚪   No    30    9  No implementa las herramientas
+63397   Vercellone, Tomás                🟢🟢🟢🔴🟢🟤   🟢⚪   No    24    9  No implementa las herramientas
 
-La experiencia de teclado esperada es:
+## No compila (recuperar)
 
-- **Enter** envía el mensaje.
-- **Esc** cierra la aplicación.
+> No compila (corregir)
 
-Mientras el asistente responde, la entrada y el botón deben deshabilitarse para evitar envíos superpuestos, y el panel de conversación debe acompañar la respuesta que se genera (auto-scroll), respetando el desplazamiento manual del usuario si éste decide leer hacia arriba.
+63234   Molina, Lázaro Exequiel          🟢🟢🟢🟢🟢🟠   🟢⚪   No    27   10  No compila
 
-El diseño no necesita ser visualmente complejo, pero debe ser claro, ordenado y funcional.
+## No presentaron (recuperar)
 
----
+> No presentaron (presenta para promocionar)
 
-## Organización del proyecto
+63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    20   10
+63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🔴   🟢⚪   No    25    7
+63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🔴   🟢⚪   No    26    8
 
-La solución debe separar responsabilidades de forma clara, con una estructura comprensible y mantenible. Se espera una separación razonable entre:
 
-- Configuración y arranque (lectura de la clave, creación del `IChatClient`).
-- La ventana principal y su disposición de paneles.
-- El control de entrada de texto.
-- El modelo de los mensajes que se muestran en pantalla.
-- Las herramientas de archivos expuestas al modelo (`leer-archivo`, `escribir-archivo`, `listar-archivos`).
-- La lógica de envío, streaming y actualización del historial.
+## No presentaron 
 
-La estructura concreta queda a criterio del estudiante.
+> No presentaron y no estan en condiciones de recuperar.
 
----
+63205   Navarro Aragón, Facundo          🔴🔴🔴🔴🔴🔴   🟢⚪   No    22   10
+63415   Chávez, Lucas Francisco          🔴🔴🔴🔴🔴🔴   🟢⚪   No    17    8
+61577   González, Lucas Alfredo          🟢🔴🔴🔴🔴🔴   🟢⚪   No    25   10
+63217   Altamiranda Borquez, Bian        🟢🔴🔴🔴🔴🔴   🟢⚪   No    26    8
+61641   Figueroa, Nahuel Ramón           🟢🔴🔴🔴🔴🔴   🟢⚪   No    19    4
+63211   Montero, Luca                    🟢🟢🔴🔴🔴🔴   🟢⚪   No    19   10
+63425   Holmquist, Jeremy                🟢🟢🔴🔴🔴🔴   🟢⚪   No    16    6
+63461   Cativa, Facundo Simón            🟢🟢🔴🔴🔴🔴   🟢⚪   No    18    8
+61161   González, Thomas Ezequiel        🟢🟢🔴🟢🔴🔴   🟢⚪   No    20    5
+63776   Fuensalida, Ulises Nahuel        🟢🟢🔴🔴🟢🔴   🟢⚪   No    17    8
+61490   Valdez Bustamante, Tomás         🟢🟢🔴🟢🟢🔴   🟢⚪   No    34    6
+64016   Cura, Rocío Aylen                🔴🟢🟢🔴🔴🔴   🟢⚪   No    17    7
+62844   Guzmán, Luciano Leonel           🔴🟢🟢🔴🔴🔴   🟢⚪   No    16   10
+61057   Getar, Thomas                    🟢🟢🟢🔴🔴🔴   🟢⚪   No    23    7
+63493   Busnelli, Bruno                  🟢🟢🟢🔴🔴🔴   🟢⚪   No    14   10
+63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
 
-## Cómo comenzar el desarrollo
-
-El proyecto se entrega como un punto de partida mínimo que ya incluye:
-
-- Un archivo ejecutable de **C# (file-based app)** con los paquetes necesarios declarados (`Microsoft.Extensions.AI`, `Terminal.Gui`, carga de `.env`).
-- La lectura de la **clave de API** desde la variable de entorno y la creación del cliente `IChatClient`.
-- Una **ventana base** de Terminal.Gui que abre a pantalla completa con el título del asistente.
-- El archivo **`AGENTS.md`** con el mensaje de sistema, que la aplicación carga al iniciar.
-
-Se recomienda avanzar de a poco, verificando el funcionamiento de cada parte antes de continuar con la siguiente.

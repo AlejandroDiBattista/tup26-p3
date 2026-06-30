@@ -28,7 +28,8 @@ static class PracticosConfig {
             [2] = new(2, TipoUmbralPractico.LineasAgregadas,  20),
             [3] = new(3, TipoUmbralPractico.LineasAgregadas,  50),
             [4] = new(4, TipoUmbralPractico.LineasAgregadas, 150),
-            [5] = new(5, TipoUmbralPractico.LineasAgregadas, 200)
+            [5] = new(5, TipoUmbralPractico.LineasAgregadas, 200),
+            [6] = new(6, TipoUmbralPractico.LineasAgregadas,  50)
         };
 
     public static bool TryObtener(int numero, out ConfiguracionPractico configuracion) =>

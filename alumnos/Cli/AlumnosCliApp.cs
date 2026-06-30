@@ -22,9 +22,11 @@ static class AlumnosCliApp {
             config.AddCommand<PublicarPracticoCommand>("publicar-practico")
                 .WithDescription("Publica el enunciado de un trabajo práctico en la carpeta de cada alumno.");
             config.AddCommand<PublicarApuntesCommand>("publicar-apuntes")
-                .WithDescription("Ejecuta publicar.py dentro de la carpeta de apuntes.");
+                .WithDescription("Publica el libro de apuntes en EPUB y PDF.");
             config.AddCommand<ListarPracticosFaltantesCommand>("listar-practicos-faltantes")
                 .WithDescription("Lista alumnos a quienes les falta el trabajo práctico indicado.");
+            config.AddCommand<NormalizarCarpetasCommand>("normalizar-carpetas")
+                .WithDescription("Normaliza los nombres de carpetas locales de alumnos.");
             config.AddCommand<ExportarEstadoCommand>("exportar-estado")
                 .WithDescription("Exporta el estado resumido a ESTADO.md.");
             config.AddCommand<ExportarMarkdownCommand>("exportar-markdown")
@@ -39,6 +41,14 @@ static class AlumnosCliApp {
                 .WithDescription("Marca TPs presentados a partir del código local.");
             config.AddCommand<VerificarCompilacionCommand>("verificar-compilacion")
                 .WithDescription("Compila los TP entregados y marca para revisar los que tienen errores.");
+            config.AddCommand<VerificarEjecucionCommand>("verificar-ejecucion")
+                .WithDescription("Ejecuta los TP entregados y marca para revisar los que fallan al iniciar.");
+            config.AddCommand<CapturarPantallasCommand>("capturar-pantallas")
+                .WithDescription("Guarda capturas de pantalla para TP web o TP6 de terminal.");
+            config.AddCommand<EjecutarTp5Command>("ejecutar-tp5")
+                .WithDescription("Ejecuta el TP5 de un alumno y abre el navegador en su página.");
+            config.AddCommand<EjecutarTp6Command>("ejecutar-tp6")
+                .WithDescription("Ejecuta el TP6 de un alumno en la terminal actual.");
             config.AddCommand<LimpiarArchivosTemporalesCommand>("limpiar-archivos-temporales")
                 .WithDescription("Elimina bin, obj, .vs, cachés de compilación y temporales SQLite dentro de prácticos.");
         });
@@ -109,6 +119,10 @@ static class AlumnosCliApp {
             "exportar-vcard" => "Exportar alumnos a vCard",
             "revisar-presentaciones" => $"Revisar presentaciones{detalle}",
             "verificar-compilacion" => $"Verificar compilación{detalle}",
+            "verificar-ejecucion" => $"Verificar ejecución{detalle}",
+            "capturar-pantallas" => $"Capturar pantallas{detalle}",
+            "ejecutar-tp5" => $"Ejecutar TP5{detalle}",
+            "ejecutar-tp6" => $"Ejecutar TP6{detalle}",
             "limpiar-archivos-temporales" => "Limpiar archivos temporales",
             "listar-grupos-whatsapp" => "Listar grupos y participantes de WhatsApp",
             _ => args[0]
@@ -120,14 +134,14 @@ static class AlumnosCliApp {
 
         AnsiConsole.Write(
             new Panel(new Markup($"[bold]Modo interactivo[/]\n[grey]Elegí una acción y completá sus parámetros.[/]\n[green]Alumnos detectados:[/] {alumnos.Count()}")) {
-                Header = new PanelHeader("[yellow]TUP 2026 · Alumnos[/]"),
+                Header = new PanelHeader("[yellow]TUP 2026 · Sistema Alumnos[/]"),
                 Border = BoxBorder.Rounded,
                 Padding = new Padding(1, 1, 1, 1)
             });
 
-        InteractiveChoice opcion = PedirOpcion(
+        InteractiveChoice opcion = PedirOpcionAgrupada(
             "[bold cyan]Menú principal[/] · ¿Qué querés hacer?",
-            ObtenerOpcionesPrincipales());
+            ObtenerGruposOpcionesPrincipales());
 
         return opcion.Command switch {
             "listar-alumnos" => ["listar-alumnos"],
@@ -137,8 +151,13 @@ static class AlumnosCliApp {
             "cerrar-prs" => ["cerrar-prs"],
             "publicar-practico" => ConstruirArgumentosPublicarPractico(),
             "publicar-apuntes" => ["publicar-apuntes"],
+            "normalizar-carpetas" => ["normalizar-carpetas"],
             "revisar-presentaciones" => ConstruirArgumentosRevisarPresentaciones(),
             "verificar-compilacion" => ConstruirArgumentosVerificarCompilacion(),
+            "verificar-ejecucion" => ConstruirArgumentosVerificarEjecucion(),
+            "capturar-pantallas" => ConstruirArgumentosCapturarPantallas(),
+            "ejecutar-tp5" => ["ejecutar-tp5"],
+            "ejecutar-tp6" => ["ejecutar-tp6"],
             "listar-practicos-faltantes" => ConstruirArgumentosPracticosFaltantes(),
             "exportar-estado" => ["exportar-estado"],
             "exportar-markdown" => ["exportar-markdown"],
@@ -155,29 +174,69 @@ static class AlumnosCliApp {
         AnsiConsole.Prompt(
             new SelectionPrompt<InteractiveChoice>()
                 .Title(titulo)
-                .PageSize(16)
-                .UseConverter(choice => $"[green]{choice.Label,-30}[/] [grey] {choice.Description}[/]")
+                .EnableSearch()
+                .WrapAround(true)
+                .PageSize(30)
+                .UseConverter(FormatearOpcionInteractiva)
+                .AddCancelResult(opciones[^1])
                 .AddChoices(opciones));
 
-    static IReadOnlyList<InteractiveChoice> ObtenerOpcionesPrincipales() => [
+    static InteractiveChoice PedirOpcionAgrupada(string titulo, IReadOnlyList<InteractiveChoiceGroup> grupos) {
+        List<InteractiveChoice> opciones = grupos.SelectMany(grupo => grupo.Choices).ToList();
+        SelectionPrompt<InteractiveChoice> prompt = new SelectionPrompt<InteractiveChoice>()
+            .Title(titulo)
+            .EnableSearch()
+            .WrapAround(true)
+            .PageSize(30)
+            .UseConverter(FormatearOpcionInteractiva)
+            .AddCancelResult(opciones[^1]);
+
+        foreach (InteractiveChoiceGroup grupo in grupos) {
+            prompt.AddChoiceGroup(new InteractiveChoice(string.Empty, grupo.Label, string.Empty), grupo.Choices);
+        }
+
+        return AnsiConsole.Prompt(prompt);
+    }
+
+    static string FormatearOpcionInteractiva(InteractiveChoice choice) =>
+        string.IsNullOrWhiteSpace(choice.Description)
+            ? $"[bold yellow]{choice.Label}[/]"
+            : $"[green]{choice.Label,-30}[/] [grey] {choice.Description}[/]";
+
+    static IReadOnlyList<InteractiveChoiceGroup> ObtenerGruposOpcionesPrincipales() => [
+        new("Alumnos y asistencia", [
             new("listar-alumnos",                 "Listar alumnos",                 "Mostrar todos los alumnos"),
             new("contar-asistencias",             "Contar asistencias",             "Reconstruir asistencias y marcar presentes de hoy"),
+            new("listar-grupos-whatsapp",         "Listar grupos de WhatsApp",      "Listar grupos y participantes")
+        ]),
+        new("Pull requests", [
             new("revisar-prs",                    "Revisar PRs",                    "Mostrar el estado de los pull requests"),
             new("bajar-prs",                      "Bajar PRs",                      "Descargar y sobrescribir todos los prácticos"),
-            new("cerrar-prs",                     "Cerrar PRs",                     "Cerrar pull requests abiertos"),
+            new("cerrar-prs",                     "Cerrar PRs",                     "Cerrar pull requests abiertos")
+        ]),
+        new("Trabajos prácticos", [
+            new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
+            new("publicar-apuntes",               "Publicar apuntes",               "Generar EPUB y PDF del libro"),
+            new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
             new("revisar-presentaciones",         "Revisar presentaciones",         "Marcar TP presentados desde el código local"),
             new("verificar-compilacion",          "Verificar compilación",          "Compilar entregados y marcar los que tienen errores"),
-            new("publicar-practico",              "Publicar práctico",              "Copiar el enunciado de un TP a cada alumno"),
-            new("publicar-apuntes",               "Publicar apuntes",               "Ejecutar apuntes/publicar.py"),
-            new("listar-practicos-faltantes",     "Listar prácticos faltantes",      "Listar alumnos que adeudan un práctico"),
+            new("verificar-ejecucion",            "Verificar ejecución",            "Ejecutar entregados y marcar los que fallan al iniciar"),
+            new("capturar-pantallas",             "Capturar pantallas",             "Guardar captura de TP web o terminal"),
+            new("ejecutar-tp5",                   "Ejecutar TP5",                   "Ejecutar el TP5 de un alumno y abrir el navegador"),
+            new("ejecutar-tp6",                   "Ejecutar TP6",                   "Ejecutar el TP6 de un alumno en la terminal")
+        ]),
+        new("Datos y mantenimiento", [
+            new("normalizar-carpetas",            "Normalizar carpetas",             "Renombrar carpetas locales de alumnos"),
             new("exportar-estado",                "Exportar Estado",                "Exportar el resumen a ESTADO.md"),
             new("exportar-markdown",              "Exportar como Markdown",         "Exportar alumnos a alumnos.md"),
             new("exportar-json",                  "Exportar como JSON",             "Exportar alumnos a alumnos.json"),
             new("exportar-vcard",                 "Exportar como vCard",            "Exportar contactos a alumnos.vcf"),
-            new("listar-grupos-whatsapp",         "Listar grupos de WhatsApp",      "Listar grupos y participantes"),
-            new("limpiar-archivos-temporales",    "Limpiar archivos temporales",    "Eliminar bin, obj, .vs, cachés y temporales SQLite"),
+            new("limpiar-archivos-temporales",    "Limpiar archivos temporales",    "Eliminar bin, obj, .vs, cachés y temporales SQLite")
+        ]),
+        new("Sistema", [
             new("salir",                          "Salir",                          "Cerrar la aplicación")
-        ];
+        ])
+    ];
 
     static string[] ConstruirArgumentosPracticosFaltantes() {
         string? trabajoPractico = PedirTrabajoPractico("Listar prácticos faltantes");
@@ -203,6 +262,22 @@ static class AlumnosCliApp {
         return trabajoPractico is null
             ? Array.Empty<string>()
             : ["verificar-compilacion", trabajoPractico];
+    }
+
+    static string[] ConstruirArgumentosVerificarEjecucion() {
+        string? trabajoPractico = PedirTrabajoPractico("Verificar ejecución");
+
+        return trabajoPractico is null
+            ? Array.Empty<string>()
+            : ["verificar-ejecucion", trabajoPractico];
+    }
+
+    static string[] ConstruirArgumentosCapturarPantallas() {
+        string? trabajoPractico = PedirTrabajoPractico("Capturar pantallas");
+
+        return trabajoPractico is null
+            ? Array.Empty<string>()
+            : ["capturar-pantallas", trabajoPractico];
     }
 
     static string[] ConstruirArgumentosPublicarPractico() {
@@ -260,8 +335,11 @@ static class AlumnosCliApp {
         InteractiveChoice seleccionado = AnsiConsole.Prompt(
             new SelectionPrompt<InteractiveChoice>()
                 .Title($"[bold cyan]{accion}[/] · Elegí el trabajo práctico\n[grey]Se encontraron {practicos.Count} en {AppPaths.EnunciadosDirectory}[/]")
-                .PageSize(12)
+                .EnableSearch()
+                .WrapAround(true)
+                .PageSize(30)
                 .UseConverter(choice => $"[green]{choice.Label,-22}[/] [grey] {choice.Description}[/]")
+                .AddCancelResult(opciones[^1])
                 .AddChoices(opciones));
 
         return seleccionado.Command == "volver" ? null : seleccionado.Command;
@@ -274,4 +352,5 @@ static class AlumnosCliApp {
         string.Equals(valor, "--help", StringComparison.OrdinalIgnoreCase);
 
     sealed record InteractiveChoice(string Command, string Label, string Description);
+    sealed record InteractiveChoiceGroup(string Label, IReadOnlyList<InteractiveChoice> Choices);
 }

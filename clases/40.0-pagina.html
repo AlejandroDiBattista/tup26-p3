@@ -1,178 +1,207 @@
-﻿
-<think>
-The user wants a self-contained HTML page that displays a real-time analog clock. I need to create a complete HTML file with CSS and JavaScript that draws an analog clock face with hour, minute, and second hands that update in real-time. I'll use a canvas element or CSS to create the clock.
-
-Let me go with a canvas-based approach for a clean, smooth analog clock.
-</think>
-
-```html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reloj Analógico</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #1a1a2e;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .clock-container {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        canvas {
-            border-radius: 50%;
-            box-shadow:
-                0 0 30px rgba(0,0,0,0.5),
-                0 0 60px rgba(100, 100, 255, 0.1),
-                inset 0 0 30px rgba(0,0,0,0.1);
-        }
-        .digital {
-            color: #e0e0e0;
-            font-size: 1.4rem;
-            letter-spacing: 4px;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 10px rgba(100, 200, 255, 0.3);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reloj Analógico</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle, #1f2937, #020617);
+      font-family: Arial, sans-serif;
+    }
+
+    .clock {
+      position: relative;
+      width: min(80vw, 420px);
+      height: min(80vw, 420px);
+      border: 12px solid #e5e7eb;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, #f1f5f9 100%);
+      box-shadow:
+        0 0 30px rgba(255, 255, 255, 0.2),
+        inset 0 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .clock::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #111827;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .number {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      font-size: clamp(1.2rem, 4vw, 2rem);
+      font-weight: bold;
+      color: #111827;
+    }
+
+    .number span {
+      display: inline-block;
+      padding-top: 18px;
+    }
+
+    .n1  { transform: rotate(30deg); }
+    .n1 span  { transform: rotate(-30deg); }
+
+    .n2  { transform: rotate(60deg); }
+    .n2 span  { transform: rotate(-60deg); }
+
+    .n3  { transform: rotate(90deg); }
+    .n3 span  { transform: rotate(-90deg); }
+
+    .n4  { transform: rotate(120deg); }
+    .n4 span  { transform: rotate(-120deg); }
+
+    .n5  { transform: rotate(150deg); }
+    .n5 span  { transform: rotate(-150deg); }
+
+    .n6  { transform: rotate(180deg); }
+    .n6 span  { transform: rotate(-180deg); }
+
+    .n7  { transform: rotate(210deg); }
+    .n7 span  { transform: rotate(-210deg); }
+
+    .n8  { transform: rotate(240deg); }
+    .n8 span  { transform: rotate(-240deg); }
+
+    .n9  { transform: rotate(270deg); }
+    .n9 span  { transform: rotate(-270deg); }
+
+    .n10 { transform: rotate(300deg); }
+    .n10 span { transform: rotate(-300deg); }
+
+    .n11 { transform: rotate(330deg); }
+    .n11 span { transform: rotate(-330deg); }
+
+    .n12 { transform: rotate(0deg); }
+
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      transform: translateX(-50%) rotate(0deg);
+      border-radius: 999px;
+      z-index: 5;
+    }
+
+    .hour {
+      width: 9px;
+      height: 27%;
+      background: #111827;
+    }
+
+    .minute {
+      width: 6px;
+      height: 36%;
+      background: #374151;
+    }
+
+    .second {
+      width: 3px;
+      height: 42%;
+      background: #dc2626;
+      z-index: 6;
+    }
+
+    .tick {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+    }
+
+    .tick::before {
+      content: "";
+      display: inline-block;
+      width: 3px;
+      height: 12px;
+      background: #64748b;
+      border-radius: 2px;
+      margin-top: 6px;
+    }
+
+    .tick.big::before {
+      width: 5px;
+      height: 18px;
+      background: #111827;
+    }
+  </style>
 </head>
 <body>
-    <div class="clock-container">
-        <canvas id="clock" width="400" height="400"></canvas>
-        <div class="digital" id="digital"></div>
-    </div>
+  <div class="clock">
+    <div class="number n1"><span>1</span></div>
+    <div class="number n2"><span>2</span></div>
+    <div class="number n3"><span>3</span></div>
+    <div class="number n4"><span>4</span></div>
+    <div class="number n5"><span>5</span></div>
+    <div class="number n6"><span>6</span></div>
+    <div class="number n7"><span>7</span></div>
+    <div class="number n8"><span>8</span></div>
+    <div class="number n9"><span>9</span></div>
+    <div class="number n10"><span>10</span></div>
+    <div class="number n11"><span>11</span></div>
+    <div class="number n12"><span>12</span></div>
 
-    <script>
-        const canvas = document.getElementById('clock');
-        const ctx = canvas.getContext('2d');
-        const digital = document.getElementById('digital');
-        const R = canvas.width / 2;
-        const RADIUS = R - 20;
+    <div class="hand hour" id="hour"></div>
+    <div class="hand minute" id="minute"></div>
+    <div class="hand second" id="second"></div>
+  </div>
 
-        function drawClock() {
-            const now = new Date();
-            const h = now.getHours() % 12;
-            const m = now.getMinutes();
-            const s = now.getSeconds();
-            const ms = now.getMilliseconds();
+  <script>
+    const clock = document.querySelector(".clock");
 
-            const smoothS = s + ms / 1000;
-            const smoothM = m + smoothS / 60;
-            const smoothH = h + smoothM / 60;
+    for (let i = 0; i < 60; i++) {
+      const tick = document.createElement("div");
+      tick.className = "tick" + (i % 5 === 0 ? " big" : "");
+      tick.style.transform = `rotate(${i * 6}deg)`;
+      clock.appendChild(tick);
+    }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const hourHand = document.getElementById("hour");
+    const minuteHand = document.getElementById("minute");
+    const secondHand = document.getElementById("second");
 
-            // Fondo
-            const bgGrad = ctx.createRadialGradient(R, R, 0, R, R, RADIUS + 10);
-            bgGrad.addColorStop(0, '#2a2a4a');
-            bgGrad.addColorStop(0.85, '#1e1e3a');
-            bgGrad.addColorStop(1, '#12122a');
-            ctx.beginPath();
-            ctx.arc(R, R, RADIUS + 10, 0, Math.PI * 2);
-            ctx.fillStyle = bgGrad;
-            ctx.fill();
+    function updateClock() {
+      const now = new Date();
 
-            // Borde
-            ctx.beginPath();
-            ctx.arc(R, R, RADIUS + 10, 0, Math.PI * 2);
-            ctx.strokeStyle = '#3a3a6a';
-            ctx.lineWidth = 3;
-            ctx.stroke();
+      const milliseconds = now.getMilliseconds();
+      const seconds = now.getSeconds() + milliseconds / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
 
-            // Marcas de minutos
-            for (let i = 0; i < 60; i++) {
-                const angle = (i * 6 - 90) * Math.PI / 180;
-                const isHour = i % 5 === 0;
-                const outerR = RADIUS - 5;
-                const innerR = isHour ? RADIUS - 28 : RADIUS - 15;
+      const secondDeg = seconds * 6;
+      const minuteDeg = minutes * 6;
+      const hourDeg = hours * 30;
 
-                ctx.beginPath();
-                ctx.moveTo(R + Math.cos(angle) * innerR, R + Math.sin(angle) * innerR);
-                ctx.lineTo(R + Math.cos(angle) * outerR, R + Math.sin(angle) * outerR);
+      secondHand.style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+      minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+      hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
 
-                if (isHour) {
-                    ctx.strokeStyle = '#c0c0e0';
-                    ctx.lineWidth = 3;
-                } else {
-                    ctx.strokeStyle = '#505080';
-                    ctx.lineWidth = 1;
-                }
-                ctx.lineCap = 'round';
-                ctx.stroke();
-            }
+      requestAnimationFrame(updateClock);
+    }
 
-            // Números
-            ctx.fillStyle = '#d0d0f0';
-            ctx.font = 'bold 22px "Segoe UI", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            for (let i = 1; i <= 12; i++) {
-                const angle = (i * 30 - 90) * Math.PI / 180;
-                const numR = RADIUS - 48;
-                const x = R + Math.cos(angle) * numR;
-                const y = R + Math.sin(angle) * numR;
-                ctx.fillText(i, x, y);
-            }
-
-            // Agujas
-            function drawHand(hourFraction, length, width, color, shadowColor) {
-                const angle = (hourFraction * 30 - 90) * Math.PI / 180;
-                const endX = R + Math.cos(angle) * length;
-                const endY = R + Math.sin(angle) * length;
-                const tailX = R - Math.cos(angle) * 20;
-                const tailY = R - Math.sin(angle) * 20;
-
-                ctx.save();
-                ctx.shadowColor = shadowColor || 'transparent';
-                ctx.shadowBlur = 8;
-                ctx.beginPath();
-                ctx.moveTo(tailX, tailY);
-                ctx.lineTo(endX, endY);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = width;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            drawHand(smoothH, RADIUS * 0.5, 6, '#e0e0f0', 'rgba(100,100,200,0.3)');
-            drawHand(smoothM, RADIUS * 0.72, 4, '#c0c0e0', 'rgba(100,100,200,0.3)');
-            drawHand(smoothS, RADIUS * 0.82, 2, '#ff4060', 'rgba(255,60,80,0.5)');
-
-            // Centro
-            ctx.beginPath();
-            ctx.arc(R, R, 7, 0, Math.PI * 2);
-            const ctrGrad = ctx.createRadialGradient(R - 2, R - 2, 0, R, R, 7);
-            ctrGrad.addColorStop(0, '#ff6080');
-            ctrGrad.addColorStop(1, '#cc2040');
-            ctx.fillStyle = ctrGrad;
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(R, R, 3, 0, Math.PI * 2);
-            ctx.fillStyle = '#fff';
-            ctx.fill();
-
-            // Digital
-            const hh = String(now.getHours()).padStart(2, '0');
-            const mm = String(m).padStart(2, '0');
-            const ss = String(s).padStart(2, '0');
-            digital.textContent = `${hh} : ${mm} : ${ss}`;
-
-            requestAnimationFrame(drawClock);
-        }
-
-        drawClock();
-    </script>
+    updateClock();
+  </script>
 </body>
 </html>
-```
