@@ -1,6 +1,371 @@
 h1:focus {
     outline: none;
 }
+:root {
+    --agenda-fondo: #f5f6f8;
+    --agenda-panel: #ffffff;
+    --agenda-borde: #e5e7eb;
+    --agenda-texto: #111827;
+    --agenda-secundario: #6b7280;
+    --agenda-azul: #0d6efd;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--agenda-fondo);
+    color: var(--agenda-texto);
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+button,
+input,
+textarea {
+    font: inherit;
+}
+.encabezado-agenda {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin: 1rem;
+    padding: 1.75rem 2rem;
+    background: var(--agenda-panel);
+    border: 1px solid var(--agenda-borde);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+.encabezado-agenda h1 {
+    margin: 0;
+    font-size: clamp(2rem, 3vw, 2.7rem);
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+.encabezado-agenda p {
+    margin: 0.35rem 0 0;
+    color: var(--agenda-secundario);
+    font-size: 1.08rem;
+}
+.boton-principal,
+.acciones-superiores .btn,
+.pie-formulario .btn {
+    min-height: 3rem;
+    padding-inline: 1.2rem;
+    border-radius: 6px;
+    font-weight: 700;
+}
+.boton-principal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    box-shadow: 0 6px 16px rgba(13, 110, 253, 0.24);
+}
+.contenedor-agenda {
+    display: grid;
+    grid-template-columns: minmax(280px, 410px) 1fr;
+    gap: 1rem;
+    margin: 0 1rem 1rem;
+}
+.panel-maestro,
+.panel-detalle {
+    background: var(--agenda-panel);
+    border: 1px solid var(--agenda-borde);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+.panel-maestro {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 11rem);
+    max-height: calc(100vh - 11rem);
+    padding: 1rem;
+}
+.buscador {
+    position: relative;
+    flex: 0 0 auto;
+    margin-bottom: 1rem;
+}
+.buscador i {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+    color: #374151;
+    font-size: 1.15rem;
+}
+.buscador input {
+    width: 100%;
+    height: 3.25rem;
+    padding: 0 1rem 0 3.2rem;
+    border: 1px solid #d6d9de;
+    border-radius: 6px;
+    outline: none;
+    color: var(--agenda-texto);
+    background: #ffffff;
+}
+.buscador input:focus {
+    border-color: var(--agenda-azul);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+.lista-contactos {
+    overflow-y: auto;
+    padding-right: 0.35rem;
+}
+.item-contacto {
+    display: grid;
+    grid-template-columns: 3.35rem 1fr;
+    align-items: center;
+    width: 100%;
+    min-height: 5.2rem;
+    padding: 0.75rem 0.85rem;
+    border: 0;
+    border-bottom: 1px solid #edf0f3;
+    border-left: 3px solid transparent;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+}
+.item-contacto:hover,
+.item-contacto.activo {
+    background: #eef6ff;
+}
+.item-contacto.activo {
+    border-left-color: var(--agenda-azul);
+}
+.resumen-contacto {
+    min-width: 0;
+}
+.resumen-contacto strong,
+.resumen-contacto small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.resumen-contacto strong {
+    font-size: 1.08rem;
+}
+.resumen-contacto small {
+    margin-top: 0.18rem;
+    color: #4b5563;
+    font-size: 0.98rem;
+}
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    color: #0b65c2;
+    font-weight: 800;
+}
+.avatar-grande {
+    width: 5.75rem;
+    height: 5.75rem;
+    font-size: 2rem;
+}
+.avatar-0 { background: #dbeafe; color: #0d6efd; }
+.avatar-1 { background: #dcfce7; color: #15803d; }
+.avatar-2 { background: #f3e8ff; color: #7e22ce; }
+.avatar-3 { background: #fef3c7; color: #b45309; }
+.avatar-4 { background: #fce7f3; color: #be185d; }
+.avatar-5 { background: #ccfbf1; color: #0f766e; }
+.avatar-6 { background: #e0e7ff; color: #4338ca; }
+.avatar-7 { background: #ffedd5; color: #c2410c; }
+.panel-detalle {
+    min-height: calc(100vh - 11rem);
+    padding: 2.2rem;
+}
+.cabecera-detalle {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1.75rem;
+}
+.titulo-detalle h2 {
+    margin: 0;
+    font-size: clamp(1.8rem, 2.4vw, 2.35rem);
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+.titulo-detalle p {
+    margin: 0.35rem 0;
+    color: #0b65c2;
+    font-size: 1.2rem;
+}
+.etiqueta-contacto {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.7rem;
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #0758a8;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.acciones-superiores {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+.acciones-superiores .btn,
+.pie-formulario .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+}
+.separador {
+    height: 1px;
+    margin: 1.7rem 0;
+    background: var(--agenda-borde);
+}
+.datos-contacto {
+    margin: 0;
+}
+.datos-contacto > div {
+    display: grid;
+    grid-template-columns: minmax(170px, 230px) 1fr;
+    gap: 1.2rem;
+    align-items: start;
+    min-height: 4.45rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--agenda-borde);
+}
+.datos-contacto dt {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    align-items: center;
+    margin: 0;
+    font-weight: 800;
+}
+.datos-contacto dt i {
+    color: #111827;
+    font-size: 1.25rem;
+}
+.datos-contacto dd {
+    margin: 0;
+    color: #374151;
+    font-size: 1.03rem;
+}
+
+.grilla-formulario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.35rem 1.6rem;
+}
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.campo label {
+    font-weight: 800;
+}
+.campo .form-control {
+    min-height: 3.1rem;
+    border-radius: 6px;
+}
+.campo-ancho {
+    grid-column: 1 / -1;
+}
+.area-notas {
+    min-height: 9.5rem;
+    resize: vertical;
+}
+.validation-message {
+    color: #dc3545;
+    font-weight: 600;
+}
+.pie-formulario {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--agenda-borde);
+}
+.confirmacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.confirmacion div {
+    display: flex;
+    gap: 0.5rem;
+}
+.estado-central,
+.sin-resultados {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    min-height: 10rem;
+    color: var(--agenda-secundario);
+    font-weight: 700;
+}
+@media (max-width: 900px) {
+    .encabezado-agenda {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 1.25rem;
+    }
+    .contenedor-agenda {
+        grid-template-columns: 1fr;
+    }
+    .panel-maestro,
+    .panel-detalle {
+        min-height: auto;
+        max-height: none;
+    }
+    .lista-contactos {
+        max-height: 28rem;
+    }
+    .cabecera-detalle {
+        grid-template-columns: auto 1fr;
+    }
+    .acciones-superiores {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+@media (max-width: 640px) {
+    .encabezado-agenda,
+    .contenedor-agenda {
+        margin-inline: 0.5rem;
+    }
+    .panel-detalle {
+        padding: 1.2rem;
+    }
+    .grilla-formulario,
+    .datos-contacto > div {
+        grid-template-columns: 1fr;
+    }
+    .datos-contacto > div {
+        gap: 0.35rem;
+    }
+    .boton-principal,
+    .acciones-superiores .btn,
+    .pie-formulario .btn {
+        width: 100%;
+    }
+    .pie-formulario,
+    .confirmacion {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .confirmacion div {
+        flex-direction: column;
+    }
+}
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
