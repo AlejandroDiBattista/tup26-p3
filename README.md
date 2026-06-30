@@ -75,7 +75,8 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
 63647   Paz, Valentina                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (no borro comentario)
 63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
-
+63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    20   10
+63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    25    7
 
 ## No implementa las herramientas (Recuperar)
 
@@ -91,16 +92,12 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 ## No compila (recuperar)
 
 > No compila (corregir)
-
 63234   Molina, Lázaro Exequiel          🟢🟢🟢🟢🟢🟠   🟢⚪   No    27   10  No compila
 
 ## No presentaron (recuperar)
 
 > No presentaron (presenta para promocionar)
-
-63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🔴   🟢⚪   No    20   10
-63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🔴   🟢⚪   No    25    7
-63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🔴   🟢⚪   No    26    8
+63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🟠   🟢⚪   No    26    8
 
 
 ## No presentaron 

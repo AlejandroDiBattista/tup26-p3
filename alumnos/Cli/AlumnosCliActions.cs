@@ -897,7 +897,7 @@ static class AlumnosCliActions {
                 .Title($"[bold cyan]Ejecutar TP{numeroTp}[/] · Elegí el alumno\n[grey]{presentados.Count} alumno(s) con TP{numeroTp} presentado[/]")
                 .EnableSearch()
                 .WrapAround(true)
-                .PageSize(30)
+                .PageSize(60)
                 .UseConverter(opcion => opcion.Alumno is null
                     ? "[grey]Volver al menú principal[/]"
                     : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")

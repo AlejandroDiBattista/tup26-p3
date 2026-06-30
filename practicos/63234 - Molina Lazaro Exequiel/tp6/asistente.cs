@@ -186,7 +186,22 @@ Window CrearInterfaz(IApplication aplicacionActiva, out TextField campoTextoOut)
 
 public class HerramientasArchivos
 {
-    // LeerArchivo
-    // EscribirArchivo
-    // ListarArchivos
+     public string LeerArchivo(string ruta)
+{
+    if (!File.Exists(ruta))
+        return $"Error: el archivo '{ruta}' no existe.";
+    return File.ReadAllText(ruta);
+}
+
+public void EscribirArchivo(string ruta, string contenido)
+{
+    File.WriteAllText(ruta, contenido);
+}
+
+public string ListarArchivos(string ruta)
+{
+    if (!Directory.Exists(ruta))
+        return $"Error: el directorio '{ruta}' no existe.";
+    return string.Join("\n", Directory.GetFileSystemEntries(ruta).Select(Path.GetFileName));
+}
 }
