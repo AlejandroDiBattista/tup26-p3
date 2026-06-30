@@ -220,7 +220,9 @@ static ConfiguracionIA CargarConfiguracion(string[] args)
         throw new InvalidOperationException($"Falta configurar la variable {proveedor}_API_URL.");
     }
 
-    if (!Uri.TryCreate(url, UriKind.Absolute, out var endpoint))
+    var urlBase = NormalizarUrlBase(url);
+
+    if (!Uri.TryCreate(urlBase, UriKind.Absolute, out var endpoint))
     {
         throw new InvalidOperationException($"La variable {proveedor}_API_URL no contiene una URL valida.");
     }
@@ -352,4 +354,14 @@ static string ResolverRutaProyecto(string ruta)
     return rutaCompleta;
 }
 
+
+static string NormalizarUrlBase(string url)
+{
+    var urlLimpia = url.Trim().TrimEnd('/');
+    const string sufijoChat = "/chat/completions";
+
+    return urlLimpia.EndsWith(sufijoChat, StringComparison.OrdinalIgnoreCase)
+        ? urlLimpia[..^sufijoChat.Length]
+        : urlLimpia;
+}
 record ConfiguracionIA(string Proveedor, Uri Endpoint, string ApiKey, string Modelo);
