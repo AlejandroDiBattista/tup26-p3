@@ -1,0 +1,96 @@
+@rendermode InteractiveServer
+
+@code{
+    [Parameter]
+    public Contacto Contacto { get; set; } = new();
+
+    [Parameter]
+    public string Titulo { get; set; } = "";
+
+    [Parameter]
+    public string ClaseBoton { get; set; } = "btn btn-success";
+
+    [Parameter]
+    public EventCallback OnGuardar { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancelar { get; set; }
+    
+    // --- ESTILOS ------
+    string inputEstilo => "form-control border border-primary text-black";
+    string div2 => "p-3 rounded-3";
+    string div3 => "col-md-6";
+}
+
+<EditForm Model="@Contacto" 
+OnValidSubmit="@(async () => await OnGuardar.InvokeAsync(Contacto))">
+    <DataAnnotationsValidator />
+
+@* Titulo  *@
+    <div class="d-flex justify-content-between  align-items-center mb-4">
+
+        <h2 class="text-black mb-0">@Titulo</h2>
+    </div>
+
+@* Formulario entero *@
+    <div class="row g-3 text-black ">
+        <div class="@div3">
+            <div class=" @div2 ">
+                <strong>Nombre:</strong>
+                <input type="text" class="@inputEstilo " @bind="Contacto.Nombre" placeholder="Ej: Juan" />
+                <ValidationMessage For="() => Contacto.Nombre" class="text-danger small mt-1" />
+            </div>
+        </div>
+        <div class="@div3">
+            <div class=" @div2 ">
+                <strong>Apellido:</strong>
+                <input type="text" class="@inputEstilo " @bind="Contacto.Apellido" placeholder="Ej: Perez" />
+                <ValidationMessage For="() => Contacto.Apellido" class="text-danger small mt-1" />
+            </div>
+        </div>
+        <div class="@div3">
+            <div class=" @div2 ">
+                <strong>Teléfono:</strong>
+                <input type="text" class="@inputEstilo " @bind="Contacto.Telefono" placeholder="Ej: 264-155-1234" />
+                <ValidationMessage For="() => Contacto.Telefono" class="text-danger small mt-1" />
+            </div>
+        </div>
+        <div class="@div3">
+            <div class=" @div2 ">
+                <strong>Email:</strong>
+                <input type="email" class="@inputEstilo " @bind="Contacto.Email" placeholder="Ej: juan@gmail.com" />
+                <ValidationMessage For="() => Contacto.Email" class="text-danger small mt-1" />
+            </div>
+        </div>
+        <div class="@div3">
+            <div class=" @div2 ">
+                <strong>Empresa:</strong>
+                <input type="text" class="@inputEstilo " @bind="Contacto.Empresa" placeholder="Ej: YPF" />
+            </div>
+        </div>
+        <div class="@div3">
+            <div class=" @div2 ">
+                <strong>Cargo:</strong>
+                <input type="text" class="@inputEstilo " @bind="Contacto.Cargo" placeholder="Ej: Ingeniero" />
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class=" @div2 ">
+                <strong>Dirección:</strong>
+                <input type="text" class="@inputEstilo" @bind="Contacto.Direccion" placeholder="Ej: Calle Falsa 123" />
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class=" @div2 ">
+                <strong>Notas:</strong>
+                <input class="@inputEstilo" @bind="Contacto.Notas" />
+            </div>
+        </div>
+    </div>
+
+@* Botones finales *@
+    <div class="d-flex justify-content-end mt-4 gap-3">
+        <button type="button" class="btn border border-black" @onclick="OnCancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary px-4">Guardar</button>
+    </div>
+</EditForm>

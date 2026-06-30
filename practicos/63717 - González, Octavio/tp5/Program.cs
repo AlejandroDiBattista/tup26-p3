@@ -25,6 +25,4 @@ using (var scope = app.Services.CreateScope())
     repo.Iniciar();
 }
 
-app.ContactoEndpoint();
-
 app.Run();

@@ -1,5 +1,4 @@
 @page "/"
-@using Microsoft.VisualBasic
 @rendermode InteractiveServer
 @inject Repositorio Repositorio
 
@@ -18,7 +17,7 @@
     
 
     <!-- Cuerpo Principal (Maestro-Detalle) -->
-    <div class="d-flex flex-grow-1 w-100  gap-3 p-2 overflow-hidden" ">
+    <div class="d-flex flex-grow-1 w-100  gap-3 p-2 overflow-hidden">
 
 
         <!-- Maestro (Sidebar) -->
@@ -30,16 +29,16 @@
                     @bind="textoBusqueda" @bind:event="oninput">
             </div>
 
-            <div class="container w-100 flex-grow-1 overflow-y-auto ">
+            <div class="w-100 flex-grow-1 overflow-y-auto d-flex flex-column gap-2 ">
                 @foreach (var contacto in contactosFiltrados)
                 {
                     <button class="btn btn-outline-primary border-white  text-dark text-start w-100 
                     @(contacto == Contactoseleccionado ? "active" : "") " style="cursor:pointer;" @onclick=" () => MostrarDetalle(contacto)">
                         <div class="d-flex flex-row gap-3">
                             <i class="bi bi-person-circle ms-2" style="font-size: 2rem;"></i>
-                            <div class = "text-truncate" style="height: 75px">
-                                <h6 >@contacto.Nombre @contacto.Apellido</h6>
-                                <p>@contacto.Empresa</p>
+                            <div class = "text-truncate overflow-x-hidden" style="height: 75px">
+                                <h6 class = "text-truncate">@contacto.Nombre @contacto.Apellido</h6>
+                                <p class = "text-truncate">@contacto.Empresa</p>
                             </div>
                         </div>
                     </button>
@@ -50,222 +49,103 @@
         <!-- Detalle -->
         <main class="card flex-grow-1  p-3 rounded-5 overflow-y-auto">
 
-            @if (agregar)
+            <!-- Agregar -->
+            @if (agregar && Contactoseleccionado == null)
             {
-                <EditForm Model="nuevoContacto" OnValidSubmit="() => CrearContacto(nuevoContacto)">
-                    <DataAnnotationsValidator />
-
-                    <div class="d-flex justify-content-between  align-items-center mb-4">
-
-                        <h2 class="text-black mb-0">Agregar nuevo contacto</h2>
-                    </div>
-
-                    <div class="row g-3 text-black ">
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Nombre:</strong>
-                                <input type="text" class="form-control border border-primary text-black " @bind="nuevoContacto.Nombre"
-                                       placeholder="Ej: Juan" />
-                                <ValidationMessage For="() => nuevoContacto.Nombre" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Apellido:</strong>
-                                <input type="text" class="form-control border border-primary text-black " @bind="nuevoContacto.Apellido"
-                                       placeholder="Ej: Perez" />
-                                <ValidationMessage For="() => nuevoContacto.Apellido" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Teléfono:</strong>
-                                <input type="text" class="form-control border border-primary text-black " @bind="nuevoContacto.Telefono"
-                                       placeholder="Ej: 264-155-1234" />
-                                <ValidationMessage For="() => nuevoContacto.Telefono" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Email:</strong>
-                                <input type="email" class="form-control border border-primary text-black " @bind="nuevoContacto.Email"
-                                       placeholder="Ej: juan@gmail.com" />
-                                <ValidationMessage For="() => nuevoContacto.Email" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Empresa:</strong>
-                                <input type="text" class="form-control border border-primary text-black " @bind="nuevoContacto.Empresa"
-                                       placeholder="Ej: YPF" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Cargo:</strong>
-                                <input type="text" class="form-control border border-primary text-black " @bind="nuevoContacto.Cargo"
-                                       placeholder="Ej: Ingeniero" />
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Dirección:</strong>
-                                <input type="text" class="form-control border border-primary text-black" @bind="nuevoContacto.Direccion"
-                                       placeholder="Ej: Calle Falsa 123" />
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class=" p-3 rounded-3 ">
-                                <strong>Notas:</strong>
-                                <input class="form-control border border-primary text-black" @bind="nuevoContacto.Notas" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end mt-4 gap-3">
-                        <button type="button" class="btn border border-black" @onclick="Ocultar">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">Guardar</button>
-                    </div>
-                </EditForm>
+                <Formulario
+                Contacto = "@nuevoContacto"
+                Titulo="Agregar nuevo contacto"
+                OnGuardar = "Guardar"
+                OnCancelar = "Ocultar"
+                />
             }
-            else if (editar !=false  && Contactoseleccionado != null)
+            
+            @* editar *@
+
+            else if (editar && Contactoseleccionado != null)
             {
-                <EditForm Model="Contactoseleccionado" OnValidSubmit="() => EditarContacto(Contactoseleccionado)">
-                    <DataAnnotationsValidator />
-
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="text-black">Editar contacto</h2>
-                        <button type="button" class="btn btn-secondary" @onclick=" () => editar = false">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-success px-4">Guardar</button>
-                        
-                    </div>
-
-                    <div class="row g-3 text-black">
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">
-                                    Nombre:
-                                </label>
-                                <input type="text" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Nombre" />
-                                <ValidationMessage For="() => Contactoseleccionado.Nombre" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Apellido:</label>
-                                <input type="text" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Apellido" />
-                                <ValidationMessage For="() => Contactoseleccionado.Apellido"
-                                                   class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Teléfono:</label>
-                                <input type="text" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Telefono" />
-                                <ValidationMessage For="() => Contactoseleccionado.Telefono"
-                                                   class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Email:</label>
-                                <input type="email" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Email" />
-                                <ValidationMessage For="() => Contactoseleccionado.Email" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Empresa:</label>
-                                <input type="text" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Empresa" />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Cargo:</label>
-                                <input type="text" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Cargo" />
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Dirección:</label>
-                                <input type="text" class="form-control  text-black"
-                                       @bind="Contactoseleccionado.Direccion" />
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <div class=" p-3 rounded-3">
-                                <label class="form-label text-muted small mb-1">Notas:</label>
-                                <input class="form-control  text-black" @bind="Contactoseleccionado.Notas" />
-                            </div>
-                        </div>
-                    </div>
-
-                </EditForm>
+                <Formulario
+                Contacto = "@Contactoseleccionado"
+                Titulo="Editar contacto"
+                OnGuardar = "Guardar"
+                OnCancelar = "() => editar=false"
+                />
             }
-            else if (Contactoseleccionado != null && detalle == true)
+            @* detalle  *@
+            else if (!editar && Contactoseleccionado != null )
             {
                 <div class="card  bg-transparent text-black">
                     <div class="card-body p-0">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2>@Contactoseleccionado.Nombre @Contactoseleccionado.Apellido</h2>
+                        <div class="d-flex justify-content-between align-items-center m-2 py-3 ">
+                            <h2 class = "ms-3">@Contactoseleccionado.Nombre @Contactoseleccionado.Apellido</h2>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-warning text-black" @onclick=" () => editar = true">
                                     <i class="bi bi-pencil-square"></i> Editar
                                 </button>
-                                <button class="btn btn-danger" @onclick="() => EliminarContacto(Contactoseleccionado.Id)">
+                                <button class="btn btn-danger" @onclick=" () => EliminarContacto(Contactoseleccionado.Id)">
                                     <i class="bi bi-trash"></i> Eliminar
                                 </button>
                             </div>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class=" p-3 rounded-3">
-                                    <span class="text-muted d-block small">Teléfono</span>
-                                    <strong>@Contactoseleccionado.Telefono</strong>
+                        <Linea/>
+                        <div>
+                            <div class="col-md-6 ">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    <span class="d-block" style="@tamañoi">Teléfono</span>
+                                    <p>@Contactoseleccionado.Telefono</p>
                                 </div>
                             </div>
+
+                        <Linea/>
                             <div class="col-md-6">
-                                <div class=" p-3 rounded-3">
-                                    <span class="text-muted d-block small">Email</span>
-                                    <strong>@Contactoseleccionado.Email</strong>
+                                <div class="@estilocelda">
+                                    <i class="bi bi-envelope-fill"></i>
+                                    <span class="d-block" style="@tamañoi">Email</span>
+                                    <a href="mailto:@Contactoseleccionado.Email">@Contactoseleccionado.Email</a>
                                 </div>
                             </div>
+                        <Linea/>
                             <div class="col-md-6">
-                                <div class=" p-3 rounded-3">
-                                    <span class="text-muted d-block small">Empresa</span>
-                                    <strong>@Contactoseleccionado.Empresa</strong>
+                                <div class="@estilocelda">
+                                    <i class="bi bi-building"></i>
+                                    <span class="d-block" style="@tamañoi">Empresa</span>
+                                    <p>@Contactoseleccionado.Empresa</p>
                                 </div>
                             </div>
+                        <Linea/>
                             <div class="col-md-6">
-                                <div class=" p-3 rounded-3">
-                                    <span class="text-muted d-block small">Cargo</span>
-                                    <strong>@Contactoseleccionado.Cargo</strong>
+                                <div class="@estilocelda">
+                                    <i class="bi bi-briefcase"></i>
+                                    <span class="d-block" style="@tamañoi">Cargo</span>
+                                    <p>@Contactoseleccionado.Cargo</p>
                                 </div>
                             </div>
+                        <Linea/>
+                            <div class="col-md-6">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span class="d-block" style="@tamañoi">Dirección</span>
+                                    <p>@Contactoseleccionado.Direccion</p>
+                                </div>
+                            </div>
+                        <Linea/>
                             <div class="col-md-12">
-                                <div class=" p-3 rounded-3">
-                                    <span class="text-muted d-block small">Dirección</span>
-                                    <strong>@Contactoseleccionado.Direccion</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class=" p-3 rounded-3">
-                                    <span class="text-muted d-block small">Notas</span>
+                                <div class="@estilocelda">
+                                    <i class="bi bi-sticky"></i>
+                                    <span class="d-block" style="@tamañoi">Notas</span>
                                     <p class="mb-0">@Contactoseleccionado.Notas</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                @code {
+                string estilocelda = "p-3 rounded-3 d-flex flex-row gap-3 align-items-center";
+                string tamañoi = "width: 85px";
+                }
             }
+            
             else
             {
                 <div class="d-flex justify-content-center align-items-center h-100">
@@ -279,52 +159,41 @@
 
 
 @code {
-
-
-    //Metodos
     List<Contacto> contactos = new List<Contacto>();
     Contacto? Contactoseleccionado = null;
     string textoBusqueda = "";
-    bool detalle = false; 
+    bool editar, agregar = false;
     List<Contacto> contactosFiltrados => string.IsNullOrWhiteSpace(textoBusqueda)
         ? contactos
         : contactos.Where(c => c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
                             || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            contactos = await Repositorio.TraerContactos();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"{ex.Message}");
-        }
-    }
+    protected override async Task OnInitializedAsync() => 
+    contactos = await Repositorio.TraerContactos();
     Contacto nuevoContacto = new Contacto();
 
-    async Task MostrarDetalle(Contacto c)
+    void MostrarDetalle(Contacto c)
     {
         Contactoseleccionado = c;
-        agregar = false;
         editar = false;
-        detalle = true; 
-    }
-    async Task CrearContacto(Contacto c)
-    {
-        await Repositorio.AgregarContacto(c);
-        contactos = await Repositorio.TraerContactos();
-        nuevoContacto = new Contacto();
-        Ocultar();
+        agregar = false; 
     }
 
-    bool editar = false;
-    async Task EditarContacto(Contacto c)
+    async Task Guardar()
     {
-        await Repositorio.Actualizar(c);
+        if (editar && Contactoseleccionado != null)
+        {
+            await Repositorio.Actualizar(Contactoseleccionado);
+            editar = false;
+        }
+        else
+        {
+           var creado = await Repositorio.AgregarContacto(nuevoContacto);
+            nuevoContacto = new Contacto();
+            Ocultar();
+            Contactoseleccionado = creado; 
+        }
         contactos = await Repositorio.TraerContactos();
-        editar = false;
     }
 
     async Task EliminarContacto(int id)
@@ -335,16 +204,12 @@
         editar = false;
     }
 
-
-    bool agregar = false;
-    void Mostrar()
+    void Mostrar () 
     {
+        editar = false ; 
         agregar = true;
-    }
-    void Ocultar()
-    {
-        agregar = false;
-        editar = false;
-        detalle = false;
-    }
+        Contactoseleccionado = null; 
+    } 
+        
+    void Ocultar() => editar = agregar = false; 
 }
