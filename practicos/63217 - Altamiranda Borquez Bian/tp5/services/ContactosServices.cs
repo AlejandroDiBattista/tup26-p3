@@ -1,4 +1,4 @@
-using Microsoft.EntipyFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using tp5.Data;
 using tp5.Models;
 namespace tp5.Services;

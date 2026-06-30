@@ -1,4 +1,4 @@
-using Microsoft.EntipyFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using tp5.Components;
 using tp5.Data;
 using tp5.Services;
@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-builder.Services.AddDbContextFactory<AppDbContext>(options =>
+builder.Services.AddDbContextFactory<AgendaDbContext>(options =>
     options.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "contactos.db")}")
 );
 builder.Services.AddScoped<ServicioContactos>(); 
