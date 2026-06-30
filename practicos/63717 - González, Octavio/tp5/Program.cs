@@ -1,14 +1,12 @@
 using tp5.Components;
 using Microsoft.EntityFrameworkCore;
 using tp5.Models;
-using BlazorBlueprint.Components;
 
 //pasos: configuracion --inicilizacion bd - endpoints - modelo - dbcontext -- repositorio.
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddBlazorBlueprintComponents();
 builder.Services.AddDbContextFactory<ContactoDb>(opciones => opciones.UseSqlite("Data Source=contactos.db"));
 builder.Services.AddScoped<Repositorio>();
 

@@ -32,10 +32,13 @@
             <div class="w-100 flex-grow-1 overflow-y-auto d-flex flex-column gap-2 ">
                 @foreach (var contacto in contactosFiltrados)
                 {
-                    <button class="btn btn-outline-primary border-white  text-dark text-start w-100 
-                    @(contacto == Contactoseleccionado ? "active" : "") " style="cursor:pointer;" @onclick=" () => MostrarDetalle(contacto)">
+                    <button class="btn btn-outline-primary border-white cursor-pointer text-dark text-start w-100 
+                    @(contacto == Contactoseleccionado ? "active" : "") "  @onclick=" () => MostrarDetalle(contacto)">
                         <div class="d-flex flex-row gap-3">
-                            <i class="bi bi-person-circle ms-2" style="font-size: 2rem;"></i>
+                            <div class="bg-danger text-white d-flex align-items-center justify-content-center rounded-circle fw-semibold "
+                                 style="width: 45px; height: 45px; font-size: 1rem; flex-shrink: 0;">
+                                @ObtenerIniciales(contacto.Nombre, contacto.Apellido)
+                            </div>
                             <div class = "text-truncate overflow-x-hidden" style="height: 75px">
                                 <h6 class = "text-truncate">@contacto.Nombre @contacto.Apellido</h6>
                                 <p class = "text-truncate">@contacto.Empresa</p>
@@ -68,7 +71,7 @@
                 Contacto = "@Contactoseleccionado"
                 Titulo="Editar contacto"
                 OnGuardar = "Guardar"
-                OnCancelar = "() => editar=false"
+                OnCancelar = "@( () => editar=false )"
                 />
             }
             @* detalle  *@
@@ -140,10 +143,6 @@
                         </div>
                     </div>
                 </div>
-                @code {
-                string estilocelda = "p-3 rounded-3 d-flex flex-row gap-3 align-items-center";
-                string tamañoi = "width: 85px";
-                }
             }
             
             else
@@ -159,19 +158,44 @@
 
 
 @code {
+    //-- Estilo simplificado--
+    string estilocelda = "p-3 rounded-3 d-flex flex-row gap-3 align-items-center";
+    string tamañoi = "width: 85px";
+
+
+
+    //-- Logica 
     List<Contacto> contactos = new List<Contacto>();
     Contacto? Contactoseleccionado = null;
     string textoBusqueda = "";
     bool editar, agregar = false;
+
+    bool Contiene (string textoOriginal, string textoBusqueda)
+    {
+        if (textoOriginal == null ) return false;
+        return
+        CultureInfo.InvariantCulture.CompareInfo.
+        IndexOf(textoOriginal, textoBusqueda, 
+        CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
+
+    }
+
     List<Contacto> contactosFiltrados => string.IsNullOrWhiteSpace(textoBusqueda)
         ? contactos
-        : contactos.Where(c => c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
-                            || c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+        : contactos.Where(c => Contiene(c.Nombre, textoBusqueda) || 
+        Contiene(c.Apellido, textoBusqueda)).ToList(); 
 
     protected override async Task OnInitializedAsync() => 
     contactos = await Repositorio.TraerContactos();
     Contacto nuevoContacto = new Contacto();
 
+    string ObtenerIniciales (string nombre, string apellido)
+    {
+        string inicial = ""; 
+        inicial += nombre [0]; 
+        inicial += apellido [0];
+        return inicial;
+    }
     void MostrarDetalle(Contacto c)
     {
         Contactoseleccionado = c;
