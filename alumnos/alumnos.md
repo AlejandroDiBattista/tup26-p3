@@ -5,7 +5,7 @@
 Legajo  Nombre y Apellido               Teléfono        GitHub                     Prácticos    Exm   Prs   Ast  Nta  Recuperación      Observaciones
 ------  ------------------------------  -------------   -------------------------  ----------   ----  ---   ---  ---  ----------------  ------------------------
 63456   Ávila Lahr, Joaquín             (381)527-6836   joacoavila9                🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  01/07/2026 10:00
-63415   Chávez, Lucas Francisco         (381)301-3490   lucaschavez10lc-ai         🔴🔴🔴🔴🟡🟢   🟢⚪   No    17    8  —                 R2
+63415   Chávez, Lucas Francisco         (381)301-3490   lucaschavez10lc-ai         🔴🔴🔴🔴🔴🔴   🟢⚪   No    17    8  —                 R2
 63268   Condori, Karina Edith           (381)412-4723   kariiedith9315             🟢🟢🟢🟢🟢🟢   🟢⚪   No     9    1  01/07/2026 12:00
 63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  01/07/2026 10:00
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  01/07/2026 10:20

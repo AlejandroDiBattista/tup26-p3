@@ -5,6 +5,7 @@
   padding: 24px;
 }
 
+
 .agenda-page {
   width: min(1200px, 100%);
   min-height: min(860px, calc(100vh - 48px));
