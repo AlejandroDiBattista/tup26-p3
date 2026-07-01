@@ -36,7 +36,5 @@ public class AgendaDbContext : DbContext
     {
         var entity = modelBuilder.Entity<Contacto>();
         entity.ToTable("Contactos");
-        entity.Property(c => c.CorreoElectronico).HasColumnName("Email");
-
     }
 }
