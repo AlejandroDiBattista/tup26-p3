@@ -734,33 +734,49 @@ static class AlumnosCliActions {
                 return 0;
             }
 
-            Alumno? alumno = SeleccionarAlumnoRecuperacion(candidatos);
-            if (alumno is null) {
+            string? comision = SeleccionarComisionRecuperacion(candidatos);
+            if (comision is null) {
                 return 0;
             }
 
-            string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
-            if (!Directory.Exists(rutaPractico)) {
-                Log.Error($"No existe la carpeta del TP{numeroTp}: {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}");
-                EsperarParaVolverAListaRecuperacion();
-                continue;
-            }
+            while (true) {
+                Alumno[] candidatosComision = AlumnosRecuperacionPendiente(alumnos, numeroExamen)
+                    .Where(alumno => alumno.Comision == comision)
+                    .ToArray();
 
-            Log.Info($"Recuperación: {alumno.Recuperacion}");
-            Log.Info($"Abriendo VS Code en: {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}");
-            if (!AbrirVsCode(rutaPractico)) {
-                Log.Warning($"No se pudo abrir VS Code automáticamente. Abrí manualmente: {rutaPractico}");
-            }
+                if (candidatosComision.Length == 0) {
+                    Log.Warning($"No quedan alumnos con recuperación pendiente en {comision}.");
+                    break;
+                }
 
-            Estado? resultado = PedirResultadoRecuperacion(alumno);
-            if (resultado is null) {
-                Log.Warning("Resultado ignorado. No se modificó el estado del segundo parcial.");
-                continue;
-            }
+                Alumno? alumno = SeleccionarAlumnoRecuperacion(candidatosComision, comision);
+                if (alumno is null) {
+                    break;
+                }
 
-            alumno.Examen(numeroExamen, resultado.Value);
-            AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
-            Log.Success($"Segundo parcial actualizado para {alumno.Legajo} | {alumno.NombreCompleto}: {resultado.Value}.");
+                string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+                if (!Directory.Exists(rutaPractico)) {
+                    Log.Error($"No existe la carpeta del TP{numeroTp}: {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}");
+                    EsperarParaVolverAListaRecuperacion();
+                    continue;
+                }
+
+                Log.Info($"Recuperación: {alumno.Recuperacion}");
+                Log.Info($"Abriendo VS Code en: {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}");
+                if (!AbrirVsCode(rutaPractico)) {
+                    Log.Warning($"No se pudo abrir VS Code automáticamente. Abrí manualmente: {rutaPractico}");
+                }
+
+                Estado? resultado = PedirResultadoRecuperacion(alumno);
+                if (resultado is null) {
+                    Log.Warning("Resultado ignorado. No se modificó el estado del segundo parcial.");
+                    continue;
+                }
+
+                alumno.Examen(numeroExamen, resultado.Value);
+                AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
+                Log.Success($"Segundo parcial actualizado para {alumno.Legajo} | {alumno.NombreCompleto}: {resultado.Value}.");
+            }
         }
     }
 
@@ -961,29 +977,49 @@ static class AlumnosCliActions {
         return seleccion.Alumno;
     }
 
-    static Alumno? SeleccionarAlumnoRecuperacion(IReadOnlyList<Alumno> candidatos) {
-        OpcionAlumnoPractico volver = new(null, "Volver al menú principal", EsVolver: true);
+    static string? SeleccionarComisionRecuperacion(IReadOnlyList<Alumno> candidatos) {
+        OpcionComisionRecuperacion volver = new(null, 0, EsVolver: true);
+        List<OpcionComisionRecuperacion> opciones = [
+            .. candidatos
+                .GroupBy(alumno => alumno.Comision)
+                .OrderBy(grupo => grupo.Key)
+                .Select(grupo => new OpcionComisionRecuperacion(grupo.Key, grupo.Count())),
+            volver
+        ];
+
+        OpcionComisionRecuperacion seleccion = AnsiConsole.Prompt(
+            new SelectionPrompt<OpcionComisionRecuperacion>()
+                .Title($"[bold cyan]Defender parcial[/] · Elegí la comisión\n[grey]{candidatos.Count} alumno(s) con recuperación pendiente[/]")
+                .EnableSearch()
+                .WrapAround(true)
+                .PageSize(20)
+                .UseConverter(opcion => opcion.EsVolver
+                    ? "[grey]Volver al menú principal[/]"
+                    : $"[green]{Markup.Escape(opcion.Comision ?? string.Empty),-8}[/] [grey]{opcion.Cantidad} alumno(s) pendiente(s)[/]")
+                .AddCancelResult(volver)
+                .AddChoices(opciones));
+
+        return seleccion.Comision;
+    }
+
+    static Alumno? SeleccionarAlumnoRecuperacion(IReadOnlyList<Alumno> candidatos, string comision) {
+        OpcionAlumnoPractico volver = new(null, "Volver a comisiones", EsVolver: true);
         List<OpcionAlumnoPractico> opciones = [
             .. candidatos.Select(alumno => new OpcionAlumnoPractico(alumno)),
             volver
         ];
 
-        SelectionPrompt<OpcionAlumnoPractico> prompt = new SelectionPrompt<OpcionAlumnoPractico>()
-            .Title($"[bold cyan]Recuperación segundo parcial[/] · Elegí el alumno\n[grey]{candidatos.Count} alumno(s) con recuperación pendiente[/]")
-            .EnableSearch()
-            .WrapAround(true)
-            .PageSize(60)
-            .UseConverter(opcion => opcion.Alumno is null
-                ? opcion.EsVolver ? $"[grey]{Markup.Escape(opcion.Etiqueta ?? "Volver al menú principal")}[/]" : $"[yellow]{Markup.Escape(opcion.Etiqueta ?? string.Empty)}[/]"
-                : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] [cyan]{Markup.Escape(opcion.Alumno.Recuperacion),-16}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")
-            .AddCancelResult(volver);
-
-        foreach (IGrouping<string, OpcionAlumnoPractico> grupo in opciones.Where(opcion => opcion.Alumno is not null).GroupBy(opcion => opcion.Alumno!.Comision)) {
-            prompt.AddChoiceGroup(new OpcionAlumnoPractico(null, grupo.Key), grupo);
-        }
-        prompt.AddChoice(volver);
-
-        return AnsiConsole.Prompt(prompt).Alumno;
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<OpcionAlumnoPractico>()
+                .Title($"[bold cyan]Defender parcial · {Markup.Escape(comision)}[/] · Elegí el alumno\n[grey]{candidatos.Count} alumno(s) con recuperación pendiente[/]")
+                .EnableSearch()
+                .WrapAround(true)
+                .PageSize(60)
+                .UseConverter(opcion => opcion.Alumno is null
+                    ? $"[grey]{Markup.Escape(opcion.Etiqueta ?? "Volver a comisiones")}[/]"
+                    : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] [cyan]{Markup.Escape(opcion.Alumno.Recuperacion),-16}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")
+                .AddCancelResult(volver)
+                .AddChoices(opciones)).Alumno;
     }
 
     static Estado? PedirResultadoRecuperacion(Alumno alumno) {
@@ -1598,6 +1634,7 @@ static class AlumnosCliActions {
     sealed record EjecucionAlumnoResultado(Alumno Alumno, EjecucionPracticoResultado Ejecucion);
     sealed record CapturaPantallaAlumnoResultado(Alumno Alumno, CapturaPantallaResultado Captura);
     sealed record OpcionAlumnoPractico(Alumno? Alumno, string? Etiqueta = null, bool EsVolver = false);
+    sealed record OpcionComisionRecuperacion(string? Comision, int Cantidad, bool EsVolver = false);
     sealed record OpcionResultadoRecuperacion(string Command, string Label, string Description);
 
     readonly record struct CopiaDetectada(int LineasComunes, int MaximoLineas, double Porcentaje);
