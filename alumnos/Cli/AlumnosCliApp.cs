@@ -90,11 +90,16 @@ static class AlumnosCliApp {
 
             if (codigo != 0) { AnsiConsole.MarkupLine($"[red]El comando terminó con código {codigo}.[/]"); }
 
-            AnsiConsole.MarkupLine("[grey]Presioná una tecla para volver al menú...[/]");
-            Console.ReadKey(intercept: true);
+            if (!VuelveDirectoAlMenu(args)) {
+                AnsiConsole.MarkupLine("[grey]Presioná una tecla para volver al menú...[/]");
+                Console.ReadKey(intercept: true);
+            }
             AnsiConsole.Clear();
         }
     }
+
+    static bool VuelveDirectoAlMenu(string[] args) =>
+        args.Length > 0 && args[0] is "defender-parcial" or "revisar-recuperacion";
 
     static void MostrarComandoEnEjecucion(string[] args) {
         string descripcion = DescribirComando(args);

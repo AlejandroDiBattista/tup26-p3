@@ -39,7 +39,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 Legajo  Nombre y Apellido               Teléfono        GitHub                     Prácticos    Exm   Prs   Ast  Nta  Recuperación      Observaciones
 ------  ------------------------------  -------------   -------------------------  ----------   ----  ---   ---  ---  ----------------  ------------------------
 63385   Almaraz Sintora, Nahuel         (381)502-5082   nahuelalmaraz957-ops       🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  01/07/2026 08:00
-63217   Altamiranda Borquez, Bian       (381)581-3104   sofiaaltamiranda22         🟢🔴🔴🔴🟢🔴   🟢⚪   No    27    8  —                 R1
+63217   Altamiranda Borquez, Bian       (381)581-3104   sofiaaltamiranda22         🟢🔴🔴🔴🟢🟢   🟢⚪   No    27    8  —                 R1
 63300   Álvarez, Hernán Fabricio        (381)581-4086   hernancarpalvarez28        🟢🟢🟢🟢🟢🟢   🟢⚪   No    24   10  01/07/2026 08:00
 63313   Ávila Puntano, Benjamín         (381)329-6643   santiagobnj-avila-pun      🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  01/07/2026 08:20
 63222   Bajre Martínez, Julián          (381)351-9652   julianbajre-png            🟢🟢🟢🟢🟢🟢   🟢⚪   No    26    7  01/07/2026 08:20
@@ -70,7 +70,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63213   Marina Noguera, Morena Giovann  (381)354-0133   mmore-cloud                🟢🟢🟢🟢🟢🟢   🟢⚪   No    31    9  02/07/2026 09:20
 63494   Medina, Lourdes Natalia         (381)201-7153   lumedina23                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  02/07/2026 09:20
 63418   Miranda, Gonzalo Emanuel        (381)208-1031   gonzalomiranda456          🟢🟢🟢🟢🟢🟢   🟢⚪   No    25    7  02/07/2026 09:40
-63234   Molina, Lázaro Exequiel         (381)416-0720   lazaro2005-ml              🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  02/07/2026 09:40  no edita datos
+63234   Molina, Lázaro Exequiel         (381)416-0720   lazaro2005-ml              🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  02/07/2026 09:40  No edita datos
 63412   Morán, Facundo Martín           (381)301-0206   facumoran                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  02/07/2026 12:00
 63205   Navarro Aragón, Facundo         (381)466-6665   facundonavarroaragon       🔴🔴🔴🔴🔴🔴   🟢⚪   No    23   10  —
 63220   Pérez Del Rien, Valentina       (381)360-2873   vall19-git                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    32   10  02/07/2026 12:00
