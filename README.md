@@ -3,6 +3,7 @@
 Cada turno dura 20 minutos y puede incluir hasta 2 estudiantes.
 
 ### Cómo se calcula la nota final del parcial
+
 - 3 puntos si el TP5 funciona correctamente.
 - 3 puntos si el TP6 funciona correctamente.
 - 1 punto por cada consigna correctamente resuelta durante la defensa del parcial, hasta un máximo de 4 puntos.
@@ -60,8 +61,6 @@ Cada turno dura 20 minutos y puede incluir hasta 2 estudiantes.
 |           | 63266 - Decima, Juan Cruz             |
 | **09:40** | 63137 - Díaz, José Simón              |
 |           | 63737 - Galván, Rocío Julieta         |
-
-## Comisión 9
 
 ### Jueves 2 de julio
 
