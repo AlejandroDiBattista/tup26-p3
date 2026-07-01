@@ -1,0 +1,239 @@
+@page "/"
+@rendermode InteractiveServer
+@inject Repositorio Repositorio
+
+<div class="d-flex flex-column vh-100" style = "background-color: rgb(230, 229, 229);" >
+    <!-- Cabecera -->
+    
+    <nav class="d-flex m-2 justify-content-between align-items-center py-2 px-3 border-bottom  border-secondary bg-white rounded-1">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-journal-bookmark-fill me-2 text-black"></i>
+            <h3 class="text-black mb-0">AgendaBlazor</h3>
+        </div>
+        <button class="btn btn-outline-secondary text-black" type="button" @onclick="Mostrar">
+            <i class="bi bi-plus-circle"></i> Nuevo
+        </button>
+    </nav>
+    
+
+    <!-- Cuerpo Principal (Maestro-Detalle) -->
+    <div class="d-flex flex-grow-1 w-100  gap-3 p-2 overflow-hidden">
+
+
+        <!-- Maestro (Sidebar) -->
+        <div class="card col-3  p-3 rounded-5 d-flex flex-column overflow-hidden ">
+            <div class="position-sticky top-0 " style="z-index:10">
+
+                <input class="form-control mb-2" type="search"
+                    placeholder="Buscar contacto..."
+                    @bind="textoBusqueda" @bind:event="oninput">
+            </div>
+
+            <div class="w-100 flex-grow-1 overflow-y-auto d-flex flex-column gap-2 ">
+                @foreach (var contacto in contactosFiltrados)
+                {
+                    <button class="btn btn-outline-primary border-white cursor-pointer text-dark text-start w-100 
+                    @(contacto == Contactoseleccionado ? "active" : "") "  @onclick=" () => MostrarDetalle(contacto)">
+                        <div class="d-flex flex-row gap-3">
+                            <div class="bg-danger text-white d-flex align-items-center justify-content-center rounded-circle fw-semibold "
+                                 style="width: 45px; height: 45px; font-size: 1rem; flex-shrink: 0;">
+                                @ObtenerIniciales(contacto.Nombre, contacto.Apellido)
+                            </div>
+                            <div class = "text-truncate overflow-x-hidden" style="height: 75px">
+                                <h6 class = "text-truncate">@contacto.Nombre @contacto.Apellido</h6>
+                                <p class = "text-truncate">@contacto.Empresa</p>
+                            </div>
+                        </div>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Detalle -->
+        <main class="card flex-grow-1  p-3 rounded-5 overflow-y-auto">
+
+            <!-- Agregar -->
+            @if (agregar && Contactoseleccionado == null)
+            {
+                <Formulario
+                Contacto = "@nuevoContacto"
+                Titulo="Agregar nuevo contacto"
+                OnGuardar = "Guardar"
+                OnCancelar = "Ocultar"
+                />
+            }
+            
+            @* editar *@
+
+            else if (editar && Contactoseleccionado != null)
+            {
+                <Formulario
+                Contacto = "@Contactoseleccionado"
+                Titulo="Editar contacto"
+                OnGuardar = "Guardar"
+                OnCancelar = "@( () => editar=false )"
+                />
+            }
+            @* detalle  *@
+            else if (!editar && Contactoseleccionado != null )
+            {
+                <div class="card  bg-transparent text-black">
+                    <div class="card-body p-0">
+                        <div class="d-flex justify-content-between align-items-center m-2 py-3 ">
+                            <h2 class = "ms-3">@Contactoseleccionado.Nombre @Contactoseleccionado.Apellido</h2>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning text-black" @onclick=" () => editar = true">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </button>
+                                <button class="btn btn-danger" @onclick=" () => EliminarContacto(Contactoseleccionado.Id)">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                        <Linea/>
+                        <div>
+                            <div class="col-md-6 ">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    <span class="d-block" style="@tamañoi">Teléfono</span>
+                                    <p>@Contactoseleccionado.Telefono</p>
+                                </div>
+                            </div>
+
+                        <Linea/>
+                            <div class="col-md-6">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-envelope-fill"></i>
+                                    <span class="d-block" style="@tamañoi">Email</span>
+                                    <a href="mailto:@Contactoseleccionado.Email">@Contactoseleccionado.Email</a>
+                                </div>
+                            </div>
+                        <Linea/>
+                            <div class="col-md-6">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-building"></i>
+                                    <span class="d-block" style="@tamañoi">Empresa</span>
+                                    <p>@Contactoseleccionado.Empresa</p>
+                                </div>
+                            </div>
+                        <Linea/>
+                            <div class="col-md-6">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-briefcase"></i>
+                                    <span class="d-block" style="@tamañoi">Cargo</span>
+                                    <p>@Contactoseleccionado.Cargo</p>
+                                </div>
+                            </div>
+                        <Linea/>
+                            <div class="col-md-6">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span class="d-block" style="@tamañoi">Dirección</span>
+                                    <p>@Contactoseleccionado.Direccion</p>
+                                </div>
+                            </div>
+                        <Linea/>
+                            <div class="col-md-12">
+                                <div class="@estilocelda">
+                                    <i class="bi bi-sticky"></i>
+                                    <span class="d-block" style="@tamañoi">Notas</span>
+                                    <p class="mb-0">@Contactoseleccionado.Notas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            else
+            {
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <h1>Seleccione un contacto para ver el detalle.</h1>
+                </div>
+            }
+        </main>
+    </div>
+</div>
+
+
+
+@code {
+    //-- Estilo simplificado--
+    string estilocelda = "p-3 rounded-3 d-flex flex-row gap-3 align-items-center";
+    string tamañoi = "width: 85px";
+
+
+
+    //-- Logica 
+    List<Contacto> contactos = new List<Contacto>();
+    Contacto? Contactoseleccionado = null;
+    string textoBusqueda = "";
+    bool editar, agregar = false;
+
+    bool Contiene (string textoOriginal, string textoBusqueda)
+    {
+        if (textoOriginal == null ) return false;
+        return
+        CultureInfo.InvariantCulture.CompareInfo.
+        IndexOf(textoOriginal, textoBusqueda, 
+        CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
+
+    }
+
+    List<Contacto> contactosFiltrados => string.IsNullOrWhiteSpace(textoBusqueda)
+        ? contactos
+        : contactos.Where(c => Contiene(c.Nombre, textoBusqueda) || 
+        Contiene(c.Apellido, textoBusqueda)).ToList(); 
+
+    protected override async Task OnInitializedAsync() => 
+    contactos = await Repositorio.TraerContactos();
+    Contacto nuevoContacto = new Contacto();
+
+    string ObtenerIniciales (string nombre, string apellido)
+    {
+        string inicial = ""; 
+        inicial += nombre [0]; 
+        inicial += apellido [0];
+        return inicial;
+    }
+    void MostrarDetalle(Contacto c)
+    {
+        Contactoseleccionado = c;
+        editar = false;
+        agregar = false; 
+    }
+
+    async Task Guardar()
+    {
+        if (editar && Contactoseleccionado != null)
+        {
+            await Repositorio.Actualizar(Contactoseleccionado);
+            editar = false;
+        }
+        else
+        {
+           var creado = await Repositorio.AgregarContacto(nuevoContacto);
+            nuevoContacto = new Contacto();
+            Ocultar();
+            Contactoseleccionado = creado; 
+        }
+        contactos = await Repositorio.TraerContactos();
+    }
+
+    async Task EliminarContacto(int id)
+    {
+        await Repositorio.Eliminar(id);
+        contactos = await Repositorio.TraerContactos();
+        Contactoseleccionado = null;
+        editar = false;
+    }
+
+    void Mostrar () 
+    {
+        editar = false ; 
+        agregar = true;
+        Contactoseleccionado = null; 
+    } 
+        
+    void Ocultar() => editar = agregar = false; 
+}

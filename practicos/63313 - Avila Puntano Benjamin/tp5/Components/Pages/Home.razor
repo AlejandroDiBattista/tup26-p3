@@ -1,0 +1,194 @@
+@page "/"
+@rendermode InteractiveServer
+@using tp5.Models
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+
+<div class="container-fluid" style="height: 100vh; display: flex; flex-direction: column; padding: 1rem;">
+    <h4 class="mb-2">AgendaWeb</h4>
+    <div class="row flex-grow-1" style="overflow: hidden;">
+        <div class="col-md-4 d-flex flex-column" style="height: 100%;">
+            <input class="form-control mb-2" placeholder="Buscar..." @bind="busqueda" @bind:event="oninput" />
+            <button class="btn btn-success btn-sm mb-2" @onclick='() => Nav.NavigateTo("/nuevo")'>+ Nuevo</button>
+            <div class="list-group" style="overflow-y: auto; flex-grow: 1;">
+                @foreach (var c in ContactosFiltrados)
+                {
+                    <button class="list-group-item list-group-item-action @(seleccionado?.Id == c.Id ? "active" : "")"
+                            @onclick="() => SeleccionarContacto(c)">
+                        <div style="display:flex; align-items:center;">
+                            <div class="avatar">@c.Nombre[0]</div>
+                            <div>
+                                <strong>@c.Nombre @c.Apellido</strong><br />
+                                <small>@c.Telefono</small>
+                            </div>
+                        </div>
+                    </button>
+                }
+            </div>
+        </div>
+        <div class="col-md-8 d-flex flex-column" style="height: 100%; overflow-y: auto;">
+            @if (seleccionado == null)
+            {
+                <p class="text-muted mt-4">Seleccioná un contacto o creá uno nuevo.</p>
+            }
+            else if (!editando)
+            {
+                <div class="card p-3">
+                    <div class="avatar-lg">@seleccionado.Nombre[0]</div>
+                    <h5>@seleccionado.Nombre @seleccionado.Apellido</h5>
+                    <p><strong>Teléfono:</strong> @seleccionado.Telefono</p>
+                    <p><strong>Email:</strong> @seleccionado.Email</p>
+                    @if (!string.IsNullOrEmpty(seleccionado.Empresa))
+                    { <p><strong>Empresa:</strong> @seleccionado.Empresa</p> }
+                    @if (!string.IsNullOrEmpty(seleccionado.Cargo))
+                    { <p><strong>Cargo:</strong> @seleccionado.Cargo</p> }
+                    @if (!string.IsNullOrEmpty(seleccionado.Direccion))
+                    { <p><strong>Dirección:</strong> @seleccionado.Direccion</p> }
+                    @if (seleccionado.FechaNacimiento.HasValue)
+                    { <p><strong>Nacimiento:</strong> @seleccionado.FechaNacimiento</p> }
+                    @if (!string.IsNullOrEmpty(seleccionado.Notas))
+                    { <p><strong>Notas:</strong> @seleccionado.Notas</p> }
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-primary btn-sm" @onclick="IniciarEdicion">Editar</button>
+                        <button class="btn btn-danger btn-sm" @onclick="Eliminar">Eliminar</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card p-3">
+                    <h5>Editar contacto</h5>
+                    <EditForm Model="contactoEdicion" OnValidSubmit="GuardarEdicion">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Nombre</label>
+                                <InputText class="form-control" @bind-Value="contactoEdicion.Nombre" />
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Apellido</label>
+                                <InputText class="form-control" @bind-Value="contactoEdicion.Apellido" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Teléfono</label>
+                                <InputText class="form-control" @bind-Value="contactoEdicion.Telefono" />
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Email</label>
+                                <InputText class="form-control" @bind-Value="contactoEdicion.Email" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label>Empresa</label>
+                                <InputText class="form-control" @bind-Value="contactoEdicion.Empresa" />
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label>Cargo</label>
+                                <InputText class="form-control" @bind-Value="contactoEdicion.Cargo" />
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label>Dirección</label>
+                            <InputText class="form-control" @bind-Value="contactoEdicion.Direccion" />
+                        </div>
+                        <div class="mb-2">
+                            <label>Fecha de nacimiento</label>
+                            <InputDate class="form-control" @bind-Value="contactoEdicion.FechaNacimiento" />
+                        </div>
+                        <div class="mb-3">
+                            <label>Notas</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="contactoEdicion.Notas" />
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-sm">Guardar</button>
+                            <button type="button" class="btn btn-secondary btn-sm" @onclick="CancelarEdicion">Cancelar</button>
+                        </div>
+                    </EditForm>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    List<Contacto> contactos = new();
+    Contacto? seleccionado;
+    Contacto contactoEdicion = new();
+    bool editando = false;
+    string busqueda = "";
+
+    List<Contacto> ContactosFiltrados => contactos
+        .Where(c => string.IsNullOrEmpty(busqueda) ||
+            c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override void OnInitialized()
+    {
+        contactos = Db.Contactos.ToList();
+    }
+
+    void SeleccionarContacto(Contacto c)
+    {
+        seleccionado = c;
+        contactoEdicion = new Contacto
+        {
+            Id = c.Id,
+            Nombre = c.Nombre,
+            Apellido = c.Apellido,
+            Telefono = c.Telefono,
+            Email = c.Email,
+            Empresa = c.Empresa,
+            Cargo = c.Cargo,
+            Direccion = c.Direccion,
+            FechaNacimiento = c.FechaNacimiento,
+            Notas = c.Notas
+        };
+        editando = false;
+    }
+
+    void IniciarEdicion()
+    {
+        if (seleccionado == null) return;
+        editando = true;
+    }
+
+    async Task GuardarEdicion()
+    {
+        if (seleccionado == null) return;
+
+        seleccionado.Nombre = contactoEdicion.Nombre;
+        seleccionado.Apellido = contactoEdicion.Apellido;
+        seleccionado.Telefono = contactoEdicion.Telefono;
+        seleccionado.Email = contactoEdicion.Email;
+        seleccionado.Empresa = contactoEdicion.Empresa;
+        seleccionado.Cargo = contactoEdicion.Cargo;
+        seleccionado.Direccion = contactoEdicion.Direccion;
+        seleccionado.FechaNacimiento = contactoEdicion.FechaNacimiento;
+        seleccionado.Notas = contactoEdicion.Notas;
+
+        Db.Contactos.Update(seleccionado);
+        await Db.SaveChangesAsync();
+        contactos = Db.Contactos.ToList();
+        editando = false;
+    }
+
+    void CancelarEdicion()
+    {
+        editando = false;
+    }
+
+    void Eliminar()
+    {
+        if (seleccionado == null) return;
+        Db.Contactos.Remove(seleccionado);
+        Db.SaveChanges();
+        contactos = Db.Contactos.ToList();
+        seleccionado = null;
+        editando = false;
+    }
+}

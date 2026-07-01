@@ -1,0 +1,273 @@
+@page "/"
+@using tp5.Data
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+@rendermode InteractiveServer
+@inject IDbContextFactory<AgendaContext> DbFactory
+
+<h3 class="mb-3">Agenda de Contactos</h3>
+
+<div style="display: flex; gap: 20px;">
+
+    <div style="width: 35%;">
+        <button class="btn btn-primary mb-2 w-100" @onclick="Nuevo">
+            + Nuevo contacto
+        </button>
+
+        <input class="form-control mb-2"
+               placeholder="Buscar por nombre o apellido..."
+               @bind="filtro"
+               @bind:event="oninput" />
+
+        @foreach (var c in ContactosFiltrados)
+        {
+            <div class="card p-2 mb-2"
+                 style="cursor:pointer; background-color: @(seleccionado?.Id == c.Id ? "#d0e8ff" : "white")"
+                 @onclick="() => Seleccionar(c)">
+                <b>@c.Nombre @c.Apellido</b><br />
+                <small class="text-muted">@c.Telefono</small>
+            </div>
+        }
+
+        @if (!ContactosFiltrados.Any())
+        {
+            <p class="text-muted">No se encontraron contactos.</p>
+        }
+    </div>
+
+    <!-- PANEL DETALLE -->
+    <div style="width: 65%;">
+
+        @if (editando != null)
+        {
+            //Seccion formulario
+            <h4>@(editando.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h4>
+
+            <div class="mb-2">
+                <label class="form-label">Nombre *</label>
+                <input class="form-control" placeholder="Nombre" @bind="editando.Nombre" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Apellido *</label>
+                <input class="form-control" placeholder="Apellido" @bind="editando.Apellido" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Teléfono *</label>
+                <input class="form-control" placeholder="Teléfono" @bind="editando.Telefono" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Email *</label>
+                <input class="form-control" placeholder="Email" @bind="editando.Email" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Empresa</label>
+                <input class="form-control" placeholder="Empresa" @bind="editando.Empresa" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Cargo</label>
+                <input class="form-control" placeholder="Cargo" @bind="editando.Cargo" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Dirección</label>
+                <input class="form-control" placeholder="Dirección" @bind="editando.Direccion" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Fecha de nacimiento</label>
+                <input class="form-control" type="date"
+                       value="@(editando.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "")"
+                       @onchange="e => editando.FechaNacimiento = string.IsNullOrEmpty(e.Value?.ToString()) ? null : DateOnly.Parse(e.Value!.ToString()!)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Notas</label>
+                <textarea class="form-control" placeholder="Notas" @bind="editando.Notas" rows="3"></textarea>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMensaje))
+            {
+                <div class="alert alert-danger">@errorMensaje</div>
+            }
+
+            <button class="btn btn-success me-2" @onclick="Guardar">Guardar</button>
+            <button class="btn btn-secondary me-2" @onclick="Cancelar">Cancelar</button>
+
+            @if (editando.Id != 0)
+            {
+                <button class="btn btn-danger" @onclick="Eliminar">Eliminar</button>
+            }
+        }
+        else if (seleccionado != null)
+        {
+            // Seccion detalle
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">@seleccionado.Nombre @seleccionado.Apellido</h4>
+                <button class="btn btn-outline-primary btn-sm" @onclick="Editar">Editar</button>
+            </div>
+
+            <table class="table table-bordered">
+                <tbody>
+                    <tr><th style="width:35%">Teléfono</th><td>@seleccionado.Telefono</td></tr>
+                    <tr><th>Email</th><td>@seleccionado.Email</td></tr>
+                    @if (!string.IsNullOrWhiteSpace(seleccionado.Empresa))
+                    {
+                        <tr><th>Empresa</th><td>@seleccionado.Empresa</td></tr>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(seleccionado.Cargo))
+                    {
+                        <tr><th>Cargo</th><td>@seleccionado.Cargo</td></tr>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(seleccionado.Direccion))
+                    {
+                        <tr><th>Dirección</th><td>@seleccionado.Direccion</td></tr>
+                    }
+                    @if (seleccionado.FechaNacimiento.HasValue)
+                    {
+                        <tr><th>Fecha de nacimiento</th><td>@seleccionado.FechaNacimiento.Value.ToString("dd/MM/yyyy")</td></tr>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(seleccionado.Notas))
+                    {
+                        <tr><th>Notas</th><td>@seleccionado.Notas</td></tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted mt-3">Seleccioná un contacto de la lista para ver su detalle.</p>
+        }
+
+    </div>
+</div>
+
+@code {
+    List<Contacto> contactos = new();
+    Contacto? seleccionado;
+    Contacto? editando;
+    string filtro = "";
+    string errorMensaje = "";
+
+    protected override void OnInitialized()
+    {
+        CargarContactos();
+    }
+
+    void CargarContactos()
+    {
+        using var db = DbFactory.CreateDbContext();
+        contactos = db.Contactos.OrderBy(c => c.Apellido).ThenBy(c => c.Nombre).ToList();
+    }
+
+    IEnumerable<Contacto> ContactosFiltrados =>
+        string.IsNullOrWhiteSpace(filtro)
+            ? contactos
+            : contactos.Where(c =>
+                (c.Nombre + " " + c.Apellido)
+                .Contains(filtro, StringComparison.OrdinalIgnoreCase));
+
+    // Click en la lista - muestra el detalle
+    void Seleccionar(Contacto c)
+    {
+        seleccionado = c;
+        editando = null;
+        errorMensaje = "";
+    }
+
+    // Boton Editar en el detalle - abre el formulario con los datos del contacto
+    void Editar()
+    {
+        if (seleccionado == null) return;
+        editando = new Contacto
+        {
+            Id = seleccionado.Id,
+            Nombre = seleccionado.Nombre,
+            Apellido = seleccionado.Apellido,
+            Telefono = seleccionado.Telefono,
+            Email = seleccionado.Email,
+            Empresa = seleccionado.Empresa,
+            Cargo = seleccionado.Cargo,
+            Direccion = seleccionado.Direccion,
+            FechaNacimiento = seleccionado.FechaNacimiento,
+            Notas = seleccionado.Notas
+        };
+        errorMensaje = "";
+    }
+
+    // Boton Nuevo - abre el formulario vacio
+    void Nuevo()
+    {
+        editando = new Contacto();
+        seleccionado = null;
+        errorMensaje = "";
+    }
+
+    void Guardar()
+    {
+        // Validacion de campos obligatorios
+        if (string.IsNullOrWhiteSpace(editando!.Nombre) ||
+            string.IsNullOrWhiteSpace(editando.Apellido) ||
+            string.IsNullOrWhiteSpace(editando.Telefono) ||
+            string.IsNullOrWhiteSpace(editando.Email))
+        {
+            errorMensaje = "Los campos Nombre, Apellido, Teléfono y Email son obligatorios.";
+            return;
+        }
+
+        using var db = DbFactory.CreateDbContext();
+
+        if (editando.Id == 0)
+        {
+            // Crear nuevo
+            db.Contactos.Add(editando);
+            db.SaveChanges();
+            seleccionado = editando;
+        }
+        else
+        {
+            // Modificar existente
+            var original = db.Contactos.Find(editando.Id);
+            if (original != null)
+            {
+                original.Nombre = editando.Nombre;
+                original.Apellido = editando.Apellido;
+                original.Telefono = editando.Telefono;
+                original.Email = editando.Email;
+                original.Empresa = editando.Empresa;
+                original.Cargo = editando.Cargo;
+                original.Direccion = editando.Direccion;
+                original.FechaNacimiento = editando.FechaNacimiento;
+                original.Notas = editando.Notas;
+                db.SaveChanges();
+                seleccionado = original;
+            }
+        }
+
+        CargarContactos();
+        // Actualizar seleccionado con los datos recien guardados
+        seleccionado = contactos.FirstOrDefault(c => c.Id == seleccionado!.Id);
+        editando = null;
+        errorMensaje = "";
+    }
+
+    void Cancelar()
+    {
+        editando = null;
+        errorMensaje = "";
+    }
+
+    void Eliminar()
+    {
+        if (editando == null || editando.Id == 0) return;
+
+        using var db = DbFactory.CreateDbContext();
+        var contacto = db.Contactos.Find(editando.Id);
+        if (contacto != null)
+        {
+            db.Contactos.Remove(contacto);
+            db.SaveChanges();
+        }
+
+        CargarContactos();
+        editando = null;
+        seleccionado = null;
+        errorMensaje = "";
+    }
+}

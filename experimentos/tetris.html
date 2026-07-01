@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tetris turbo</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --fondo: oklch(17% 0.07 325);
+      --panel: oklch(25% 0.09 315);
+      --texto: oklch(96% 0.04 100);
+      --mango: oklch(86% 0.19 78);
+      --frutilla: oklch(69% 0.24 5);
+      --menta: oklch(82% 0.23 150);
+      --cielo: oklch(78% 0.19 220);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      overflow-x: hidden;
+      padding: clamp(1rem, 4vw, 3rem);
+      background:
+        radial-gradient(circle at 15% 20%, oklch(70% 0.24 340 / 0.42), transparent 30vmax),
+        radial-gradient(circle at 80% 12%, oklch(82% 0.25 135 / 0.34), transparent 28vmax),
+        radial-gradient(circle at 70% 86%, oklch(78% 0.21 72 / 0.36), transparent 30vmax),
+        var(--fondo);
+      color: var(--texto);
+      font-family: "Trebuchet MS", "Gill Sans", system-ui, sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -35vmax;
+      z-index: -1;
+      background: conic-gradient(
+        from 120deg,
+        transparent,
+        oklch(80% 0.25 200 / 0.18),
+        transparent,
+        oklch(78% 0.25 20 / 0.18),
+        transparent
+      );
+      animation: girar-fondo 22s linear infinite;
+    }
+
+    .arcade {
+      display: grid;
+      grid-template-columns: auto minmax(13rem, 17rem);
+      gap: clamp(1rem, 4vw, 2rem);
+      align-items: center;
+      animation: entrada 650ms var(--ease-out) both;
+    }
+
+    .maquina {
+      position: relative;
+      padding: clamp(0.8rem, 2vw, 1.2rem);
+      border-radius: 2rem;
+      background:
+        linear-gradient(135deg, oklch(35% 0.14 328), oklch(22% 0.08 290)),
+        var(--panel);
+      border: 0.24rem solid oklch(92% 0.16 95);
+      box-shadow:
+        0 1.5rem 0 oklch(13% 0.05 310),
+        0 2.5rem 4rem oklch(0% 0 0 / 0.45),
+        0 0 3rem oklch(77% 0.22 190 / 0.38);
+      transform: perspective(900px) rotateX(2deg) rotateY(-3deg);
+    }
+
+    .maquina::after {
+      content: "";
+      position: absolute;
+      inset: 0.8rem;
+      pointer-events: none;
+      border-radius: 1.4rem;
+      background: linear-gradient(120deg, oklch(100% 0 0 / 0.26), transparent 26%);
+      mix-blend-mode: screen;
+    }
+
+    h1 {
+      margin: 0 0 0.35rem;
+      color: var(--mango);
+      font-size: clamp(2.4rem, 8vw, 4.4rem);
+      line-height: 0.9;
+      letter-spacing: -0.08em;
+      text-shadow:
+        0.08em 0.08em 0 var(--frutilla),
+        0.14em 0.14em 0 oklch(10% 0.05 320),
+        0 0 1.2rem oklch(87% 0.22 85 / 0.75);
+      transform: rotate(-2deg);
+    }
+
+    .bajada {
+      margin: 0 0 1.2rem;
+      color: oklch(93% 0.08 115);
+      font-size: 1rem;
+    }
+
+    canvas {
+      display: block;
+      border-radius: 1rem;
+    }
+
+    #juego {
+      width: min(75vw, 300px);
+      height: auto;
+      background: oklch(14% 0.05 285);
+      border: 0.25rem solid oklch(94% 0.15 100);
+      box-shadow:
+        inset 0 0 0 0.35rem oklch(20% 0.08 300),
+        inset 0 0 2rem oklch(88% 0.2 190 / 0.24),
+        0 0 2rem oklch(78% 0.23 180 / 0.45);
+    }
+
+    .panel {
+      padding: clamp(1rem, 3vw, 1.4rem);
+      border-radius: 1.8rem;
+      background:
+        linear-gradient(150deg, oklch(34% 0.13 310), oklch(21% 0.07 285));
+      border: 0.2rem solid oklch(90% 0.18 145);
+      box-shadow:
+        0 1.2rem 0 oklch(13% 0.05 300),
+        0 1.8rem 3rem oklch(0% 0 0 / 0.38);
+      animation: flotar 4s var(--ease-out) infinite alternate;
+    }
+
+    .etiqueta {
+      margin: 0 0 0.4rem;
+      color: var(--menta);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    #proxima {
+      margin-bottom: 1.1rem;
+      background: oklch(16% 0.06 290);
+      border: 0.2rem solid oklch(91% 0.15 86);
+      box-shadow: inset 0 0 1.4rem oklch(78% 0.22 210 / 0.28);
+    }
+
+    .dato {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0.45rem 0;
+      padding: 0.55rem 0.75rem;
+      border-radius: 999px;
+      color: oklch(16% 0.05 300);
+      background: linear-gradient(90deg, var(--mango), var(--menta));
+      font-weight: 900;
+      box-shadow: 0 0.35rem 0 oklch(10% 0.05 300 / 0.75);
+    }
+
+    .pulso {
+      animation: pulso 240ms var(--ease-out);
+    }
+
+    .controles {
+      margin: 1.2rem 0 0;
+      display: grid;
+      gap: 0.45rem;
+      color: oklch(95% 0.04 100);
+      font-size: 0.95rem;
+    }
+
+    kbd {
+      display: inline-block;
+      min-width: 1.8rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 0.45rem;
+      color: oklch(15% 0.05 300);
+      background: var(--cielo);
+      box-shadow: 0 0.22rem 0 oklch(30% 0.11 240);
+      font: inherit;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    @keyframes entrada {
+      from {
+        opacity: 0;
+        transform: translateY(2rem) scale(0.96);
+      }
+    }
+
+    @keyframes girar-fondo {
+      to {
+        transform: rotate(1turn);
+      }
+    }
+
+    @keyframes flotar {
+      to {
+        transform: translateY(-0.5rem) rotate(1deg);
+      }
+    }
+
+    @keyframes pulso {
+      40% {
+        transform: scale(1.18) rotate(-2deg);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .arcade {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+
+      .panel {
+        width: min(100%, 300px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="arcade" aria-labelledby="titulo">
+    <section>
+      <h1 id="titulo">Tetris turbo</h1>
+      <p class="bajada">Fichas con brillo, impacto y caída física suave.</p>
+
+      <div class="maquina">
+        <canvas id="juego" width="300" height="600" aria-label="Tablero de Tetris"></canvas>
+      </div>
+    </section>
+
+    <aside class="panel" aria-label="Estado del juego">
+      <p class="etiqueta">Próxima ficha</p>
+      <canvas id="proxima" width="120" height="120" aria-label="Próxima ficha"></canvas>
+
+      <p class="dato">Puntos <span id="puntos">0</span></p>
+      <p class="dato">Líneas <span id="lineas">0</span></p>
+
+      <div class="controles" aria-label="Controles">
+        <span><kbd>←</kbd> <kbd>→</kbd> mover</span>
+        <span><kbd>↑</kbd> girar</span>
+        <span><kbd>↓</kbd> bajar</span>
+        <span><kbd>espacio</kbd> caída total</span>
+      </div>
+
+      <p id="estado" class="visually-hidden" aria-live="polite"></p>
+    </aside>
+  </main>
+
+  <script>
+    const canvas = document.querySelector("#juego");
+    const ctx = canvas.getContext("2d");
+    const proximaCanvas = document.querySelector("#proxima");
+    const proximaCtx = proximaCanvas.getContext("2d");
+    const puntosEl = document.querySelector("#puntos");
+    const lineasEl = document.querySelector("#lineas");
+    const estadoEl = document.querySelector("#estado");
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const columnas = 10;
+    const filas = 20;
+    const tamaño = 30;
+    const formas = [
+      [[1, 1, 1, 1]],
+      [[1, 1], [1, 1]],
+      [[0, 1, 0], [1, 1, 1]],
+      [[1, 1, 0], [0, 1, 1]],
+      [[0, 1, 1], [1, 1, 0]],
+      [[1, 0, 0], [1, 1, 1]],
+      [[0, 0, 1], [1, 1, 1]]
+    ];
+    const colores = [
+      { base: "#20f7ff", claro: "#b8ffff", oscuro: "#007d9a", brillo: "#3fffff" },
+      { base: "#ffe84a", claro: "#fff7ad", oscuro: "#a86d00", brillo: "#fff66b" },
+      { base: "#d35bff", claro: "#f1c4ff", oscuro: "#6f1796", brillo: "#df7cff" },
+      { base: "#54ff79", claro: "#c8ffd2", oscuro: "#078f38", brillo: "#7dff95" },
+      { base: "#ff4d76", claro: "#ffc0cf", oscuro: "#a0002c", brillo: "#ff6f91" },
+      { base: "#5d7cff", claro: "#cad6ff", oscuro: "#2432a8", brillo: "#83a2ff" },
+      { base: "#ff9d2e", claro: "#ffd9a8", oscuro: "#a74900", brillo: "#ffbd59" }
+    ];
+
+    let tablero;
+    let pieza;
+    let proxima;
+    let x;
+    let y;
+    let visualX = 0;
+    let visualY = 0;
+    let puntos = 0;
+    let lineas = 0;
+    let ultimoPaso = 0;
+    let bloqueo = false;
+    let sacudida = 0;
+    let flash = 0;
+    let particulas = [];
+
+    const crearTablero = () => Array.from({ length: filas }, () => Array(columnas).fill(null));
+
+    function recorrer(accion, mapa = pieza.forma, dx = x, dy = y) {
+      mapa.forEach((fila, yy) =>
+        fila.forEach((celda, xx) => celda && accion(dx + xx, dy + yy))
+      );
+    }
+
+    function choca(mapa = pieza.forma, dx = x, dy = y) {
+      let resultado = false;
+      recorrer((xx, yy) => {
+        resultado ||= xx < 0 || xx >= columnas || yy >= filas || Boolean(tablero[yy]?.[xx]);
+      }, mapa, dx, dy);
+      return resultado;
+    }
+
+    function animarDato(elemento) {
+      if (reduceMotion) return;
+      elemento.classList.remove("pulso");
+      void elemento.offsetWidth;
+      elemento.classList.add("pulso");
+    }
+
+    function actualizarDatos(texto = "") {
+      puntosEl.textContent = puntos;
+      lineasEl.textContent = lineas;
+      estadoEl.textContent = texto;
+      animarDato(puntosEl);
+      animarDato(lineasEl);
+    }
+
+    function crearPieza() {
+      const i = Math.floor(Math.random() * formas.length);
+      return { forma: formas[i], color: colores[i] };
+    }
+
+    function nuevaPieza() {
+      pieza = proxima ?? crearPieza();
+      proxima = crearPieza();
+      x = Math.floor((columnas - pieza.forma[0].length) / 2);
+      y = 0;
+      visualX = x;
+      visualY = y;
+      dibujarProxima();
+      if (choca()) return reiniciar();
+    }
+
+    function reiniciar() {
+      alert(`Fin del juego. Puntos: ${puntos}`);
+      tablero = crearTablero();
+      proxima = crearPieza();
+      puntos = 0;
+      lineas = 0;
+      particulas = [];
+      actualizarDatos("Juego reiniciado");
+      nuevaPieza();
+    }
+
+    function mover(dx, dy) {
+      if (bloqueo || choca(pieza.forma, x + dx, y + dy)) return false;
+      x += dx;
+      y += dy;
+      return true;
+    }
+
+    function crearParticulas(cx, cy, color, cantidad = 6, fuerza = 2.5) {
+      if (reduceMotion) return;
+
+      for (let i = 0; i < cantidad; i++) {
+        particulas.push({
+          x: cx * tamaño,
+          y: cy * tamaño,
+          vx: (Math.random() - 0.5) * fuerza,
+          vy: -Math.random() * fuerza - 0.4,
+          vida: 26 + Math.random() * 18,
+          color: Math.random() > 0.45 ? color.claro : color.brillo,
+          tamaño: 2 + Math.random() * 4
+        });
+      }
+    }
+
+    function fijar() {
+      const celdas = [];
+      recorrer((xx, yy) => {
+        tablero[yy][xx] = pieza.color;
+        celdas.push([xx, yy, pieza.color]);
+      });
+
+      celdas.forEach(([xx, yy, color]) => crearParticulas(xx + 0.5, yy + 0.9, color, 3, 2));
+      sacudida = reduceMotion ? 0 : 7;
+
+      const completas = tablero
+        .map((fila, indice) => fila.every(Boolean) ? indice : -1)
+        .filter(indice => indice >= 0);
+
+      completas.forEach(yy =>
+        tablero[yy].forEach((color, xx) => crearParticulas(xx + 0.5, yy + 0.5, color, 8, 5))
+      );
+
+      tablero = tablero.filter(fila => !fila.every(Boolean));
+      while (tablero.length < filas) tablero.unshift(Array(columnas).fill(null));
+
+      if (completas.length) {
+        puntos += completas.length * 150 + completas.length * completas.length * 50;
+        lineas += completas.length;
+        flash = reduceMotion ? 0 : 1;
+        actualizarDatos(`${completas.length} línea${completas.length > 1 ? "s" : ""} eliminada${completas.length > 1 ? "s" : ""}`);
+      }
+
+      nuevaPieza();
+    }
+
+    function girar() {
+      if (bloqueo) return;
+      const forma = pieza.forma[0].map((_, i) => pieza.forma.map(fila => fila[i]).reverse());
+      if (!choca(forma)) {
+        pieza.forma = forma;
+        recorrer((xx, yy) => crearParticulas(xx + 0.5, yy + 0.5, pieza.color, 1, 1.2));
+      }
+    }
+
+    function bajarHastaFondo() {
+      if (bloqueo) return;
+
+      const inicio = y;
+      while (mover(0, 1)) {}
+
+      for (let yy = inicio; yy <= y; yy += 2) {
+        recorrer((xx) => crearParticulas(xx + 0.5, yy + 0.5, pieza.color, 1, 1.8), pieza.forma, x, yy);
+      }
+
+      visualY = inicio;
+      bloqueo = true;
+      setTimeout(() => {
+        fijar();
+        bloqueo = false;
+        ultimoPaso = performance.now();
+      }, reduceMotion ? 0 : 90);
+    }
+
+    function pintarBloque(contexto, px, py, lado, color, alpha = 1) {
+      contexto.save();
+      contexto.globalAlpha = alpha;
+      contexto.shadowColor = color.brillo;
+      contexto.shadowBlur = reduceMotion ? 0 : 12;
+
+      contexto.fillStyle = "rgba(15, 10, 30, 0.55)";
+      contexto.fillRect(px + lado * 0.13, py + lado * 0.16, lado * 0.82, lado * 0.82);
+
+      const gradiente = contexto.createLinearGradient(px, py, px + lado, py + lado);
+      gradiente.addColorStop(0, color.claro);
+      gradiente.addColorStop(0.42, color.base);
+      gradiente.addColorStop(1, color.oscuro);
+      contexto.fillStyle = gradiente;
+      contexto.fillRect(px + 1, py + 1, lado - 3, lado - 3);
+
+      contexto.shadowBlur = 0;
+      contexto.fillStyle = "rgba(255, 255, 255, 0.48)";
+      contexto.fillRect(px + lado * 0.16, py + lado * 0.16, lado * 0.62, lado * 0.12);
+      contexto.fillRect(px + lado * 0.16, py + lado * 0.16, lado * 0.12, lado * 0.62);
+
+      contexto.fillStyle = "rgba(0, 0, 0, 0.36)";
+      contexto.fillRect(px + lado * 0.76, py + lado * 0.2, lado * 0.12, lado * 0.64);
+      contexto.fillRect(px + lado * 0.2, py + lado * 0.76, lado * 0.64, lado * 0.12);
+
+      contexto.fillStyle = "rgba(255, 255, 255, 0.6)";
+      contexto.fillRect(px + lado * 0.32, py + lado * 0.3, lado * 0.16, lado * 0.16);
+      contexto.restore();
+    }
+
+    function pintarFantasma(xx, yy) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.24)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 5]);
+      ctx.strokeRect(xx * tamaño + 4, yy * tamaño + 4, tamaño - 8, tamaño - 8);
+      ctx.restore();
+    }
+
+    function dibujarProxima() {
+      const lado = 24;
+      const ancho = proxima.forma[0].length * lado;
+      const alto = proxima.forma.length * lado;
+      const ox = (proximaCanvas.width - ancho) / 2;
+      const oy = (proximaCanvas.height - alto) / 2;
+
+      proximaCtx.clearRect(0, 0, proximaCanvas.width, proximaCanvas.height);
+      proximaCtx.fillStyle = "#21123d";
+      proximaCtx.fillRect(0, 0, proximaCanvas.width, proximaCanvas.height);
+      proxima.forma.forEach((fila, yy) =>
+        fila.forEach((celda, xx) =>
+          celda && pintarBloque(proximaCtx, ox + xx * lado, oy + yy * lado, lado, proxima.color)
+        )
+      );
+    }
+
+    function dibujarFondo() {
+      const fondo = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      fondo.addColorStop(0, "#201246");
+      fondo.addColorStop(1, "#100824");
+      ctx.fillStyle = fondo;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i < columnas; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * tamaño, 0);
+        ctx.lineTo(i * tamaño, canvas.height);
+        ctx.stroke();
+      }
+      for (let i = 1; i < filas; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * tamaño);
+        ctx.lineTo(canvas.width, i * tamaño);
+        ctx.stroke();
+      }
+    }
+
+    function dibujarParticulas() {
+      particulas = particulas.filter(p => p.vida > 0);
+      particulas.forEach(p => {
+        p.vy += 0.12;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vida -= 1;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(p.vida / 44, 0);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 12;
+        ctx.fillRect(p.x, p.y, p.tamaño, p.tamaño);
+        ctx.restore();
+      });
+    }
+
+    function dibujar() {
+      const easingX = reduceMotion ? 1 : 0.34;
+      const easingY = reduceMotion ? 1 : bloqueo ? 0.58 : 0.24;
+      visualX += (x - visualX) * easingX;
+      visualY += (y - visualY) * easingY;
+
+      ctx.save();
+      if (sacudida > 0) {
+        ctx.translate((Math.random() - 0.5) * sacudida, (Math.random() - 0.5) * sacudida);
+        sacudida *= 0.84;
+      }
+
+      dibujarFondo();
+
+      tablero.forEach((fila, yy) =>
+        fila.forEach((color, xx) => color && pintarBloque(ctx, xx * tamaño, yy * tamaño, tamaño, color))
+      );
+
+      let fondo = y;
+      while (!choca(pieza.forma, x, fondo + 1)) fondo++;
+      recorrer(pintarFantasma, pieza.forma, x, fondo);
+
+      recorrer((xx, yy) =>
+        pintarBloque(ctx, xx * tamaño, yy * tamaño, tamaño, pieza.color),
+        pieza.forma,
+        visualX,
+        visualY
+      );
+
+      if (flash > 0) {
+        ctx.fillStyle = `rgba(255, 244, 154, ${flash * 0.22})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        flash *= 0.82;
+      }
+
+      dibujarParticulas();
+      ctx.restore();
+      requestAnimationFrame(dibujar);
+    }
+
+    function jugar(tiempo = 0) {
+      if (!bloqueo && tiempo - ultimoPaso > 780) {
+        if (!mover(0, 1)) fijar();
+        ultimoPaso = tiempo;
+      }
+
+      requestAnimationFrame(jugar);
+    }
+
+    document.addEventListener("keydown", evento => {
+      if (["ArrowDown", "ArrowUp", "Space"].includes(evento.code)) evento.preventDefault();
+
+      if (evento.key === "ArrowLeft") mover(-1, 0);
+      if (evento.key === "ArrowRight") mover(1, 0);
+      if (evento.key === "ArrowDown") mover(0, 1);
+      if (evento.key === "ArrowUp") girar();
+      if (evento.code === "Space") bajarHastaFondo();
+    });
+
+    tablero = crearTablero();
+    nuevaPieza();
+    actualizarDatos("Juego iniciado");
+    dibujar();
+    jugar();
+  </script>
+</body>
+</html>

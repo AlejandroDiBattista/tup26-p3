@@ -46,11 +46,13 @@ class WAppService {
     readonly TimeSpan timeout;
     readonly Dictionary<string, ContactoWhatsApp?> contactosPorAutor = new(StringComparer.OrdinalIgnoreCase);
 
-    public WAppService(string? store = null, TimeSpan? timeout = null) {
+    public WAppService(string? store = null, TimeSpan? timeout = null, bool sincronizar = true) {
         this.store = store;
-        this.timeout = timeout ?? TimeSpan.FromMinutes(5);
+        this.timeout = timeout ?? TimeSpan.FromMinutes(2);
 
-        Sincronizar();
+        if (sincronizar) {
+            Sincronizar();
+        }
     }
 
     static void ValidarNoVacio(string valor, string parametro) {
@@ -162,6 +164,14 @@ class WAppService {
 
     public List<GrupoWhatsApp> Grupos() {
         return ListarGruposDesdeBaseLocal();
+    }
+
+    public int CantidadMensajes(string[] referencias) {
+        DateOnly hoy = DateOnly.FromDateTime(DateTime.Today);
+        DateTime desde = new(hoy.Year, 4, 1);
+        DateTime hasta = hoy.ToDateTime(new TimeOnly(13, 0));
+        
+        return referencias.Sum(referencia => Mensajes(referencia, desde, hasta).Count);
     }
 
     public List<MensajeWhatsApp> Mensajes(string referencia, DateTime? desde = null, DateTime? hasta = null) {
@@ -866,7 +876,7 @@ class WAppService {
         string salida = EjecutarYObtenerSalida(argumentos);
 
         if (!string.IsNullOrWhiteSpace(salida)) {
-            Log.Info(salida);
+            // Log.Info(salida);
         }
     }
 

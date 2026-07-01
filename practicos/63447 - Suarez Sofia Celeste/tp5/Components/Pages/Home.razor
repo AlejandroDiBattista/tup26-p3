@@ -1,0 +1,435 @@
+@page "/"
+
+@rendermode InteractiveServer
+
+@using tp5.Models
+@using tp5.Datos
+@using Microsoft.EntityFrameworkCore
+@using System.Globalization;
+@using System.Text;
+
+@inject AgendaContext Db
+
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+<div class="card shadow-sm mb-2">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">
+                <i class="bi bi-person-lines-fill me-2"></i> Agenda de contactos
+            </h1>
+
+            <button class="btn btn-primary" @onclick="NuevoContacto">
+                <i class="bi bi-person-plus-fill me-1"></i>Agregar contacto
+            </button>
+        </div>
+    </div>
+</div>
+
+
+@if (contactos.Count == 0) {
+    <p>no hay contactos</p>
+} 
+else {
+    <ul>
+        <div class="row"> 
+                <div class="col-4">
+                    <input class="form-control mb-3" placeholder="Buscar contacto"@bind="textoBusqueda" @bind:event="oninput"/>
+
+                    <div style="height:80vh; overflow-y:auto;">
+                    <ul class="list-group"> 
+                        @foreach(var contacto in contactos.Where(c => string.IsNullOrWhiteSpace(textoBusqueda) || Normalizar(c.Nombre).Contains(Normalizar(textoBusqueda)) || Normalizar(c.Apellido).Contains(Normalizar(textoBusqueda))))
+                        {
+                            <li class="list-group-item @(seleccionado?.Id == contacto.Id ? "active" : "")" style="cursor:pointer" @onclick="() => Seleccionar(contacto)"> 
+                                @contacto.Nombre @contacto.Apellido
+                            </li>
+                        }
+                    </ul>
+                    </div>
+                </div>
+
+
+            <div class="col-8">
+                @if (modo == "detalle")
+                {
+                    if (seleccionado != null)
+                    {
+                        <div class="card shadow-sm p-4" style="height:80vh; overflow-y:auto;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3>@seleccionado.Nombre @seleccionado.Apellido</h3>
+                                <div>
+                                    <button class="btn btn-outline-dark" @onclick="EditarContacto">
+                                        Editar
+                                    </button>
+
+                                    <button type="button" class="btn btn-outline-danger" @onclick="EliminarContacto">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <hr/>
+
+                            <div class="mb-3">
+                            <strong>
+                                <i class="bi bi-telephone-fill me-2"></i>Teléfono
+                            </strong>
+                            <br/>
+                            @seleccionado.Telefono
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>
+                                    <i class="bi bi-envelope-fill me-2"></i>Email
+                                </strong>
+                                <br/>
+                                @seleccionado.Email
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>
+                                    <i class="bi bi-building me-2"></i>Empresa
+                                </strong>
+                                <br/>
+                                @seleccionado.Empresa
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>
+                                    <i class="bi bi-briefcase-fill me-2"></i>Cargo
+                                </strong>
+                                <br/>
+                                @seleccionado.Cargo
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>
+                                    <i class="bi bi-geo-alt-fill me-2"></i>Dirección
+                                </strong>
+                                <br/>
+                                @seleccionado.Direccion
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>
+                                    <i class="bi bi-card-text me-2"></i>Notas
+                                </strong>
+                                <br/>
+                                @seleccionado.Notas
+                            </div>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Seleccione un contacto</p>
+                    }
+                }
+
+                else if (modo == "editar")
+                {
+                    <h3>Editar contacto</h3>
+                    <div class="card shadow-sm p-4 me-4" style="height:80vh; overflow-y:auto;">
+                        <EditForm Model="contactoEditando" OnValidSubmit="GuardarEdicion">
+                            <DataAnnotationsValidator />
+                            <div class="mb-3">
+                                <label class="form-label">Nombre</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Nombre"/>
+                                </div>
+                                <ValidationMessage For="() => contactoEditando!.Nombre"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Apellido</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person-vcard-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Apellido"/>
+                                </div>
+                                <ValidationMessage For="() => contactoEditando!.Apellido"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-telephone-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Telefono"/>
+                                </div>
+                                <ValidationMessage For="() => contactoEditando!.Telefono"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-envelope-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Email"/>
+                                </div>
+                                <ValidationMessage For="() => contactoEditando!.Email"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Empresa</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-building"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Empresa"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Cargo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-briefcase-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Cargo"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Dirección</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="contactoEditando!.Direccion"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notas</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-card-text"></i>
+                                    </span>
+                                    <textarea class="form-control" @bind="contactoEditando!.Notas"></textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-outline-success">
+                                Guardar
+                            </button>
+                        </EditForm>
+                    </div>
+                }
+
+                else if (modo == "nuevo")
+                {
+                    <h3>Nuevo contacto</h3>
+                    <div class="card shadow-sm p-4 me-4"  style="height:80vh; overflow-y:auto;">
+                        <EditForm Model="nuevo" OnValidSubmit="GuardarNuevo">
+                            <DataAnnotationsValidator />
+                            <div class="mb-3">
+                                <label class="form-label">Nombre</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Nombre"/>
+                                </div>
+                                <ValidationMessage For="() => nuevo.Nombre" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Apellido</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-person-vcard-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Apellido"/>
+                                </div>
+                                <ValidationMessage For="() => nuevo.Apellido"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-telephone-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Telefono"/>
+                                </div>
+                                <ValidationMessage For="() => nuevo.Telefono"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-envelope-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Email"/>
+                                </div>
+                                <ValidationMessage For="() => nuevo.Email"/>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Empresa</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-building"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Empresa"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Cargo</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-briefcase-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Cargo"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Dirección</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                    </span>
+                                    <input class="form-control" @bind="nuevo.Direccion"/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notas</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-card-text"></i>
+                                    </span>
+                                    <textarea class="form-control" @bind="nuevo.Notas"></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline-success">
+                                Guardar
+                            </button>
+                        </EditForm>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </ul>
+}
+
+@code {
+    List<Contacto> contactos = new() ;
+    Contacto? seleccionado;
+    string textoBusqueda="";
+    string modo = "detalle"; 
+    Contacto nuevo = new();
+    Contacto? contactoEditando;
+    protected override async Task OnInitializedAsync() {
+        contactos=await Db.Contactos.ToListAsync();
+    }
+
+    void EditarContacto()
+    {
+        if (seleccionado == null)
+            return;
+
+        contactoEditando = new Contacto
+        {
+            Id = seleccionado.Id,
+            Nombre = seleccionado.Nombre,
+            Apellido = seleccionado.Apellido,
+            Telefono = seleccionado.Telefono,
+            Email = seleccionado.Email,
+            Empresa = seleccionado.Empresa,
+            Cargo = seleccionado.Cargo,
+            Direccion = seleccionado.Direccion,
+            FechaNacimiento = seleccionado.FechaNacimiento,
+            Notas = seleccionado.Notas
+        };
+
+        modo = "editar";
+    }
+
+    void NuevoContacto()
+    {
+       nuevo = new Contacto();
+       modo = "nuevo";
+       seleccionado = null;
+    }
+
+    void Seleccionar(Contacto contacto)
+    {
+        seleccionado = contacto;
+        modo = "detalle";
+    }
+
+    async Task EliminarContacto()
+    {
+        if (seleccionado == null)
+            return;
+        Db.Contactos.Remove(seleccionado);
+        await Db.SaveChangesAsync();
+        contactos.Remove(seleccionado);
+        seleccionado = null;
+    }
+
+    async Task GuardarEdicion()
+    {
+        if (seleccionado == null || contactoEditando == null)
+            return;
+
+        seleccionado.Nombre = contactoEditando.Nombre;
+        seleccionado.Apellido = contactoEditando.Apellido;
+        seleccionado.Telefono = contactoEditando.Telefono;
+        seleccionado.Email = contactoEditando.Email;
+        seleccionado.Empresa = contactoEditando.Empresa;
+        seleccionado.Cargo = contactoEditando.Cargo;
+        seleccionado.Direccion = contactoEditando.Direccion;
+        seleccionado.FechaNacimiento = contactoEditando.FechaNacimiento;
+        seleccionado.Notas = contactoEditando.Notas;
+
+        await Db.SaveChangesAsync();
+
+        modo = "detalle";
+    }
+
+    async Task GuardarNuevo()
+    {
+        Db.Contactos.Add(nuevo);
+        await Db.SaveChangesAsync();
+        contactos.Add(nuevo);
+     seleccionado = nuevo;
+        modo = "detalle";
+    }
+
+    string Normalizar(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+            return "";
+
+        texto = texto.Replace('ñ', '#')
+        .Replace('Ñ', '#');
+
+        var normalizado = texto.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+
+        foreach (var c in normalizado)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            {
+                sb.Append(char.ToLower(c));
+            }
+        }
+        return sb.ToString()
+        .Replace('#', 'ñ')
+        .Normalize(NormalizationForm.FormC);
+    }
+}

@@ -24,9 +24,6 @@ class Alumnos : IEnumerable<Alumno> {
     public Alumnos ConTelefono(bool tiene = true) =>
         new(Lista.Where(a => tiene == a.ConTelefono));
 
-    public Alumnos ConFotos(bool tiene = true) =>
-        new(Lista.Where(a => tiene == a.ConFoto));
-
     public Alumnos EnComision(string comision) =>
         new(Lista.Where(a => string.Equals(a.Comision, comision)));
 

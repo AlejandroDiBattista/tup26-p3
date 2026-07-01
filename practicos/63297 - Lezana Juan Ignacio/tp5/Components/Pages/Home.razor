@@ -1,0 +1,265 @@
+@page "/"
+@rendermode InteractiveServer
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+<div class="container mt-4">
+    <h3 class="mb-4">Agenda de Contactos</h3>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    Contactos
+                    <button class="btn btn-sm btn-success" @onclick="Nuevo">+ Nuevo</button>
+                </div>
+                <div class="card-body pb-0">
+                    <input class="form-control mb-2" placeholder="Buscar..."
+                           @bind="textoBusqueda" @bind:event="oninput" />
+                </div>
+                <div class="contact-list-container">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var c in ContactosBuscados)
+                        {
+                            <li class="list-group-item list-group-item-action contact-list"
+                                style="cursor:pointer" @onclick="() => contactoActivo = c">
+                                <div class="avatar" style="background-color: @AvatarHelper.Color(c.Nombre, c.Apellido); color: #1a1a2e;">
+                                    @AvatarHelper.Iniciales(c.Nombre, c.Apellido)
+                                </div>
+                                <div>
+                                    <p class="contact-name">@c.Nombre @c.Apellido</p>
+                                    <p class="contact-sub">@c.Empresa</p>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    @if (contactoActivo != null)
+                    {
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="avatar avatar-lg" style="background-color: @AvatarHelper.Color(contactoActivo.Nombre, contactoActivo.Apellido); color: #1a1a2e;">
+                                @AvatarHelper.Iniciales(contactoActivo.Nombre, contactoActivo.Apellido)
+                            </div>
+                            <div>
+                                <h4 class="mb-0">@contactoActivo.Nombre @contactoActivo.Apellido</h4>
+                                <small class="text-muted">@contactoActivo.Cargo — @contactoActivo.Empresa</small>
+                            </div>
+                        </div>
+
+                        <p><strong>Teléfono:</strong> @contactoActivo.Telefono</p>
+                        <p><strong>Email:</strong> @contactoActivo.Email</p>
+                        <p><strong>Empresa:</strong> @(string.IsNullOrEmpty(contactoActivo.Empresa) ? "—" : contactoActivo.Empresa)</p>
+                        <p><strong>Cargo:</strong> @(string.IsNullOrEmpty(contactoActivo.Cargo) ? "—" : contactoActivo.Cargo)</p>
+                        <p><strong>Dirección:</strong> @(string.IsNullOrEmpty(contactoActivo.Direccion) ? "—" : contactoActivo.Direccion)</p>
+                        <p><strong>Notas:</strong> @(string.IsNullOrEmpty(contactoActivo.Notas) ? "—" : contactoActivo.Notas)</p>
+
+                        <button class="btn btn-primary" @onclick="Editar">Editar</button>
+                        <button class="btn btn-danger" @onclick="Eliminar">Eliminar</button>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Seleccioná un contacto de la lista</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (mostrarModal)
+{
+    <div class="modal-backdrop-custom" @onclick="CerrarModal"></div>
+
+    <div class="modal-dialog-custom">
+        <div class="card" style="background-color: #1e3a5f; border: none; border-radius: 16px;">
+            <div class="card-header d-flex align-items-center gap-3"
+                 style="background-color: #4f8fa8; border-radius: 16px 16px 0 0; padding: 1.5rem;">
+                <div class="avatar avatar-lg"
+                     style="background-color: @AvatarHelper.Color(contactoEdit.Nombre, contactoEdit.Apellido); color: #1a1a2e;">
+                    @AvatarHelper.Iniciales(contactoEdit.Nombre, contactoEdit.Apellido)
+                </div>
+                <div>
+                    <h4 class="mb-0 text-white">@(contactoEdit.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h4>
+                    <small style="color: #b8c5d6;">@contactoEdit.Nombre @contactoEdit.Apellido</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-auto"
+                        @onclick="CerrarModal"></button>
+            </div>
+
+            <div class="card-body p-4">
+                <EditForm Model="contactoEdit" OnValidSubmit="Guardar">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Nombre</label>
+                            <InputText class="form-control form-dark" @bind-Value="contactoEdit.Nombre" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Apellido</label>
+                            <InputText class="form-control form-dark" @bind-Value="contactoEdit.Apellido" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Teléfono</label>
+                            <InputText class="form-control form-dark" @bind-Value="contactoEdit.Telefono" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Email</label>
+                            <InputText class="form-control form-dark" @bind-Value="contactoEdit.Email" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Empresa</label>
+                            <InputText class="form-control form-dark" @bind-Value="contactoEdit.Empresa" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Cargo</label>
+                            <InputText class="form-control form-dark" @bind-Value="contactoEdit.Cargo" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Dirección</label>
+                        <InputText class="form-control form-dark" @bind-Value="contactoEdit.Direccion" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-white">Notas</label>
+                        <InputTextArea class="form-control form-dark" rows="3" @bind-Value="contactoEdit.Notas" />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success px-4">Guardar</button>
+                        <button type="button" class="btn btn-secondary px-4" @onclick="CerrarModal">Cancelar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .modal-backdrop-custom {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 1040;
+    }
+
+    .modal-dialog-custom {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(640px, 95vw);
+        z-index: 1050;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 16px;
+    }
+</style>
+
+@code{
+    List<Contacto> listaContactos = new();
+    Contacto? contactoActivo;
+    string textoBusqueda = "";
+    bool mostrarModal = false;
+    Contacto contactoEdit = new();
+
+    IEnumerable<Contacto> ContactosBuscados =>
+        listaContactos.Where(c =>
+            string.IsNullOrEmpty(textoBusqueda) ||
+            c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        listaContactos = await Db.Contactos.ToListAsync();
+    }
+
+    async Task Eliminar()
+    {
+        if (contactoActivo != null)
+        {
+            Db.Contactos.Remove(contactoActivo);
+            await Db.SaveChangesAsync();
+            listaContactos.Remove(contactoActivo);
+            contactoActivo = null;
+        }
+    }
+
+    void Editar()
+    {
+        if (contactoActivo != null)
+        {
+            contactoEdit = new Contacto
+            {
+                Id        = contactoActivo.Id,
+                Nombre    = contactoActivo.Nombre,
+                Apellido  = contactoActivo.Apellido,
+                Telefono  = contactoActivo.Telefono,
+                Email     = contactoActivo.Email,
+                Empresa   = contactoActivo.Empresa,
+                Cargo     = contactoActivo.Cargo,
+                Direccion = contactoActivo.Direccion,
+                Notas     = contactoActivo.Notas,
+            };
+            mostrarModal = true;
+        }
+    }
+
+    void Nuevo()
+    {
+        contactoEdit = new Contacto();
+        mostrarModal = true;
+    }
+
+    async Task Guardar()
+    {
+        if (contactoEdit.Id == 0)
+        {
+            Db.Contactos.Add(contactoEdit);
+            await Db.SaveChangesAsync();
+            listaContactos.Add(contactoEdit);
+            contactoActivo = contactoEdit;
+        }
+        else
+        {
+            var existente = await Db.Contactos.FindAsync(contactoEdit.Id);
+            if (existente != null)
+            {
+                existente.Nombre    = contactoEdit.Nombre;
+                existente.Apellido  = contactoEdit.Apellido;
+                existente.Telefono  = contactoEdit.Telefono;
+                existente.Email     = contactoEdit.Email;
+                existente.Empresa   = contactoEdit.Empresa;
+                existente.Cargo     = contactoEdit.Cargo;
+                existente.Direccion = contactoEdit.Direccion;
+                existente.Notas     = contactoEdit.Notas;
+                await Db.SaveChangesAsync();
+                listaContactos = await Db.Contactos.ToListAsync();
+                contactoActivo = existente;
+            }
+        }
+        mostrarModal = false;
+    }
+
+    void CerrarModal() => mostrarModal = false;
+}

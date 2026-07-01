@@ -1,0 +1,22 @@
+@inherits LayoutComponentBase
+
+<div class="shell">
+    <div class="main-area">
+        <header class="topbar">
+            <div class="brand">
+                CRM<span>.</span>
+                <small>UTN Tucuman</small>
+            </div>
+            <nav class="tabs">
+                <NavLink href="/" Match="NavLinkMatch.All">Contactos</NavLink>
+                <NavLink href="/pipeline">Pipeline</NavLink>
+            </nav>
+        </header>
+        <main class="content">
+            @Body
+        </main>
+    </div>
+    <aside class="agente-lateral-wrap">
+        <AgentePanel />
+    </aside>
+</div>

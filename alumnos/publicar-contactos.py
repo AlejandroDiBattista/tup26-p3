@@ -79,11 +79,15 @@ def leer_alumnos_desde_markdown(ruta: Path) -> list[dict]:
 		if not legajo.isdigit():
 			continue
 
+		tiene_columna_foto = len(columnas) >= 11 and limpiar_campo(columnas[3]).lower() in {"si", "sí", "no", "true", "false"}
+		indice_github = 4 if tiene_columna_foto else 3
+		indice_practicos = 5 if tiene_columna_foto else 4
+
 		nombre = limpiar_campo(columnas[1])
 		telefono = limpiar_campo(columnas[2])
-		foto = limpiar_campo(columnas[3]).lower() == "si"
-		github = normalizar_github(columnas[4])
-		practicos = columnas[5].strip()
+		foto = tiene_columna_foto and limpiar_campo(columnas[3]).lower() in {"si", "sí", "true"}
+		github = normalizar_github(columnas[indice_github])
+		practicos = columnas[indice_practicos].strip()
 		carpeta_tp = f"{legajo} - {nombre}"
 
 		alumnos.append({
@@ -192,4 +196,3 @@ def main() -> None:
 
 if __name__ == "__main__":
 	main()
-

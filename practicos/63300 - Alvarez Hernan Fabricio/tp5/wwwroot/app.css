@@ -1,0 +1,376 @@
+body {
+    margin: 0;
+    background: #f5f6f8;
+    color: #171b24;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.agenda-shell {
+    min-height: 100vh;
+    padding: 14px 18px;
+}
+
+.agenda-header,
+.agenda-sidebar,
+.agenda-detail {
+    background: #ffffff;
+    border: 1px solid #e3e6ea;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(20, 24, 31, 0.08);
+}
+
+.agenda-header {
+    min-height: 116px;
+    padding: 28px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.agenda-header h1 {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.agenda-header p {
+    margin: 8px 0 0;
+    color: #6b7280;
+    font-size: 17px;
+}
+
+.agenda-main-button,
+.detail-actions .btn,
+.form-buttons .btn {
+    min-height: 48px;
+    padding-inline: 18px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.agenda-layout {
+    display: grid;
+    grid-template-columns: 500px 1fr;
+    gap: 18px;
+}
+
+.agenda-sidebar {
+    padding: 20px 18px;
+    height: calc(100vh - 166px);
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-box {
+    height: 46px;
+    border: 1px solid #d7dce2;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    margin-bottom: 20px;
+    color: #1f2937;
+}
+
+.search-box input {
+    border: 0;
+    outline: 0;
+    width: 100%;
+    font-size: 17px;
+    background: transparent;
+}
+
+.contact-list {
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.contact-item {
+    width: 100%;
+    min-height: 76px;
+    border: 0;
+    border-bottom: 1px solid #edf0f2;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 14px;
+    text-align: left;
+    position: relative;
+}
+
+.contact-item.selected {
+    background: #eaf3ff;
+}
+
+.contact-item.selected::before {
+    content: "";
+    width: 3px;
+    background: #0d6efd;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.contact-item strong {
+    display: block;
+    color: #111827;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.contact-item small {
+    display: block;
+    margin-top: 4px;
+    color: #4b5563;
+    font-size: 16px;
+}
+
+.avatar {
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: #dcecff;
+    color: #0d6efd;
+    font-weight: 800;
+    border: 1px solid rgba(13, 110, 253, 0.12);
+}
+
+.avatar-small {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
+
+.avatar-large {
+    width: 92px;
+    height: 92px;
+    font-size: 34px;
+}
+
+.contact-item:nth-child(2n) .avatar {
+    background: #dcf8e8;
+    color: #198754;
+}
+
+.contact-item:nth-child(3n) .avatar {
+    background: #f1e2ff;
+    color: #7f35c9;
+}
+
+.contact-item:nth-child(4n) .avatar {
+    background: #fff3cd;
+    color: #9a6a00;
+}
+
+.contact-item:nth-child(5n) .avatar {
+    background: #ffe1ef;
+    color: #c92a6d;
+}
+
+.agenda-detail {
+    min-height: calc(100vh - 166px);
+    padding: 38px 28px;
+}
+
+.detail-header,
+.edit-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-person {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.detail-person h2 {
+    margin: 0 0 4px;
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.detail-person a,
+.detail-person p span {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.detail-person p {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: 18px;
+}
+
+.tag {
+    width: fit-content;
+    margin-top: 12px;
+    display: block;
+    padding: 3px 12px;
+    border-radius: 14px;
+    background: #dcecff;
+    color: #1f5fae;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.info-list {
+    margin-top: 24px;
+}
+
+.info-row {
+    min-height: 74px;
+    display: grid;
+    grid-template-columns: 28px 150px 1fr;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 17px;
+}
+
+.info-row i {
+    font-size: 22px;
+    color: #111827;
+}
+
+.info-row strong {
+    color: #111827;
+}
+
+.info-row span {
+    color: #273142;
+}
+
+.info-row.align-start {
+    align-items: start;
+    padding-top: 24px;
+}
+
+.edit-form {
+    padding-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.form-field .form-control {
+    min-height: 48px;
+    font-size: 16px;
+    border-color: #d7dce2;
+}
+
+.form-wide {
+    grid-column: 1 / -1;
+}
+
+.form-buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.placeholder-panel {
+    min-height: 420px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    color: #6b7280;
+    gap: 14px;
+}
+
+.placeholder-panel i {
+    font-size: 52px;
+    color: #0d6efd;
+}
+
+.empty-state {
+    color: #6b7280;
+    padding: 20px 10px;
+}
+
+@media (max-width: 992px) {
+    .agenda-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .agenda-sidebar {
+        height: auto;
+        min-height: 0;
+    }
+
+    .agenda-detail {
+        min-height: 520px;
+    }
+}
+
+@media (max-width: 720px) {
+    .agenda-shell {
+        padding: 10px;
+    }
+
+    .agenda-header,
+    .detail-header,
+    .edit-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .detail-actions,
+    .agenda-main-button,
+    .form-buttons {
+        width: 100%;
+    }
+
+    .detail-actions .btn,
+    .form-buttons .btn,
+    .agenda-main-button {
+        justify-content: center;
+    }
+
+    .detail-person {
+        align-items: flex-start;
+    }
+
+    .info-row {
+        grid-template-columns: 28px 1fr;
+        gap: 10px 16px;
+    }
+
+    .info-row span {
+        grid-column: 2;
+    }
+
+    .edit-form {
+        grid-template-columns: 1fr;
+    }
+}

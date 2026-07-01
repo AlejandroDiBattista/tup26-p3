@@ -1,0 +1,19 @@
+@* Fila del detalle: ícono + etiqueta + valor. *@
+
+<div class="fila-detalle">
+    <div class="fila-etiqueta">
+        <i class="bi @Icono me-2"></i>@Etiqueta
+    </div>
+    <div class="fila-valor">@ChildContent</div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Icono { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Etiqueta { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -1,0 +1,36 @@
+@page "/Error"
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Error</PageTitle>
+
+<h1 class="text-danger">Error.</h1>
+<h2 class="text-danger">Ocurrió un error al procesar la solicitud.</h2>
+
+@if (this.MostrarIdSolicitud)
+{
+    <p>
+        <strong>ID de solicitud:</strong> <code>@this.IdSolicitud</code>
+    </p>
+}
+
+<h3>Modo de desarrollo</h3>
+<p>
+    Cambiar al entorno <strong>Development</strong> muestra información más
+    detallada del error.
+</p>
+<p>
+    <strong>El entorno Development no debe habilitarse en aplicaciones
+    publicadas.</strong>
+</p>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? IdSolicitud { get; set; }
+    private bool MostrarIdSolicitud => !string.IsNullOrEmpty(this.IdSolicitud);
+
+    protected override void OnInitialized() =>
+        this.IdSolicitud = System.Diagnostics.Activity.Current?.Id
+            ?? this.HttpContext?.TraceIdentifier;
+}

@@ -1,0 +1,306 @@
+@page "/"
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>TP5: AgendaWeb</PageTitle>
+
+
+<div class="container-fluid px-4 py-4">
+
+    <div class="agenda-header">
+        <div>
+            <h1>Agenda</h1>
+            <p>Contactos personales y profesionales</p>
+        </div>
+        <button class="btn btn-primary" @onclick="Nuevo">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo contacto
+        </button>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="panel p-3">
+
+                <div class="search-box mb-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Buscar contacto..."
+                               @bind="textoBusqueda" @bind:event="oninput" />
+                    </div>
+                </div>
+
+                <ul class="list-group list-group-flush contact-list">
+                    @foreach (var item in ListaFiltrada())
+                    {
+                        <li class="list-group-item @(item == actual ? "active" : "")"
+                            @onclick="@(() => actual = item)">
+
+                            <div class="avatar" style="background-color:@AvatarHelper.Color(item.Nombre, item.Apellido)">
+                                @AvatarHelper.Iniciales(item.Nombre, item.Apellido)
+                            </div>
+
+                            <div>
+                                <p class="contact-name">@item.Nombre @item.Apellido</p>
+                                <p class="contact-sub">  @if (string.IsNullOrEmpty(item.Empresa))
+                                    {
+                                        @:Independiente
+                                    }
+                                    else
+                                    {
+                                        @item.Empresa
+                                    }
+                                </p>
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="panel p-4">
+@if (modoEdicion || modoNuevo)
+{
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="d-flex gap-3 align-items-center">
+            <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(modelo.Nombre ?? "?", modelo.Apellido ?? "")">
+                @AvatarHelper.Iniciales(modelo.Nombre ?? "?", modelo.Apellido ?? "")
+            </div>
+            <div>
+                <h4 class="mb-0">@(modoNuevo ? "Nuevo contacto" : "Editar contacto")</h4>
+                @if (!modoNuevo && actual is not null)
+                {
+                    <p class="mb-0 text-muted">Modificá los datos de <span class="text-primary">@actual.Nombre @actual.Apellido</span></p>
+                }
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+            <button class="btn btn-primary" @onclick="GuardarCambios">
+                <i class="bi bi-floppy me-1"></i>Guardar cambios
+            </button>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Nombre" placeholder="Nombre" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Apellido <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Apellido" placeholder="Apellido" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Empresa</label>
+            <input class="form-control" @bind="modelo.Empresa" placeholder="Empresa" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Cargo</label>
+            <input class="form-control" @bind="modelo.Cargo" placeholder="Cargo" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Teléfono <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Telefono" placeholder="Teléfono" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+            <input class="form-control" @bind="modelo.Email" placeholder="Email" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Dirección</label>
+            <input class="form-control" @bind="modelo.Direccion" placeholder="Dirección" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Fecha de nacimiento</label>
+            <input type="date" class="form-control"
+                   value="@(modelo.FechaNacimiento?.ToString("yyyy-MM-dd"))"
+                   @onchange="@(e => modelo.FechaNacimiento = e.Value is string s && !string.IsNullOrEmpty(s) ? DateOnly.Parse(s) : null)" />
+        </div>
+        <div class="col-12">
+            <label class="form-label fw-semibold">Notas</label>
+            <textarea class="form-control" rows="4" @bind="modelo.Notas" placeholder="Notas adicionales..."></textarea>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
+        <button class="btn btn-primary" @onclick="GuardarCambios">
+            <i class="bi bi-floppy me-1"></i>Guardar cambios
+        </button>
+    </div>
+}
+else if (actual == null)
+{
+    <p class="text-muted">Seleccioná un contacto de la lista</p>
+}
+else
+{
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+
+                        <div class="d-flex gap-3 align-items-center">
+                            <div class="avatar avatar-lg" style="background-color:@AvatarHelper.Color(actual.Nombre, actual.Apellido)">
+                                 @AvatarHelper.Iniciales(actual.Nombre, actual.Apellido)
+                            </div>
+                            <div>
+                                <h4 class="mb-0">@actual.Nombre @actual.Apellido</h4>
+                                @if (!string.IsNullOrEmpty(actual.Empresa))
+                                {
+                                    <p class="text-primary mb-0">@actual.Empresa</p>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary" @onclick="IrAEditar">
+                                <i class="bi bi-pencil me-1"></i>Editar
+                            </button>
+                            <button class="btn btn-outline-danger" @onclick="BorrarContacto">
+                                <i class="bi bi-trash me-1"></i>Eliminar
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <hr />
+
+                    <div class="detail-field">
+                        <i class="bi bi-envelope"></i>
+                        <div class="detail-field-label">Email</div>
+                        <div>@actual.Email</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-telephone"></i>
+                        <div class="detail-field-label">Teléfono</div>
+                        <div>@actual.Telefono</div>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <i class="bi bi-building"></i>
+                        <div class="detail-field-label">Empresa</div>
+                        <div>@(string.IsNullOrEmpty(actual.Empresa) ? "—" : actual.Empresa)</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-briefcase"></i>
+                        <div class="detail-field-label">Cargo</div>
+                        <div>@(string.IsNullOrEmpty(actual.Cargo) ? "—" : actual.Cargo)</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-geo-alt"></i>
+                        <div class="detail-field-label">Dirección</div>
+                        <div>@(string.IsNullOrEmpty(actual.Direccion) ? "—" : actual.Direccion)</div>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <i class="bi bi-card-text"></i>
+                        <div class="detail-field-label">Notas</div>
+                        <div>@(string.IsNullOrEmpty(actual.Notas) ? "—" : actual.Notas)</div>
+                    </div>
+                }
+
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+@code {
+    List<Contacto> listaContactos = new();
+    Contacto? actual;
+    string textoBusqueda = "";
+bool modoEdicion = false;
+bool modoNuevo = false;
+Contacto modelo = new();
+    protected override async Task OnInitializedAsync()
+    {
+        listaContactos = await Db.Contactos.ToListAsync();
+    }
+
+    List<Contacto> ListaFiltrada()
+    {
+        if (string.IsNullOrEmpty(textoBusqueda))
+            return listaContactos;
+
+        return listaContactos
+            .Where(x => x.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                     || x.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    async Task BorrarContacto()
+    {
+        if (actual == null) return;
+
+        Db.Contactos.Remove(actual);
+        await Db.SaveChangesAsync();
+        listaContactos.Remove(actual);
+        actual = null;
+    }
+
+     void IrAEditar()
+     {
+         if (actual is null) return;
+     modelo = new Contacto
+    {
+        Id = actual.Id,
+        Nombre = actual.Nombre,
+        Apellido = actual.Apellido,
+        Telefono = actual.Telefono,
+        Email = actual.Email,
+        Empresa = actual.Empresa,
+        Cargo = actual.Cargo,
+        Direccion = actual.Direccion,
+        FechaNacimiento = actual.FechaNacimiento,
+        Notas = actual.Notas
+    };
+    modoEdicion = true;
+    modoNuevo = false;
+    }
+
+    void Nuevo()
+    {
+         modelo = new Contacto();
+    actual = null;
+    modoNuevo = true;
+    modoEdicion = false;
+    }
+
+void CancelarEdicion()
+{
+    modoEdicion = false;
+    modoNuevo = false;
+}
+
+async Task GuardarCambios()
+{
+    if (modoNuevo)
+    {
+        Db.Contactos.Add(modelo);
+        await Db.SaveChangesAsync();
+        listaContactos = await Db.Contactos.ToListAsync();
+        actual = listaContactos.FirstOrDefault(c => c.Id == modelo.Id);
+    }
+    else
+    {
+        Db.Contactos.Update(modelo);
+        await Db.SaveChangesAsync();
+        var idx = listaContactos.FindIndex(c => c.Id == modelo.Id);
+        if (idx >= 0) listaContactos[idx] = modelo;
+        actual = modelo;
+    }
+    modoEdicion = false;
+    modoNuevo = false;
+}
+}
+

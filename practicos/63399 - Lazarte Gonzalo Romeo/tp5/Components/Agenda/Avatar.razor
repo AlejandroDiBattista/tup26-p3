@@ -1,0 +1,24 @@
+@using tp5.Models
+@* Avatar circular con las iniciales del contacto.
+   El color se elige de forma determinística a partir del Id,
+   así cada contacto mantiene siempre el mismo color. *@
+
+<div class="avatar @ClaseColor @(Grande ? "avatar-grande" : "")">
+    @Contacto.Iniciales
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Contacto Contacto { get; set; } = default!;
+
+    [Parameter]
+    public bool Grande { get; set; }
+
+    private static readonly string[] Colores =
+    {
+        "avatar-azul", "avatar-verde", "avatar-violeta",
+        "avatar-rosa", "avatar-naranja", "avatar-celeste"
+    };
+
+    private string ClaseColor => Colores[Math.Abs(Contacto.Id) % Colores.Length];
+}

@@ -1,0 +1,349 @@
+/* ============================================================
+   AGENDA WEB - Estilos globales
+   Paleta: Indigo moderno + grises neutros
+   ============================================================ */
+
+:root {
+    --primary:        #4f46e5;
+    --primary-hover:  #4338ca;
+    --primary-light:  #e0e7ff;
+    --primary-ring:   rgba(79, 70, 229, 0.18);
+    --bg-main:        #f1f5f9;
+    --sidebar-start:  #1e1b4b;
+    --sidebar-end:    #312e81;
+    --text-main:      #0f172a;
+    --text-muted:     #64748b;
+    --border:         #e2e8f0;
+    --card-bg:        #ffffff;
+}
+
+/* ── Base ── */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.page {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    background-image: linear-gradient(180deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%) !important;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.12);
+}
+
+.top-row.navbar {
+    background-color: rgba(0, 0, 0, 0.18) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff !important;
+}
+
+/* ── Contenedor principal ── */
+.agenda-container {
+    padding: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Encabezado ── */
+.agenda-header {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.75rem;
+}
+
+.agenda-header h1 {
+    color: var(--text-main);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.agenda-header .text-muted {
+    color: var(--text-muted) !important;
+    font-size: 0.875rem;
+}
+
+/* ── Botón Nuevo Contacto ── */
+.btn-nuevo {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #fff !important;
+    padding: 0.55rem 1.3rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.22);
+}
+
+.btn-nuevo:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(79, 70, 229, 0.3);
+}
+
+/* ── Layout grilla ── */
+.agenda-content {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* ── Panel Maestro (lista) ── */
+.panel-maestro {
+    background: var(--card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    height: 74vh;
+}
+
+/* ── Búsqueda ── */
+.search-box {
+    margin-bottom: 1rem;
+}
+
+.search-box input.form-control {
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    background-color: #f8fafc;
+    padding-left: 2.5rem !important;
+    height: 42px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box input.form-control:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-ring) !important;
+    background-color: #fff;
+}
+
+.search-box i.bi-search {
+    top: 13px !important;
+    left: 14px !important;
+    color: var(--text-muted) !important;
+    font-size: 0.9rem;
+}
+
+/* ── Lista de contactos ── */
+.listado-contactos {
+    overflow-y: auto;
+    flex-grow: 1;
+    margin: 0 -0.25rem;
+    padding: 0 0.25rem;
+}
+
+.contacto-item {
+    display: flex;
+    align-items: center;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 0.25rem;
+    transition: background-color 0.15s ease;
+}
+
+.contacto-item:hover {
+    background-color: #f1f5f9;
+}
+
+.contacto-item.active {
+    background-color: var(--primary-light);
+}
+
+/* ── Avatares ── */
+.avatar-mini {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-right: 0.8rem;
+}
+
+.contacto-item.active .avatar-mini {
+    background-color: #c7d2fe;
+    color: #3730a3;
+}
+
+.contacto-name {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.contacto-company {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+/* ── Panel Detalle ── */
+.panel-detalle {
+    background: var(--card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.75rem 2rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    height: 74vh;
+    overflow-y: auto;
+}
+
+/* Estado vacío */
+.panel-detalle .bi-person-lines-fill {
+    color: #cbd5e1;
+}
+
+/* ── Avatar grande ── */
+.avatar-grande {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.5rem;
+}
+
+/* ── Cabecera del detalle ── */
+.detalle-header {
+    gap: 1rem;
+}
+
+.detalle-header h3 {
+    font-size: 1.2rem;
+    color: var(--text-main);
+}
+
+.detalle-header .text-primary {
+    color: var(--primary) !important;
+    font-size: 0.95rem !important;
+}
+
+/* ── Botones de acción ── */
+.action-btn {
+    border-radius: 7px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* ── Filas de información ── */
+.info-row {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.info-label {
+    min-width: 140px;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.info-val {
+    color: #334155;
+    flex: 1;
+}
+
+.info-val.text-primary {
+    color: var(--primary) !important;
+}
+
+/* ── Formulario de edición ── */
+.formulario-wrapper {
+    /* contenido del form */
+}
+
+.formulario-header {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.35rem;
+}
+
+.form-custom-input,
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-custom-input:focus,
+.form-control:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-ring) !important;
+}
+
+/* Badge "Cliente" */
+.badge.bg-light.text-primary {
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
+    border-color: #c7d2fe !important;
+    font-size: 0.75rem;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 900px) {
+    .agenda-content {
+        grid-template-columns: 1fr;
+    }
+
+    .panel-maestro {
+        height: auto;
+        max-height: 50vh;
+    }
+
+    .panel-detalle {
+        height: auto;
+        max-height: 70vh;
+    }
+}
+
+@media (max-width: 576px) {
+    .agenda-container {
+        padding: 1rem;
+    }
+
+    .detalle-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

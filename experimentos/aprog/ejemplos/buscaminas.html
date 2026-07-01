@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buscaminas · Glassmorphism</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffe5c4;
+      --ink: #3a1a0a;
+      --ink-soft: rgba(58, 26, 10, 0.66);
+      --glass: rgba(255, 255, 255, 0.36);
+      --glass-strong: rgba(255, 255, 255, 0.56);
+      --line: rgba(255, 255, 255, 0.62);
+      --shadow: rgba(90, 46, 30, 0.2);
+      --accent: #ff623d;
+      --accent-2: #e6334f;
+      --gold: #ffd86b;
+      --cell-gap: 7px;
+      --ease-out-quick: cubic-bezier(0.2, 0.8, 0.2, 1);
+      --ease-snap: cubic-bezier(0.16, 1, 0.3, 1);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-block-size: 100%;
+    }
+
+    body {
+      min-block-size: 100dvh;
+      font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 16%, rgba(255, 216, 107, 0.9), transparent 31%),
+        radial-gradient(circle at 78% 28%, rgba(230, 51, 79, 0.32), transparent 34%),
+        radial-gradient(circle at 54% 88%, rgba(255, 107, 53, 0.44), transparent 38%),
+        linear-gradient(135deg, #ffe9cd 0%, #ffd8a8 52%, #ffc4a4 100%);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      min-block-size: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    .shell {
+      width: min(100%, 720px);
+      display: grid;
+      gap: 18px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      inline-size: 56px;
+      block-size: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--gold) 0%, #ff6b35 58%, var(--accent-2) 100%);
+      box-shadow: 0 12px 34px rgba(230, 51, 79, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      padding: 10px;
+      transform: rotate(-4deg);
+    }
+
+    .brand-mark span {
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.38);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    }
+
+    .brand-mark span:nth-child(2),
+    .brand-mark span:nth-child(5),
+    .brand-mark span:nth-child(7) {
+      background: rgba(58, 26, 10, 0.24);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.6rem;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .brand em {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      min-inline-size: 96px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      box-shadow: 0 8px 24px rgba(90, 46, 30, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.64rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-soft);
+    }
+
+    .stat-value {
+      display: block;
+      margin-block-start: 2px;
+      font-size: 1.4rem;
+      line-height: 1;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .modes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-block-size: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.58);
+      border-radius: 12px;
+      padding: 9px 14px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.34);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+      cursor: pointer;
+      transition: transform 90ms var(--ease-out-quick), background 90ms var(--ease-out-quick), box-shadow 90ms var(--ease-out-quick);
+      font-weight: 700;
+      font-size: 0.84rem;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.52);
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .btn[aria-pressed="true"],
+    .btn-primary {
+      color: #fff8f0;
+      border-color: rgba(255, 255, 255, 0.28);
+      background: linear-gradient(135deg, #ff8a4a 0%, #ff5a3a 100%);
+      box-shadow: 0 8px 22px rgba(255, 90, 58, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+    }
+
+    :where(button):focus-visible {
+      outline: 3px solid rgba(58, 26, 10, 0.78);
+      outline-offset: 3px;
+    }
+
+    .cell:focus-visible {
+      outline: none;
+    }
+
+    .board-wrap {
+      position: relative;
+      inline-size: min(100%, 680px);
+      margin-inline: auto;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(30px) saturate(1.5);
+      -webkit-backdrop-filter: blur(30px) saturate(1.5);
+      box-shadow:
+        0 22px 64px var(--shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.52),
+        inset 0 -2px 0 rgba(255, 255, 255, 0.16);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+      grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+      gap: var(--cell-gap);
+      inline-size: 100%;
+      aspect-ratio: var(--cols) / var(--rows);
+    }
+
+    .cell {
+      position: relative;
+      min-inline-size: 0;
+      min-block-size: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      border-radius: var(--cell-radius, 12px);
+      color: var(--ink);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(255, 210, 180, 0.38)),
+        rgba(255, 255, 255, 0.46);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.72),
+        inset 0 -4px 0 rgba(90, 46, 30, 0.13),
+        0 5px 12px rgba(90, 46, 30, 0.12);
+      font-size: var(--cell-font, 1rem);
+      line-height: 1;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      transition: transform 70ms var(--ease-out-quick), background 80ms var(--ease-out-quick), box-shadow 80ms var(--ease-out-quick);
+    }
+
+    .cell:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(255, 214, 184, 0.48)),
+        rgba(255, 255, 255, 0.58);
+    }
+
+    .cell:disabled {
+      cursor: default;
+    }
+
+    .cell.revealed {
+      background:
+        linear-gradient(145deg, rgba(255, 235, 204, 0.42), rgba(255, 198, 148, 0.22)),
+        rgba(255, 216, 170, 0.38);
+      box-shadow:
+        inset 0 4px 10px rgba(90, 46, 30, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      border-color: rgba(155, 90, 46, 0.24);
+      transform: none;
+    }
+
+    .cell.fresh {
+      animation: cellPop 120ms var(--ease-snap);
+      will-change: transform, opacity;
+    }
+
+    .cell.active {
+      border-color: rgba(58, 26, 10, 0.46);
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.62),
+        0 0 0 4px rgba(58, 26, 10, 0.24),
+        inset 0 2px 0 rgba(255, 255, 255, 0.58),
+        inset 0 -3px 0 rgba(90, 46, 30, 0.11);
+    }
+
+    .cell.revealed.active {
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.5),
+        0 0 0 4px rgba(58, 26, 10, 0.2),
+        inset 0 4px 10px rgba(90, 46, 30, 0.16);
+    }
+
+    .cell.flagged {
+      color: #fff8f0;
+      background: linear-gradient(135deg, #ff8a4a 0%, #e6334f 100%);
+      box-shadow: 0 6px 16px rgba(230, 51, 79, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+    }
+
+    .cell.flagged:hover:not(:disabled) {
+      color: #fff8f0;
+      background: linear-gradient(135deg, #ff9a5f 0%, #ef435b 100%);
+      box-shadow: 0 8px 18px rgba(230, 51, 79, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.48);
+    }
+
+    .cell.flagged.active {
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.56),
+        0 0 0 4px rgba(58, 26, 10, 0.22),
+        0 7px 18px rgba(230, 51, 79, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    }
+
+    .cell.flagged.fresh {
+      animation: flagPop 130ms var(--ease-snap);
+      will-change: transform, opacity;
+    }
+
+    .cell.mine {
+      color: #fff8f0;
+      background: linear-gradient(135deg, #3a1a0a 0%, #7a211f 100%);
+    }
+
+    .cell.boom {
+      background: linear-gradient(135deg, #ffdf6e 0%, #ff623d 50%, #e6334f 100%);
+      animation: boom 170ms var(--ease-snap);
+      will-change: transform;
+    }
+
+    .cell.chord {
+      animation: chordPulse 115ms var(--ease-out-quick);
+      will-change: transform, opacity;
+    }
+
+    .cell.blocked {
+      animation: blockedNudge 130ms var(--ease-out-quick);
+      will-change: transform;
+    }
+
+    .board-wrap.win-pulse {
+      animation: winPulse 180ms var(--ease-snap);
+      will-change: transform;
+    }
+
+    .cell[data-near="1"] { color: #2c65d8; }
+    .cell[data-near="2"] { color: #138a51; }
+    .cell[data-near="3"] { color: #d64b26; }
+    .cell[data-near="4"] { color: #7045c8; }
+    .cell[data-near="5"] { color: #b3233c; }
+    .cell[data-near="6"] { color: #008995; }
+    .cell[data-near="7"] { color: #513127; }
+    .cell[data-near="8"] { color: #6b625b; }
+
+    @keyframes boom {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.14) rotate(-2deg); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes cellPop {
+      0% { transform: scale(0.94); opacity: 0.86; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes flagPop {
+      0% { transform: scale(0.9) rotate(-3deg); opacity: 0.88; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes chordPulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.97); opacity: 0.9; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes blockedNudge {
+      0% { transform: translateX(0); }
+      35% { transform: translateX(-2px); }
+      70% { transform: translateX(2px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes winPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      border-radius: 24px;
+      background: rgba(255, 245, 230, 0.36);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      padding: 20px;
+    }
+
+    .overlay.show {
+      display: grid;
+    }
+
+    .overlay-card {
+      inline-size: min(100%, 330px);
+      padding: 28px 30px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.66);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.48);
+      backdrop-filter: blur(22px) saturate(1.4);
+      -webkit-backdrop-filter: blur(22px) saturate(1.4);
+      box-shadow: 0 20px 52px rgba(90, 46, 30, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      animation: cardIn 130ms var(--ease-snap);
+    }
+
+    @keyframes cardIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .overlay-kicker {
+      color: var(--ink-soft);
+      font-size: 0.66rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .overlay-title {
+      margin-block: 5px 8px;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 2.8rem;
+      font-style: italic;
+      line-height: 1;
+    }
+
+    .overlay-copy {
+      margin: 0 0 18px;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-inline: 4px;
+      color: var(--ink-soft);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    kbd {
+      display: inline-grid;
+      place-items: center;
+      min-inline-size: 21px;
+      block-size: 21px;
+      padding-inline: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.42);
+      color: var(--ink);
+      font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .sr-status {
+      position: absolute;
+      clip-path: inset(50%);
+      overflow: hidden;
+      inline-size: 1px;
+      block-size: 1px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        padding: 16px;
+        place-items: start center;
+      }
+
+      .header {
+        align-items: stretch;
+      }
+
+      .brand {
+        inline-size: 100%;
+      }
+
+      h1 {
+        font-size: 2.25rem;
+      }
+
+      .stats {
+        inline-size: 100%;
+      }
+
+      .stat {
+        flex: 1 1 0;
+        min-inline-size: 0;
+      }
+
+      .controls {
+        align-items: stretch;
+      }
+
+      .modes,
+      .btn-primary {
+        inline-size: 100%;
+      }
+
+      .modes .btn {
+        flex: 1 1 90px;
+      }
+
+      .board-wrap {
+        padding: 10px;
+        border-radius: 20px;
+      }
+
+      .board {
+        gap: 5px;
+      }
+
+      .cell {
+        border-radius: var(--cell-radius-mobile, 8px);
+      }
+
+      .footer {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cell,
+      .btn {
+        transition-duration: 1ms;
+      }
+
+      .cell.fresh,
+      .cell.flagged.fresh,
+      .cell.boom,
+      .cell.chord,
+      .cell.blocked,
+      .board-wrap.win-pulse,
+      .overlay-card {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="shell" aria-labelledby="game-title">
+      <header class="header">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <div>
+            <h1 id="game-title">Buscaminas</h1>
+            <p><em>glass edition</em> · despeja sin tocar las minas</p>
+          </div>
+        </div>
+
+        <div class="stats" aria-label="Estado de la partida">
+          <div class="stat">
+            <span class="stat-label">Minas</span>
+            <span class="stat-value" id="mineCount">10</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Banderas</span>
+            <span class="stat-value" id="flagCount">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Tiempo</span>
+            <span class="stat-value" id="timer">000</span>
+          </div>
+        </div>
+      </header>
+
+      <nav class="controls" aria-label="Controles de partida">
+        <div class="modes" role="group" aria-label="Dificultad">
+          <button class="btn" type="button" data-mode="easy" aria-pressed="true">8 x 8</button>
+          <button class="btn" type="button" data-mode="medium" aria-pressed="false">12 x 12</button>
+          <button class="btn" type="button" data-mode="hard" aria-pressed="false">16 x 16</button>
+        </div>
+        <button class="btn btn-primary" type="button" id="newGame">Nuevo juego</button>
+      </nav>
+
+      <div class="board-wrap">
+        <div class="board" id="board" role="group" aria-label="Tablero de Buscaminas"></div>
+        <div class="overlay" id="overlay" aria-live="polite">
+          <div class="overlay-card">
+            <div class="overlay-kicker" id="overlayKicker">Partida</div>
+            <div class="overlay-title" id="overlayTitle">Listo</div>
+            <p class="overlay-copy" id="overlayCopy">Primer click siempre seguro.</p>
+            <button class="btn btn-primary" type="button" id="overlayAction">Jugar otra vez</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>Click o <kbd>Space</kbd>: revelar · click derecho o <kbd>Shift</kbd> + click: bandera</span>
+        <span>Flechas: mover · <kbd>Shift</kbd> + flechas: saltar · <kbd>Enter</kbd>: marcar/acorde</span>
+      </footer>
+
+      <p class="sr-status" id="srStatus" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    const modes = {
+      easy: { rows: 8, cols: 8, mines: 10 },
+      medium: { rows: 12, cols: 12, mines: 24 },
+      hard: { rows: 16, cols: 16, mines: 48 }
+    };
+
+    const boardEl = document.querySelector("#board");
+    const mineCountEl = document.querySelector("#mineCount");
+    const flagCountEl = document.querySelector("#flagCount");
+    const timerEl = document.querySelector("#timer");
+    const overlayEl = document.querySelector("#overlay");
+    const overlayKickerEl = document.querySelector("#overlayKicker");
+    const overlayTitleEl = document.querySelector("#overlayTitle");
+    const overlayCopyEl = document.querySelector("#overlayCopy");
+    const overlayActionEl = document.querySelector("#overlayAction");
+    const srStatusEl = document.querySelector("#srStatus");
+    const modeButtons = [...document.querySelectorAll("[data-mode]")];
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    let mode = "easy";
+    let config = modes[mode];
+    let cells = [];
+    let started = false;
+    let ended = false;
+    let flags = 0;
+    let revealed = 0;
+    let seconds = 0;
+    let timerId = null;
+    let pressTimer = null;
+    let activeIndex = 0;
+    let freshIndexes = new Set();
+
+    function createCell(row, col) {
+      return {
+        row,
+        col,
+        mine: false,
+        revealed: false,
+        flagged: false,
+        near: 0
+      };
+    }
+
+    function startGame(nextMode = mode) {
+      mode = nextMode;
+      config = modes[mode];
+      cells = [];
+      started = false;
+      ended = false;
+      flags = 0;
+      revealed = 0;
+      seconds = 0;
+      activeIndex = 0;
+      freshIndexes.clear();
+      clearInterval(timerId);
+      timerId = null;
+      overlayEl.classList.remove("show");
+      boardEl.parentElement.classList.remove("win-pulse");
+
+      for (let row = 0; row < config.rows; row++) {
+        for (let col = 0; col < config.cols; col++) {
+          cells.push(createCell(row, col));
+        }
+      }
+
+      modeButtons.forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
+      });
+
+      renderBoard();
+      setActiveCell(activeIndex);
+      requestAnimationFrame(() => setActiveCell(activeIndex));
+      updateStats();
+      announce("Partida nueva. Primer click seguro.");
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = "";
+      boardEl.style.setProperty("--cols", config.cols);
+      boardEl.style.setProperty("--rows", config.rows);
+      boardEl.style.setProperty("--cell-font", config.cols >= 16 ? "0.76rem" : config.cols >= 12 ? "0.9rem" : "1.05rem");
+      boardEl.style.setProperty("--cell-radius", config.cols >= 16 ? "9px" : "12px");
+      boardEl.style.setProperty("--cell-radius-mobile", config.cols >= 16 ? "6px" : "8px");
+
+      cells.forEach((cell, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "cell";
+        button.dataset.index = index;
+        button.tabIndex = index === activeIndex ? 0 : -1;
+        button.setAttribute("aria-label", `Fila ${cell.row + 1}, columna ${cell.col + 1}. Oculta.`);
+
+        button.addEventListener("click", (event) => {
+          setActiveCell(index);
+
+          if (event.shiftKey) {
+            toggleFlag(index);
+            return;
+          }
+
+          reveal(index);
+        });
+        button.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          setActiveCell(index);
+          toggleFlag(index);
+        });
+        button.addEventListener("dblclick", () => {
+          setActiveCell(index);
+          chordReveal(index);
+        });
+        button.addEventListener("focus", () => setActiveCell(index, { focus: false }));
+        button.addEventListener("keydown", (event) => handleCellKey(event, index));
+        button.addEventListener("pointerdown", () => {
+          setActiveCell(index);
+          clearTimeout(pressTimer);
+          pressTimer = setTimeout(() => toggleFlag(index), 360);
+        });
+        button.addEventListener("pointerup", () => clearTimeout(pressTimer));
+        button.addEventListener("pointerleave", () => clearTimeout(pressTimer));
+
+        boardEl.appendChild(button);
+      });
+    }
+
+    function placeMines(firstIndex) {
+      const blocked = new Set([firstIndex, ...neighbors(firstIndex)]);
+      const candidates = cells
+        .map((_, index) => index)
+        .filter((index) => !blocked.has(index));
+
+      shuffle(candidates)
+        .slice(0, config.mines)
+        .forEach((index) => cells[index].mine = true);
+
+      cells.forEach((cell, index) => {
+        cell.near = neighbors(index).filter((nearIndex) => cells[nearIndex].mine).length;
+      });
+    }
+
+    function reveal(index) {
+      const cell = cells[index];
+      if (ended || cell.flagged || cell.revealed) return;
+
+      if (!started) {
+        started = true;
+        placeMines(index);
+        startTimer();
+      }
+
+      if (cell.mine) {
+        cell.revealed = true;
+        freshIndexes.add(index);
+        endGame(false, index);
+        return;
+      }
+
+      floodReveal(index);
+      paint();
+      checkWin();
+    }
+
+    function floodReveal(index) {
+      const queue = [index];
+      const visited = new Set();
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (visited.has(current)) continue;
+        visited.add(current);
+
+        const cell = cells[current];
+        if (cell.revealed || cell.flagged || cell.mine) continue;
+
+        cell.revealed = true;
+        freshIndexes.add(current);
+        revealed++;
+
+        if (cell.near === 0) {
+          neighbors(current).forEach((nearIndex) => queue.push(nearIndex));
+        }
+      }
+    }
+
+    function toggleFlag(index) {
+      const cell = cells[index];
+      if (ended || cell.revealed) return;
+
+      cell.flagged = !cell.flagged;
+      flags += cell.flagged ? 1 : -1;
+      if (cell.flagged) {
+        freshIndexes.add(index);
+      }
+      paint();
+      updateStats();
+      announce(cell.flagged ? "Bandera marcada." : "Bandera quitada.");
+    }
+
+    function chordReveal(index) {
+      const cell = cells[index];
+      if (ended || !cell.revealed || cell.mine || cell.near === 0) return false;
+
+      const nearIndexes = neighbors(index);
+      const flaggedCount = nearIndexes.filter((nearIndex) => cells[nearIndex].flagged).length;
+      if (flaggedCount !== cell.near) {
+        pulseCell(index, "blocked");
+        announce(`Faltan banderas: esta celda necesita ${cell.near} alrededor.`);
+        return false;
+      }
+
+      const targets = nearIndexes.filter((nearIndex) => {
+        const nearCell = cells[nearIndex];
+        return !nearCell.revealed && !nearCell.flagged;
+      });
+
+      let mineIndex = null;
+      for (const nearIndex of targets) {
+        const nearCell = cells[nearIndex];
+
+        if (nearCell.mine) {
+          nearCell.revealed = true;
+          freshIndexes.add(nearIndex);
+          mineIndex = nearIndex;
+          break;
+        }
+
+        floodReveal(nearIndex);
+      }
+
+      if (mineIndex !== null) {
+        endGame(false, mineIndex);
+        return true;
+      }
+
+      if (targets.length > 0) {
+        paint();
+        checkWin();
+      }
+
+      pulseCell(index, "chord");
+      if (!ended && targets.length > 0) {
+        announce("Vecinas reveladas.");
+      }
+      return targets.length > 0;
+    }
+
+    function paint() {
+      const fresh = freshIndexes;
+      freshIndexes = new Set();
+
+      cells.forEach((cell, index) => {
+        const button = boardEl.children[index];
+        button.className = "cell";
+        button.textContent = "";
+        button.removeAttribute("data-near");
+        button.disabled = false;
+        button.tabIndex = index === activeIndex ? 0 : -1;
+
+        if (index === activeIndex) {
+          button.classList.add("active");
+        }
+
+        if (fresh.has(index)) {
+          button.classList.add("fresh");
+        }
+
+        if (cell.revealed) {
+          button.classList.add("revealed");
+
+          if (cell.mine) {
+            button.classList.add("mine");
+            button.textContent = "💣";
+            button.setAttribute("aria-label", `Fila ${cell.row + 1}, columna ${cell.col + 1}. Mina.`);
+          } else if (cell.near > 0) {
+            button.textContent = cell.near;
+            button.dataset.near = cell.near;
+            button.setAttribute("aria-label", `Fila ${cell.row + 1}, columna ${cell.col + 1}. ${cell.near} minas cerca.`);
+          } else {
+            button.setAttribute("aria-label", `Fila ${cell.row + 1}, columna ${cell.col + 1}. Libre.`);
+          }
+        } else if (cell.flagged) {
+          button.classList.add("flagged");
+          button.textContent = "🚩";
+          button.setAttribute("aria-label", `Fila ${cell.row + 1}, columna ${cell.col + 1}. Marcada con bandera.`);
+        } else {
+          button.setAttribute("aria-label", `Fila ${cell.row + 1}, columna ${cell.col + 1}. Oculta.`);
+        }
+      });
+    }
+
+    function endGame(won, mineIndex = null) {
+      ended = true;
+      clearInterval(timerId);
+
+      if (!won) {
+        cells.forEach((cell) => {
+          if (cell.mine) cell.revealed = true;
+        });
+      }
+
+      paint();
+      if (mineIndex !== null) {
+        boardEl.children[mineIndex].classList.add("boom");
+      }
+
+      if (won) {
+        pulseBoard("win-pulse");
+      }
+
+      overlayKickerEl.textContent = won ? "Zona despejada" : "Mina activada";
+      overlayTitleEl.textContent = won ? "Ganaste" : "Perdiste";
+      overlayCopyEl.textContent = won
+        ? `Tiempo final: ${formatTime(seconds)} con ${flags} banderas.`
+        : "La proxima partida empieza con otro mapa.";
+      overlayEl.classList.add("show");
+      announce(won ? "Ganaste la partida." : "Perdiste la partida.");
+    }
+
+    function checkWin() {
+      if (revealed === cells.length - config.mines) {
+        cells.forEach((cell) => {
+          if (cell.mine && !cell.flagged) {
+            cell.flagged = true;
+            flags++;
+          }
+        });
+        updateStats();
+        endGame(true);
+      }
+    }
+
+    function startTimer() {
+      timerId = setInterval(() => {
+        seconds++;
+        timerEl.textContent = formatTime(seconds);
+      }, 1000);
+    }
+
+    function updateStats() {
+      mineCountEl.textContent = config.mines;
+      flagCountEl.textContent = flags;
+      timerEl.textContent = formatTime(seconds);
+    }
+
+    function formatTime(value) {
+      return String(Math.min(value, 999)).padStart(3, "0");
+    }
+
+    function neighbors(index) {
+      const cell = cells[index];
+      const result = [];
+
+      for (let row = cell.row - 1; row <= cell.row + 1; row++) {
+        for (let col = cell.col - 1; col <= cell.col + 1; col++) {
+          if (row === cell.row && col === cell.col) continue;
+          if (row < 0 || col < 0 || row >= config.rows || col >= config.cols) continue;
+          result.push(row * config.cols + col);
+        }
+      }
+
+      return result;
+    }
+
+    function shuffle(items) {
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      return items;
+    }
+
+    function handleCellKey(event, index) {
+      const nextIndex = event.shiftKey
+        ? getExtendedTarget(index, event.key)
+        : getArrowTarget(index, event.key);
+
+      if (nextIndex !== null) {
+        event.preventDefault();
+        event.stopPropagation();
+        setActiveCell(nextIndex);
+        return;
+      }
+
+      if (event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (event.shiftKey) {
+          if (cells[index].revealed) {
+            chordReveal(index);
+          } else {
+            toggleFlag(index);
+          }
+          return;
+        }
+
+        reveal(index);
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (cells[index].revealed) {
+          chordReveal(index);
+        } else {
+          toggleFlag(index);
+        }
+        return;
+      }
+
+      if (event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleFlag(index);
+      }
+    }
+
+    function getArrowTarget(index, key) {
+      const row = Math.floor(index / config.cols);
+      const col = index % config.cols;
+
+      if (key === "ArrowUp" && row > 0) return index - config.cols;
+      if (key === "ArrowDown" && row < config.rows - 1) return index + config.cols;
+      if (key === "ArrowLeft" && col > 0) return index - 1;
+      if (key === "ArrowRight" && col < config.cols - 1) return index + 1;
+
+      return null;
+    }
+
+    function getExtendedTarget(index, key) {
+      let current = getArrowTarget(index, key);
+      let lastSameState = null;
+      const revealed = cells[index].revealed;
+
+      while (current !== null && cells[current].revealed === revealed) {
+        lastSameState = current;
+        current = getArrowTarget(current, key);
+      }
+
+      return lastSameState ?? current;
+    }
+
+    function setActiveCell(index, options = {}) {
+      if (index < 0 || index >= cells.length || activeIndex === index && options.focus === false) {
+        return;
+      }
+
+      const previous = boardEl.children[activeIndex];
+      activeIndex = index;
+      const current = boardEl.children[activeIndex];
+
+      if (previous) {
+        previous.classList.remove("active");
+        previous.tabIndex = -1;
+      }
+
+      if (current) {
+        current.classList.add("active");
+        current.tabIndex = 0;
+
+        if (options.focus !== false) {
+          current.focus({ preventScroll: true });
+        }
+      }
+    }
+
+    function pulseCell(index, className) {
+      if (motionQuery.matches) return;
+
+      const cell = boardEl.children[index];
+      if (!cell) return;
+
+      cell.classList.remove(className);
+      void cell.offsetWidth;
+      cell.classList.add(className);
+      window.setTimeout(() => cell.classList.remove(className), 180);
+    }
+
+    function pulseBoard(className) {
+      if (motionQuery.matches) return;
+
+      const boardWrap = boardEl.parentElement;
+      boardWrap.classList.remove(className);
+      void boardWrap.offsetWidth;
+      boardWrap.classList.add(className);
+      window.setTimeout(() => boardWrap.classList.remove(className), 220);
+    }
+
+    function announce(message) {
+      srStatusEl.textContent = message;
+    }
+
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => startGame(button.dataset.mode));
+    });
+
+    document.querySelector("#newGame").addEventListener("click", () => startGame());
+    overlayActionEl.addEventListener("click", () => startGame());
+
+    window.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented) return;
+
+      if (event.key.toLowerCase() === "r") {
+        startGame();
+        return;
+      }
+
+      if (shouldRouteBoardKey(event)) {
+        handleCellKey(event, activeIndex);
+      }
+    });
+
+    function shouldRouteBoardKey(event) {
+      const key = event.key;
+      const boardKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Enter", "f", "F"];
+      const target = event.target;
+      if (!boardKeys.includes(key)) return false;
+      if (boardEl.contains(target)) return false;
+      if (target.closest?.("button, input, select, textarea, a")) return false;
+      return true;
+    }
+
+    startGame();
+  </script>
+</body>
+</html>

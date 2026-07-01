@@ -5,6 +5,7 @@ namespace Tup26.AlumnosApp;
 static class AlumnosCliActions {
 
     const double UmbralCopia = 0.90;
+    const int MinimoLineasCopia = 20;
     //  60% -> 91
     //  70% -> 64
     //  75% -> 56
@@ -19,41 +20,6 @@ static class AlumnosCliActions {
         return 0;
     }
 
-    public static int ListarSinGithub() {
-        Alumnos alumnos = CargarAlumnos();
-        AlumnosManager.Listar(alumnos.ConGithub(false), "Alumnos sin GitHub");
-        return 0;
-    }
-
-    public static int ListarSinTelefono() {
-        Alumnos alumnos = CargarAlumnos();
-        AlumnosManager.Listar(alumnos.ConTelefono(false), "Alumnos sin telefono");
-        return 0;
-    }
-
-    public static int ListarSinFoto() {
-        Alumnos alumnos = CargarAlumnos();
-        int actualizados = AlumnosManager.SincronizarEstadoFotosDesdeCarpetas(alumnos);
-
-        if (actualizados > 0) {
-            AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
-            Log.Info($"Estado de foto actualizado en alumnos.md: {actualizados} alumno(s).");
-        } else {
-            Log.Info("No hubo cambios en el estado de fotos al revisar carpetas.");
-        }
-
-        AlumnosManager.Listar(alumnos.ConFotos(false), "Alumnos sin foto");
-        return 0;
-    }
-
-    public static int ListarTp1NoPresentado() {
-        return ListarTpNoPresentado("1");
-    }
-
-    public static int ListarTp2NoPresentado() {
-        return ListarTpNoPresentado("2");
-    }
-
     public static int ListarTpNoPresentado(string trabajoPractico) {
         int numeroTp = ObtenerNumeroTP(trabajoPractico);
         if (numeroTp <= 0) {
@@ -66,30 +32,28 @@ static class AlumnosCliActions {
             .Where(TieneAlgunPracticoPresentado)
             .Where(alumno => alumno.EstadoPractico(numeroTp) != Estado.Aprobado);
 
-        AlumnosManager.Listar(noPresentaron, $"Alumnos que no presentaron TP{numeroTp}");
+        AlumnosManager.Listar(noPresentaron, $"Alumnos con TP{numeroTp} faltante");
         return 0;
     }
 
-    public static int ListarSinPracticosPresentados() {
-        Alumnos alumnos = CargarAlumnos();
-        IEnumerable<Alumno> sinPracticos = alumnos.Where(alumno => !TieneAlgunPracticoPresentado(alumno));
-
-        AlumnosManager.Listar(sinPracticos, "Alumnos sin prácticos presentados");
+    public static int NormalizarCarpetas() {
+        PrepararCarpetasAlumnos();
         return 0;
     }
 
     public static int LimpiarProyectosPracticos() {
+        PrepararCarpetasAlumnos();
         LimpiezaCompilacionPracticosResultado resultado = AppPaths.LimpiarDirectoriosCompilacionPracticos();
         IReadOnlyList<string> elementosEliminados = resultado.ElementosEliminados;
-        IReadOnlyList<string> elementosRestantes = resultado.ElementosRestantes;
+        IReadOnlyList<string> elementosRestantes  = resultado.ElementosRestantes;
 
         if (elementosEliminados.Count == 0 && elementosRestantes.Count == 0) {
-            Log.Info("No se encontraron carpetas ni cachés de compilación dentro de prácticos.");
+            Log.Info("No se encontraron carpetas ni cachés de compilación dentro de prácticos, enunciados ni clases.");
             return 0;
         }
 
         foreach (string ruta in elementosEliminados) {
-            Log.Info($"Eliminado: {AppPaths.RutaRelativaDesdePracticos(ruta)}");
+            Log.Info($"Eliminado: {AppPaths.RutaRelativaDesdeRepo(ruta)}");
         }
 
         Log.Info($"Total de elementos eliminados: {elementosEliminados.Count}");
@@ -97,7 +61,7 @@ static class AlumnosCliActions {
         if (elementosRestantes.Count > 0) {
             Log.Warning($"Quedaron o se regeneraron {elementosRestantes.Count} elemento(s) de compilación.");
             foreach (string ruta in elementosRestantes.Take(10)) {
-                Log.Warning($"Pendiente: {AppPaths.RutaRelativaDesdePracticos(ruta)}");
+                Log.Warning($"Pendiente: {AppPaths.RutaRelativaDesdeRepo(ruta)}");
             }
 
             if (elementosRestantes.Count > 10) {
@@ -134,12 +98,6 @@ static class AlumnosCliActions {
         return 0;
     }
 
-    public static int CrearCarpetas() {
-        Alumnos alumnos = CargarAlumnos();
-        AlumnosManager.CrearCarpetas(alumnos);
-        return 0;
-    }
-
     public static int PublicarPractico(string trabajoPractico, bool forzar) {
         int numeroTp = ObtenerNumeroTP(trabajoPractico);
         if (numeroTp <= 0) {
@@ -153,13 +111,356 @@ static class AlumnosCliActions {
             return 1;
         }
 
-        Alumnos alumnos = CargarAlumnos();
+        Alumnos alumnos = CargarAlumnosConCarpetasPreparadas();
         Log.Info($"Publicando {carpetaTp.ToUpperInvariant()} desde {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
         AlumnosManager.PublicarPractico(alumnos, carpetaTp, forzar);
         return 0;
     }
 
-    public static int PublicarRehacer(string trabajoPractico) {
+    public static int PublicarApuntes() {
+        (string Script, string[] Argumentos)[] publicaciones = [
+            ("publicar.py", []),
+            ("publicar_pdf.py", ["--no-renumerar"])
+        ];
+
+        foreach ((string script, _) in publicaciones) {
+            string rutaScript = Path.Combine(AppPaths.ApuntesDirectory, script);
+            if (!AppPaths.ExisteArchivo(rutaScript)) {
+                Log.Error($"No existe el script de publicación: {rutaScript}");
+                return 1;
+            }
+        }
+
+        foreach ((string script, string[] argumentos) in publicaciones) {
+            int codigo = EjecutarScriptPublicacion(script, argumentos);
+            if (codigo != 0) {
+                return codigo;
+            }
+        }
+
+        return 0;
+    }
+
+    static int EjecutarScriptPublicacion(string script, string[] argumentos) {
+        try {
+            Log.Info($"Ejecutando apuntes/{script}...");
+            ProcessStartInfo startInfo = new() {
+                FileName = PythonExecutable(),
+                WorkingDirectory = AppPaths.ApuntesDirectory,
+                UseShellExecute = false
+            };
+            startInfo.ArgumentList.Add(script);
+            foreach (string argumento in argumentos) {
+                startInfo.ArgumentList.Add(argumento);
+            }
+
+            using Process proceso = Process.Start(startInfo)
+                ?? throw new InvalidOperationException($"No se pudo iniciar {script}.");
+            proceso.WaitForExit();
+
+            if (proceso.ExitCode != 0) {
+                Log.Error($"{script} terminó con código {proceso.ExitCode}.");
+            }
+
+            return proceso.ExitCode;
+        } catch (Exception ex) {
+            Log.Error($"No se pudo ejecutar {script}: {ex.Message}");
+            return 1;
+        }
+    }
+
+    static string PythonExecutable() {
+        string[] candidatos = OperatingSystem.IsWindows()
+            ? ["python", "py"]
+            : ["python3", "python"];
+
+        string? path = Environment.GetEnvironmentVariable("PATH");
+        foreach (string candidato in candidatos) {
+            if (ExisteEjecutableEnPath(candidato, path)) {
+                return candidato;
+            }
+        }
+
+        return candidatos[0];
+    }
+
+    static bool ExisteEjecutableEnPath(string ejecutable, string? path) {
+        if (string.IsNullOrWhiteSpace(path)) {
+            return false;
+        }
+
+        IEnumerable<string> nombres = OperatingSystem.IsWindows()
+            ? ExtensionesEjecutablesWindows(ejecutable)
+            : [ejecutable];
+
+        foreach (string directorio in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)) {
+            foreach (string nombre in nombres) {
+                if (File.Exists(Path.Combine(directorio.Trim(), nombre))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    static IEnumerable<string> ExtensionesEjecutablesWindows(string ejecutable) {
+        if (Path.HasExtension(ejecutable)) {
+            yield return ejecutable;
+            yield break;
+        }
+
+        string[] extensiones = (Environment.GetEnvironmentVariable("PATHEXT") ?? ".COM;.EXE;.BAT;.CMD")
+            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        yield return ejecutable;
+        foreach (string extension in extensiones) {
+            yield return ejecutable + extension.ToLowerInvariant();
+        }
+    }
+
+    public static int RevisarPullRequests() {
+        (Alumnos alumnos, GitHub gh) = PrepararPullRequests();
+        List<(int Numero, string Titulo)> prs = EjecutarConIndicador(
+            "Revisar PRs",
+            "Consultando pull requests abiertos...",
+            actualizarEstado => {
+                actualizarEstado("Leyendo pull requests abiertos desde GitHub...");
+                return gh.PullRequests();
+            });
+
+        foreach (var pr in prs) {
+            Log.Info($"Consultando PR #{pr.Numero}: {pr.Titulo}");
+            int legajo = GitHub.ExtraerLegajo(pr.Titulo);
+            Alumno? alumno = alumnos.BuscarPorLegajo(legajo);
+
+            if (alumno is null) {
+                Log.Error($"Alumno con legajo {legajo} no encontrado en la lista de alumnos.");
+                continue;
+            }
+
+            int cantidadArchivos = gh.ListarArchivos(pr.Numero).Count;
+            int cantidadLineas   = gh.CantidadLineas(pr.Numero);
+            int cantidadCommits  = gh.Commits(pr.Numero).Count;
+            List<int> tps = GitHub.ExtraerTPs(pr.Titulo);
+            List<(int Tp, int CantidadArchivos)> archivosPorTp = tps
+                .Select(tp => (
+                    Tp: tp,
+                    CantidadArchivos: gh.ListarArchivosDirectorio(pr.Numero, alumno.CarpetaNombre, $"tp{tp}").Count))
+                .ToList();
+            string etiquetaTp = tps.Count == 0 ? "?" : string.Join("", tps);
+
+            Log.Print($"PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | TP{etiquetaTp}");
+            foreach ((int tp, int cantidad) in archivosPorTp) {
+                Log.Print($" - TP{tp,2}: {cantidad,2} archivo{(cantidad == 1 ? "" : "s")}");
+            }
+        }
+
+        return 0;
+    }
+
+    public static int BajarPullRequests() {
+        (Alumnos alumnos, GitHub gh) = PrepararPullRequests(prepararCarpetas: true);
+        List<(int Numero, string Titulo)> prs = EjecutarConIndicador(
+            "Bajar PRs",
+            "Consultando PRs abiertos...",
+            actualizarEstado => {
+                actualizarEstado("Leyendo PRs abiertos desde GitHub...");
+                return gh.PullRequests();
+            });
+
+        if (prs.Count == 0) {
+            Log.Error("No se encontraron PRs abiertos para bajar.");
+            return 1;
+        }
+
+        int indice = 0;
+        int procesados = 0;
+        int trabajosProcesados = 0;
+        int archivosDescargados = 0;
+        HashSet<int> trabajosParaRevisar = new();
+        Log.WriteLine("[red]Igual al existente  [green]Nuevo  [black]Modificado");
+        foreach (var pr in prs) {
+            indice++;
+            Log.Info($"\nRevisando PR {indice}/{prs.Count}: #{pr.Numero} | {pr.Titulo}");
+            int legajo = GitHub.ExtraerLegajo(pr.Titulo);
+            if (legajo <= 0) {
+                Log.Error($"Se omite PR #{pr.Numero}: no se encontró un legajo válido en el título.");
+                continue;
+            }
+
+            Alumno? alumno = alumnos.BuscarPorLegajo(legajo);
+            if (alumno is null) {
+                Log.Error($"Se omite PR #{pr.Numero}: el legajo {legajo} no corresponde a un alumno de alumnos.md.");
+                continue;
+            }
+
+            BajadaArchivosAlumnoResultado bajada = gh.BajarArchivosAlumno(pr.Numero, alumno, forzar: true);
+            if (bajada.Archivos.Count > 0) {
+                procesados++;
+                trabajosProcesados  += bajada.TrabajosPracticos.Count;
+                archivosDescargados += bajada.Archivos.Count;
+                trabajosParaRevisar.UnionWith(bajada.Archivos.Select(archivo => archivo.TrabajoPractico));
+            }
+        }
+
+        const string alcance = "todos los TP detectados";
+        Log.Info($"\nResumen: {procesados}/{prs.Count} PR(s) procesados para {alcance}. TPs detectados: {trabajosProcesados}. Archivos bajados: {archivosDescargados}. Sobrescritura: sí");
+        if (procesados == 0) {
+            Log.Error($"No se encontraron PRs con archivos para {alcance}.");
+            return 1;
+        }
+
+        Log.Info($"\nRevisando automáticamente los TP descargados: {string.Join(", ", trabajosParaRevisar.Order().Select(tp => $"TP{tp}"))}");
+        foreach (int tp in trabajosParaRevisar.Order()) {
+            if (RevisarPresentados(tp.ToString()) != 0) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    public static int CerrarPullRequests() {
+        (_, GitHub gh) = PrepararPullRequests();
+        List<(int Numero, string Titulo)> prs = EjecutarConIndicador(
+            "Cerrar PRs",
+            "Consultando todos los PRs abiertos...",
+            actualizarEstado => {
+                actualizarEstado("Leyendo PRs abiertos desde GitHub...");
+                return gh.PullRequests(soloAbiertos: true);
+            });
+
+        if (prs.Count == 0) {
+            Log.Info("No hay PRs abiertos para cerrar.");
+            return 0;
+        }
+
+        int cerrados = 0;
+        int errores = 0;
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .Start(ctx => {
+                var tarea = ctx.AddTask("Cerrando PRs", maxValue: prs.Count);
+                foreach ((int Numero, string Titulo) pr in prs) {
+                    tarea.Description = $"Cerrando PR #{pr.Numero}";
+                    if (gh.CerrarPR(pr.Numero, informarExito: false)) {
+                        cerrados++;
+                    } else {
+                        errores++;
+                    }
+                    tarea.Increment(1);
+                }
+                tarea.Description = "Cerrar PRs";
+            });
+
+        Log.Info($"Resumen: {cerrados}/{prs.Count} PRs abiertos cerrados.");
+        if (errores > 0) {
+            Log.Error($"No se pudieron cerrar {errores} PR(s).");
+        }
+
+        return 0;
+    }
+
+    public static int RevisarPresentados(string? trabajoPractico) {
+        if (string.IsNullOrWhiteSpace(trabajoPractico)) {
+            IReadOnlyList<EnunciadoPracticoDisponible> practicos =
+                PracticosConfig.FiltrarConfigurados(AppPaths.ListarEnunciadosPracticos());
+            if (practicos.Count == 0) {
+                Log.Error($"No se encontraron trabajos prácticos con enunciado y criterio de revisión configurado en {AppPaths.EnunciadosDirectory}.");
+                return 1;
+            }
+
+            Log.Info($"Revisando todos los trabajos prácticos: {string.Join(", ", practicos.Select(practico => $"TP{practico.Numero}"))}");
+            foreach (EnunciadoPracticoDisponible practico in practicos) {
+                if (RevisarPresentados(practico.Numero.ToString()) != 0) {
+                    return 1;
+                }
+            }
+
+            return 0;
+        }
+
+        int numeroTp = ObtenerNumeroTP(trabajoPractico);
+
+        if (numeroTp <= 0) {
+            Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
+            return 1;
+        }
+
+        if (!PracticosConfig.TryObtener(numeroTp, out ConfiguracionPractico configuracion)) {
+            Log.Error($"TP{numeroTp} no tiene un criterio de revisión configurado.");
+            return 1;
+        }
+
+        Alumnos alumnos = CargarAlumnosConCarpetasPreparadas();
+        string carpetaTp = CarpetaTrabajoPractico(numeroTp);
+        string rutaEnunciado = AppPaths.EnunciadoPracticoDirectory(carpetaTp);
+        int lineasEnunciado = ObtenerLineasBaseEnunciado(numeroTp, carpetaTp, rutaEnunciado, alumnos);
+        HashSet<string> lineasCodigoEnunciado = ObtenerLineasCodigoNormalizadas(rutaEnunciado);
+
+        Log.Info($"{carpetaTp.ToUpperInvariant()} | criterio: {configuracion.DescripcionCriterio} | líneas base del enunciado: {lineasEnunciado}");
+        List<TrabajoPresentadoLocal> trabajosPresentados = new();
+        List<PresentacionCambiada> presentacionesCambiadas = new();
+        bool habiaObservaciones = alumnos.Any(alumno => !string.IsNullOrWhiteSpace(alumno.Observaciones));
+
+        Alumno[] alumnosOrdenados = alumnos.OrderBy(alumno => alumno.Legajo).ToArray();
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .Start(ctx => {
+                var tarea = ctx.AddTask($"Revisando presentados TP{numeroTp}", maxValue: alumnosOrdenados.Length);
+                foreach (Alumno alumno in alumnosOrdenados) {
+                    tarea.Description = $"Revisando {alumno.Legajo}";
+                    string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+                    int lineasTotales   = ContarLineasPracticoLocal(rutaPractico);
+                    int lineasAgregadas = Math.Max(0, lineasTotales - lineasEnunciado);
+
+                    // alumno.Observaciones = string.Empty;
+
+                    Estado estadoAnterior = alumno.EstadoPractico(numeroTp);
+                    Estado estado = estadoAnterior;
+                    if (configuracion.ParecePresentado(lineasTotales, lineasAgregadas)) {
+                        estado = Estado.Aprobado;
+                        HashSet<string> lineasCodigo = ObtenerLineasCodigoNormalizadas(rutaPractico);
+                        lineasCodigo.ExceptWith(lineasCodigoEnunciado);
+                        trabajosPresentados.Add(new(alumno, rutaPractico, lineasCodigo));
+                    }
+
+                    if (estadoAnterior != estado) {
+                        alumno.Practico(numeroTp, estado);
+                        presentacionesCambiadas.Add(new(alumno, estadoAnterior, estado, lineasTotales, lineasAgregadas));
+                    }
+                    tarea.Increment(1);
+                }
+            });
+
+        int copias = RevisarCopiasTrabajosPresentados(numeroTp, trabajosPresentados);
+        Alumno[] alumnosPresentados = alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => alumno.Legajo)
+            .ToArray();
+        int marcados = alumnosPresentados.Length;
+
+        if (presentacionesCambiadas.Count > 0 || trabajosPresentados.Count > 0 || habiaObservaciones) {
+            AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
+        }
+
+        if (presentacionesCambiadas.Count == 0) {
+            Log.Warning("No hubo cambios de estado.");
+        } else {
+            foreach (PresentacionCambiada cambio in presentacionesCambiadas.OrderBy(cambio => cambio.Alumno.Legajo)) {
+                Log.Print($"{cambio.Alumno.Legajo} | {cambio.Alumno.NombreCompleto,-40} | L:{cambio.LineasTotales,4} | L+:{cambio.LineasAgregadas,4} | {cambio.EstadoAnterior.ToEmoji()} -> {cambio.EstadoNuevo.ToEmoji()}");
+            }
+        }
+
+        AlumnosManager.Listar(alumnosPresentados, $"Alumnos con TP{numeroTp} presentado");
+        Log.Success($"Resumen TP{numeroTp}: marcados={marcados}, copias={copias}, total={alumnos.Count()}, porcentaje={marcados * 100.0 / alumnos.Count():F2}%");
+        return 0;
+    }
+
+    public static int VerificarCompilacion(string trabajoPractico) {
         int numeroTp = ObtenerNumeroTP(trabajoPractico);
         if (numeroTp <= 0) {
             Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
@@ -173,357 +474,514 @@ static class AlumnosCliActions {
         }
 
         Alumnos alumnos = CargarAlumnos();
-        List<Alumno> alumnosParaRehacer = alumnos
-            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Revision)
-            .ToList();
+        Alumno[] entregados = alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => alumno.Legajo)
+            .ToArray();
 
-        Log.Info($"Republicando {carpetaTp.ToUpperInvariant()} para alumnos en estado Revisar desde {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
-        Log.Info($"Alumnos en estado Revisar para {carpetaTp.ToUpperInvariant()}: {alumnosParaRehacer.Count}");
-        AlumnosManager.PublicarRehacer(alumnosParaRehacer, carpetaTp);
-        return 0;
-    }
-
-    public static int RevisarPullRequests() {
-        Alumnos alumnos = CargarAlumnos();
-        GitHub gh = new();
-
-        foreach (var pr in gh.PullRequests()) {
-            int legajo = GitHub.ExtraerLegajo(pr.Titulo);
-            Alumno? alumno = alumnos.BuscarPorLegajo(legajo);
-
-            if (alumno is null) {
-                Log.Error($"Alumno con legajo {legajo} no encontrado en la lista de alumnos.");
-                continue;
-            }
-
-            var detallePr = gh.ObtenerEstado(pr.Numero);
-            int cantidadArchivos = gh.ListarArchivos(pr.Numero).Count;
-            int cantidadLineas = gh.CantidadLineas(pr.Numero);
-            int cantidadCommits = gh.Commits(pr.Numero).Count;
-            string estado = detallePr.Estado == "open" ? "abierto" : detallePr.Estado == "closed" ? "cerrado" : "sin dato";
-            string mergeable = detallePr.EsMergeable ? "mergeable" : "con conflictos";
-            int tp = GitHub.ExtraerTP(pr.Titulo);
-            string carpetaTp = tp > 0 ? $"tp{tp}" : string.Empty;
-            List<string> archivosTp = string.IsNullOrWhiteSpace(carpetaTp)
-                ? new()
-                : gh.ListarArchivosDirectorio(pr.Numero, alumno.CarpetaNombre, carpetaTp);
-
-            Console.ForegroundColor = detallePr.EsMergeable ? ConsoleColor.Green : ConsoleColor.Red;
-            Console.BackgroundColor = cantidadArchivos < 10 ? ConsoleColor.Black : ConsoleColor.DarkRed;
-            Log.WriteLine($"PR #{pr.Numero:000} | {legajo} | {alumno.NombreCompleto,-40} | A:{cantidadArchivos,4} | L:{cantidadLineas,4} | C:{cantidadCommits,2} | {estado} | {mergeable,-15} | TP{tp}");
-            foreach (string archivo in archivosTp) {
-                Log.WriteLine($"  - {archivo}");
-            }
-            Console.ResetColor();
-        }
-
-        return 0;
-    }
-
-    public static int NormalizarPullRequests(bool simular) {
-        Alumnos alumnos = CargarAlumnos();
-        new GitHub().NormalizarTitulos(alumnos, simular);
-        return 0;
-    }
-
-    public static int BajarPullRequests(string trabajoPractico, bool forzar) {
-        int numeroTp = ObtenerNumeroTP(trabajoPractico);
-        if (numeroTp <= 0) {
-            Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
-            return 1;
-        }
-
-        GitHub gh = new();
-        IEnumerable<(int Numero, string Titulo)> prs = gh.PullRequests(tp: numeroTp);
-
-        foreach (var pr in prs) {
-            gh.BajarArchivosAlumno(pr.Numero, forzar);
-        }
-
-        return 0;
-    }
-
-    public static int CerrarPullRequests(string? trabajoPractico) {
-        GitHub gh = new();
-
-        if (string.IsNullOrWhiteSpace(trabajoPractico)) {
-            gh.CerrarPRsAbiertos();
+        if (entregados.Length == 0) {
+            Log.Warning($"No hay trabajos entregados para verificar en TP{numeroTp}.");
             return 0;
         }
 
-        int numeroTp = ObtenerNumeroTP(trabajoPractico);
-        if (numeroTp <= 0) {
-            Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
-            return 1;
+        List<CompilacionAlumnoResultado> resultados = new();
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .Start(ctx => {
+                var tarea = ctx.AddTask($"Compilando TP{numeroTp}", maxValue: entregados.Length);
+                foreach (Alumno alumno in entregados) {
+                    tarea.Description = $"Compilando {alumno.Legajo}";
+                    string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+                    CompilacionPracticoResultado compilacion =
+                        CompilacionPracticos.Verificar(rutaPractico, numeroTp);
+
+                    if (!compilacion.Exito) {
+                        alumno.Practico(numeroTp, Estado.Revision);
+                    }
+
+                    resultados.Add(new(alumno, compilacion));
+                    tarea.Increment(1);
+                }
+            });
+
+        int correctos = resultados.Count(resultado => resultado.Compilacion.Exito);
+        int errores = resultados.Count - correctos;
+
+        if (errores > 0) {
+            AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
         }
 
-        gh.CerrarPRsAbiertos(numeroTp);
-        return 0;
+        foreach (CompilacionAlumnoResultado resultado in resultados) {
+            if (resultado.Compilacion.Exito) {
+                string objetivos = string.Join(", ", resultado.Compilacion.Objetivos.Select(objetivo => objetivo.Objetivo));
+                Log.Success($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | compila: {objetivos} | sin cambio");
+                continue;
+            }
+
+            Log.Error($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | no compila | {Estado.Aprobado.ToEmoji()} -> {Estado.Revision.ToEmoji()}");
+            foreach (CompilacionObjetivoResultado objetivo in resultado.Compilacion.Objetivos.Where(objetivo => !objetivo.Exito)) {
+                foreach (string error in objetivo.Errores) {
+                    Log.Print($"  {objetivo.Objetivo}: {error}");
+                }
+            }
+        }
+
+        Log.Info($"Resumen TP{numeroTp}: entregados={entregados.Length}, compilan={correctos}, con errores={errores}, marcados para revisar={errores}");
+        return errores == 0 ? 0 : 1;
     }
 
-    public static int RevisarPresentados(string trabajoPractico) {
-        Alumnos alumnos = CargarAlumnos();
+    public static int VerificarEjecucion(string trabajoPractico) {
         int numeroTp = ObtenerNumeroTP(trabajoPractico);
-
         if (numeroTp <= 0) {
             Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
             return 1;
         }
 
         string carpetaTp = CarpetaTrabajoPractico(numeroTp);
-        string rutaEnunciado = AppPaths.EnunciadoPracticoDirectory(carpetaTp);
-        int lineasEnunciado = ObtenerLineasBaseEnunciado(numeroTp, carpetaTp, rutaEnunciado, alumnos);
-
-        Log.Info($"{carpetaTp.ToUpperInvariant()} | líneas base del enunciado: {lineasEnunciado}");
-        List<TrabajoPresentadoLocal> trabajosPresentados = new();
-        bool habiaCodigos = alumnos.Any(alumno => !string.IsNullOrWhiteSpace(alumno.Codigo));
-
-        foreach (Alumno alumno in alumnos.OrderBy(alumno => alumno.Legajo)) {
-            string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
-            int lineasTotales   = ContarLineasPracticoLocal(rutaPractico);
-            int lineasAgregadas = Math.Max(0, lineasTotales - lineasEnunciado);
-
-            // alumno.Codigo = string.Empty;
-
-            Estado estado = Estado.Desaprobado;
-            if (PracticoParecePresentado(numeroTp, lineasTotales, lineasAgregadas)) {
-                estado = Estado.Aprobado;
-                trabajosPresentados.Add(new(alumno, rutaPractico, ObtenerLineasCodigoNormalizadas(rutaPractico)));
-            }
-
-            alumno.Practico(numeroTp, estado);
+        if (!AppPaths.ExisteEnunciadoPractico(carpetaTp)) {
+            Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
+            return 1;
         }
 
-        int copias = RevisarCopiasTrabajosPresentados(numeroTp, trabajosPresentados);
-        int marcados = alumnos.Count(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado);
+        Alumnos alumnos = CargarAlumnos();
+        Alumno[] entregados = alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => alumno.Legajo)
+            .ToArray();
 
-        if (trabajosPresentados.Count > 0 || habiaCodigos) {
+        if (entregados.Length == 0) {
+            Log.Warning($"No hay trabajos entregados para verificar en TP{numeroTp}.");
+            return 0;
+        }
+
+        List<EjecucionAlumnoResultado> resultados = new();
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .Start(ctx => {
+                var tarea = ctx.AddTask($"Ejecutando TP{numeroTp}", maxValue: entregados.Length);
+                foreach (Alumno alumno in entregados) {
+                    tarea.Description = $"Ejecutando {alumno.Legajo}";
+                    string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+                    EjecucionPracticoResultado ejecucion =
+                        EjecucionPracticos.Verificar(rutaPractico, numeroTp);
+
+                    if (!ejecucion.Exito) {
+                        alumno.Practico(numeroTp, Estado.Revision);
+                    }
+
+                    resultados.Add(new(alumno, ejecucion));
+                    tarea.Increment(1);
+                }
+            });
+
+        int errores = resultados.Count(resultado => !resultado.Ejecucion.Exito);
+        int omitidos = resultados.Sum(resultado => resultado.Ejecucion.Omitidos);
+        int correctos = resultados.Count(resultado => resultado.Ejecucion.Exito && resultado.Ejecucion.Omitidos == 0);
+
+        if (errores > 0) {
             AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
         }
 
-        foreach (Alumno alumno in alumnos.OrderBy(alumno => alumno.Legajo)) {
-            string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
-            int lineasTotales   = ContarLineasPracticoLocal(rutaPractico);
-            int lineasAgregadas = Math.Max(0, lineasTotales - lineasEnunciado);
+        foreach (EjecucionAlumnoResultado resultado in resultados) {
+            if (resultado.Ejecucion.Exito) {
+                string objetivosCorrectos = string.Join(", ",
+                    resultado.Ejecucion.Objetivos
+                        .Where(objetivo => !objetivo.Omitido)
+                        .Select(objetivo => objetivo.Objetivo));
+                string objetivosOmitidos = string.Join(", ",
+                    resultado.Ejecucion.Objetivos
+                        .Where(objetivo => objetivo.Omitido)
+                        .Select(objetivo => objetivo.Objetivo));
 
-            alumno.Codigo = string.Empty;
+                if (!string.IsNullOrWhiteSpace(objetivosCorrectos)) {
+                    Log.Success($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | ejecuta: {objetivosCorrectos} | sin cambio");
+                }
 
-            var estado = alumno.EstadoPractico(numeroTp);
-            Log.Info($"{alumno.Legajo} | {alumno.NombreCompleto,-40} | L:{lineasTotales,4} | L+:{lineasAgregadas,4} | marcado    {estado.ToEmoji()}");
+                if (!string.IsNullOrWhiteSpace(objetivosOmitidos)) {
+                    Log.Warning($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | omitido: {objetivosOmitidos} | sin cambio");
+                    foreach (EjecucionObjetivoResultado objetivo in resultado.Ejecucion.Objetivos.Where(objetivo => objetivo.Omitido)) {
+                        foreach (string mensaje in objetivo.Mensajes) {
+                            Log.Print($"  {objetivo.Objetivo}: {mensaje}");
+                        }
+                    }
+                }
+
+                continue;
             }
 
-        Log.Info($"Resumen TP{numeroTp}: marcados={marcados}, copias={copias}, total={alumnos.Count()}, porcentaje={marcados * 100.0 / alumnos.Count():F2}%");
-        return 0;
+            Log.Error($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | no ejecuta | {Estado.Aprobado.ToEmoji()} -> {Estado.Revision.ToEmoji()}");
+            foreach (EjecucionObjetivoResultado objetivo in resultado.Ejecucion.Objetivos.Where(objetivo => objetivo.Estado == EstadoEjecucionObjetivo.Error)) {
+                foreach (string error in objetivo.Mensajes) {
+                    Log.Print($"  {objetivo.Objetivo}: {error}");
+                }
+            }
+        }
+
+        Log.Info($"Resumen TP{numeroTp}: entregados={entregados.Length}, ejecutan={correctos}, con errores={errores}, omitidos={omitidos}, marcados para revisar={errores}");
+        return errores == 0 ? 0 : 1;
     }
 
-    public static int RegistrarAsistencias() {
+    public static int CapturarPantallas(string trabajoPractico, string rutaInicial, bool headed, bool forzar) {
+        int numeroTp = ObtenerNumeroTP(trabajoPractico);
+        if (numeroTp <= 0) {
+            Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
+            return 1;
+        }
+
+        string carpetaTp = CarpetaTrabajoPractico(numeroTp);
+        if (!AppPaths.ExisteEnunciadoPractico(carpetaTp)) {
+            Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
+            return 1;
+        }
+
         Alumnos alumnos = CargarAlumnos();
-        Alumno[] presentesHoy = alumnos.Where(alumno => alumno.Presente).OrderBy(alumno => alumno.Legajo).ToArray();
-        int contar = presentesHoy.Length;
+        Alumno[] presentados = alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => alumno.Legajo)
+            .ToArray();
 
-        if (contar > 0) {
-            AlumnosManager.Listar(presentesHoy, "Alumnos presentes hoy");
+        if (presentados.Length == 0) {
+            Log.Warning($"No hay trabajos presentados para capturar en TP{numeroTp}.");
+            return 0;
         }
 
-        foreach (Alumno alumno in alumnos) {
-            if (alumno.Presente) {
-                alumno.Asistencias++;
+        List<CapturaPantallaAlumnoResultado> resultados = new();
+        AnsiConsole.Progress()
+            .AutoClear(true)
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
+            .Start(ctx => {
+                var tarea = ctx.AddTask($"Capturando pantallas TP{numeroTp}", maxValue: presentados.Length);
+                foreach (Alumno alumno in presentados) {
+                    tarea.Description = $"Capturando {alumno.Legajo}";
+                    string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+                    CapturaPantallaResultado captura = CapturarPantallaPractico(rutaPractico, numeroTp, rutaInicial, headed, forzar);
+
+                    resultados.Add(new(alumno, captura));
+                    tarea.Increment(1);
+                }
+            });
+
+        foreach (CapturaPantallaAlumnoResultado resultado in resultados) {
+            if (resultado.Captura.Capturada) {
+                string archivo = resultado.Captura.Archivo is null
+                    ? NombreCapturaPorDefecto(numeroTp)
+                    : Path.GetFileName(resultado.Captura.Archivo);
+                string proyecto = string.IsNullOrWhiteSpace(resultado.Captura.Proyecto)
+                    ? string.Empty
+                    : $" | proyecto: {resultado.Captura.Proyecto}";
+                Log.Success($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | capturada: {archivo}{proyecto}");
+                continue;
             }
 
-            alumno.Presente = false;
-            alumno.Examen(1, alumno.Asistencias switch { >= 8 => Estado.Aprobado, >= 4 => Estado.Pendiente, _ => Estado.Desaprobado });
+            string etiqueta = resultado.Captura.Omitida ? "omitido" : "error";
+            Action<string> log = resultado.Captura.Omitida ? Log.Warning : Log.Error;
+            string proyectoDetalle = string.IsNullOrWhiteSpace(resultado.Captura.Proyecto)
+                ? string.Empty
+                : $" | proyecto: {resultado.Captura.Proyecto}";
+            string archivoDetalle = string.IsNullOrWhiteSpace(resultado.Captura.Archivo)
+                ? string.Empty
+                : $" | archivo: {Path.GetFileName(resultado.Captura.Archivo)}";
+            log($"{resultado.Alumno.Legajo} | {resultado.Alumno.NombreCompleto,-40} | {etiqueta}{proyectoDetalle}{archivoDetalle}");
+            foreach (string mensaje in resultado.Captura.Mensajes) {
+                Log.Print($"  {mensaje}");
+            }
         }
 
+        int capturados = resultados.Count(resultado => resultado.Captura.Capturada);
+        int errores = resultados.Count(resultado => resultado.Captura.Error);
+        int omitidos = resultados.Count(resultado => resultado.Captura.Omitida);
+        Log.Info($"Resumen TP{numeroTp}: presentados={presentados.Length}, capturados={capturados}, con errores={errores}, omitidos={omitidos}");
+        return errores == 0 ? 0 : 1;
+    }
+
+    static CapturaPantallaResultado CapturarPantallaPractico(
+        string rutaPractico,
+        int numeroTp,
+        string rutaInicial,
+        bool headed,
+        bool forzar) =>
+        numeroTp == 6
+            ? CapturaTerminalPracticos.CapturarTp6(rutaPractico, forzar)
+            : CapturaPantallasPracticos
+                .Capturar(rutaPractico, numeroTp, rutaInicial, headed, forzar)
+                .GetAwaiter()
+                .GetResult();
+
+    static string NombreCapturaPorDefecto(int numeroTp) =>
+        numeroTp == 6 ? "captura-tp6.png" : "captura-tp5.png";
+
+    public static int EjecutarTp5(int? legajo) {
+        return EjecutarPracticoAlumno(5, legajo, EjecutarTp5Alumno);
+    }
+
+    public static int EjecutarTp6(int? legajo) {
+        return EjecutarPracticoAlumno(6, legajo, EjecutarTp6Alumno);
+    }
+
+    static int EjecutarPracticoAlumno(int numeroTp, int? legajo, Func<Alumno, string, int, int> ejecutarAlumno) {
+        string carpetaTp = CarpetaTrabajoPractico(numeroTp);
+        if (!AppPaths.ExisteEnunciadoPractico(carpetaTp)) {
+            Log.Error($"No existe la carpeta del enunciado: {AppPaths.EnunciadoPracticoDirectory(carpetaTp)}");
+            return 1;
+        }
+
+        Alumnos alumnos = CargarAlumnos();
+
+        if (legajo is int valor) {
+            Alumno? alumno = alumnos.BuscarPorLegajo(valor);
+            if (alumno is null || alumno.EstadoPractico(numeroTp) != Estado.Aprobado) {
+                Log.Error($"El alumno {valor} no existe o no tiene TP{numeroTp} presentado.");
+                return 1;
+            }
+
+            ejecutarAlumno(alumno, carpetaTp, numeroTp);
+            RegistrarObservacionPractico(alumnos, alumno);
+            return 0;
+        }
+
+        while (true) {
+            Alumno[] candidatos = AlumnosPracticoOrdenados(alumnos, numeroTp);
+            if (candidatos.Length == 0) {
+                Log.Warning($"No hay alumnos con TP{numeroTp} presentado para ejecutar.");
+                return 0;
+            }
+
+            Alumno? alumno = SeleccionarAlumnoPractico(candidatos, numeroTp);
+            if (alumno is null) {
+                return 0;
+            }
+
+            ejecutarAlumno(alumno, carpetaTp, numeroTp);
+            RegistrarObservacionPractico(alumnos, alumno);
+        }
+    }
+
+    static Alumno[] AlumnosPracticoOrdenados(Alumnos alumnos, int numeroTp) =>
+        alumnos
+            .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
+            .OrderBy(alumno => string.IsNullOrWhiteSpace(alumno.Observaciones) ? 0 : 1)
+            .ThenBy(alumno => alumno.Legajo)
+            .ToArray();
+
+    static void RegistrarObservacionPractico(Alumnos alumnos, Alumno alumno) {
+        string observacion = AnsiConsole.Prompt(
+            new TextPrompt<string>($"[bold cyan]Observación para {alumno.Legajo} | {Markup.Escape(alumno.NombreCompleto)}[/] [grey](vacío = sin observación)[/]:")
+                .AllowEmpty());
+
+        if (string.IsNullOrWhiteSpace(observacion)) {
+            Log.Warning("No se registró ninguna observación.");
+            return;
+        }
+
+        alumno.Observaciones = observacion.Trim();
         AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
-        if (contar == 0) {
-            Log.WriteLine("No hay alumnos presentes para registrar.");
+        Log.Success($"Observación guardada para {alumno.Legajo} | {alumno.NombreCompleto}.");
+    }
+
+    static int EjecutarTp5Alumno(Alumno alumno, string carpetaTp, int numeroTp) {
+        string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+        Log.Info($"Iniciando TP{numeroTp} de {alumno.Legajo} | {alumno.NombreCompleto}...");
+
+        EjecucionWebResultado resultado = EjecutarConIndicador(
+            $"Ejecutar TP{numeroTp}",
+            "Compilando e iniciando el proyecto web...",
+            actualizarEstado => {
+                actualizarEstado("Esperando a que la aplicación informe su URL...");
+                return EjecucionWebPracticos.Iniciar(rutaPractico, numeroTp);
+            });
+
+        if (!resultado.Iniciada || resultado.Url is null || resultado.Proceso is null) {
+            Log.Error($"No se pudo iniciar el proyecto web de {alumno.Legajo} | {alumno.NombreCompleto}.");
+            foreach (string mensaje in resultado.Mensajes) {
+                Log.Print($"  {mensaje}");
+            }
+            return 1;
         }
 
-        Log.WriteLine($"Asistencias registradas: {contar}");
+        try {
+            Log.Success($"Proyecto en ejecución: {resultado.Proyecto}");
+            Log.Info($"Abriendo el navegador en {resultado.Url}");
+            if (!EjecucionWebPracticos.AbrirNavegador(resultado.Url)) {
+                Log.Warning($"No se pudo abrir el navegador automáticamente. Abrí manualmente {resultado.Url}");
+            }
+
+            AnsiConsole.MarkupLine("[grey]Presioná una tecla para detener la aplicación y volver al menú...[/]");
+            Console.ReadKey(intercept: true);
+        } finally {
+            EjecucionWebPracticos.Detener(resultado.Proceso, rutaPractico);
+            Log.Info("Aplicación detenida.");
+        }
+
         return 0;
     }
+
+    static int EjecutarTp6Alumno(Alumno alumno, string carpetaTp, int numeroTp) {
+        string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+        Log.Info($"Iniciando TP{numeroTp} de {alumno.Legajo} | {alumno.NombreCompleto}...");
+
+        IReadOnlyList<string> objetivos = ObjetivosPracticos.Obtener(rutaPractico, numeroTp);
+        if (objetivos.Count == 0) {
+            Log.Error($"No se encontró un proyecto o archivo de entrada para ejecutar en {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}.");
+            return 1;
+        }
+
+        string objetivo = objetivos[0];
+        Log.Success($"Objetivo seleccionado: {Path.GetFileName(objetivo)}");
+        AnsiConsole.MarkupLine("[grey]La aplicación se ejecuta en esta terminal. Salí del TP6 con Esc o Ctrl+C para volver al sistema alumnos.[/]");
+        AnsiConsole.MarkupLine("[grey]Presioná una tecla para iniciar...[/]");
+        Console.ReadKey(intercept: true);
+        AnsiConsole.Clear();
+
+        int codigoSalida = EjecutarObjetivoEnTerminal(rutaPractico, objetivo, numeroTp);
+        AnsiConsole.WriteLine();
+        if (codigoSalida == 0) {
+            Log.Success($"TP{numeroTp} finalizó correctamente.");
+        } else {
+            Log.Error($"TP{numeroTp} terminó con código {codigoSalida}.");
+        }
+
+        return codigoSalida;
+    }
+
+    static int EjecutarObjetivoEnTerminal(string rutaPractico, string objetivo, int numeroTp) {
+        bool esProyecto = string.Equals(Path.GetExtension(objetivo), ".csproj", StringComparison.OrdinalIgnoreCase);
+        string objetivoRelativo = Path.GetRelativePath(rutaPractico, objetivo);
+
+        ProcessStartInfo startInfo = new() {
+            FileName = "dotnet",
+            WorkingDirectory = rutaPractico,
+            UseShellExecute = false
+        };
+        startInfo.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
+
+        startInfo.ArgumentList.Add("run");
+        if (esProyecto) {
+            startInfo.ArgumentList.Add("--project");
+        }
+
+        startInfo.ArgumentList.Add(objetivoRelativo);
+        if (esProyecto) {
+            startInfo.ArgumentList.Add("--no-launch-profile");
+            startInfo.ArgumentList.Add("-p:EnableSourceControlManagerQueries=false");
+        }
+        if (numeroTp == 6) {
+            startInfo.ArgumentList.Add("--");
+            startInfo.ArgumentList.Add("openai");
+        }
+
+        ConsoleCancelEventHandler ignorarCtrlC = (_, e) => e.Cancel = true;
+        Console.CancelKeyPress += ignorarCtrlC;
+        try {
+            using Process proceso = Process.Start(startInfo)
+                ?? throw new InvalidOperationException("No se pudo iniciar dotnet run.");
+            proceso.WaitForExit();
+            return proceso.ExitCode;
+        } catch (Exception ex) {
+            Log.Error($"No se pudo ejecutar dotnet run: {ex.Message}");
+            return 1;
+        } finally {
+            Console.CancelKeyPress -= ignorarCtrlC;
+        }
+    }
+
+    static Alumno? SeleccionarAlumnoPractico(IReadOnlyList<Alumno> presentados, int numeroTp) {
+        List<OpcionAlumnoPractico> opciones = [
+            .. presentados.Select(alumno => new OpcionAlumnoPractico(alumno)),
+            new(null)
+        ];
+
+        OpcionAlumnoPractico seleccion = AnsiConsole.Prompt(
+            new SelectionPrompt<OpcionAlumnoPractico>()
+                .Title($"[bold cyan]Ejecutar TP{numeroTp}[/] · Elegí el alumno\n[grey]{presentados.Count} alumno(s) con TP{numeroTp} presentado[/]")
+                .EnableSearch()
+                .WrapAround(true)
+                .PageSize(60)
+                .UseConverter(opcion => opcion.Alumno is null
+                    ? "[grey]Volver al menú principal[/]"
+                    : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")
+                .AddCancelResult(opciones[^1])
+                .AddChoices(opciones));
+
+        return seleccion.Alumno;
+    }
+
+    static string FormatearObservacion(string observaciones) =>
+        string.IsNullOrWhiteSpace(observaciones)
+            ? string.Empty
+            : $"[yellow]{Markup.Escape(observaciones)}[/]";
 
     public static int RelevarAsistencias() {
         Alumnos alumnos = CargarAlumnos();
 
-        AnsiConsole.Status()
-            .Spinner(Spinner.Known.Dots)
-            .SpinnerStyle(Style.Parse("cyan"))
-            .Start("Preparando relevamiento de asistencias...", contexto =>
-                CargarAsistenciasHastaHoy(alumnos, estado => contexto.Status(estado)));
-
+        CargarAsistenciasHastaHoy(alumnos);
         Alumno[] presentesHoy = alumnos.Where(alumno => alumno.Presente).OrderBy(alumno => alumno.Legajo).ToArray();
         AlumnosManager.Listar(presentesHoy, "Alumnos presentes hoy");
         Log.WriteLine($"Presentes detectados hoy: {presentesHoy.Length}");
-        Log.WriteLine($"Asistencias acumuladas hasta ayer: {alumnos.Sum(alumno => alumno.Asistencias)}");
-        AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
-        return 0;
-    }
-
-    public static int RegistrarRespuestas() {
-        Alumnos alumnos = CargarAlumnos();
-
-        AnsiConsole.Status()
-            .Spinner(Spinner.Known.Dots)
-            .SpinnerStyle(Style.Parse("cyan"))
-            .Start("Registrando respuestas de WhatsApp...", contexto =>
-                CargarCodigosDesdeWhatsApp(alumnos, estado => contexto.Status(estado)));
-
-        IEnumerable<Alumno> conCodigo = alumnos.Where(alumno => !string.IsNullOrWhiteSpace(alumno.Codigo));
-        AlumnosManager.Listar(conCodigo, "Alumnos con código registrado");
-        Log.WriteLine($"Códigos detectados: {conCodigo.Count()}");
+        Log.WriteLine($"Asistencias acumuladas hasta hoy: {alumnos.Sum(alumno => alumno.Asistencias)}");
         AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
         return 0;
     }
 
     public static int WappGrupos() {
-        WAppService wapp = new();
+        Alumnos alumnos = CargarAlumnos();
 
-        foreach (var grupo in wapp.Grupos()) {
+        Log.Info("Listando grupos y participantes desde la base local de wacli.");
+        Log.Info($"Base principal: {AppPaths.WacliDatabase(null)}");
+        Log.Info($"Base de sesión: {AppPaths.WacliSessionDatabase(null)}");
+
+        if (!AppPaths.ExisteArchivo(AppPaths.WacliDatabase(null))) {
+            Log.Error("No existe la base principal de wacli. Ejecutá wacli o sincronizá WhatsApp antes de listar grupos.");
+            return 1;
+        }
+
+        if (!AppPaths.ExisteArchivo(AppPaths.WacliSessionDatabase(null))) {
+            Log.Error("No existe la base de sesión de wacli. Ejecutá wacli o sincronizá WhatsApp antes de listar participantes.");
+            return 1;
+        }
+
+        WAppService wapp = new(sincronizar: false);
+        List<GrupoWhatsApp> grupos;
+
+        try {
+            grupos = wapp.Grupos();
+        } catch (Exception ex) {
+            Log.Error($"No se pudieron listar grupos desde la base local de wacli: {ex.Message}");
+            return 1;
+        }
+
+        if (grupos.Count == 0) {
+            Log.Warning("No se encontraron grupos en la base local de wacli.");
+            return 0;
+        }
+
+        Log.Info($"Grupos encontrados: {grupos.Count}");
+
+        foreach (var grupo in grupos) {
             Log.WriteLine($"Grupo: {grupo.Group}");
-            foreach (var contacto in wapp.Participantes(grupo.Group)) {
-                Log.WriteLine($"  - {contacto.Name,-30} {contacto.PhoneNumber} {contacto.Jid}");
+            try {
+                List<ContactoWhatsApp> participantes = wapp.Participantes(grupo.Jid);
+                Log.WriteLine($"  Participantes: {participantes.Count}");
+                foreach (var contacto in participantes) {
+                    Alumno? alumno = alumnos.BuscarPorTelefono(contacto.PhoneNumber);
+                    string datosAlumno = alumno is null
+                        ? "SIN ALUMNO"
+                        : $"{alumno.Comision} | {alumno.Legajo} | {alumno.NombreCompleto}";
+                    string linea = $"  - {contacto.Name,-30} {contacto.PhoneNumber,-15} {contacto.Jid,-28} | {datosAlumno}";
+
+                    if (alumno is null) {
+                        Log.Error(linea);
+                    } else {
+                        Log.WriteLine(linea);
+                    }
+                }
+            } catch (Exception ex) {
+                Log.Error($"  No se pudieron listar participantes de '{grupo.Group}': {ex.Message}");
             }
         }
 
         return 0;
-    }
-
-    public static int WappRecuperarPracticos(string? trabajoPractico, bool simular) {
-        int? numeroTp = null;
-        if (!string.IsNullOrWhiteSpace(trabajoPractico)) {
-            int n = ObtenerNumeroTP(trabajoPractico);
-            if (n <= 0) {
-                Log.Error(MensajeTrabajoPracticoInvalido(trabajoPractico));
-                return 1;
-            }
-            numeroTp = n;
-        }
-
-        Alumnos alumnos = CargarAlumnos();
-        List<Alumno> destinatarios = alumnos
-            .Where(alumno => numeroTp switch {
-                1 => alumno.EstadoPractico(1) != Estado.Aprobado,
-                2 => alumno.EstadoPractico(2) != Estado.Aprobado,
-                _ => alumno.EstadoPractico(1) != Estado.Aprobado && alumno.EstadoPractico(2) != Estado.Aprobado
-            })
-            .OrderBy(alumno => alumno.Comision)
-            .ThenBy(alumno => alumno.NombreCompleto)
-            .ThenBy(alumno => alumno.Legajo)
-            .ToList();
-
-        string etiqueta = numeroTp is int tp ? $"TP{tp}" : "TP1 y TP2";
-        if (destinatarios.Count == 0) {
-            Log.Info($"No hay alumnos con {etiqueta} pendiente de presentación.");
-            return 0;
-        }
-
-        Log.Info($"{(simular ? "Simulación" : "Envío")} de WhatsApp a alumnos con {etiqueta} no presentado.");
-
-        int enviados = 0;
-        int omitidos = 0;
-
-        if (simular) {
-            foreach (Alumno alumno in destinatarios) {
-                string mensaje = MensajeRecuperacion(alumno, numeroTp);
-                if (string.IsNullOrWhiteSpace(alumno.TelefonoId)) {
-                    omitidos++;
-                    Log.Warning($"Omitido sin teléfono: {alumno.Legajo} | {alumno.NombreCompleto}");
-                    continue;
-                }
-                Log.Info($"\n-- SIMULAR {alumno.Legajo} | {alumno.NombreCompleto} | {alumno.TelefonoId} ".PadRight(90, '-'));
-                Log.WriteLine(mensaje);
-            }
-        } else {
-            WAppService wapp = new();
-            AnsiConsole.Progress()
-                .AutoClear(false)
-                .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
-                .Start(ctx => {
-                    var tarea = ctx.AddTask($"Enviando {etiqueta}", maxValue: destinatarios.Count);
-                    foreach (Alumno alumno in destinatarios) {
-                        string mensaje = MensajeRecuperacion(alumno, numeroTp);
-                        if (string.IsNullOrWhiteSpace(alumno.TelefonoId)) {
-                            omitidos++;
-                            Log.Warning($"Omitido sin teléfono: {alumno.Legajo} | {alumno.NombreCompleto}");
-                        } else {
-                            try {
-                                wapp.Enviar(alumno.TelefonoId, mensaje, null);
-                                enviados++;
-                                Log.Info($"Enviado: {alumno.Legajo} | {alumno.NombreCompleto} | {alumno.TelefonoId}");
-                            } catch (Exception ex) {
-                                omitidos++;
-                                Log.Error($"No se pudo enviar a {alumno.Legajo} | {alumno.NombreCompleto}: {ex.Message}");
-                            }
-                        }
-                        tarea.Increment(1);
-                    }
-                });
-        }
-
-        Log.Info($"Resumen WhatsApp {etiqueta}: destinatarios={destinatarios.Count}, enviados={enviados}, omitidos={omitidos}, simular={simular}");
-        return omitidos > 0 && !simular ? 1 : 0;
-    }
-
-    public static int WappFotoParcial(bool simular) {
-        Alumnos alumnos = CargarAlumnos();
-        List<Alumno> destinatarios = alumnos
-            .Where(alumno => !alumno.ConFoto)
-            .OrderBy(alumno => alumno.Comision)
-            .ThenBy(alumno => alumno.NombreCompleto)
-            .ThenBy(alumno => alumno.Legajo)
-            .ToList();
-
-        if (destinatarios.Count == 0) {
-            Log.Info("No hay alumnos sin foto de perfil.");
-            return 0;
-        }
-
-        Log.Info($"{(simular ? "Simulación" : "Envío")} de WhatsApp a alumnos sin foto de perfil.");
-
-        int enviados = 0;
-        int omitidos = 0;
-
-        if (simular) {
-            foreach (Alumno alumno in destinatarios) {
-                string mensaje = MensajeFotoParcial(alumno);
-                if (string.IsNullOrWhiteSpace(alumno.TelefonoId)) {
-                    omitidos++;
-                    Log.Warning($"Omitido sin teléfono: {alumno.Legajo} | {alumno.NombreCompleto}");
-                    continue;
-                }
-                Log.Info($"\n-- SIMULAR {alumno.Legajo} | {alumno.NombreCompleto} | {alumno.TelefonoId} ".PadRight(90, '-'));
-                Log.WriteLine(mensaje);
-            }
-        } else {
-            WAppService wapp = new();
-            AnsiConsole.Progress()
-                .AutoClear(false)
-                .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new SpinnerColumn())
-                .Start(ctx => {
-                    var tarea = ctx.AddTask("Enviando foto parcial", maxValue: destinatarios.Count);
-                    foreach (Alumno alumno in destinatarios) {
-                        string mensaje = MensajeFotoParcial(alumno);
-                        if (string.IsNullOrWhiteSpace(alumno.TelefonoId)) {
-                            omitidos++;
-                            Log.Warning($"Omitido sin teléfono: {alumno.Legajo} | {alumno.NombreCompleto}");
-                        } else {
-                            try {
-                                wapp.Enviar(alumno.TelefonoId, mensaje, null);
-                                enviados++;
-                                Log.Info($"Enviado: {alumno.Legajo} | {alumno.NombreCompleto} | {alumno.TelefonoId}");
-                            } catch (Exception ex) {
-                                omitidos++;
-                                Log.Error($"No se pudo enviar a {alumno.Legajo} | {alumno.NombreCompleto}: {ex.Message}");
-                            }
-                        }
-                        tarea.Increment(1);
-                    }
-                });
-        }
-
-        Log.Info($"Resumen WhatsApp foto parcial: destinatarios={destinatarios.Count}, enviados={enviados}, omitidos={omitidos}, simular={simular}");
-        return omitidos > 0 && !simular ? 1 : 0;
     }
 
     public static int ObtenerNumeroTP(string? valor) {
@@ -550,122 +1008,84 @@ static class AlumnosCliActions {
         return alumnos;
     }
 
+    static void EjecutarConIndicador(string accion, string estadoInicial, Action<Action<string>> ejecutar) {
+        AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .SpinnerStyle(Style.Parse("cyan"))
+            .Start($"{accion} · {estadoInicial}", contexto =>
+                ejecutar(estado => contexto.Status($"{accion} · {estado}")));
+    }
+
+    static T EjecutarConIndicador<T>(string accion, string estadoInicial, Func<Action<string>, T> ejecutar) =>
+        AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .SpinnerStyle(Style.Parse("cyan"))
+            .Start($"{accion} · {estadoInicial}", contexto =>
+                ejecutar(estado => contexto.Status($"{accion} · {estado}")));
+
     static string ResolverRuta(string? ruta, string rutaPorDefecto) =>
         string.IsNullOrWhiteSpace(ruta) ? rutaPorDefecto : ruta;
 
+    static void PrepararCarpetasAlumnos() =>
+        CargarAlumnosConCarpetasPreparadas();
+
+    static Alumnos CargarAlumnosConCarpetasPreparadas() {
+        Alumnos alumnos = CargarAlumnos();
+        AlumnosManager.CrearCarpetas(alumnos);
+        return alumnos;
+    }
+
+    static (Alumnos Alumnos, GitHub GitHub) PrepararPullRequests(bool prepararCarpetas = false) {
+        Alumnos alumnos = prepararCarpetas
+            ? CargarAlumnosConCarpetasPreparadas()
+            : CargarAlumnos();
+        GitHub gh = new();
+
+        Log.Info("Normalizando títulos de PRs antes de continuar...");
+        gh.NormalizarTitulos(alumnos);
+        return (alumnos, gh);
+    }
+
     static string CarpetaTrabajoPractico(int numeroTp) => $"tp{numeroTp}";
 
-    static void CargarAsistenciasHastaHoy(Alumnos alumnos, Action<string>? actualizarEstado = null) {
-        actualizarEstado?.Invoke("Sincronizando WhatsApp...");
-        WAppService wapp = new();
-        DateTime hoy = DateTime.Today;
+    static void CargarAsistenciasHastaHoy(Alumnos alumnos) {
+        WAppService wapp = EjecutarConIndicador(
+            "Relevar asistencias",
+            "Sincronizando WhatsApp...",
+            actualizarEstado => {
+                actualizarEstado("Sincronizando WhatsApp antes de leer mensajes...");
+                return new WAppService();
+            });
+        DateOnly hoy = DateOnly.FromDateTime(DateTime.Today);
 
         DateTime desde = new(hoy.Year, 4, 1);
-        DateTime hasta = hoy.AddHours(12).AddMinutes(30);
-        Dictionary<int, HashSet<DateTime>> asistenciasPorAlumno = alumnos
-            .ToDictionary(alumno => alumno.Legajo, _ => new HashSet<DateTime>());
+        DateTime hasta = hoy.ToDateTime(new TimeOnly(14, 0));
+        Dictionary<int, HashSet<DateOnly>> asistenciasPorAlumno = alumnos
+            .ToDictionary(alumno => alumno.Legajo, _ => new HashSet<DateOnly>());
 
         foreach (var grupo in new[] { "C7", "C9" }) {
-            actualizarEstado?.Invoke($"Leyendo mensajes de {grupo}...");
-            foreach (var mensaje in wapp.Mensajes(grupo, desde, hasta)) {
-                if (!EsMensajeDeAsistencia(mensaje, desde, hasta)) { continue; }
-
-                string telefono = wapp.ObtenerTelefonoAutorMensaje(mensaje);
-                Alumno? alumno = alumnos.BuscarPorTelefono(telefono);
-
-                if (alumno is null) { continue; }
-
-                asistenciasPorAlumno[alumno.Legajo].Add(mensaje.Fecha.Date);
-            }
-        }
-
-        actualizarEstado?.Invoke("Consolidando asistencias...");
-        foreach (Alumno alumno in alumnos) {
-            HashSet<DateTime> fechas = asistenciasPorAlumno[alumno.Legajo];
-            alumno.Presente = fechas.Contains(hoy.Date);
-            alumno.Asistencias = fechas.Count(fecha => fecha < hoy.Date);
-        }
-    }
-
-    static void CargarCodigosDesdeWhatsApp(Alumnos alumnos, Action<string>? actualizarEstado = null) {
-        actualizarEstado?.Invoke("Sincronizando WhatsApp...");
-        WAppService wapp = new();
-        DateTime desde = DateTime.Today.AddDays(-30);
-        DateTime hasta = DateTime.Today.AddDays(1);
-        Dictionary<int, (DateTime Fecha, string Codigo, string Origen)> codigosDetectados = new();
-
-        foreach (string grupo in new[] { "C7", "C9" }) {
-            actualizarEstado?.Invoke($"Leyendo mensajes del grupo {grupo}...");
-            try {
-                foreach (MensajeWhatsApp mensaje in wapp.Mensajes(grupo, desde, hasta)) {
-                    if (mensaje.FromMe) { continue; }
-
-                    string? codigo = ExtraerCodigoDesdeTexto(mensaje.Content);
-                    if (codigo is null) { continue; }
-
-                    Alumno? alumno = ExtraerLegajoDesdeCodigo(codigo) is int legajo
-                        ? alumnos.BuscarPorLegajo(legajo)
-                        : null;
-
-                    if (alumno is null) {
+            IEnumerable<MensajeWhatsApp> mensajes = wapp.Mensajes(grupo, desde, hasta).Where(mensaje => EsMensajeDeAsistencia(mensaje, desde, hasta));
+            AnsiConsole.Progress()
+                .AutoClear(true)
+                .Start(ctx => {
+                    var tarea = ctx.AddTask($"Procesando mensajes de {grupo}", maxValue: mensajes.Count());
+                    foreach (var mensaje in mensajes) {
                         string telefono = wapp.ObtenerTelefonoAutorMensaje(mensaje);
-                        alumno = alumnos.BuscarPorTelefono(telefono);
+                        Alumno? alumno = alumnos.BuscarPorTelefono(telefono);
+                        if (alumno is not null) {
+                            asistenciasPorAlumno[alumno.Legajo].Add(DateOnly.FromDateTime(mensaje.Fecha));
+                            tarea.Increment(1);
+                        }
                     }
-
-                    if (alumno is null) { continue; }
-
-                    RegistrarCodigoDetectado(alumno, mensaje, codigo, grupo);
-                }
-            } catch (Exception ex) {
-                Log.Warning($"No se pudieron leer mensajes del grupo {grupo}: {ex.Message}");
-            }
+                });
         }
 
         foreach (Alumno alumno in alumnos) {
-            if (string.IsNullOrWhiteSpace(alumno.TelefonoId)) { continue; }
-
-            actualizarEstado?.Invoke($"Leyendo chat privado de {alumno.NombreCompleto}...");
-            try {
-                foreach (MensajeWhatsApp mensaje in wapp.Mensajes(alumno.TelefonoId, desde, hasta)) {
-                    if (mensaje.FromMe) { continue; }
-
-                    string? codigo = ExtraerCodigoDesdeTexto(mensaje.Content);
-                    if (codigo is not null) {
-                        RegistrarCodigoDetectado(alumno, mensaje, codigo, "privado");
-                    }
-                }
-            } catch (Exception ex) {
-                Log.Warning($"No se pudieron leer mensajes de {alumno.NombreCompleto}: {ex.Message}");
-            }
+            HashSet<DateOnly> fechas = asistenciasPorAlumno[alumno.Legajo];
+            alumno.Presente    = fechas.Contains(hoy);
+            alumno.Asistencias = fechas.Count;
+            alumno.Examen(1, alumno.Asistencias switch { >= 8 => Estado.Aprobado, >= 4 => Estado.Pendiente, _ => Estado.Desaprobado });
         }
-
-        actualizarEstado?.Invoke("Consolidando códigos...");
-
-        foreach (Alumno alumno in alumnos) {
-            if (!codigosDetectados.TryGetValue(alumno.Legajo, out var detectado)) { continue; }
-
-            alumno.Codigo = detectado.Codigo;
-            alumno.Presente = true;
-            Log.Info($"Código detectado ({detectado.Origen}) [{detectado.Fecha:HH:mm}]: {alumno.NombreCompleto} → {detectado.Codigo}");
-        }
-
-        void RegistrarCodigoDetectado(Alumno alumno, MensajeWhatsApp mensaje, string codigo, string origen) {
-            if (codigosDetectados.TryGetValue(alumno.Legajo, out var anterior) && anterior.Fecha > mensaje.Fecha) {
-                return;
-            }
-
-            codigosDetectados[alumno.Legajo] = (mensaje.Fecha, codigo, origen);
-        }
-    }
-
-    static string? ExtraerCodigoDesdeTexto(string texto) {
-        Match m = Regex.Match(texto, @"\b\d+\.\d+\.[a-zA-Z0-9]+(?:\.\d{2})?\b");
-        return m.Success ? m.Value : null;
-    }
-
-    static int? ExtraerLegajoDesdeCodigo(string codigo) {
-        string primerParte = codigo.Split('.')[0];
-        return int.TryParse(primerParte, out int legajo) ? legajo : null;
     }
 
     static bool EsMensajeDeAsistencia(MensajeWhatsApp mensaje, DateTime desde, DateTime hasta) {
@@ -675,14 +1095,43 @@ static class AlumnosCliActions {
         TimeSpan hora = mensaje.Fecha.TimeOfDay;
         return
             dia >= DayOfWeek.Monday && dia <= DayOfWeek.Thursday &&
-            hora >= new TimeSpan(8, 0, 0) && hora <= new TimeSpan(12, 30, 0);
+                hora >= new TimeSpan(8, 0, 0) && hora <= new TimeSpan(13, 0, 0);
     }
 
-    static int ContarLineasPracticoLocal(string rutaPractico) =>
-        AppPaths.ContarLineasArchivos(rutaPractico, "*.cs", SearchOption.TopDirectoryOnly);
+    static readonly HashSet<string> extensionesFuentePractico = new(StringComparer.OrdinalIgnoreCase) {
+        ".cs",
+        ".cshtml",
+        ".csproj",
+        ".css",
+        ".html",
+        ".htm",
+        ".js",
+        ".json",
+        ".razor",
+        ".sln",
+        ".slnx",
+        ".ts"
+    };
+
+    static int ContarLineasPracticoLocal(string rutaPractico) {
+        if (!Directory.Exists(rutaPractico)) {
+            return 0;
+        }
+
+        return Directory
+            .EnumerateFiles(rutaPractico, "*", SearchOption.AllDirectories)
+            .Where(EsArchivoContabilizablePractico)
+            .Sum(rutaArchivo => File.ReadLines(rutaArchivo).Count());
+    }
+
+    static bool EsArchivoContabilizablePractico(string rutaArchivo) =>
+        EsArchivoFuentePractico(rutaArchivo) &&
+        extensionesFuentePractico.Contains(Path.GetExtension(rutaArchivo)) &&
+        ArchivoTexto.EsRutaTexto(rutaArchivo) &&
+        ArchivoTexto.PareceArchivoTexto(rutaArchivo);
 
     static int ObtenerLineasBaseEnunciado(int numeroTp, string carpetaTp, string rutaEnunciado, Alumnos alumnos) {
-        int lineasEnunciado = AppPaths.ContarLineasArchivos(rutaEnunciado, "*.cs");
+        int lineasEnunciado = ContarLineasPracticoLocal(rutaEnunciado);
         if (numeroTp != 3) {
             return lineasEnunciado;
         }
@@ -773,9 +1222,9 @@ static class AlumnosCliActions {
             string codigo = string.Join(",", grupo.Order());
             foreach (int legajoGrupo in grupo) {
                 if (alumnosPorLegajo.TryGetValue(legajoGrupo, out Alumno? alumno)) {
-                    string anterior = numeroTp == 1 ? "" : alumno.Codigo;
-                    alumno.Codigo = $"{anterior} TP{numeroTp}:{codigo}".Trim();
-                    Console.WriteLine($"{numeroTp} -> {anterior} | {alumno.Codigo}");
+                    string anterior = numeroTp == 1 ? "" : alumno.Observaciones;
+                    alumno.Observaciones = $"{anterior} TP{numeroTp}:{codigo}".Trim();
+                    Console.WriteLine($"{numeroTp} -> {anterior} | {alumno.Observaciones}");
                 }
             }
         }
@@ -783,7 +1232,7 @@ static class AlumnosCliActions {
 
     static CopiaDetectada? CompararTrabajos(TrabajoPresentadoLocal actual, TrabajoPresentadoLocal otro) {
         int maximoLineas = Math.Min(actual.LineasCodigo.Count, otro.LineasCodigo.Count);
-        if (maximoLineas == 0) {
+        if (maximoLineas < MinimoLineasCopia) {
             return null;
         }
 
@@ -801,7 +1250,11 @@ static class AlumnosCliActions {
             return lineas;
         }
 
-        foreach (string rutaArchivo in Directory.EnumerateFiles(rutaPractico, "*.cs", SearchOption.AllDirectories).Where(EsArchivoFuentePractico)) {
+        foreach (string rutaArchivo in Directory
+            .EnumerateFiles(rutaPractico, "*.cs", SearchOption.AllDirectories)
+            .Where(EsArchivoFuentePractico)
+            .Where(ArchivoTexto.EsRutaTexto)
+            .Where(ArchivoTexto.PareceArchivoTexto)) {
             foreach (string linea in NormalizarLineasCodigo(File.ReadLines(rutaArchivo))) {
                 lineas.Add(linea);
             }
@@ -932,53 +1385,16 @@ static class AlumnosCliActions {
         return sb.ToString();
     }
 
-    static bool PracticoParecePresentado(int numeroTp, int lineasTotales, int lineasAgregadas) =>
-        numeroTp switch {
-            1 => lineasTotales   >= 100,
-            2 => lineasAgregadas >= 20,
-            3 => lineasAgregadas >= 50,
-            _ => lineasTotales   >= 100
-        };
-
     static bool TieneAlgunPracticoPresentado(Alumno alumno) =>
         alumno.practicos.Any(estado => estado == Estado.Aprobado);
 
     sealed record TrabajoPresentadoLocal(Alumno Alumno, string RutaPractico, HashSet<string> LineasCodigo);
+    sealed record PresentacionCambiada(Alumno Alumno, Estado EstadoAnterior, Estado EstadoNuevo, int LineasTotales, int LineasAgregadas);
+    sealed record CompilacionAlumnoResultado(Alumno Alumno, CompilacionPracticoResultado Compilacion);
+    sealed record EjecucionAlumnoResultado(Alumno Alumno, EjecucionPracticoResultado Ejecucion);
+    sealed record CapturaPantallaAlumnoResultado(Alumno Alumno, CapturaPantallaResultado Captura);
+    sealed record OpcionAlumnoPractico(Alumno? Alumno);
 
     readonly record struct CopiaDetectada(int LineasComunes, int MaximoLineas, double Porcentaje);
 
-    static string MensajeFotoParcial(Alumno alumno) =>
-        $"""
-        Hola *{alumno.Nombre}*.
-
-        No tengo registrada una foto tuya en el sistema y mañana tenemos el parcial.
-
-        Respondé este mensaje con una *selfie simple* para que pueda identificarte durante el examen. 📸
-        """;
-
-    static string MensajeRecuperacion(Alumno alumno, int? numeroTp) {
-        string tpsTexto = numeroTp switch {
-            1 => "el trabajo práctico 1",
-            2 => "el trabajo práctico 2",
-            3 => "el trabajo práctico 3",
-            4 => "el trabajo práctico 4",
-            5 => "el trabajo práctico 5",
-            _ => "el trabajo práctico 1 ni el trabajo práctico 2"
-        };
-
-        return $"""
-            Hola *{alumno.Nombre}*.
-
-            Según mi registro, no has presentado {tpsTexto}.
-
-            Podes recuperar el trabajo si lo presentas hasta el próximo jueves {ProximoJueves():dd/MM}.
-            """;
-    }
-
-    static DateTime ProximoJueves() {
-        int dias = ((int)DayOfWeek.Thursday - (int)DateTime.Today.DayOfWeek + 7) % 7;
-        if (dias == 0) { dias = 7; }
-
-        return DateTime.Today.AddDays(dias);
-    }
 }

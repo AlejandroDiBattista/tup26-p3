@@ -1,0 +1,139 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    background-color: #fdf2f4;
+    font-family: 'Segoe UI', sans-serif;
+    color: #2d3748;
+}
+
+.navbar-agenda {
+    background-color: #8b1a3a;
+    color: white;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.navbar-agenda h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.avatar-inicial {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: #c2185b;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lista-contactos {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    background: white;
+}
+.lista-contactos .list-group-item {
+    border: none;
+    border-bottom: 1px solid #f8e4ea;
+    border-radius: 0 !important;
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.lista-contactos .list-group-item:hover { background-color: #fce4ec; }
+.lista-contactos .list-group-item.active {
+    background-color: #8b1a3a;
+    border-color: #8b1a3a;
+    color: white;
+}
+.lista-contactos .list-group-item.active small { color: #f8bbd9; }
+.lista-contactos .list-group-item.active .avatar-inicial { background-color: #c2185b; }
+
+.buscador input {
+    border-radius: 8px;
+    border: 1px solid #f4a7b9;
+    padding: 0.6rem 1rem;
+}
+.buscador input:focus {
+    border-color: #8b1a3a;
+    box-shadow: 0 0 0 3px rgba(139,26,58,0.15);
+    outline: none;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.card-header {
+    background-color: #8b1a3a;
+    color: white;
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem 1.25rem;
+}
+.card-header h5 { margin: 0; font-weight: 600; }
+
+.btn-nuevo {
+    background-color: #c2185b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    width: 100%;
+    margin-bottom: 0.75rem;
+    transition: background 0.2s;
+}
+.btn-nuevo:hover { background-color: #8b1a3a; color: white; }
+
+.btn-editar {
+    background-color: #f48fb1 !important;
+    color: #4a0f22 !important;
+    border: none !important;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    margin-right: 0.4rem;
+    font-weight: 600;
+}
+.btn-editar:hover { background-color: #f06292 !important; color: #4a0f22 !important; }
+
+.btn-eliminar {
+    background-color: #4a0f22 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.btn-eliminar:hover { background-color: #2d0715 !important; color: white !important; }
+
+.estado-vacio {
+    text-align: center;
+    color: #b0707a;
+    margin-top: 4rem;
+}
+.estado-vacio .icono-grande { font-size: 3.5rem; margin-bottom: 0.5rem; }
+
+
+.lista-contactos {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+
+.col-md-8 {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}

@@ -1,0 +1,91 @@
+@using tp5.Models
+
+@if (Contacto is null)
+{
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-person-vcard fs-1 d-block mb-3"></i>
+        <span>Seleccioná un contacto para ver su detalle.</span>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-person-circle me-2"></i>
+                @Contacto.Apellido, @Contacto.Nombre
+            </h4>
+            <div>
+                <button class="btn btn-outline-primary btn-sm me-2" @onclick="OnEditar">
+                    <i class="bi bi-pencil me-1"></i>Editar
+                </button>
+                <button class="btn btn-outline-danger btn-sm" @onclick="OnEliminar">
+                    <i class="bi bi-trash me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>Teléfono</strong>
+                    <p class="mb-0">@Contacto.Telefono</p>
+                </div>
+                <div class="col-md-6">
+                    <strong>Correo electrónico</strong>
+                    <p class="mb-0">@Contacto.Email</p>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Contacto.Empresa))
+                {
+                    <div class="col-md-6">
+                        <strong>Empresa</strong>
+                        <p class="mb-0">@Contacto.Empresa</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Contacto.Cargo))
+                {
+                    <div class="col-md-6">
+                        <strong>Cargo</strong>
+                        <p class="mb-0">@Contacto.Cargo</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Contacto.Direccion))
+                {
+                    <div class="col-12">
+                        <strong>Dirección</strong>
+                        <p class="mb-0">@Contacto.Direccion</p>
+                    </div>
+                }
+
+                @if (Contacto.FechaNacimiento.HasValue)
+                {
+                    <div class="col-md-6">
+                        <strong>Fecha de nacimiento</strong>
+                        <p class="mb-0">@Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Contacto.Notas))
+                {
+                    <div class="col-12">
+                        <strong>Notas</strong>
+                        <p class="mb-0 text-break">@Contacto.Notas</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Contacto? Contacto { get; set; }
+
+    [Parameter]
+    public EventCallback OnEditar { get; set; }
+
+    [Parameter]
+    public EventCallback OnEliminar { get; set; }
+}

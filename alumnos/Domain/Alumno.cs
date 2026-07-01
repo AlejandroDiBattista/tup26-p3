@@ -14,30 +14,31 @@ public class Alumno {
     public bool Presente = false;
     public int Asistencias = 0;
     public int Nota = 0;
-    public string Codigo = "";
+    public string Recuperacion = "";
+    public string Observaciones = "";
 
     public List<Estado> practicos = new();
     public List<Estado> examenes = new();
 
     public string NombreCompleto => $"{Apellido}, {Nombre}";
-    public string CarpetaNombre => $"{Legajo} - {NombreCompleto}";
+    public string CarpetaNombre => $"{Legajo} - {NormalizarNombreCarpeta(NombreCompleto)}";
     public bool ConTelefono => !string.IsNullOrWhiteSpace(Telefono);
     public string TelefonoId => TelefonoID(Telefono);
     public bool ConGithub => EsGitHubValido(GitHub);
     public bool ConFoto => TieneFoto;
 
-    public Alumno(int legajo, string comision, string nombre, string apellido, string telefono, string github, bool tieneFoto, bool presente = false, int asistencias = 0, int nota = 0, string codigo = "") {
+    public Alumno(int legajo, string comision, string nombre, string apellido, string telefono, string github, bool presente = false, int asistencias = 0, int nota = 0, string observaciones = "", string recuperacion = "") {
         Legajo = legajo;
         Comision = NormalizarComision(comision);
         Nombre = NormalizarNombre(nombre);
         Apellido = NormalizarNombre(apellido);
         Telefono = NormalizarTelefono(telefono);
         GitHub = NormalizarGitHub(github);
-        TieneFoto = tieneFoto;
         Presente = presente;
         Asistencias = asistencias;
         Nota = nota;
-        Codigo = codigo.Trim();
+        Recuperacion = recuperacion.Trim();
+        Observaciones = observaciones.Trim();
     }
 
     public static int Comparar(Alumno a, Alumno b) {
@@ -92,6 +93,18 @@ public class Alumno {
         nombre = Regex.Replace(nombre, @"^\s+|\s+$|\s+(?=\s)", "");
         nombre = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nombre);
         return nombre;
+    }
+
+    static string NormalizarNombreCarpeta(string nombre) {
+        string sinAcentos = nombre
+            .Normalize(NormalizationForm.FormD)
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            .Aggregate(new StringBuilder(), (sb, c) => sb.Append(c))
+            .ToString()
+            .Normalize(NormalizationForm.FormC);
+
+        string sinComas = sinAcentos.Replace(",", "");
+        return Regex.Replace(sinComas, @"\s+", " ").Trim();
     }
 
     static string NormalizarGitHub(string github) {

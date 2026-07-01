@@ -1,0 +1,90 @@
+@page "/editar/{Id:int}"
+@page "/nuevo"
+@rendermode InteractiveServer
+@using tp5.Models
+@using Microsoft.EntityFrameworkCore
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+
+<h3>@Titulo</h3>
+
+<EditForm Model="modelo" OnValidSubmit="GuardarCambios">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-2">
+        <label>Nombre</label>
+        <InputText class="form-control" @bind-Value="modelo.Nombre" />
+    </div>
+
+    <div class="mb-2">
+        <label>Apellido</label>
+        <InputText class="form-control" @bind-Value="modelo.Apellido" />
+    </div>
+
+    <div class="mb-2">
+        <label>Teléfono</label>
+        <InputText class="form-control" @bind-Value="modelo.Telefono" />
+    </div>
+
+    <div class="mb-2">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="modelo.Email" />
+    </div>
+
+    <div class="mb-2">
+        <label>Empresa</label>
+        <InputText class="form-control" @bind-Value="modelo.Empresa" />
+    </div>
+
+    <div class="mb-2">
+        <label>Cargo</label>
+        <InputText class="form-control" @bind-Value="modelo.Cargo" />
+    </div>
+
+    <div class="mb-2">
+        <label>Dirección</label>
+        <InputText class="form-control" @bind-Value="modelo.Direccion" />
+    </div>
+
+    <div class="mb-2">
+        <label>Notas</label>
+        <InputTextArea class="form-control" @bind-Value="modelo.Notas" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Guardar</button>
+    <button type="button" class="btn btn-secondary" @onclick="Volver">Cancelar</button>
+</EditForm>
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private Contacto modelo = new();
+
+    private string Titulo => Id.HasValue ? "Editar contacto" : "Nuevo contacto";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var encontrado = await Db.Contactos.FindAsync(Id.Value);
+            if (encontrado is not null)
+                modelo = encontrado;
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (modelo.Id == 0)
+            Db.Contactos.Add(modelo);
+        else
+            Db.Contactos.Update(modelo);
+
+        await Db.SaveChangesAsync();
+        Volver();
+    }
+
+    private void Volver()
+    {
+        Nav.NavigateTo("/");
+    }
+}

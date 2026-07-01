@@ -1,120 +1,123 @@
-﻿# Programación 3
+# Segundo parcial - Programación III
 
->[!IMPORTANT]
-> Está publicado el TP4: Catálogo REST.
-> Deben presentarlo hasta el martes 2 de junio.
+El segundo parcial consiste en la defensa de los trabajos prácticos 5 y 6.
 
-(Ver enunciado completo: [enunciados/tp4/enunciado.md](enunciados/tp4/enunciado.md))
-(Ver instrucción de entrega: [como-entregar-practico.md](como-entregar-practico.md))
+Durante la defensa, cada estudiante deberá realizar en vivo una modificación sobre el sistema que presentó. La consigna se indicará en el momento y será acotada: no se pedirá desarrollar una funcionalidad nueva, sino corregir o ajustar aspectos del sistema entregado.
 
+Cada estudiante dispondrá de una computadora provista por la cátedra y tendrá 15 minutos para realizar los cambios y documentarlos.
 
-# ¿Cómo aprobar la materia?
+Están en condiciones de promocionar quienes, al momento de esta comunicación, tienen nota de promoción y presentaron el Trabajo Práctico 5. La falta de presentación del Trabajo Práctico 6 no excluye a nadie de este listado por ahora, porque el plazo de entrega de ese trabajo todavía no está cerrado.
 
-Para aprobar la materia se debe asistir, presentar los prácticos y aprobar los parciales.
-Dependiendo del desempeño en cada uno de estos aspectos, el alumno podrá quedar libre, regular o promocionar la materia.
+Los siguientes estudiantes se encuentran en condiciones de promocionar y deben revisar el estado indicado para el Trabajo Práctico 5. Cuando haya observaciones, deberán corregirlas y presentar los cambios hasta el lunes 29 de junio de 2026 a las 21:00.
 
-## ¿Cómo regularizo la materia?
-- Debe tener al menos 15 asistencias a clase verificadas.
-- Debe aprobar al menos 3 trabajos prácticos.
-- Debe aprobar ambos parciales con 4 o más.
+La corrección debe entregarse mediante un pull request con los cambios realizados. El pull request debe incluir solamente las correcciones solicitadas para esta instancia.
 
-## ¿Cómo promociono la materia?
-- Debe tener al menos 30 asistencias a clase verificadas.
-- Debe aprobar todos los trabajos prácticos.
-- Debe aprobar ambos parciales con 8 o más.
-- Los trabajos prácticos se contabilizarán como 2 asistencias a clase, a los fines de la promoción.
+El calendario de defensas, con día y horario para cada estudiante, se informará más adelante.
 
+## Condición del TP6
 
-## Sobre la asistencia a clase
-- La materia es presencial; la asistencia es obligatoria.
-- Los trabajos prácticos aprobados se pueden considerar como asistencia a clase a los fines de la promoción.
-- A la fecha, quedan 15 clases para finalizar el cursado.
+El Trabajo Práctico 6 formará parte de la defensa del segundo parcial. Su ausencia no invalida este listado mientras el plazo de entrega no esté cerrado. La condición final se verificará al cerrar la instancia.
+
+## Correcciones a realizar
+
+---
+
+# Evaluacion TP6
+
+Se evalua el funcionamiento del TP6 son el siguiente resultado.
 
 
-## Sobre la evaluación de los trabajos prácticos
-- Los trabajos prácticos serán aprobados o rechazados en función de que se ejecuten sin error. 
-- No se les dará una nota numérica.
-- El trabajo es *estrictamente individual* y debe ser realizado en persona por el alumno.
-- La práctica se realizará en la computadora del alumno.
-- El alumno tiene libertad para usar cualquier recurso de aprendizaje, pero *no podrá usar la IA para hacer* los trabajos prácticos.
+## Funciona de primera (trabajo aprobado)
+
+> Estos trabajos funcionaron de primera. 
+
+63207   Saravia, César Nahum             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63219   Lazarte, Sergio Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63231   Herrera, Rocío Tatiana           🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto
+63241   Cortez, Josías                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto
+63268   Condori, Karina Edith            🟢🟢🟢🟢🟢🟢   🟢⚪   No     9    1  correcto
+63297   Lezana, Juan Ignacio             🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto
+63300   Álvarez, Hernán Fabricio         🟢🟢🟢🟢🟢🟢   🟢⚪   No    23   10  correcto
+63313   Ávila Puntano, Benjamín          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63341   Carrer, Juan Cruz                🟢🟢🟢🟢🟢🟢   🟢⚪   No    21   10  correcto
+63354   Perondi, Luciano                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63399   Lazarte, Gonzalo Romeo           🟢🟢🟢🟢🟢🟢   🟢⚪   No    24   10  correcto
+63402   Condori, Nahuel Ariel            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto
+63419   Coronel, Tomás                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  correcto
+63494   Medina, Lourdes Natalia          🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  correcto
+63546   Sosa Paz, Jeremías               🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto
+63547   Sosa Paz, José Lisandro          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  correcto
+63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🟢   🟢⚪   No    18    8  correcto (mantenia comentario)
+63420   Pereyra, Valentina Nazaret       🔴🟢🔴🔴🟢🟢   🟢⚪   No    12    5  correcto
+63208   Rosconi, Ignacio Federico        🔴🟢🔴🔴🟢🟢   🟢⚪   No    15    4  correcto
 
 
-## ¿Cómo se evaluarán los parciales?
-- Los alumnos que tengan todos los prácticos aprobados y no alcancen la nota para la promoción podrán rendir un recuperatorio del primer parcial para mejorar su nota.
-- El último trabajo práctico actuará como examen final, que deberá defenderse en forma presencial ante el docente.
-- Si el sistema ejecuta sin error el trabajo práctico, la nota será un 5.
-- La defensa consistirá en la resolución de 5 consignas; cada una le dará un punto, por lo que podrá obtener hasta un 10.
-- La consigna consistirá en explicar el código y/o realizar cambios en él para resolver un problema o agregar una funcionalidad.
-- La defensa se realizará en la fecha acordada para cada grupo, en forma pública y presencial.
+## Corregido problema subsanables (trabajo aprobado)
+
+> Estos trabajos fallaron por problemas de configuracion. (Revisar correccion)
+
+61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (no sale)
+61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟢⚪   No    23    6  correcto (fallaba proveedor)
+63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  correcto (fallaba streaming)
+63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    13   10  correcto
+63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (mal proveedor)
+63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (fallaba streaming)
+63345   García, Franco Tomás             🔴🟢🟢🟢🔴🟢   🟢⚪   No    16   10  correcto (lee mal api_key)
+63350   Páez Carabajal, Santiago         🟢🟢🟢🟢🟢🟢   🟢⚪   No    20    9  correcto (faltaba DotNetEnv)
+63385   Almaraz Sintora, Nahuel          🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  correcto (lee mal api_key)
+63387   Sosa Gonella, Luca               🟢🟢🟢🟢🟢🟢   🟢⚪   No    22    9  correcto (fallaba streaming)
+63388   López, Leandro Joel              🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (lee mal .env)
+63396   Gil Garau, Atalía Trinidad       🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (fallaba proveedor)
+63412   Morán, Facundo Martín            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba proveedor)
+63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  correcto (fallaba streaming)
+63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢⚪   No    26   10  correcto (fallaba streaming)
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢⚪   No    28   10  correcto (mal proveedor)
+63647   Paz, Valentina                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (no borro comentario)
+63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  correcto (fallaba streaming)
+63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    20   10
+63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🟢   🟢⚪   No    25    7
+
+## No implementa las herramientas (Recuperar)
+
+> No cumple consigna, no implementa las funciones (corregir )
+
+63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟤   🟢⚪   No    32    9  No implementa las herramientas
+63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟤   🟢⚪   No    25    7  No implementa las herramientas
+61489   Gómez, Tomás                     🟢🟢🟢🟢🟢🟤   🟢⚪   No    28    9  No implementa las herramientas
+63717   González, Octavio                🟢🟢🟢🟢🟢🟤   🟢⚪   No    31    9  No implementa las herramientas
+63213   Marina Noguera, Morena Giovann   🟢🟢🟢🟢🟢🟤   🟢⚪   No    30    9  No implementa las herramientas
+63397   Vercellone, Tomás                🟢🟢🟢🔴🟢🟤   🟢⚪   No    24    9  No implementa las herramientas
+
+## No compila (recuperar)
+
+> No compila (corregir)
+63234   Molina, Lázaro Exequiel          🟢🟢🟢🟢🟢🟠   🟢⚪   No    27   10  No compila
+
+## No presentaron (recuperar)
+
+> No presentaron (presenta para promocionar)
+63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🟠   🟢⚪   No    26    8
 
 
-## Recuperación Trabajos prácticos
+## No presentaron 
 
-Dada la enorme cantidad de irregularidades detectadas en el TP3, se procedió a analizar detalladamente los trabajos prácticos anteriores.
+> No presentaron y no estan en condiciones de recuperar.
 
-## Rehacer TP3 _(para Promocionar)_
-> [!IMPORTANT]
-> Plazo para entregar el TP3: 
-> **sábado 29 de mayo**
+63205   Navarro Aragón, Facundo          🔴🔴🔴🔴🔴🔴   🟢⚪   No    22   10
+63415   Chávez, Lucas Francisco          🔴🔴🔴🔴🔴🔴   🟢⚪   No    17    8
+61577   González, Lucas Alfredo          🟢🔴🔴🔴🔴🔴   🟢⚪   No    25   10
+63217   Altamiranda Borquez, Bian        🟢🔴🔴🔴🔴🔴   🟢⚪   No    26    8
+61641   Figueroa, Nahuel Ramón           🟢🔴🔴🔴🔴🔴   🟢⚪   No    19    4
+63211   Montero, Luca                    🟢🟢🔴🔴🔴🔴   🟢⚪   No    19   10
+63425   Holmquist, Jeremy                🟢🟢🔴🔴🔴🔴   🟢⚪   No    16    6
+63461   Cativa, Facundo Simón            🟢🟢🔴🔴🔴🔴   🟢⚪   No    18    8
+61161   González, Thomas Ezequiel        🟢🟢🔴🟢🔴🔴   🟢⚪   No    20    5
+63776   Fuensalida, Ulises Nahuel        🟢🟢🔴🔴🟢🔴   🟢⚪   No    17    8
+61490   Valdez Bustamante, Tomás         🟢🟢🔴🟢🟢🔴   🟢⚪   No    34    6
+64016   Cura, Rocío Aylen                🔴🟢🟢🔴🔴🔴   🟢⚪   No    17    7
+62844   Guzmán, Luciano Leonel           🔴🟢🟢🔴🔴🔴   🟢⚪   No    16   10
+61057   Getar, Thomas                    🟢🟢🟢🔴🔴🔴   🟢⚪   No    23    7
+63493   Busnelli, Bruno                  🟢🟢🟢🔴🔴🔴   🟢⚪   No    14   10
+63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
 
-```text
-Legajo  Alumno                     TP     As.  1P  Grupos
-------  -------------------------- -----  ---  --  ------
-61161   González, Thomas Ezequiel  🟢🟢🟠   10   5  - - C
-63207   Saravia, César Nahum       🟢🟢🟠    9  10  - - B
-63213   Marina Noguera, Morena     🟢🟢🟠   11   9  - - C
-63216   Sánchez, Sofía Micaela     🟢🟢🟠   11  10  - - B
-63300   Álvarez, Hernán Fabricio   🟢🟢🟠    9  10  - - B
-63354   Perondi, Luciano           🟢🟢🟠    8  10  - - A
-63456   Ávila Lahr, Joaquín        🟢🟢🟠   12  10  - - A
-```
-
-
-## Rehacer TP1 _(para Promocionar)_
-> [!IMPORTANT]
-> Plazo para entregar el TP1: 
-> **sábado 29 de mayo**
-
-
-```text
-Legajo  Alumno                     TP     As.  1P  Grupos
-------  -------------------------- -----  ---  --  ------
-62844   Guzmán, Luciano Leonel     🟠🟢🟢   11  10  D - -
-63182   González Rojas, Emmanuel   🟠🟢🟢   13  10  D - -
-63397   Vercellone, Tomás          🟠🟢🔴   10   9  B - -
-63493   Busnelli, Bruno            🟠🟢🔴    6  10  E - -
-63647   Paz, Valentina             🟠🟢🟢    9  10  B - -
-```
-
-
-## Rehacer TP1 y TP2 _(para Promocionar)_
-> [!IMPORTANT]
-> Plazo para entregar el TP1 y TP2:
-> **miércoles 2 de junio**
-
-
-```text
-Legajo  Alumno                     TP     As.  1P  Grupos
-------  -------------------------- -----  ---  --  ------
-61026   Thompson, María José       🟠🟠🟢   12   9  F C -
-61490   Valdez Bustamante, Tomás   🟠🟠🔴   13  13  A A -
-63150   Carlino, Joaquín           🟠🟠🔴   13  13  A A -
-```
-
-
-## Rehacer TP1, TP2 y TP3 _(para No Recursar)_
-> [!IMPORTANT]
-> Plazo para entregar el TP1, TP2 y TP3: **sábado 5 de junio**
-
-```text
-Legajo  Alumno                     TP     As.  1P  Grupos
-------  -------------------------  -----  ---  --  ------
-61489   Gómez, Tomás               🟠🟠🟠   12   9  F C C
-61641   Figueroa, Nahuel Ramón     🟠🟠🟠   11   4  F C C
-61801   Benega, Maximiliano        🟠🟠🟠    7   6  F C C
-63218   Cortés, Guillermo Augusto  🟠🟠🟠   11  10  G B B
-63341   Carrer, Juan Cruz          🟠🟠🟠    8  10  G B B
-63345   García, Franco Tomás       🟠🟠🟠    6  10  E B B
-63494   Medina, Lourdes Natalia    🟠🟠🟠    9  10  C D B
-63737   Galván, Rocío Julieta      🟠🟠🟠   10  10  G D B
-```

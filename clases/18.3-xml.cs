@@ -16,18 +16,18 @@ Agenda agenda = new () {
     ]
 };
 
-Directory.CreateDirectory("datos");
+Directory.CreateDirectory("18.datos");
 
 /// === XML ===
 //
 // Serializar Agenda en formato XML
 var serializadorXml = new XmlSerializer(typeof(Agenda));
-using (var archivoXml = File.Create("datos/18.3.agenda.xml")) {
+using (var archivoXml = File.Create("18.datos/18.3.agenda.xml")) {
     serializadorXml.Serialize(archivoXml, agenda);
 }
 
 // Leer Agenda desde formato XML
-using (var archivoXml = File.OpenRead("datos/18.3.agenda.xml")) {
+using (var archivoXml = File.OpenRead("18.datos/18.3.agenda.xml")) {
     var agendaXml = (Agenda)serializadorXml.Deserialize(archivoXml)!;
 
     Console.WriteLine("\n === Contactos cargados desde XML ===");
@@ -38,7 +38,7 @@ using (var archivoXml = File.OpenRead("datos/18.3.agenda.xml")) {
 
 /// === Repositorio de Contactos (con XML) ===
 
-var x = new Repository<Persona>("datos/18.3.contactos.xml", new XmlFileSerializer<Persona>());
+var x = new Repository<Persona>("18.datos/18.3.contactos.xml", new XmlFileSerializer<Persona>());
 x.Create(new() { Nombre = "María", Apellido = "González", Edad = 25 });
 x.Create(new() { Nombre = "Juan",  Apellido = "Pérez",    Edad = 40 });
 
@@ -84,9 +84,9 @@ var agendaSinClases = new XElement("Agenda",
 
 
 
-agendaSinClases.Save("datos/18.3.agenda-sin-clases.xml");
+agendaSinClases.Save("18.datos/18.3.agenda-sin-clases.xml");
 
-var agendaXmlSinClases = XElement.Load("datos/18.3.agenda-sin-clases.xml");
+var agendaXmlSinClases = XElement.Load("18.datos/18.3.agenda-sin-clases.xml");
 
 Console.WriteLine("\n === Agenda cargada desde XML sin clases ===");
 foreach (var contacto in agendaXmlSinClases.Element("Contactos")!.Elements("Contacto")) {

@@ -56,5 +56,6 @@
     "code-runner.fileDirectoryAsCwd": true,
     "code-runner.runInTerminal": true,
     "code-runner.clearPreviousOutput": true,
-    "code-runner.saveFileBeforeRun": true
+    "code-runner.saveFileBeforeRun": true,
+    "workbench.colorTheme": "Light 2026"
 }

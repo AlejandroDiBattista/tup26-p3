@@ -46,6 +46,7 @@ var toppings = AnsiConsole.Prompt(
     new MultiSelectionPrompt<string>()
         .Title("Que [green]ingredientes[/] te gustaria?")
         .NotRequired()
+        .EnableSearch()
         .InstructionsText("[grey](Presiona [blue]<space>[/] para alternar, [green]<enter>[/] para confirmar)[/]")
         .AddChoices("Pepperoni", "Champiñones", "Salchicha", "Cebolla", "Pimientos verdes", "Aceitunas negras"));
 AnsiConsole.MarkupLine($"Ingredientes: [yellow]{string.Join(", ", toppings)}[/]");
