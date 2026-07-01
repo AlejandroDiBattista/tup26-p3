@@ -1022,6 +1022,10 @@ static class AlumnosCliActions {
             return true;
         }
 
+        if (OperatingSystem.IsWindows()) {
+            return EjecutarAperturaVsCodeWindows(ruta, archivoCambios);
+        }
+
         if (OperatingSystem.IsMacOS()) {
             return EjecutarAperturaVsCode("open", "-a", "Visual Studio Code", ruta, archivoCambios);
         }
@@ -1049,6 +1053,61 @@ static class AlumnosCliActions {
             return true;
         } catch {
             return false;
+        }
+    }
+
+    static bool EjecutarAperturaVsCodeWindows(string ruta, string archivoCambios) {
+        if (EjecutarComandoVsCodeWindows(ruta, archivoCambios)) {
+            return true;
+        }
+
+        foreach (string ejecutable in RutasVsCodeWindows()) {
+            if (File.Exists(ejecutable) && EjecutarAperturaVsCode(ejecutable, ruta, archivoCambios)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static bool EjecutarComandoVsCodeWindows(string ruta, string archivoCambios) {
+        try {
+            ProcessStartInfo startInfo = new() {
+                FileName = "cmd.exe",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            startInfo.ArgumentList.Add("/c");
+            startInfo.ArgumentList.Add("code");
+            startInfo.ArgumentList.Add(ruta);
+            startInfo.ArgumentList.Add(archivoCambios);
+
+            using Process? proceso = Process.Start(startInfo);
+            if (proceso is null) {
+                return false;
+            }
+
+            return !proceso.WaitForExit(2000) || proceso.ExitCode == 0;
+        } catch {
+            return false;
+        }
+    }
+
+    static IEnumerable<string> RutasVsCodeWindows() {
+        string? localAppData = Environment.GetEnvironmentVariable("LOCALAPPDATA");
+        string? programFiles = Environment.GetEnvironmentVariable("ProgramFiles");
+        string? programFilesX86 = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
+
+        if (!string.IsNullOrWhiteSpace(localAppData)) {
+            yield return Path.Combine(localAppData, "Programs", "Microsoft VS Code", "Code.exe");
+        }
+
+        if (!string.IsNullOrWhiteSpace(programFiles)) {
+            yield return Path.Combine(programFiles, "Microsoft VS Code", "Code.exe");
+        }
+
+        if (!string.IsNullOrWhiteSpace(programFilesX86)) {
+            yield return Path.Combine(programFilesX86, "Microsoft VS Code", "Code.exe");
         }
     }
 
