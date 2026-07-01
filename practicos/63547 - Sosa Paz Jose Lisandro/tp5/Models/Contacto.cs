@@ -17,7 +17,7 @@ public class Contacto
 
     [Required(ErrorMessage = "El correo es obligatorio")]
     [EmailAddress(ErrorMessage = "Ingrese un correo valido")]
-    public string CorreoElectronico { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 
     public string? Empresa { get; set; }
 

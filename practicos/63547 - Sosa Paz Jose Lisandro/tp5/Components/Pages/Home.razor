@@ -77,8 +77,8 @@
                     </div>
                     <div>
                         <label class="form-label">Correo electronico</label>
-                        <InputText class="form-control" @bind-Value="contactoFormulario.CorreoElectronico" />
-                        <ValidationMessage For="() => contactoFormulario.CorreoElectronico" />
+                        <InputText class="form-control" @bind-Value="contactoFormulario.Email" />
+                        <ValidationMessage For="() => contactoFormulario.Email" />
                     </div>
                     <div>
                         <label class="form-label">Empresa</label>
@@ -125,7 +125,7 @@
 
             <dl class="contact-detail-list">
                 <dt>Email</dt>
-                <dd>@contactoSeleccionado.CorreoElectronico</dd>
+                <dd>@contactoSeleccionado.Email</dd>
                 <dt>Telefono</dt>
                 <dd>@contactoSeleccionado.Telefono</dd>
                 <dt>Empresa</dt>
@@ -242,7 +242,7 @@
         Nombre = contacto.Nombre,
         Apellido = contacto.Apellido,
         Telefono = contacto.Telefono,
-        CorreoElectronico = contacto.CorreoElectronico,
+        Email = contacto.Email,
         Empresa = contacto.Empresa,
         Cargo = contacto.Cargo,
         Direccion = contacto.Direccion,
