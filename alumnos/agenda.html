@@ -658,7 +658,7 @@
     }
 
     function fotoCandidates(carpetaNombre) {
-      const archivos = ['foto.jpg'];
+      const archivos    = ['foto.jpg'];
       const ubicaciones = ['', 'tp1'];
       const paths = [];
       const localBase = localPracticosBasePath();
@@ -727,7 +727,7 @@
         const presenteRaw    = cols[6].trim();
         const asistenciasRaw = cols[7].trim();
         const notaRaw        = cols[8]?.trim() ?? '';
-        const codigoRaw      = cols[9]?.trim() ?? '';
+        const codigoRaw      = cols[9]?.trim() ?? '-' + cols[10]?.trim() ?? '-';
 
         const comma     = apellidoNombre.indexOf(',');
         const apellido  = comma >= 0 ? apellidoNombre.slice(0, comma).trim() : apellidoNombre;

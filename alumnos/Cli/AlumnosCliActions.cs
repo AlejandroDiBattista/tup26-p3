@@ -720,6 +720,50 @@ static class AlumnosCliActions {
         return EjecutarPracticoAlumno(6, legajo, EjecutarTp6Alumno);
     }
 
+    public static int RevisarRecuperacionesSegundoParcial() {
+        const int numeroExamen = 2;
+        const int numeroTp = 5;
+        string carpetaTp = CarpetaTrabajoPractico(numeroTp);
+
+        Alumnos alumnos = CargarAlumnos();
+        while (true) {
+            Alumno[] candidatos = AlumnosRecuperacionPendiente(alumnos, numeroExamen);
+
+            if (candidatos.Length == 0) {
+                Log.Warning("No hay alumnos con fecha de recuperación pendiente de segundo parcial.");
+                return 0;
+            }
+
+            Alumno? alumno = SeleccionarAlumnoRecuperacion(candidatos);
+            if (alumno is null) {
+                return 0;
+            }
+
+            string rutaPractico = AppPaths.PracticoAlumnoSubdirectory(alumno, carpetaTp);
+            if (!Directory.Exists(rutaPractico)) {
+                Log.Error($"No existe la carpeta del TP{numeroTp}: {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}");
+                EsperarParaVolverAListaRecuperacion();
+                continue;
+            }
+
+            Log.Info($"Recuperación: {alumno.Recuperacion}");
+            Log.Info($"Abriendo VS Code en: {AppPaths.RutaRelativaDesdeRepo(rutaPractico)}");
+            if (!AbrirVsCode(rutaPractico)) {
+                Log.Warning($"No se pudo abrir VS Code automáticamente. Abrí manualmente: {rutaPractico}");
+            }
+
+            Estado? resultado = PedirResultadoRecuperacion(alumno);
+            if (resultado is null) {
+                Log.Warning("Resultado ignorado. No se modificó el estado del segundo parcial.");
+                continue;
+            }
+
+            alumno.Examen(numeroExamen, resultado.Value);
+            AlumnosManager.Escribir(alumnos, AppPaths.ArchivoAlumnos);
+            Log.Success($"Segundo parcial actualizado para {alumno.Legajo} | {alumno.NombreCompleto}: {resultado.Value}.");
+        }
+    }
+
     static int EjecutarPracticoAlumno(int numeroTp, int? legajo, Func<Alumno, string, int, int> ejecutarAlumno) {
         string carpetaTp = CarpetaTrabajoPractico(numeroTp);
         if (!AppPaths.ExisteEnunciadoPractico(carpetaTp)) {
@@ -762,6 +806,16 @@ static class AlumnosCliActions {
         alumnos
             .Where(alumno => alumno.EstadoPractico(numeroTp) == Estado.Aprobado)
             .OrderBy(alumno => string.IsNullOrWhiteSpace(alumno.Observaciones) ? 0 : 1)
+            .ThenBy(alumno => alumno.Legajo)
+            .ToArray();
+
+    static Alumno[] AlumnosRecuperacionPendiente(Alumnos alumnos, int numeroExamen) =>
+        alumnos
+            .Where(alumno => !string.IsNullOrWhiteSpace(alumno.Recuperacion))
+            .Where(alumno => alumno.EstadoExamen(numeroExamen) == Estado.Vacio)
+            .OrderBy(alumno => alumno.Comision)
+            .ThenBy(alumno => ObtenerFechaRecuperacionOrden(alumno.Recuperacion))
+            .ThenBy(alumno => alumno.NombreCompleto)
             .ThenBy(alumno => alumno.Legajo)
             .ToArray();
 
@@ -905,6 +959,97 @@ static class AlumnosCliActions {
                 .AddChoices(opciones));
 
         return seleccion.Alumno;
+    }
+
+    static Alumno? SeleccionarAlumnoRecuperacion(IReadOnlyList<Alumno> candidatos) {
+        OpcionAlumnoPractico volver = new(null, "Volver al menú principal", EsVolver: true);
+        List<OpcionAlumnoPractico> opciones = [
+            .. candidatos.Select(alumno => new OpcionAlumnoPractico(alumno)),
+            volver
+        ];
+
+        SelectionPrompt<OpcionAlumnoPractico> prompt = new SelectionPrompt<OpcionAlumnoPractico>()
+            .Title($"[bold cyan]Recuperación segundo parcial[/] · Elegí el alumno\n[grey]{candidatos.Count} alumno(s) con recuperación pendiente[/]")
+            .EnableSearch()
+            .WrapAround(true)
+            .PageSize(60)
+            .UseConverter(opcion => opcion.Alumno is null
+                ? opcion.EsVolver ? $"[grey]{Markup.Escape(opcion.Etiqueta ?? "Volver al menú principal")}[/]" : $"[yellow]{Markup.Escape(opcion.Etiqueta ?? string.Empty)}[/]"
+                : $"[green]{opcion.Alumno.Legajo,-8}[/] [grey]{opcion.Alumno.NombreCompleto,-40}[/] [cyan]{Markup.Escape(opcion.Alumno.Recuperacion),-16}[/] {FormatearObservacion(opcion.Alumno.Observaciones)}")
+            .AddCancelResult(volver);
+
+        foreach (IGrouping<string, OpcionAlumnoPractico> grupo in opciones.Where(opcion => opcion.Alumno is not null).GroupBy(opcion => opcion.Alumno!.Comision)) {
+            prompt.AddChoiceGroup(new OpcionAlumnoPractico(null, grupo.Key), grupo);
+        }
+        prompt.AddChoice(volver);
+
+        return AnsiConsole.Prompt(prompt).Alumno;
+    }
+
+    static Estado? PedirResultadoRecuperacion(Alumno alumno) {
+        OpcionResultadoRecuperacion ignorar = new("ignorar", "Ignorar", "No modificar el estado");
+        OpcionResultadoRecuperacion opcion = AnsiConsole.Prompt(
+            new SelectionPrompt<OpcionResultadoRecuperacion>()
+                .Title($"[bold cyan]Resultado de {alumno.Legajo} | {Markup.Escape(alumno.NombreCompleto)}[/]\n[grey]Recuperación: {Markup.Escape(alumno.Recuperacion)}[/]")
+                .UseConverter(choice => $"[green]{choice.Label,-14}[/] [grey]{choice.Description}[/]")
+                .AddCancelResult(ignorar)
+                .AddChoices([
+                    new("aprobado", "Aprobado", "Marcar segundo parcial como aprobado"),
+                    new("desaprobado", "Desaprobado", "Marcar segundo parcial como desaprobado"),
+                    ignorar
+                ]));
+
+        return opcion.Command switch {
+            "aprobado" => Estado.Aprobado,
+            "desaprobado" => Estado.Desaprobado,
+            _ => null
+        };
+    }
+
+    static DateTime ObtenerFechaRecuperacionOrden(string valor) {
+        string texto = valor.Trim();
+        string[] formatos = ["dd/MM/yyyy HH:mm", "dd/MM HH:mm"];
+        if (DateTime.TryParseExact(texto, formatos, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fecha)) {
+            return fecha.Year == 1 ? new DateTime(DateTime.Today.Year, fecha.Month, fecha.Day, fecha.Hour, fecha.Minute, 0) : fecha;
+        }
+
+        return DateTime.MaxValue;
+    }
+
+    static bool AbrirVsCode(string ruta) {
+        string archivoCambios = Path.Combine(ruta, "cambios.md");
+        if (EjecutarAperturaVsCode("code", ruta, archivoCambios)) {
+            return true;
+        }
+
+        if (OperatingSystem.IsMacOS()) {
+            return EjecutarAperturaVsCode("open", "-a", "Visual Studio Code", ruta, archivoCambios);
+        }
+
+        return false;
+    }
+
+    static void EsperarParaVolverAListaRecuperacion() {
+        AnsiConsole.MarkupLine("[grey]Presioná una tecla para volver a la lista de recuperaciones...[/]");
+        Console.ReadKey(intercept: true);
+    }
+
+    static bool EjecutarAperturaVsCode(string comando, params string[] argumentos) {
+        try {
+            ProcessStartInfo startInfo = new() {
+                FileName = comando,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            foreach (string argumento in argumentos) {
+                startInfo.ArgumentList.Add(argumento);
+            }
+
+            Process.Start(startInfo);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     static string FormatearObservacion(string observaciones) =>
@@ -1393,7 +1538,8 @@ static class AlumnosCliActions {
     sealed record CompilacionAlumnoResultado(Alumno Alumno, CompilacionPracticoResultado Compilacion);
     sealed record EjecucionAlumnoResultado(Alumno Alumno, EjecucionPracticoResultado Ejecucion);
     sealed record CapturaPantallaAlumnoResultado(Alumno Alumno, CapturaPantallaResultado Captura);
-    sealed record OpcionAlumnoPractico(Alumno? Alumno);
+    sealed record OpcionAlumnoPractico(Alumno? Alumno, string? Etiqueta = null, bool EsVolver = false);
+    sealed record OpcionResultadoRecuperacion(string Command, string Label, string Description);
 
     readonly record struct CopiaDetectada(int LineasComunes, int MaximoLineas, double Porcentaje);
 

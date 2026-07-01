@@ -121,3 +121,15 @@ Se evalua el funcionamiento del TP6 son el siguiente resultado.
 63493   Busnelli, Bruno                  🟢🟢🟢🔴🔴🔴   🟢⚪   No    14   10
 63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
 
+
+63211   Montero, Luca                    🟢🟢🔴🔴🔴🔴   🟢⚪   No    19   10
+63425   Holmquist, Jeremy                🟢🟢🔴🔴🔴🔴   🟢⚪   No    16    6
+63461   Cativa, Facundo Simón            🟢🟢🔴🔴🔴🔴   🟢⚪   No    18    8
+61161   González, Thomas Ezequiel        🟢🟢🔴🟢🔴🔴   🟢⚪   No    20    5
+63776   Fuensalida, Ulises Nahuel        🟢🟢🔴🔴🟢🔴   🟢⚪   No    17    8
+61490   Valdez Bustamante, Tomás         🟢🟢🔴🟢🟢🔴   🟢⚪   No    34    6
+64016   Cura, Rocío Aylen                🔴🟢🟢🔴🔴🔴   🟢⚪   No    17    7
+62844   Guzmán, Luciano Leonel           🔴🟢🟢🔴🔴🔴   🟢⚪   No    16   10
+61057   Getar, Thomas                    🟢🟢🟢🔴🔴🔴   🟢⚪   No    23    7
+63493   Busnelli, Bruno                  🟢🟢🟢🔴🔴🔴   🟢⚪   No    14   10
+63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🔴🔴   🟢⚪   No    27    5
