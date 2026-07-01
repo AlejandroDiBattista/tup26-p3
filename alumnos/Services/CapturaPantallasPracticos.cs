@@ -138,6 +138,8 @@ static class CapturaPantallasPracticos {
             CreateNoWindow = true
         };
         startInfo.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
+        startInfo.Environment["DOTNET_hostBuilder__reloadConfigOnChange"] = "false";
+        startInfo.Environment["ASPNETCORE_hostBuilder__reloadConfigOnChange"] = "false";
         startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         startInfo.Environment["ASPNETCORE_URLS"] = "http://127.0.0.1:0";
         startInfo.ArgumentList.Add("run");
