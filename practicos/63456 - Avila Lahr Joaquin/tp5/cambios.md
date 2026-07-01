@@ -24,7 +24,10 @@ No deben mostrarse otros datos del contacto en el panel maestro.
 
 ### Cambios realizados
 
-> *** Poner aca el codigo final con los cambios realizados *** 
+```cs
+// Nombre del archivo: p.e. Contactos.cs
+// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
+```
 
 ---
 
@@ -44,7 +47,10 @@ Los nuevos textos deben aparecer en los botones, enlaces o títulos donde corres
 
 ### Cambios realizados
 
-> *** Poner aca el codigo final con los cambios realizados *** 
+```cs
+// Nombre del archivo: p.e. Contactos.cs
+// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
+```
 
 ---
 
@@ -64,4 +70,14 @@ El campo `Legajo` debe incorporarse en todos los lugares necesarios para que el 
 
 ### Cambios realizados
 
-> *** Poner aca el codigo final con los cambios realizados *** 
+```cs
+// Nombre del archivo: p.e. Contactos.cs
+// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
+```
+
+--- 
+
+## 4. Darse de alta en el sistema.
+
+Debera cargar los datos de su propio contacto en la agenda, incluyendo el legajo. 
+Para ello, deberá usar la opción de **Alta de contacto**.

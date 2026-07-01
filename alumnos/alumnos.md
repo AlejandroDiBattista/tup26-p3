@@ -15,7 +15,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  01/07/2026 11:00
 61577   González, Lucas Alfredo         (381)669-4386   lucasgonzaa                🟢🔴🔴🔴🟡🔴   🟢⚪   No    26   10  —                 R2
 63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    33    9  01/07/2026 11:00
-63700   Jiménez, Nelson Maximiliano     (381)639-2861   maximilianojimnez          🟢🟢🟢🟢🟢🔴   🟢⚪   No    27    8  01/07/2026 11:20
+63700   Jiménez, Nelson Maximiliano     (381)639-2861   maximilianojimnez          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27    8  01/07/2026 11:20
 63399   Lazarte, Gonzalo Romeo          (381)576-0069   tutu-04                    🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  01/07/2026 11:20
 63211   Montero, Luca                   (381)528-7848   monteroluca007             🟢🟢🔴🔴🟡🔴   🟢⚪   No    19   10  —                 R2
 63350   Páez Carabajal, Santiago        (381)572-4096   santiagopaez-2             🟢🟢🟢🟢🟢🟢   🟢⚪   No    21    9  01/07/2026 11:40
@@ -55,7 +55,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 61641   Figueroa, Nahuel Ramón          (381)353-2589   figueroanahuel16           🟢🔴🔴🔴🔴🔴   🟢⚪   No    19    4  —
 63737   Galván, Rocío Julieta           (381)647-5597   rociogalvani               🟢🟢🟢🟢🟢🟢   🟢⚪   No    25   10  01/07/2026 09:40
 63345   García, Franco Tomás            (381)207-5701   francotms                  🔴🟢🟢🟢🟢🟢   🟢⚪   No    16   10  02/07/2026 08:00
-61057   Getar, Thomas                   (381)336-2147   thomasgetar                🟢🟢🟢🔴🟡🔴   🟢⚪   No    23    7  —                 R2
+61057   Getar, Thomas                   (381)336-2147   thomasgetar                🟢🟢🟢🔴🟢🔴   🟢⚪   No    23    7  —                 R2
 61489   Gómez, Tomás                    (381)390-5024   tomasgomez18               🟢🟢🟢🟢🟢🟢   🟢⚪   No    28    9  02/07/2026 08:00
 63182   González Rojas, Emmanuel        (381)612-5571   emmanuelgr-web             🟢🟢🟢🟢🟢🟢   🟢⚪   No    32   10  02/07/2026 08:20
 63717   González, Octavio               (381)604-1868   owning01                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    32    9  02/07/2026 08:20

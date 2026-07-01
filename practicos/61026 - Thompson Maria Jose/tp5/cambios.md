@@ -25,9 +25,8 @@ No deben mostrarse otros datos del contacto en el panel maestro.
 ### Cambios realizados
 
 ```cs
-// Contactos.cs
-
-public int Legajo { get; set; } = 0;
+// Nombre del archivo: p.e. Contactos.cs
+// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
 ```
 
 ---
@@ -49,12 +48,8 @@ Los nuevos textos deben aparecer en los botones, enlaces o títulos donde corres
 ### Cambios realizados
 
 ```cs
-// - Home.razor
-<button class="btn btn-success" @onclick="MostrarFormularioNuevo">Alta de Contacto</button>
-<button type="submit" class="btn btn-primary">Guardar</button>
-<button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
-<button type="button" class="btn btn-danger" @onclick="EliminarContacto">🗑️ Baja de Contacto</button>
-<button class="btn btn-outline-primary" @onclick="HabilitarEdicion">✏️ Modificacion de Contacto</button>
+// Nombre del archivo: p.e. Contactos.cs
+// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
 ```
 
 ---
@@ -76,15 +71,13 @@ El campo `Legajo` debe incorporarse en todos los lugares necesarios para que el 
 ### Cambios realizados
 
 ```cs
-//  Contacto.cs
-public int Legajo { get; set; } = 0;
-
-// Home.razor
-
-<div class="col-md-6">
-    <label class="form-label">Legajo</label>
-    <InputNumber class="form-control" @bind-Value="modeloFormulario.Legajo" />
-</div>
-
-<p><strong>🏢 Legajo:</strong> @contactoSeleccionado.Legajo</p>
+// Nombre del archivo: p.e. Contactos.cs
+// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
 ```
+
+--- 
+
+## 4. Darse de alta en el sistema.
+
+Debera cargar los datos de su propio contacto en la agenda, incluyendo el legajo. 
+Para ello, deberá usar la opción de **Alta de contacto**.
