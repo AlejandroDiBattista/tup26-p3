@@ -1,0 +1,83 @@
+@page "/nuevo"
+@using tp5.Models
+@inject AgendaDbContext Db
+@inject NavigationManager Nav
+
+<div class="container py-4">
+    <h4>Nuevo contacto</h4>
+    <div class="card p-3">
+        <EditForm Model="contacto" OnValidSubmit="Guardar">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label>Nombre</label>
+                    <InputText class="form-control" @bind-Value="contacto.Nombre" />
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label>Apellido</label>
+                    <InputText class="form-control" @bind-Value="contacto.Apellido" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label>Teléfono</label>
+                    <InputText class="form-control" @bind-Value="contacto.Telefono" />
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label>Email</label>
+                    <InputText class="form-control" @bind-Value="contacto.Email" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label>Empresa</label>
+                    <InputText class="form-control" @bind-Value="contacto.Empresa" />
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label>Cargo</label>
+                    <InputText class="form-control" @bind-Value="contacto.Cargo" />
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <label>Dirección</label>
+                <InputText class="form-control" @bind-Value="contacto.Direccion" />
+            </div>
+
+            <div class="mb-2">
+                <label>Fecha de nacimiento</label>
+                <InputDate class="form-control" @bind-Value="contacto.FechaNacimiento" />
+            </div>
+
+            <div class="mb-3">
+                <label>Notas</label>
+                <InputTextArea class="form-control" rows="3" @bind-Value="contacto.Notas" />
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success btn-sm">Guardar</button>
+                <button type="button" class="btn btn-secondary btn-sm" @onclick="Cancelar">Cancelar</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    Contacto contacto = new();
+
+    async Task Guardar()
+    {
+        Db.Contactos.Add(contacto);
+        await Db.SaveChangesAsync();
+        Nav.NavigateTo("/");
+    }
+
+    void Cancelar()
+    {
+        Nav.NavigateTo("/");
+    }
+}
