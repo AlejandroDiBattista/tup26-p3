@@ -74,11 +74,11 @@
                     <div class="detail-actions">
                         <button class="btn btn-outline-dark" @onclick="EditarContacto">
                             <i class="bi bi-pencil"></i>
-                            Editar
+                            Modificar contacto
                         </button>
                         <button class="btn btn-outline-danger" @onclick="EliminarContacto">
                             <i class="bi bi-trash3"></i>
-                            Eliminar
+                            Baja de Contacto
                         </button>
                     </div>
                 </div>
@@ -114,6 +114,7 @@
                         <span>@TextoODefecto(contactoSeleccionado.Direccion)</span>
                     </div>
 
+                    
                     @if (contactoSeleccionado.FechaNacimiento.HasValue)
                     {
                         <div class="info-row">
@@ -145,7 +146,7 @@
                         <button class="btn btn-outline-dark" @onclick="CancelarEdicion">Cancelar</button>
                         <button class="btn btn-danger" @onclick="GuardarCambios">
                             <i class="bi bi-floppy"></i>
-                            Guardar cambios
+                            Guardar 
                         </button>
                     </div>
                 </div>
@@ -195,12 +196,17 @@
                         <label>Notas</label>
                         <textarea class="form-control" rows="5" @bind="contactoSeleccionado.Notas"></textarea>
                     </div>
+                     <div class="form-field form-wide">
+                        <label>Legajo</label>
+                        <textarea class="form-control"  @bind="contactoSeleccionado.Legajo"></textarea>
+                    </div>
+                    
 
                     <div class="form-buttons">
                         <button class="btn btn-outline-dark" @onclick="CancelarEdicion">Cancelar</button>
                         <button class="btn btn-primary" @onclick="GuardarCambios">
                             <i class="bi bi-floppy"></i>
-                            Guardar cambios
+                            Guardar 
                         </button>
                     </div>
                 </div>

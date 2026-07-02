@@ -18,6 +18,7 @@ public class Contexto : DbContext
             entity.Property(e => e.Apellido).IsRequired();
             entity.Property(e => e.Telefono).IsRequired();
             entity.Property(e => e.Email).IsRequired();
+            entity.Property(e => e.Legajo).IsRequired();
         });
     }
 }

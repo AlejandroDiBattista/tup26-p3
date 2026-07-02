@@ -16,7 +16,7 @@ using (var alcance = app.Services.CreateScope())
 {
     var fabricaContexto = alcance.ServiceProvider.GetRequiredService<IDbContextFactory<AgendaContext>>();
     await using var contexto = await fabricaContexto.CreateDbContextAsync();
-    await DatosIniciales.CargarContactos(contexto);
+    // await DatosIniciales.CargarContactos(contexto);
 }
 
 app.UseHttpsRedirection();

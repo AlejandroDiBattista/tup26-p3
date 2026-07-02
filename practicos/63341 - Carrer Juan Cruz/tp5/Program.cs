@@ -1,6 +1,5 @@
 using tp5.Components;
 using Microsoft.EntityFrameworkCore;
-using tp5.Components;
 using tp5.Data;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -26,7 +26,7 @@ else
             <button class="btn btn-success w-100 mb-3"
                     @onclick="MostrarFormulario">
                 <i class="bi bi-plus-circle"></i>
-                Nuevo Contacto
+                Alta de Contacto
             </button>
 
             <div class="mb-3">
@@ -39,7 +39,7 @@ else
             {
                 <div class="card mb-3">
                     <div class="card-header">
-                        Nuevo Contacto
+                        Alta de Contacto
                     </div>
 
                     <div class="card-body">
@@ -116,15 +116,15 @@ else
                         <div>
 
                             <button class="btn btn-warning btn-sm me-2"
-                            @onclick="EditarContacto">
+                            @onclick="ModificarContacto">
                             <i class="bi bi-pencil"></i>
-                            Editar
+                            Modificar Contacto
                             </button>
 
                         <button class="btn btn-warning btn-sm"
-                                @onclick="EliminarContacto">
+                                @onclick="BajadeContacto">
                             <i class="bi bi-trash"></i>
-                            Eliminar
+                            Baja de Contacto
                         </button>
 
                         </div>
@@ -174,10 +174,14 @@ else
                                     <InputText class="form-control"
                                                @bind-Value="contactoEditado.Direccion" />
                                 </div>
+                                <div class="mb-2">
+                                    <InputText class="form-control"
+                                               @bind-Value="contactoEditado.Direccion" />
+                                </div>
 
                                 <button type="submit"
                                         class="btn btn-success">
-                                    Guardar cambios
+                                    Guardar
                                 </button>
 
                             </EditForm>

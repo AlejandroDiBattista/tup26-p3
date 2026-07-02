@@ -48,8 +48,26 @@ Los nuevos textos deben aparecer en los botones, enlaces o títulos donde corres
 ### Cambios realizados
 
 ```cs
-// Nombre del archivo: p.e. Contactos.cs
-// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
+// Nombre del archivo: p.e. Home.razor
+<div class="detail-actions">
+                        
+                    </div>
+                        <div class="detail-actions">
+                        <button class="btn btn-outline-dark" @onclick="CancelarEdicion">Cancelar</button>
+                        <button class="btn btn-danger" @onclick="GuardarCambios">
+                            <i class="bi bi-floppy"></i>
+                            Guardar 
+                        </button>
+                    </div>
+                        <button class="btn btn-outline-dark" @onclick="EditarContacto">
+                            <i class="bi bi-pencil"></i>
+                            Modificar contacto
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="EliminarContacto">
+                            <i class="bi bi-trash3"></i>
+                            Baja de Contacto
+                        </button>
+                    </div>
 ```
 
 ---

@@ -24,6 +24,9 @@ public class Contacto
     [StringLength(200, ErrorMessage = "El correo no puede superar los 200 caracteres.")]
     public string Email { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "El legajo es obligatorio.")]
+    public int Legajo { get; set; };
+
     [StringLength(100, ErrorMessage = "La empresa no puede superar los 100 caracteres.")]
     public string Empresa { get; set; } = string.Empty;
 

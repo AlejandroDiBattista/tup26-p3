@@ -27,7 +27,7 @@ else
 
             <button class="btn btn-primary mb-3"
                     @onclick="NuevoContacto">
-                    Nuevo contacto
+                    Alta de contacto
             </button>   
 
             <ul class="list-group shadow-sm">
@@ -37,9 +37,10 @@ else
                     <li class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
                         @onclick="() => Seleccionar(c)"
                         style="cursor:pointer">
-
+                        <div>
                         @c.Apellido, @c.Nombre
-
+                        </div>
+                        <small>@c.Telefono | @c.Email</small>
                     </li>
                 }
 
@@ -53,6 +54,12 @@ else
                 @if (modoEdicion)
                 {
                     <h2>@(contactoEditando.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h2>
+
+                    <div class="mb-2">
+                        <label>Legajo</label>
+                        <input class="form-control"
+                            @bind="contactoEditando.Legajo" />
+                    </div>
 
                     <div class="mb-2">
                         <label>Nombre</label>
@@ -118,6 +125,8 @@ else
 
                     <hr>
 
+                    <p><b>Legajo:</b> @contactoSeleccionado.Legajo</p>
+
                     <p><b>Teléfono:</b> @contactoSeleccionado.Telefono</p>
 
                     <p><b>Email:</b> @contactoSeleccionado.Email</p>
@@ -134,12 +143,12 @@ else
 
                     <button class="btn btn-warning"
                             @onclick="EditarContacto">
-                        Editar
+                        Modificar Contacto
                     </button>
 
                     <button class="btn btn-danger ms-2"
                             @onclick="EliminarContacto">
-                        Eliminar
+                        Baja de contactos
                     </button>
                 }
 
@@ -186,6 +195,7 @@ else
         contactoEditando = new Contacto
         {
             Id = contactoSeleccionado.Id,
+            Legajo = contactoSeleccionado.Legajo,
             Nombre = contactoSeleccionado.Nombre,
             Apellido = contactoSeleccionado.Apellido,
             Telefono = contactoSeleccionado.Telefono,
@@ -227,7 +237,8 @@ else
             var contactoExistente = await Db.Contactos.FindAsync(contactoEditando.Id);
 
             if (contactoExistente != null)
-            {
+            { 
+                contactoExistente.Legajo = contactoEditando.Legajo;
                 contactoExistente.Nombre = contactoEditando.Nombre;
                 contactoExistente.Apellido = contactoEditando.Apellido;
                 contactoExistente.Telefono = contactoEditando.Telefono;
@@ -267,6 +278,7 @@ else
         contactos?.Where(c =>
             string.IsNullOrWhiteSpace(textoBusqueda) ||
             c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Legajo.ToString().Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
         ?? Enumerable.Empty<Contacto>();
 }

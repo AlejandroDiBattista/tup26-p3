@@ -52,7 +52,8 @@ public class AgendaContext : DbContext {
 
                 entity.Property(e => e.Notas)
                     .HasMaxLength(500);
-
+                entity.Property(e => e.Legajo)
+                    .HasMaxLength(50);
 
     });
     }

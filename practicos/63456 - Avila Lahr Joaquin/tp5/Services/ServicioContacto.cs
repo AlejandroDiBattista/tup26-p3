@@ -25,7 +25,8 @@ public class ServicioContacto
                 c.Apellido.ToLower().Contains(b) ||
                 c.Email.ToLower().Contains(b) ||
                 c.Telefono.Contains(b) ||
-                c.Empresa.ToLower().Contains(b));
+                c.Empresa.ToLower().Contains(b) ||
+                c.Legajo.ToString().ToLower().Contains(b));
         }
 
         return await query.OrderBy(c => c.Apellido).ThenBy(c => c.Nombre).ToListAsync();
@@ -55,6 +56,7 @@ public class ServicioContacto
     existente.Direccion = contacto.Direccion;
     existente.FechaNacimiento = contacto.FechaNacimiento;
     existente.Notas = contacto.Notas;
+    existente.Legajo = contacto.Legajo;
 
     await _contexto.SaveChangesAsync();
 }
