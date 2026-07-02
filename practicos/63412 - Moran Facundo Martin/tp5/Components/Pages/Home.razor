@@ -15,7 +15,7 @@
 
         <button type="button" class="btn btn-primary" @onclick="NuevoContacto">
             <i class="bi bi-plus-lg"></i>
-            Nuevo contacto
+            Alta de contacto
         </button>
     </section>
 
@@ -58,7 +58,7 @@
                                 <span class="contact-avatar">@Iniciales(contacto)</span>
                                 <span class="contact-summary">
                                     <strong>@NombreCompleto(contacto)</strong>
-                                    <small>@Resumen(contacto)</small>
+                                    <small>@contacto.Telefono (@contacto.Email)</small>
                                 </span>
                             </button>
                         }
@@ -130,6 +130,10 @@
                             <div class="form-floating">
                                 <InputDate class="form-control" id="fechaNacimiento" @bind-Value="formulario.FechaNacimiento" />
                                 <label for="fechaNacimiento">Fecha de nacimiento</label>
+                            </div>|
+                            <div class="form-floating">
+                                <InputNumber class="form-control" id="legajo" @bind-Value="formulario.Legajo" placeholder="Legajo" />
+                                <label for="legajo">Legajo *</label>
                             </div>
 
                             <div class="form-floating form-wide">
@@ -154,11 +158,11 @@
                         <div class="toolbar-actions">
                             <button type="button" class="btn btn-outline-primary" @onclick="EditarContacto">
                                 <i class="bi bi-pencil-square"></i>
-                                Editar
+                                Modificar contacto
                             </button>
                             <button type="button" class="btn btn-outline-danger" @onclick="() => confirmandoEliminar = true">
                                 <i class="bi bi-trash3"></i>
-                                Eliminar
+                                Baja de contacto
                             </button>
                         </div>
                     </div>
@@ -184,6 +188,7 @@
                         <InfoItem Icon="bi-briefcase" Label="Cargo" Value="@ValorOpcional(contactoSeleccionado.Cargo)" />
                         <InfoItem Icon="bi-geo-alt" Label="Direccion" Value="@ValorOpcional(contactoSeleccionado.Direccion)" />
                         <InfoItem Icon="bi-cake2" Label="Nacimiento" Value="@Fecha(contactoSeleccionado.FechaNacimiento)" />
+                        <InfoItem Icon="bi-person-badge" Label="Legajo" Value="@contactoSeleccionado.Legajo.ToString()" />
                     </div>
 
                     <section class="notes-panel">
@@ -197,7 +202,7 @@
                         <i class="bi bi-person-plus"></i>
                         <h2>No hay contactos para mostrar</h2>
                         <p>Cree el primer contacto para comenzar la agenda.</p>
-                        <button type="button" class="btn btn-primary" @onclick="NuevoContacto">Nuevo contacto</button>
+                        <button type="button" class="btn btn-primary" @onclick="NuevoContacto">Alta de contacto</button>
                     </div>
                 }
             </section>
@@ -230,6 +235,7 @@
                 contacto.Telefono.Contains(texto, StringComparison.CurrentCultureIgnoreCase) ||
                 contacto.Email.Contains(texto, StringComparison.CurrentCultureIgnoreCase) ||
                 contacto.Empresa.Contains(texto, StringComparison.CurrentCultureIgnoreCase) ||
+                contacto.Legajo.ToString().Contains(texto, StringComparison.CurrentCultureIgnoreCase) ||
                 contacto.Cargo.Contains(texto, StringComparison.CurrentCultureIgnoreCase));
         }
     }
@@ -334,6 +340,7 @@
         Cargo = contacto.Cargo,
         Direccion = contacto.Direccion,
         FechaNacimiento = contacto.FechaNacimiento,
+        Legajo = contacto.Legajo,
         Notas = contacto.Notas
     };
 

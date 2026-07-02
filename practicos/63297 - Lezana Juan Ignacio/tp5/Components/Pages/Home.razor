@@ -15,7 +15,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     Contactos
-                    <button class="btn btn-sm btn-success" @onclick="Nuevo">+ Nuevo</button>
+                    <button class="btn btn-sm btn-success" @onclick="Nuevo">+ Alta de Contacto</button>
                 </div>
                 <div class="card-body pb-0">
                     <input class="form-control mb-2" placeholder="Buscar..."
@@ -32,7 +32,7 @@
                                 </div>
                                 <div>
                                     <p class="contact-name">@c.Nombre @c.Apellido</p>
-                                    <p class="contact-sub">@c.Empresa</p>
+                                    <p class="contact-sub">@c.Telefono @c.Email</p>
                                 </div>
                             </li>
                         }
@@ -55,7 +55,7 @@
                                 <small class="text-muted">@contactoActivo.Cargo — @contactoActivo.Empresa</small>
                             </div>
                         </div>
-
+                        <p><strong>Legajo:</strong> @contactoActivo.Legajo</p>
                         <p><strong>Teléfono:</strong> @contactoActivo.Telefono</p>
                         <p><strong>Email:</strong> @contactoActivo.Email</p>
                         <p><strong>Empresa:</strong> @(string.IsNullOrEmpty(contactoActivo.Empresa) ? "—" : contactoActivo.Empresa)</p>
@@ -63,8 +63,8 @@
                         <p><strong>Dirección:</strong> @(string.IsNullOrEmpty(contactoActivo.Direccion) ? "—" : contactoActivo.Direccion)</p>
                         <p><strong>Notas:</strong> @(string.IsNullOrEmpty(contactoActivo.Notas) ? "—" : contactoActivo.Notas)</p>
 
-                        <button class="btn btn-primary" @onclick="Editar">Editar</button>
-                        <button class="btn btn-danger" @onclick="Eliminar">Eliminar</button>
+                        <button class="btn btn-primary" @onclick="Editar">Modificar contacto </button>
+                        <button class="btn btn-danger" @onclick="Eliminar">Baja de contacto</button>
                     }
                     else
                     {
@@ -101,6 +101,13 @@
                 <EditForm Model="contactoEdit" OnValidSubmit="Guardar">
                     <DataAnnotationsValidator />
                     <ValidationSummary class="text-danger" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-white">Legajo</label>
+                            <InputNumber class="form-control form-dark" @bind-Value="contactoEdit.Legajo" />
+                        </div>
+                        </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -187,7 +194,8 @@
         listaContactos.Where(c =>
             string.IsNullOrEmpty(textoBusqueda) ||
             c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Legajo.ToString().Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
 
     protected override async Task OnParametersSetAsync()
     {
@@ -220,6 +228,7 @@
                 Cargo     = contactoActivo.Cargo,
                 Direccion = contactoActivo.Direccion,
                 Notas     = contactoActivo.Notas,
+                Legajo    = contactoActivo.Legajo
             };
             mostrarModal = true;
         }
@@ -253,6 +262,7 @@
                 existente.Cargo     = contactoEdit.Cargo;
                 existente.Direccion = contactoEdit.Direccion;
                 existente.Notas     = contactoEdit.Notas;
+                existente.Legajo    = contactoEdit.Legajo;
                 await Db.SaveChangesAsync();
                 listaContactos = await Db.Contactos.ToListAsync();
                 contactoActivo = existente;

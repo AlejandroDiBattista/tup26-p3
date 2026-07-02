@@ -16,6 +16,7 @@ public class Contacto
     public string Email { get; set; } = "";
     public string Empresa { get; set; } = "";
     public string Cargo { get; set; } = "";
+    public int Legajo {get;set;} =0;
     public string Direccion { get; set; } = "";
     public DateOnly? FechaNacimiento { get; set; }
     public string Notas { get; set; } = "";

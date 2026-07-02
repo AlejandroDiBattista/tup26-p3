@@ -27,6 +27,7 @@ public class AgendaDbContext : DbContext
             entity.Property(c => c.Direccion).HasColumnName("Direccion").HasMaxLength(250);
             entity.Property(c => c.FechaNacimiento).HasColumnName("FechaNacimiento");
             entity.Property(c => c.Notas).HasColumnName("Notas");
+            entity.Property(c => c.Legajo).HasColumnName("Legajo");
             entity.Ignore(c => c.NombreCompleto);
             entity.Ignore(c => c.Iniciales);
         });

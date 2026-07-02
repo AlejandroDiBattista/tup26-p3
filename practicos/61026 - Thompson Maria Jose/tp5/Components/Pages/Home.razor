@@ -16,10 +16,10 @@
             <div class="d-flex gap-2 mb-3">
                 <input type="text" 
                        class="form-control" 
-                       placeholder="🔍 Buscar..." 
+                       placeholder="🔍 Buscar LEGAJO" 
                        @bind="TextoBusqueda" 
                        @bind:event="oninput" />
-                <button class="btn btn-success" @onclick="MostrarFormularioNuevo">➕</button>
+                <button class="btn btn-success" @onclick="MostrarFormularioNuevo">alta de contacto</button>
             </div>
 
             <div class="list-group" style="max-height: 65vh; overflow-y: auto;">
@@ -53,7 +53,7 @@
             @if (editando && modeloFormulario != null)
             {
                 <div class="card shadow-sm p-4">
-                    <h3 class="mb-4 text-secondary">@(modeloFormulario.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h3>
+                    <h3 class="mb-4 text-secondary">@(modeloFormulario.Id == 0 ? "Nuevo Contacto" : "modificar contacto")</h3>
                     <EditForm Model="modeloFormulario" OnValidSubmit="GuardarContacto">
                         <DataAnnotationsValidator />
                         
@@ -89,6 +89,11 @@
                             <div class="col-md-6">
                                 <label class="form-label">📅 Fecha de Nacimiento</label>
                                 <InputDate class="form-control" @bind-Value="modeloFormulario.FechaNacimiento" />
+                            
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">LEGAJO</label>
+                                <InputNumber class="form-control" @bind-Value="modeloFormulario.Legajo" required />
                             </div>
                             <div class="col-12">
                                 <label class="form-label">📝 Notas</label>
@@ -104,7 +109,7 @@
                             
                             @if (modeloFormulario.Id != 0)
                             {
-                                <button type="button" class="btn btn-danger" @onclick="EliminarContacto">🗑️ Eliminar Contacto</button>
+                                <button type="button" class="btn btn-danger" @onclick=" EliminarContacto">Baja de contacto</button>
                             }
                         </div>
                     </EditForm>
@@ -115,7 +120,7 @@
                 <div class="card shadow-sm p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="text-primary mb-0">@contactoSeleccionado.Nombre @contactoSeleccionado.Apellido</h2>
-                        <button class="btn btn-outline-primary" @onclick="HabilitarEdicion">✏️ Editar</button>
+                        <button class="btn btn-outline-primary" @onclick="HabilitarEdicion">Modificar contacto</button>
                     </div>
                     <hr />
                     <div class="row g-3">
@@ -123,6 +128,7 @@
                             <p><strong>📞 Teléfono:</strong> @contactoSeleccionado.Telefono</p>
                             <p><strong>📧 Correo electrónico:</strong> @contactoSeleccionado.Email</p>
                             <p><strong>🏢 Empresa:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Empresa) ? "-" : contactoSeleccionado.Empresa)</p>
+                             <p><strong>📧 Email:</strong> @contactoSeleccionado.Email</p>
                         </div>
                         <div class="col-sm-6">
                             <p><strong>💼 Cargo:</strong> @(string.IsNullOrWhiteSpace(contactoSeleccionado.Cargo) ? "-" : contactoSeleccionado.Cargo)</p>
@@ -203,6 +209,7 @@
                 Cargo = contactoSeleccionado.Cargo,
                 Direccion = contactoSeleccionado.Direccion,
                 FechaNacimiento = contactoSeleccionado.FechaNacimiento,
+                Legajo = contactoSeleccionado.Legajo,
                 Notas = contactoSeleccionado.Notas
             };
             editando = true;

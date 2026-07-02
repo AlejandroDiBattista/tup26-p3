@@ -29,7 +29,8 @@
 
         return contactos.Where(c =>
             c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)
+            c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)||
+            c.Legajo.ToString().Contains(busqueda,StringComparison.OrdinalIgnoreCase)
         ).ToList();
     }
 
@@ -63,7 +64,7 @@
             <p>Contactos personales y profesionales</p>
         </div>
         <button class="btn btn-primary" @onclick="IrANuevo">
-            <i class="bi bi-plus-lg me-1"></i>Nuevo contacto
+            <i class="bi bi-plus-lg me-1"></i>Altadecontacto
         </button>
     </div>
 
@@ -93,7 +94,10 @@
 
                             <div>
                                 <p class="contact-name">@contacto.Nombre @contacto.Apellido</p>
+                             <p class="contact-name">@contacto.Telefono @contacto.Email</p>
+
                                 <p class="contact-sub">
+
                                     @(string.IsNullOrEmpty(contacto.Empresa) ? "Independiente" : contacto.Empresa)
                                 </p>
                             </div>
@@ -115,10 +119,10 @@
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-secondary" @onclick="IrAEditar">
-                                <i class="bi bi-pencil me-1"></i>Editar
+                                <i class="bi bi-pencil me-1"></i>Modificarcontacto
                             </button>
                             <button class="btn btn-outline-danger" @onclick="EliminarSeleccionado">
-                                <i class="bi bi-trash me-1"></i>Eliminar
+                                <i class="bi bi-trash me-1"></i>Bajadecontacto
                             </button>
                         </div>
                         <div class="d-flex gap-3 align-items-center">

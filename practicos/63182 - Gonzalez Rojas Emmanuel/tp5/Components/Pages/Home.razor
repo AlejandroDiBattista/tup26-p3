@@ -22,7 +22,7 @@
             </p>
         </div>
         <button class="btn-nuevo" @onclick="AbrirFormularioNuevo">
-            <i class="bi bi-plus-lg"></i> Agregar Contacto
+            <i class="bi bi-plus-lg"></i> Alta Contacto
         </button>
     </div>
 
@@ -60,7 +60,9 @@
                             </div>
                             <div class="info-item">
                                 <span class="nombre-item">@contacto.NombreCompleto</span>
-                                <span class="empresa-item">@(contacto.Empresa ?? "Independiente")</span>
+                                <span style="color: var(--gris-oscuro); font-size: 0.7sem;">
+                                    @contacto.Telefono | @contacto.Email
+                                </span>
                             </div>
                         </div>
                     }
@@ -95,7 +97,7 @@
                     <div class="acciones-detalle">
                         <button class="btn-cancelar" @onclick="CancelarFormulario">Cancelar</button>
                         <button class="btn-guardar" @onclick="PedirConfirmacionGuardar">
-                            <i class="bi bi-floppy"></i> Guardar cambios
+                            <i class="bi bi-floppy"></i> Guardar
                         </button>
                     </div>
                 </div>
@@ -128,6 +130,11 @@
                         <label class="etiqueta">Empresa</label>
                         <input class="input-campo" @bind="contactoEnEdicion.Empresa" placeholder="Empresa u organización" />
                     </div>
+
+                    <div class="campo-formulario">
+                        <label class="etiqueta">Legajo</label>
+                        <input class="input-campo" @bind="contactoEnEdicion.Legajo" placeholder="Número de legajo" />
+                    </div>
                     <div class="campo-formulario">
                         <label class="etiqueta">Cargo</label>
                         <input class="input-campo" @bind="contactoEnEdicion.Cargo" placeholder="Puesto o función" />
@@ -151,7 +158,7 @@
                 <div class="pie-formulario">
                     <button class="btn-cancelar" @onclick="CancelarFormulario">Cancelar</button>
                     <button class="btn-guardar" @onclick="PedirConfirmacionGuardar">
-                        <i class="bi bi-floppy"></i> Guardar cambios
+                        <i class="bi bi-floppy"></i> Guardar
                     </button>
                 </div>
             }
@@ -174,10 +181,10 @@
                     </div>
                     <div class="acciones-detalle">
                         <button class="btn-editar" @onclick="() => AbrirFormularioEditar(contactoSeleccionado)">
-                            <i class="bi bi-pencil"></i> Editar
+                            <i class="bi bi-pencil"></i> Modificar contacto
                         </button>
                         <button class="btn-eliminar" @onclick="() => ConfirmarEliminar(contactoSeleccionado)">
-                            <i class="bi bi-trash"></i> Eliminar
+                            <i class="bi bi-trash"></i> Baja de contacto
                         </button>
                     </div>
                 </div>
@@ -192,6 +199,10 @@
                     @if (!string.IsNullOrEmpty(contactoSeleccionado.Cargo))
                     {
                         <FilaCampo Icono="bi-briefcase" Etiqueta="Cargo" Valor="@contactoSeleccionado.Cargo" />
+                    }
+                    @if (!string.IsNullOrEmpty(contactoSeleccionado.Legajo.ToString()))
+                    {
+                        <FilaCampo Icono="bi-id-card" Etiqueta="Legajo" Valor="@contactoSeleccionado.Legajo.ToString()" />
                     }
                     @if (!string.IsNullOrEmpty(contactoSeleccionado.Direccion))
                     {
@@ -314,7 +325,9 @@ private async Task CargarContactos()
                 .Where(c =>
                     c.NombreCompleto.ToLower().Contains(busqueda) ||
                     c.Email.ToLower().Contains(busqueda) ||
-                    (c.Empresa ?? "").ToLower().Contains(busqueda))
+                    (c.Empresa ?? "").ToLower().Contains(busqueda) ||
+                    c.Legajo.ToString().Contains(busqueda)
+                    )
                 .ToList();
         }
     }
@@ -352,6 +365,7 @@ private void AbrirFormularioEditar(Contacto contacto)
             Telefono    = contacto.Telefono,
             Email       = contacto.Email,
             Empresa     = contacto.Empresa,
+            Legajo     = contacto.Legajo,
             Cargo       = contacto.Cargo,
             Direccion   = contacto.Direccion,
             FechaNacimiento = contacto.FechaNacimiento,
@@ -401,6 +415,7 @@ private void CancelarConfirmacionGuardar()
                     Apellido        = contactoEnEdicion.Apellido,
                     Telefono        = contactoEnEdicion.Telefono,
                     Email           = contactoEnEdicion.Email,
+                    Legajo          = contactoEnEdicion.Legajo,
                     Empresa         = contactoEnEdicion.Empresa   ?? "",
                     Cargo           = contactoEnEdicion.Cargo     ?? "",
                     Direccion       = contactoEnEdicion.Direccion ?? "",
@@ -422,6 +437,7 @@ private void CancelarConfirmacionGuardar()
                     existente.Apellido        = contactoEnEdicion.Apellido;
                     existente.Telefono        = contactoEnEdicion.Telefono;
                     existente.Email           = contactoEnEdicion.Email;
+                    existente.Legajo          = contactoEnEdicion.Legajo;
                     existente.Empresa         = contactoEnEdicion.Empresa   ?? "";
                     existente.Cargo           = contactoEnEdicion.Cargo     ?? "";
                     existente.Direccion       = contactoEnEdicion.Direccion ?? "";

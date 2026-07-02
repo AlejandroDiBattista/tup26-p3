@@ -15,7 +15,7 @@
                 </h6>
                 <button class="btn btn-primary btn-sm d-flex align-items-center gap-1"
                         @onclick="NuevoContacto">
-                    <i class="bi bi-plus-lg"></i> Nuevo
+                    <i class="bi bi-plus-lg"></i> Alta de Contacto
                 </button>
             </div>
             
@@ -65,7 +65,8 @@
                             <div class="contacto-secundario">
                                 @if (!string.IsNullOrWhiteSpace(c.Empresa))
                                 {
-                                    <span>@c.Empresa</span>
+                                    <span>@c.Telefono</span>
+                                    <span>@c.Email</span>
                                 }
                                 else
                                 {
@@ -86,7 +87,7 @@
             <div class="detail-header">
                 <h5 class="mb-0 fw-semibold">
                     <i class="bi @(esNuevo ? "bi-person-plus" : "bi-pencil-square") me-2 text-primary"></i>
-                    @(esNuevo ? "Nuevo contacto" : "Editar contacto")
+                    @(esNuevo ? "Alta de Contacto" : "Modificar contacto")
                 </h5>
                 <button class="btn btn-sm btn-outline-secondary" @onclick="CancelarFormulario">
                     <i class="bi bi-x-lg"></i>
@@ -108,6 +109,11 @@
                             <label class="form-label">Apellido <span class="text-danger">*</span></label>
                             <InputText class="form-control" @bind-Value="contactoEdicion.Apellido" placeholder="García" />
                             <ValidationMessage For="@(() => contactoEdicion.Apellido)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Legajo <span class="text-danger">*</span></label>
+                            <InputNumber class="form-control" @bind-Value="contactoEdicion.Legajo" placeholder="63388" />
+                            <ValidationMessage For="@(() => contactoEdicion.Legajo)" class="text-danger small" />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Teléfono <span class="text-danger">*</span></label>
@@ -164,7 +170,7 @@
                             {
                                 <i class="bi bi-check-lg"></i>
                             }
-                            @(esNuevo ? "Crear contacto" : "Guardar cambios")
+                            @(esNuevo ? "Crear contacto" : "Guardar")
                         </button>
                         <button type="button" class="btn btn-outline-secondary" @onclick="CancelarFormulario">
                             Cancelar
@@ -193,10 +199,10 @@
                 </div>
                 <div class="d-flex gap-2">
                     <button class="btn btn-sm btn-outline-primary" @onclick="EditarContacto">
-                        <i class="bi bi-pencil me-1"></i>Editar
+                        <i class="bi bi-pencil me-1"></i>Modificar Contacto
                     </button>
                     <button class="btn btn-sm btn-outline-danger" @onclick="ConfirmarEliminar">
-                        <i class="bi bi-trash me-1"></i>Eliminar
+                        <i class="bi bi-trash me-1"></i>Baja de Contacto
                     </button>
                 </div>
             </div>
@@ -270,7 +276,7 @@
                 <h6>Seleccioná un contacto</h6>
                 <p>Elegí un contacto de la lista o creá uno nuevo.</p>
                 <button class="btn btn-primary" @onclick="NuevoContacto">
-                    <i class="bi bi-plus-lg me-2"></i>Nuevo contacto
+                    <i class="bi bi-plus-lg me-2"></i>Alta de Contacto
                 </button>
             </div>
         }
@@ -326,6 +332,7 @@
                 c.Apellido.ToLower().Contains(t) ||
                 c.Email.ToLower().Contains(t) ||
                 c.Telefono.Contains(t) ||
+                c.Legajo.ToString().Contains(t) ||
                 (c.Empresa?.ToLower().Contains(t) ?? false) ||
                 (c.Cargo?.ToLower().Contains(t) ?? false)
             ).ToList();
@@ -371,6 +378,7 @@
             Direccion = contactoSeleccionado.Direccion,
             FechaNacimiento = contactoSeleccionado.FechaNacimiento,
             Notas = contactoSeleccionado.Notas,
+            Legajo = contactoSeleccionado.Legajo,
         };
         esNuevo = false;
         modoFormulario = true;

@@ -11,7 +11,7 @@
 
     <div style="width: 35%;">
         <button class="btn btn-primary mb-2 w-100" @onclick="Nuevo">
-            + Nuevo contacto
+            + Alta de contacto
         </button>
 
         <input class="form-control mb-2"
@@ -25,7 +25,7 @@
                  style="cursor:pointer; background-color: @(seleccionado?.Id == c.Id ? "#d0e8ff" : "white")"
                  @onclick="() => Seleccionar(c)">
                 <b>@c.Nombre @c.Apellido</b><br />
-                <small class="text-muted">@c.Telefono</small>
+                <small class="text-muted">@c.Telefono | @c.Email</small>
             </div>
         }
 
@@ -41,7 +41,7 @@
         @if (editando != null)
         {
             //Seccion formulario
-            <h4>@(editando.Id == 0 ? "Nuevo contacto" : "Editar contacto")</h4>
+            <h4>@(editando.Id == 0 ? "Alta de contacto" : "Modificar contacto")</h4>
 
             <div class="mb-2">
                 <label class="form-label">Nombre *</label>
@@ -50,6 +50,10 @@
             <div class="mb-2">
                 <label class="form-label">Apellido *</label>
                 <input class="form-control" placeholder="Apellido" @bind="editando.Apellido" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Legajo</label>
+                <input class="form-control" type= "number" placeholder="Legajo" @bind="editando.Legajo" />
             </div>
             <div class="mb-2">
                 <label class="form-label">Teléfono *</label>
@@ -92,7 +96,7 @@
 
             @if (editando.Id != 0)
             {
-                <button class="btn btn-danger" @onclick="Eliminar">Eliminar</button>
+                <button class="btn btn-danger" @onclick="Eliminar">Baja de contacto</button>
             }
         }
         else if (seleccionado != null)
@@ -100,11 +104,12 @@
             // Seccion detalle
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="mb-0">@seleccionado.Nombre @seleccionado.Apellido</h4>
-                <button class="btn btn-outline-primary btn-sm" @onclick="Editar">Editar</button>
+                <button class="btn btn-outline-primary btn-sm" @onclick="Editar">Modificar contacto</button>
             </div>
 
             <table class="table table-bordered">
                 <tbody>
+                    <tr><th style="width:35%">Legajo</th><td>@seleccionado.Legajo</td></tr>
                     <tr><th style="width:35%">Teléfono</th><td>@seleccionado.Telefono</td></tr>
                     <tr><th>Email</th><td>@seleccionado.Email</td></tr>
                     @if (!string.IsNullOrWhiteSpace(seleccionado.Empresa))
@@ -161,7 +166,7 @@
             ? contactos
             : contactos.Where(c =>
                 (c.Nombre + " " + c.Apellido)
-                .Contains(filtro, StringComparison.OrdinalIgnoreCase));
+                .Contains(filtro, StringComparison.OrdinalIgnoreCase) || c.Legajo.ToString().Contains(filtro));
 
     // Click en la lista - muestra el detalle
     void Seleccionar(Contacto c)
@@ -180,6 +185,7 @@
             Id = seleccionado.Id,
             Nombre = seleccionado.Nombre,
             Apellido = seleccionado.Apellido,
+            Legajo = seleccionado.Legajo,
             Telefono = seleccionado.Telefono,
             Email = seleccionado.Email,
             Empresa = seleccionado.Empresa,
@@ -228,6 +234,7 @@
             {
                 original.Nombre = editando.Nombre;
                 original.Apellido = editando.Apellido;
+                original.Legajo = editando.Legajo;
                 original.Telefono = editando.Telefono;
                 original.Email = editando.Email;
                 original.Empresa = editando.Empresa;

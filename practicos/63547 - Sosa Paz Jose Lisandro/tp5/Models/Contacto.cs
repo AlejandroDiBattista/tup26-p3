@@ -23,6 +23,8 @@ public class Contacto
 
     public string? Cargo { get; set; }
 
+    public string? Legajo { get; set; }
+
     public string? Direccion { get; set; }
 
     public DateTime? FechaNacimiento { get; set; }

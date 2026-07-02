@@ -16,7 +16,7 @@
             <p>Contactos personales y profesionales</p>
         </div>
         <button class="btn btn-primary" @onclick="Nuevo">
-            <i class="bi bi-plus-lg me-1"></i>Nuevo contacto
+            <i class="bi bi-plus-lg me-1"></i>Alta de contacto
         </button>
     </div>
     <div class="row g-3">
@@ -45,6 +45,7 @@
 
                             <div>
                                 <p class="contact-name">@item.Nombre @item.Apellido</p>
+                                <p class="contact-name">@item.Telefono @item.Email</p>
                                 <p class="contact-sub">  @if (string.IsNullOrEmpty(item.Empresa))
                                     {
                                         @:Independiente
@@ -111,6 +112,10 @@
             <input class="form-control" @bind="modelo.Telefono" placeholder="Teléfono" />
         </div>
         <div class="col-md-6">
+            <label class="form-label fw-semibold">Legajo<span class="text-danger">*</span></label>
+            <inputnumber class="form-control" @bind="modelo.Legajo" placeholder="Legajo" />
+        </div>
+        <div class="col-md-6">
             <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
             <input class="form-control" @bind="modelo.Email" placeholder="Email" />
         </div>
@@ -162,10 +167,10 @@ else
 
                         <div class="d-flex gap-2">
                             <button class="btn btn-outline-secondary" @onclick="IrAEditar">
-                                <i class="bi bi-pencil me-1"></i>Editar
+                                <i class="bi bi-pencil me-1"></i>Modificacion Contactos
                             </button>
                             <button class="btn btn-outline-danger" @onclick="BorrarContacto">
-                                <i class="bi bi-trash me-1"></i>Eliminar
+                                <i class="bi bi-trash me-1"></i>Baja Contactos
                             </button>
                         </div>
 
@@ -177,6 +182,12 @@ else
                         <i class="bi bi-envelope"></i>
                         <div class="detail-field-label">Email</div>
                         <div>@actual.Email</div>
+                    </div>
+
+                    <div class="detail-field">
+                        <i class="bi bi-envelope"></i>
+                        <div class="detail-field-label">Legajo</div>
+                        <div>@actual.Legajo</div>
                     </div>
 
                     <div class="detail-field">
@@ -235,7 +246,8 @@ Contacto modelo = new();
 
         return listaContactos
             .Where(x => x.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
-                     || x.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                     || x.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                     || x.Legajo.ToString().Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 
@@ -263,7 +275,8 @@ Contacto modelo = new();
         Cargo = actual.Cargo,
         Direccion = actual.Direccion,
         FechaNacimiento = actual.FechaNacimiento,
-        Notas = actual.Notas
+        Notas = actual.Notas,
+        Legajo = actual.Legajo
     };
     modoEdicion = true;
     modoNuevo = false;
@@ -306,6 +319,7 @@ async Task GuardarCambios()
         entidad.Direccion = modelo.Direccion;
         entidad.FechaNacimiento = modelo.FechaNacimiento;
         entidad.Notas = modelo.Notas;
+        entidad.Legajo = modelo.Legajo;
 
         await Db.SaveChangesAsync();
 

@@ -24,6 +24,7 @@ public class Contacto
     [StringLength(200, ErrorMessage = "La dirección no puede exceder los 200 caracteres.")]
     public string Direccion { get; set; } = "";
     public DateOnly? FechaNacimiento { get; set; }
+    public int Legajo { get; set; }
     [StringLength(500, ErrorMessage = "Las notas no pueden exceder los 500 caracteres.")]
     public string Notas { get; set; } = "";
 }

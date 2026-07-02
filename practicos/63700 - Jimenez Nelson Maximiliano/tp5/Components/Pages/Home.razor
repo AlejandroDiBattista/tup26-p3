@@ -17,7 +17,7 @@
             </div>
 
             <button class="btn btn-primary w-100 mb-3" @onclick="PrepararNuevoContacto">
-                <i class="bi bi-person-plus"></i> Nuevo Contacto
+                <i class="bi bi-person-plus"></i> Alta de Contacto
             </button>
 
             <div class="list-group" style="max-height: 70vh; overflow-y: auto;">
@@ -37,7 +37,7 @@
                                 class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == c.Id ? "active" : "")"
                                 @onclick="() => SeleccionarContacto(c)">
                             <strong>@c.Apellido, @c.Nombre</strong>
-                            <br/><small class="@(contactoSeleccionado?.Id == c.Id ? "text-white-50" : "text-muted")">@c.Empresa</small>
+                            <small>@c.Telefono | @c.CorreoElectronico</small>
                         </button>
                     }
                 }
@@ -90,8 +90,8 @@
                         <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
 
                         <div class="mt-4">
-                            <button class="btn btn-warning" @onclick="HabilitarEdicion">Editar</button>
-                            <button class="btn btn-danger" @onclick="EliminarContacto">Eliminar</button>
+                            <button class="btn btn-warning" @onclick="HabilitarEdicion">Modificar Contacto</button>
+                            <button class="btn btn-danger" @onclick="EliminarContacto">Baja de Contacto</button>
                         </div>
                     </div>
                 </div>
