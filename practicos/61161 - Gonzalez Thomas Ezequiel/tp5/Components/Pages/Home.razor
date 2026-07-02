@@ -1,9 +1,9 @@
 @page "/"
 @using tp5.Models
-@using tp5.Data
-@using Microsoft.EntityFrameworkCore
+@using tp5.Services
 @rendermode InteractiveServer
-@inject AgendaaContext Db
+
+@inject ContactoService ServicioContactos
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
@@ -144,7 +144,8 @@
 
     private async Task CargarContactosDesdeBase()
     {
-        todosLosContactos = await Db.Contactos.ToListAsync();
+        // AHORA LLAMAMOS AL SERVICIO
+        todosLosContactos = await ServicioContactos.ObtenerTodosAsync();
         FiltrarContactos();
     }
 
@@ -152,14 +153,13 @@
     {
         if (string.IsNullOrWhiteSpace(textoBusqueda))
         {
-            contactosFiltrados = todosLosContactos.OrderBy(c => c.Apellido).ToList();
+            contactosFiltrados = todosLosContactos.ToList(); // El servicio ya lo ordena
         }
         else
         {
             contactosFiltrados = todosLosContactos
                 .Where(c => c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) || 
                             c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(c => c.Apellido)
                 .ToList();
         }
     }
@@ -201,20 +201,9 @@
     {
         if (contactoFormulario == null) return;
 
-        if (contactoFormulario.Id == 0)
-        {
-            Db.Contactos.Add(contactoFormulario);
-        }
-        else
-        {
-            var original = await Db.Contactos.FindAsync(contactoFormulario.Id);
-            if (original != null)
-            {
-                Db.Entry(original).CurrentValues.SetValues(contactoFormulario);
-            }
-        }
+        // DELEGAMOS EL GUARDADO AL SERVICIO
+        await ServicioContactos.GuardarAsync(contactoFormulario);
         
-        await Db.SaveChangesAsync();
         await CargarContactosDesdeBase();
         
         if (contactoFormulario.Id != 0)
@@ -237,8 +226,8 @@
     {
         if (contactoSeleccionado == null) return;
 
-        Db.Contactos.Remove(contactoSeleccionado);
-        await Db.SaveChangesAsync();
+        // DELEGAMOS LA ELIMINACIÓN AL SERVICIO
+        await ServicioContactos.EliminarAsync(contactoSeleccionado);
 
         contactoSeleccionado = null;
         contactoFormulario = null;
