@@ -1,4 +1,4 @@
-﻿# TUP 2026 - Programación III
+# TUP 2026 - Programación III
 
 ## C7
 ```text
@@ -10,7 +10,7 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢🟢   🟢🔴   No    30   10  —                 R
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢🟢🟢   🟢🟢   No    31   10  —                 P
 63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢🟢   🟢🟡   No    29   10  —                 R
-63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🟠🟠🟢🟢   🟢⚪   No    18    8  —                 R Copia TP3 de 63419 y TP4 de 63268
+63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🟠🟠🟢🟢   🟢⚪   No    18    8  —                 R
 63396   Gil Garau, Atalía Trinidad      (381)456-4405   ataliagg                   🟢🟢🟢🟢🟢🟢   🟢🟢   No    29   10  —                 P
 63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟢   🟢🟢   No    29   10  —                 P
 61577   González, Lucas Alfredo         (381)669-4386   lucasgonzaa                🟢🔴🔴🔴🟡🔴   🟢⚪   No    26   10  —                 L
