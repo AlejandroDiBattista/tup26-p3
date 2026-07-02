@@ -1,8 +1,8 @@
 ---
 
-- Legajo  : 63137
-- Nombre  : José Simón Díaz
-- Comisión: C9
+- Legajo  : <legajo>
+- Nombre  : <nombre> <apellido>
+- Comisión: <comisión>
 
 ---
 

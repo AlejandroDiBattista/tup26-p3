@@ -67,7 +67,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Correo electrónico *</label>
-                            <InputText class="form-control" @bind-Value="contactoEnEdicion.Email" />
+                            <InputText class="form-control" @bind-Value="contactoEnEdicion.CorreoElectronico" />
                         </div>
                         </div>
 
@@ -85,7 +85,7 @@
                         <h6 class="card-subtitle mb-3 text-muted">@contactoSeleccionado.Cargo en @contactoSeleccionado.Empresa</h6>
                         
                         <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
-                        <p><strong>Correo:</strong> @contactoSeleccionado.Email</p>
+                        <p><strong>Correo:</strong> @contactoSeleccionado.CorreoElectronico</p>
                         <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
                         <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
 
@@ -152,7 +152,7 @@
                 Nombre = contactoSeleccionado.Nombre,
                 Apellido = contactoSeleccionado.Apellido,
                 Telefono = contactoSeleccionado.Telefono,
-                Email = contactoSeleccionado.Email,
+                CorreoElectronico = contactoSeleccionado.CorreoElectronico,
                 Empresa = contactoSeleccionado.Empresa,
                 Cargo = contactoSeleccionado.Cargo,
                 Direccion = contactoSeleccionado.Direccion,
@@ -177,7 +177,7 @@
         modoEdicion = false;
         await CargarContactos();
         // Volver a seleccionar el contacto editado o el nuevo
-        contactoSeleccionado = contactos?.FirstOrDefault(c => c.Email == contactoEnEdicion.Email);
+        contactoSeleccionado = contactos?.FirstOrDefault(c => c.CorreoElectronico == contactoEnEdicion.CorreoElectronico);
     }
 
     private async Task EliminarContacto()

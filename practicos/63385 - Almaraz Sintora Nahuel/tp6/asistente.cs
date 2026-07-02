@@ -19,16 +19,11 @@ using System.ComponentModel;
 const string raiz = ".";
 
 DotNetEnv.Env.Load();
-var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
-
-var url    = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
-var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
-var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL");
-
+var config = CargarConfiguracion(args);
 IChatClient chat = new OpenAIClient(
-        new ApiKeyCredential(apiKey ?? "no-requiere-key"),
-        new OpenAIClientOptions { Endpoint = NormalizarEndpoint(url) })
-    .GetChatClient(modelo)
+        new ApiKeyCredential(config.ApiKey),
+        new OpenAIClientOptions { Endpoint = NormalizarEndpoint(config.Url) })
+    .GetChatClient(config.Modelo)
     .AsIChatClient()
     .AsBuilder()
     .UseFunctionInvocation()
@@ -65,7 +60,7 @@ var turnos = new List<TurnoPantalla>();
 
 using IApplication app = Application.Create().Init();
 using var ventana = new Window {
-    Title = $" Asistente IA · {modelo} ",
+    Title = $" Asistente IA · {config.Modelo} ",
     Width = Dim.Fill(), Height = Dim.Fill()
 };
 
@@ -214,14 +209,6 @@ string ListarArchivos([Description("Ruta relativa del directorio a listar.")] st
         .EnumerateFileSystemEntries(directorio)
         .Select(Path.GetFileName)
         .OrderBy(nombre => nombre));
-}
-
-string EncontrarRaizAplicacion(string directorioActual)
-{
-    if (File.Exists(Path.Combine(directorioActual, "AGENTS.md"))) return directorioActual;
-    var subcarpetaTp6 = Path.Combine(directorioActual, "tp6");
-    if (File.Exists(Path.Combine(subcarpetaTp6, "AGENTS.md"))) return subcarpetaTp6;
-    return directorioActual;
 }
 
 ConfiguracionApi CargarConfiguracion(string[] argumentos)

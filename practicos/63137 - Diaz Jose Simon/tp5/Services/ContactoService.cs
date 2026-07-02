@@ -26,7 +26,8 @@ public sealed class ContactoService
                 contacto.Nombre.Contains(filtro) ||
                 contacto.Apellido.Contains(filtro) ||
                 contacto.Telefono.Contains(filtro) ||
-                contacto.Email.Contains(filtro));
+                contacto.Email.Contains(filtro) ||
+                contacto.Legajo.ToString().Contains(filtro));
         }
 
         return await consulta
