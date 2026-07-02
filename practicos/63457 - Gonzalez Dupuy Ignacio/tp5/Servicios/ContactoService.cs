@@ -15,8 +15,7 @@ public class ContactoService
 
     public async Task<List<Contacto>> ListarContactos()
     {
-        return await db.Agenda.ToListAsync();
-    }
+    return await db.Agenda.AsNoTracking().ToListAsync();    }
 
     public async Task CrearContacto(Contacto nuevoContacto)
     {

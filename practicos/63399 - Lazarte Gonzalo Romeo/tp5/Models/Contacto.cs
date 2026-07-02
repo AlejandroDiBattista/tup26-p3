@@ -29,6 +29,8 @@ public class Contacto
 
     public string Notas { get; set; } = "";
 
+    public int? Legajo { get; set; }
+
 
     public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
 

@@ -4,15 +4,15 @@
 ```text
 Legajo  Nombre y Apellido               Teléfono        GitHub                     Prácticos    Exm   Prs   Ast  Nta  Recuperación      Observaciones
 ------  ------------------------------  -------------   -------------------------  ----------   ----  ---   ---  ---  ----------------  ------------------------
-63456   Ávila Lahr, Joaquín             (381)527-6836   joacoavila9                🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  01/07/2026 10:00
+63456   Ávila Lahr, Joaquín             (381)527-6836   joacoavila9                🟢🟢🟢🟢🟢🟢   🟢🟢   No    27   10  01/07/2026 10:00
 63415   Chávez, Lucas Francisco         (381)301-3490   lucaschavez10lc-ai         🔴🔴🔴🔴🔴🔴   🟢⚪   No    17    8  —                 R2
 63268   Condori, Karina Edith           (381)412-4723   kariiedith9315             🟢🟢🟢🟢🟢🟢   🟢⚪   No     9    1  01/07/2026 12:00
-63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢🟢   🟢⚪   No    30   10  01/07/2026 10:00
+63402   Condori, Nahuel Ariel           (381)341-9689   nahuelc19                  🟢🟢🟢🟢🟢🟢   🟢🔴   No    30   10  01/07/2026 10:00
 63419   Coronel, Tomás                  (381)678-0335   tomicor979-lgtm            🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  01/07/2026 10:20
 63241   Cortez, Josías                  (381)665-0808   josias57455                🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  01/07/2026 10:20
 63776   Fuensalida, Ulises Nahuel       (381)334-9851   ulisesfuensalida-ui        🟢🟢🔴🔴🟢🟢   🟢⚪   No    18    8  01/07/2026 10:40
 63396   Gil Garau, Atalía Trinidad      (381)456-4405   ataliagg                   🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  01/07/2026 10:40
-63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟢   🟢⚪   No    29   10  01/07/2026 11:00
+63457   González Dupuy, Ignacio         (381)683-1233   ignas11                    🟢🟢🟢🟢🟢🟢   🟢🟢   No    29   10  01/07/2026 11:00
 61577   González, Lucas Alfredo         (381)669-4386   lucasgonzaa                🟢🔴🔴🔴🟡🔴   🟢⚪   No    26   10  —                 R2
 63174   Jerez, Luciano Germán           (381)550-7143   luchex1525                 🟢🟢🟢🟢🟢🟢   🟢⚪   No    33    9  01/07/2026 11:00
 63700   Jiménez, Nelson Maximiliano     (381)639-2861   maximilianojimnez          🟢🟢🟢🟢🟢🟢   🟢⚪   No    27    8  01/07/2026 11:20
@@ -38,17 +38,17 @@ Legajo  Nombre y Apellido               Teléfono        GitHub                 
 ```text
 Legajo  Nombre y Apellido               Teléfono        GitHub                     Prácticos    Exm   Prs   Ast  Nta  Recuperación      Observaciones
 ------  ------------------------------  -------------   -------------------------  ----------   ----  ---   ---  ---  ----------------  ------------------------
-63385   Almaraz Sintora, Nahuel         (381)502-5082   nahuelalmaraz957-ops       🟢🟢🟢🟢🟢🟢   🟢⚪   No    31   10  01/07/2026 08:00
+63385   Almaraz Sintora, Nahuel         (381)502-5082   nahuelalmaraz957-ops       🟢🟢🟢🟢🟢🟢   🟢🔴   No    31   10  01/07/2026 08:00
 63217   Altamiranda Borquez, Bian       (381)581-3104   sofiaaltamiranda22         🟢🔴🔴🔴🟢🟢   🟢⚪   No    27    8  —                 R1
-63300   Álvarez, Hernán Fabricio        (381)581-4086   hernancarpalvarez28        🟢🟢🟢🟢🟢🟢   🟢⚪   No    24   10  01/07/2026 08:00
-63313   Ávila Puntano, Benjamín         (381)329-6643   santiagobnj-avila-pun      🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  01/07/2026 08:20
-63222   Bajre Martínez, Julián          (381)351-9652   julianbajre-png            🟢🟢🟢🟢🟢🟢   🟢⚪   No    26    7  01/07/2026 08:20
-61801   Benega, Maximiliano Abraham     (381)505-9048   abrahambenega              🟢🟢🟢🟢🟢🟢   🟢⚪   No    24    6  01/07/2026 08:40
-63493   Busnelli, Bruno                 (381)366-0607   brunobusnelli              🟢🟢🟢🟢🟢🟢   🟢⚪   No    15   10  01/07/2026 08:40
-63150   Carlino, Joaquín                (381)605-7383   vincent-coffe              🟢🟢🟢🟢🟢🟢   🟢⚪   No    13   10  01/07/2026 09:00
-63341   Carrer, Juan Cruz               (381)632-5727   juancarrer11               🟢🟢🟢🟢🟢🟢   🟢⚪   No    22   10  01/07/2026 09:00
+63300   Álvarez, Hernán Fabricio        (381)581-4086   hernancarpalvarez28        🟢🟢🟢🟢🟢🟢   🟢🟢   No    24   10  01/07/2026 08:00
+63313   Ávila Puntano, Benjamín         (381)329-6643   santiagobnj-avila-pun      🟢🟢🟢🟢🟢🟢   🟢🟢   No    27   10  01/07/2026 08:20
+63222   Bajre Martínez, Julián          (381)351-9652   julianbajre-png            🟢🟢🟢🟢🟢🟢   🟢🟢   No    26    7  01/07/2026 08:20
+61801   Benega, Maximiliano Abraham     (381)505-9048   abrahambenega              🟢🟢🟢🟢🟢🟢   🟢🟢   No    24    6  01/07/2026 08:40
+63493   Busnelli, Bruno                 (381)366-0607   brunobusnelli              🟢🟢🟢🟢🟢🟢   🟢🟢   No    15   10  01/07/2026 08:40
+63150   Carlino, Joaquín                (381)605-7383   vincent-coffe              🟢🟢🟢🟢🟢🟢   🟢🟢   No    13   10  01/07/2026 09:00
+63341   Carrer, Juan Cruz               (381)632-5727   juancarrer11               🟢🟢🟢🟢🟢🟢   🟢🟢   No    22   10  01/07/2026 09:00
 63461   Cativa, Facundo Simón           (381)391-4222   cativafacundo9-gif         🟢🟢🔴🔴🟡🔴   🟢⚪   No    19    8  —                 R2
-63218   Cortés, Guillermo Augusto       (381)606-0586   guillecortes01             🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  01/07/2026 09:20
+63218   Cortés, Guillermo Augusto       (381)606-0586   guillecortes01             🟢🟢🟢🟢🟢🟢   🟢🟢   No    27   10  01/07/2026 09:20
 64016   Cura, Rocío Aylen               (381)478-8799   rocura26                   🔴🟢🟢🔴🟢🔴   🟢⚪   No    17    7  —
 63266   Decima, Juan Cruz               (381)558-9063   devjuancruz003-com         🟢🟢🟢🟢🟢🟢   🟢⚪   No    27   10  01/07/2026 09:20
 63137   Díaz, José Simón                (381)617-9958   josesimondiaz              🟢🟢🔴🟢🟢🟢   🟢⚪   No    29    6  01/07/2026 09:40
