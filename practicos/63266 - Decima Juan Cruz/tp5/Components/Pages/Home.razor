@@ -15,7 +15,7 @@
 
             <h3>Contactos</h3>
             <button class="btn btn-primary w-100 mb-3" @onclick="MostrarFormularioNuevo">
-                <i class="bi bi-plus-circle"></i> Nuevo Contacto
+                <i class="bi bi-plus-circle"></i> Alta de contacto
             </button>
 
             <div class="input-group mb-3">
@@ -43,6 +43,7 @@
                             class="list-group-item list-group-item-action @(contactoSeleccionado?.Id == con.Id ? "active" : "")"
                             @onclick="() => SeleccionarContacto(con)">
                             <strong>@con.Apellido, @con.Nombre</strong>
+                            <p>@con.Telefono, @con.Email</p>
                         </button>
                     }
                 }
@@ -60,6 +61,10 @@
                         <DataAnnotationsValidator />
 
                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Legajo *</label>
+                                <InputNumber @bind-value="elContacto.Legajo" class="form-control" required />
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nombre *</label>
                                 <InputText @bind-value="elContacto.Nombre" class="form-control" required />
@@ -138,10 +143,10 @@
                                 <hr />
                                 <div class="d-flex justify-content-end gap-2">
                                     <button class="btn btn-warning" @onclick="MostrarFormularioEditar">
-                                        <i class="bi bi-pencil"></i> Editar Contacto
+                                        <i class="bi bi-pencil"></i> Modificar contacto
                                     </button>
                                     <button class="btn btn-danger" @onclick="EliminarContacto">
-                                        <i class="bi bi-trash"></i> Eliminar Contacto
+                                        <i class="bi bi-trash"></i> Baja de contacto
                                     </button>
                                 </div>
                             </div>
@@ -214,6 +219,7 @@
             elContacto = new Contacto
             {
                 Id = contactoSeleccionado.Id,
+                Legajo = contactoSeleccionado.Legajo,
                 Nombre = contactoSeleccionado.Nombre,
                 Apellido = contactoSeleccionado.Apellido,
                 Telefono = contactoSeleccionado.Telefono,
@@ -247,6 +253,7 @@
             if (contactoDb != null)
             {
                 contactoDb.Nombre = elContacto.Nombre;
+                contactoDb.Legajo = elContacto.Legajo;
                 contactoDb.Apellido = elContacto.Apellido;
                 contactoDb.Telefono = elContacto.Telefono;
                 contactoDb.Email = elContacto.Email;
@@ -281,7 +288,9 @@
 
             return contactos.Where(c =>
                 c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
-                c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+                c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                c.Legajo.ToString().Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                );
         }
     }
 

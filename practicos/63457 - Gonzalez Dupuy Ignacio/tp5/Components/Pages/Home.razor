@@ -11,70 +11,195 @@
 
 <button class="btn btn-success mb-3"
         @onclick="NuevoContacto">
-    Nuevo Contacto
+    <i class="bi bi-plus-circle me-1"></i> Alta de contacto
 </button>
 
 <div class="row">
 
     <div class="col-md-4">
+        <div class="columna-scroll">
 
-        <input class="form-control mb-3"
-               placeholder="Buscar contacto..."
-               @bind="textoBusqueda"
-               @bind:event="oninput" />
+            <input class="form-control mb-3"
+                   placeholder="Buscar contacto..."
+                   @bind="textoBusqueda"
+                   @bind:event="oninput" />
 
-        <div class="list-group">
+            <div class="list-group">
 
-            @foreach (var contacto in ContactosFiltrados)
-            {
-                <button class="list-group-item list-group-item-action"
-                        @onclick="() => SeleccionarContacto(contacto)">
-                    @contacto.Nombre @contacto.Apellido
-                </button>
-            }
+                @foreach (var contacto in ContactosFiltrados)
+                {
+                    <button class="list-group-item list-group-item-action @(contactoActual?.Id == contacto.Id ? "active" : "")"
+                            @onclick="() => SeleccionarContacto(contacto)">
+                        @contacto.Nombre @contacto.Apellido @contacto.Telefono @contacto.Email
+                    </button>
+                }
+
+            </div>
 
         </div>
-
     </div>
 
     <div class="col-md-8">
+        <div class="columna-scroll">
 
-        @if (contactoActual != null)
-        {
-            <div class="card">
-                <div class="card-body">
+            @if (modoEdicion && contactoEditando != null)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            @if (contactoEditando.Id == 0)
+                            {
+                                <i class="bi bi-person-plus me-2"></i>
+                                <text>Nuevo Contacto</text>
+                            }
+                            else
+                            {
+                                <i class="bi bi-pencil me-2"></i>
+                                <text>Editar Contacto</text>
+                            }
+                        </h5>
+                    </div>
+                    <div class="card-body">
 
-                    <h3>
-                        @contactoActual.Nombre
-                        @contactoActual.Apellido
-                    </h3>
+                        <EditForm Model="contactoEditando" OnValidSubmit="GuardarContacto">
+                            <DataAnnotationsValidator />
 
-                    <hr />
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label fw-bold">Nombre *</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Nombre" />
+                                    <ValidationMessage For="() => contactoEditando.Nombre" class="text-danger small" />
+                                </div>
+                                <div class="col">
+                                    <label class="form-label fw-bold">Apellido *</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Apellido" />
+                                    <ValidationMessage For="() => contactoEditando.Apellido" class="text-danger small" />
+                                </div>
+                            </div>
+                             <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label fw-bold">Legajo *</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Legajo" />
+                                    <ValidationMessage For="() => contactoEditando.Legajo" class="text-danger small" />
+                                </div>
+                                </div>
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label fw-bold">Teléfono *</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Telefono" />
+                                    <ValidationMessage For="() => contactoEditando.Telefono" class="text-danger small" />
+                                </div>
+                                <div class="col">
+                                    <label class="form-label fw-bold">Correo electrónico *</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Email" />
+                                    <ValidationMessage For="() => contactoEditando.Email" class="text-danger small" />
+                                </div>
+                            </div>
 
-                    <p><b>Teléfono:</b> @contactoActual.Telefono</p>
-                    <p><b>Email:</b> @contactoActual.Email</p>
-                    <p><b>Empresa:</b> @contactoActual.Empresa</p>
-                    <p><b>Cargo:</b> @contactoActual.Cargo</p>
-                    <p><b>Dirección:</b> @contactoActual.Direccion</p>
-                    <p><b>Fecha de nacimiento:</b> @contactoActual.FechaNacimiento</p>
-                    <p><b>Notas:</b> @contactoActual.Notas</p>
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label class="form-label">Empresa</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Empresa" />
+                                </div>
+                                <div class="col">
+                                    <label class="form-label">Cargo</label>
+                                    <InputText class="form-control" @bind-Value="contactoEditando.Cargo" />
+                                </div>
+                            </div>
 
-                    <hr />
+                            <div class="mb-3">
+                                <label class="form-label">Dirección</label>
+                                <InputText class="form-control" @bind-Value="contactoEditando.Direccion" />
+                            </div>
 
-                    <button class="btn btn-warning me-2"
-                            @onclick="EditarContacto">
-                        Editar
-                    </button>
+                            <div class="mb-3">
+                                <label class="form-label">Fecha de nacimiento</label>
+                                <InputDate class="form-control" @bind-Value="contactoEditando.FechaNacimiento" />
+                            </div>
 
-                    <button class="btn btn-danger"
-                            @onclick="EliminarContacto">
-                        Eliminar
-                    </button>
+                            <div class="mb-3">
+                                <label class="form-label">Notas</label>
+                                <InputTextArea class="form-control" @bind-Value="contactoEditando.Notas" rows="3" />
+                            </div>
 
+                            <hr />
+
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-floppy me-1"></i> Guardar
+                            </button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">
+                                Cancelar
+                            </button>
+
+                        </EditForm>
+
+                    </div>
                 </div>
-            </div>
-        }
+            }
+            else if (contactoActual != null)
+            {
+                <div class="card">
+                    <div class="card-body">
 
+                        <h3>
+                            @contactoActual.Nombre
+                            @contactoActual.Apellido
+                        </h3>
+                        
+
+                        <hr />
+                        <p><b>Teléfono:</b> @contactoActual.Telefono</p>
+                        <p><b>Email:</b> @contactoActual.Email</p>
+
+                        @if (!string.IsNullOrEmpty(contactoActual.Empresa))
+                        {
+                            <p><b>Empresa:</b> @contactoActual.Empresa</p>
+                        }
+                      @if (!string.IsNullOrEmpty(contactoActual.Legajo))
+                        {
+                            <p><b>Legajo:</b> @contactoActual.Legajo</p>
+                        }
+                        @if (!string.IsNullOrEmpty(contactoActual.Cargo))
+                        {
+                            <p><b>Cargo:</b> @contactoActual.Cargo</p>
+                        }
+                        @if (!string.IsNullOrEmpty(contactoActual.Direccion))
+                        {
+                            <p><b>Dirección:</b> @contactoActual.Direccion</p>
+                        }
+                        @if (contactoActual.FechaNacimiento.HasValue)
+                        {
+                            <p><b>Fecha de nacimiento:</b> @contactoActual.FechaNacimiento</p>
+                        }
+                        @if (!string.IsNullOrEmpty(contactoActual.Notas))
+                        {
+                            <p><b>Notas:</b> @contactoActual.Notas</p>
+                        }
+
+                        <hr />
+
+                        <button class="btn btn-success me-2"
+                                @onclick="EditarContacto">
+                            <i class="bi bi-pencil me-1"></i> Modificar contacto
+                        </button>
+
+                        <button class="btn btn-danger"
+                                @onclick="EliminarContacto">
+                            <i class="bi bi-trash me-1"></i> Baja de contacto
+                        </button>
+
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-muted text-center mt-5">
+                    <i class="bi bi-person-lines-fill" style="font-size: 3rem;"></i>
+                    <p class="mt-2">Seleccioná un contacto de la lista o creá uno nuevo.</p>
+                </div>
+            }
+
+        </div>
     </div>
 
 </div>
@@ -82,9 +207,9 @@
 @code {
 
     private List<Contacto> listaContactos = new();
-
     private Contacto? contactoActual;
-
+    private Contacto? contactoEditando;
+    private bool modoEdicion = false;
     private string textoBusqueda = "";
 
     protected override async Task OnInitializedAsync()
@@ -100,44 +225,63 @@
     private void SeleccionarContacto(Contacto contacto)
     {
         contactoActual = contacto;
+        modoEdicion = false;
     }
 
-    private async Task NuevoContacto()
+    private void NuevoContacto()
     {
-        var nuevo = new Contacto
+        contactoEditando = new Contacto();
+        modoEdicion = true;
+    }
+
+    private void EditarContacto()
+    {
+        if (contactoActual == null) return;
+
+        contactoEditando = new Contacto
         {
-            Nombre = "Nuevo",
-            Apellido = "Contacto",
-            Telefono = "000000",
-            Email = "nuevo@email.com"
+            Id = contactoActual.Id,
+            Nombre = contactoActual.Nombre,
+            Apellido = contactoActual.Apellido,
+            Telefono = contactoActual.Telefono,
+            Email = contactoActual.Email,
+            Empresa = contactoActual.Empresa,
+            Cargo = contactoActual.Cargo,
+            Direccion = contactoActual.Direccion,
+            FechaNacimiento = contactoActual.FechaNacimiento,
+            Notas = contactoActual.Notas
         };
 
-        await ContactoService.CrearContacto(nuevo);
-
-        listaContactos = await ContactoService.ListarContactos();
+        modoEdicion = true;
     }
 
-    private async Task EditarContacto()
+    private async Task GuardarContacto()
     {
-        if (contactoActual == null)
-            return;
+        if (contactoEditando == null) return;
 
-        contactoActual.Notas = "Contacto editado";
-
-        await ContactoService.ModificarContacto(contactoActual);
+        if (contactoEditando.Id == 0)
+            await ContactoService.CrearContacto(contactoEditando);
+        else
+            await ContactoService.ModificarContacto(contactoEditando);
 
         listaContactos = await ContactoService.ListarContactos();
+        contactoActual = listaContactos.FirstOrDefault(c => c.Id == contactoEditando.Id);
+        modoEdicion = false;
+        contactoEditando = null;
+    }
+
+    private void CancelarEdicion()
+    {
+        modoEdicion = false;
+        contactoEditando = null;
     }
 
     private async Task EliminarContacto()
     {
-        if (contactoActual == null)
-            return;
+        if (contactoActual == null) return;
 
         await ContactoService.BorrarContacto(contactoActual.Id);
-
         listaContactos = await ContactoService.ListarContactos();
-
         contactoActual = null;
     }
 }

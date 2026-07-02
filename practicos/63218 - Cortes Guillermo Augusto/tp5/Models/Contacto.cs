@@ -6,6 +6,8 @@ public class Contacto
 {
     public int Id { get; set; }
 
+    public int Legajo {get; set;} = 0;
+
     [Required(ErrorMessage = "El nombre es obligatorio.")]
     public string Nombre { get; set; } = "";
 

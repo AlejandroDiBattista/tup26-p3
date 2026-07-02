@@ -24,11 +24,8 @@ No deben mostrarse otros datos del contacto en el panel maestro.
 
 ### Cambios realizados
 
-```cs
-// Nombre del archivo: p.e. Contactos.cs
-// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
-```
-
+Toqué ListaContactos.Razor modificando el valor que se ve en primera instancia, borrandolo y
+añadiendo lo que yo queria, que era telefono y mail
 ---
 
 ## 2. Cambiar los nombres de las acciones
@@ -47,10 +44,7 @@ Los nuevos textos deben aparecer en los botones, enlaces o títulos donde corres
 
 ### Cambios realizados
 
-```cs
-// Nombre del archivo: p.e. Contactos.cs
-// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
-```
+cambie el nombre de las etiquetas, modificando cada valor por el solicitado
 
 ---
 
@@ -70,10 +64,7 @@ El campo `Legajo` debe incorporarse en todos los lugares necesarios para que el 
 
 ### Cambios realizados
 
-```cs
-// Nombre del archivo: p.e. Contactos.cs
-// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
-```
+añadi el legajo en Contacto.cs
 
 --- 
 

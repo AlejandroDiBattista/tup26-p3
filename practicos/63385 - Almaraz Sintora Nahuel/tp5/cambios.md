@@ -25,8 +25,36 @@ No deben mostrarse otros datos del contacto en el panel maestro.
 ### Cambios realizados
 
 ```cs
-// Nombre del archivo: p.e. Contactos.cs
-// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
+// Nombre del archivo: Home.razor
+// Codigo cambiado: elimine:
+  <div class="row">
+        <div class="col-md-6 mb-2">
+            <label>Teléfono</label>
+            <InputText class="form-control" @bind-Value="seleccionado.Telefono" />
+        </div>
+        <div class="col-md-6 mb-2">
+            <label>Email</label>
+            <InputText class="form-control" @bind-Value="seleccionado.Email" />
+        </div>
+        </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label>Empresa</label>
+                    <InputText class="form-control" @bind-Value="seleccionado.Empresa" />
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label>Cargo</label>
+                    <InputText class="form-control" @bind-Value="seleccionado.Cargo" />
+                </div>
+                </div>
+                <div class="mb-2">
+                    <label>Dirección</label>
+                    <InputText class="form-control" @bind-Value="seleccionado.Direccion" />
+                </div>
+                <div class="mb-3">
+                    <label>Notas</label>
+                    <InputTextArea class="form-control" @bind-Value="seleccionado.Notas" rows="3" />
+                </div>
 ```
 
 ---
@@ -48,8 +76,13 @@ Los nuevos textos deben aparecer en los botones, enlaces o títulos donde corres
 ### Cambios realizados
 
 ```cs
-// Nombre del archivo: p.e. Contactos.cs
-// Codigo cambiado: p.e. public int Legajo { get; set; } = 0;
+// Nombre del archivo: Home.razor
+// Codigo cambiado: 
+<button class="btn btn-primary me-2" @onclick="Editar">Modificar contacto</button>
+<button class="btn btn-danger" @onclick="Eliminar">Baja de contacto</button>
+<button type="submit" class="btn btn-success me-2">Guardar</button>
+<button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+<button class="btn btn-sm btn-success" @onclick="Nuevo">Alta de contacto</button>
 ```
 
 ---

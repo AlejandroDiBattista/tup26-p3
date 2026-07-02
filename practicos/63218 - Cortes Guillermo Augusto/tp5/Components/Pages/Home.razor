@@ -23,7 +23,7 @@
                     <i class="bi bi-people me-2"></i>Contactos
                 </h2>
                 <button type="button" class="btn btn-primary btn-sm" @onclick="NuevoContacto">
-                    Nuevo
+                    Alta de Contacto
                 </button>
             </div>
 
@@ -59,8 +59,7 @@
 
                             <div>
                                 <strong>@contacto.Apellido, @contacto.Nombre</strong><br />
-                                <small>@contacto.Telefono</small><br />
-                                <small>@contacto.Email</small>
+                                <small>@contacto.Email | @contacto.Telefono</small>
                             </div>
                         </div>
 
@@ -84,8 +83,13 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label" for="nombre">Nombre</label>
-                                    <InputText id="nombre" class="form-control" @bind-Value="contactoFormulario.Nombre" />
+                                    <InputText id="Nombre" class="form-control" @bind-Value="contactoFormulario.Nombre" />
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="legajo">Legajo</label>
+                                    <InputNumber id="Legajo" class="form-control" @bind-Value="contactoFormulario.Legajo" />
+                                </div>
+                                
 
                                 <div class="col-md-6">
                                     <label class="form-label" for="apellido">Apellido</label>
@@ -166,10 +170,10 @@
 
                             <div>
                                 <button type="button" class="btn btn-outline-primary btn-sm" @onclick="EditarContacto">
-                                    Editar
+                                    Modificar Contacto
                                 </button>
                                 <button type="button" class="btn btn-outline-danger btn-sm ms-2" @onclick="MostrarConfirmacionEliminar">
-                                    Eliminar
+                                    Baja de Contacto
                                 </button>
                             </div>
                         </div>
@@ -190,6 +194,9 @@
                         <dl class="row mb-0">
                             <dt class="col-sm-4"><i class="bi bi-telephone me-2"></i>Telefono</dt>
                             <dd class="col-sm-8">@contactoSeleccionado.Telefono</dd>
+
+                            <dt class="col-sm-4"><i class="bi bi-telephone me-2"></i>Legajo</dt>
+                            <dd class="col-sm-8">@contactoSeleccionado.Legajo</dd>
 
                             <dt class="col-sm-4"><i class="bi bi-envelope me-2"></i>Email</dt>
                             <dd class="col-sm-8">@contactoSeleccionado.Email</dd>
@@ -348,7 +355,9 @@
         return contacto.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase)
             || contacto.Apellido.Contains(texto, StringComparison.OrdinalIgnoreCase)
             || contacto.Telefono.Contains(texto, StringComparison.OrdinalIgnoreCase)
-            || contacto.Email.Contains(texto, StringComparison.OrdinalIgnoreCase);
+            || contacto.Email.Contains(texto, StringComparison.OrdinalIgnoreCase)
+            || contacto.Legajo.ToString().Contains(texto, StringComparison.OrdinalIgnoreCase);
+
     }
 
     private static Contacto CopiarContacto(Contacto contacto)
@@ -364,7 +373,8 @@
             Cargo = contacto.Cargo,
             Direccion = contacto.Direccion,
             FechaNacimiento = contacto.FechaNacimiento,
-            Notas = contacto.Notas
+            Notas = contacto.Notas,
+            Legajo = contacto.Legajo
         };
     }
 
@@ -379,6 +389,7 @@
         destino.Direccion = origen.Direccion;
         destino.FechaNacimiento = origen.FechaNacimiento;
         destino.Notas = origen.Notas;
+        destino.Legajo = origen.Legajo;
     }
 
     private static string MostrarDato(string? valor)

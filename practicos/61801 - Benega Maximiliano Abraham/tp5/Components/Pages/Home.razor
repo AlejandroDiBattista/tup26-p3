@@ -31,7 +31,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="h5 mb-0 fw-bold text-secondary">Contactos</h3>
                 <button class="btn btn-sm btn-primary" @onclick="IniciarCreacion">
-                    <i class="bi bi-person-plus-fill"></i> Nuevo Contacto
+                    <i class="bi bi-person-plus-fill"></i> o Alta de Contacto
                 </button>
             </div>
 
@@ -89,7 +89,6 @@
                     <div class="card-body p-4">
                         <EditForm Model="ContactoEnEdicion" OnValidSubmit="GuardarContacto">
                             <DataAnnotationsValidator />
-                            
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nombre *</label>
@@ -108,8 +107,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Correo Electrónico *</label>
-                                    <InputText class="form-control" @bind-Value="ContactoEnEdicion.CorreoElectronico" />
-                                    <ValidationMessage For="() => ContactoEnEdicion.CorreoElectronico" class="text-danger small" />
+                                    <InputText class="form-control" @bind-Value="ContactoEnEdicion.Email" />
+                                    <ValidationMessage For="() => ContactoEnEdicion.Email" class="text-danger small" />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Empresa</label>
@@ -131,6 +130,10 @@
                                     <label class="form-label fw-semibold">Notas</label>
                                     <InputTextArea class="form-control" rows="3" @bind-Value="ContactoEnEdicion.Notas" />
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Legajo</label>
+                                    <InputText class="form-control" @bind-Value="ContactoEnEdicion.Legajo" />
+                                </div>
                             </div>
 
                             <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
@@ -148,10 +151,10 @@
                         <h4 class="card-title h5 mb-0 fw-bold text-dark">Detalle del Contacto</h4>
                         <div class="d-flex gap-2">
                             <button class="btn btn-sm btn-outline-primary" @onclick="IniciarEdicion">
-                                <i class="bi bi-pencil-square"></i> Modificar
+                                <i class="bi bi-pencil-square"></i> Modificar Contacto
                             </button>
                             <button class="btn btn-sm btn-outline-danger" @onclick="EliminarContacto">
-                                <i class="bi bi-trash-fill"></i> Eliminar
+                                <i class="bi bi-trash-fill"></i> Baja de contacto
                             </button>
                         </div>
                     </div>
@@ -173,7 +176,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="text-muted small d-block fw-bold text-uppercase">Correo Electrónico</label>
-                                <span class="fs-5 fw-medium text-dark"><i class="bi bi-envelope text-primary me-2"></i>@ContactoSeleccionado.CorreoElectronico</span>
+                                <span class="fs-5 fw-medium text-dark"><i class="bi bi-envelope text-primary me-2"></i>@ContactoSeleccionado.Email</span>
                             </div>
                             <div class="col-md-6">
                                 <label class="text-muted small d-block fw-bold text-uppercase">Dirección</label>
@@ -273,7 +276,7 @@
             Nombre = ContactoSeleccionado.Nombre,
             Apellido = ContactoSeleccionado.Apellido,
             Telefono = ContactoSeleccionado.Telefono,
-            CorreoElectronico = ContactoSeleccionado.CorreoElectronico,
+            Email = ContactoSeleccionado.Email,
             Empresa = ContactoSeleccionado.Empresa,
             Cargo = ContactoSeleccionado.Cargo,
             Direccion = ContactoSeleccionado.Direccion,
