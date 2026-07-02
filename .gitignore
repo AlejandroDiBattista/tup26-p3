@@ -59,3 +59,5 @@ clases/node_modules/debug/LICENSE
 clases/40.0-salida.md
 /.playwright-mcp
 /experimentos
+/.quarto
+/README_files
