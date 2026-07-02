@@ -1,4 +1,4 @@
-﻿# TUP 2026 - Programación III
+# TUP 2026 - Programación III
 
 ## C7
 ```text
