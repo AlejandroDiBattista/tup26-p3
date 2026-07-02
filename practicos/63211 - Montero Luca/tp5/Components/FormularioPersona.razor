@@ -1,0 +1,91 @@
+@* Formulario reutilizable para alta y edición de una persona. *@
+
+<div class="card shadow-sm tarjeta-formulario">
+    <div class="card-header encabezado-formulario">
+        <h4 class="mb-0">
+            @(this.EsAlta ? "➕ Nueva persona" : "✏️ Editar persona")
+        </h4>
+    </div>
+    <div class="card-body">
+        <EditForm Model="this.Datos" OnValidSubmit="EnviarFormulario">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="alert alert-warning" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Nombre <span class="marca-obligatorio">*</span></label>
+                    <InputText @bind-Value="this.Datos.Nombre" class="form-control campo-formulario" />
+                    <ValidationMessage For="@(() => this.Datos.Nombre)" class="mensaje-error" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Apellido <span class="marca-obligatorio">*</span></label>
+                    <InputText @bind-Value="this.Datos.Apellido" class="form-control campo-formulario" />
+                    <ValidationMessage For="@(() => this.Datos.Apellido)" class="mensaje-error" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Teléfono <span class="marca-obligatorio">*</span></label>
+                    <InputText @bind-Value="this.Datos.Telefono" class="form-control campo-formulario" />
+                    <ValidationMessage For="@(() => this.Datos.Telefono)" class="mensaje-error" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Correo electrónico <span class="marca-obligatorio">*</span></label>
+                    <InputText @bind-Value="this.Datos.Email" class="form-control campo-formulario" type="email" />
+                    <ValidationMessage For="@(() => this.Datos.Email)" class="mensaje-error" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Empresa</label>
+                    <InputText @bind-Value="this.Datos.Empresa" class="form-control campo-formulario" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Cargo</label>
+                    <InputText @bind-Value="this.Datos.Cargo" class="form-control campo-formulario" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label etiqueta-campo">Dirección</label>
+                    <InputText @bind-Value="this.Datos.Direccion" class="form-control campo-formulario" />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label etiqueta-campo">Fecha de nacimiento</label>
+                    <InputDate @bind-Value="this.Datos.FechaNacimiento" class="form-control campo-formulario" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label etiqueta-campo">Notas</label>
+                    <InputTextArea @bind-Value="this.Datos.Notas" class="form-control campo-formulario" rows="3" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn boton-guardar">
+                    <span class="bi bi-save"></span> Guardar
+                </button>
+                <button type="button" class="btn boton-cancelar" @onclick="OnDescartar">
+                    Cancelar
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Persona Datos { get; set; } = default!;
+
+    [Parameter]
+    public bool EsAlta { get; set; }
+
+    [Parameter]
+    public EventCallback<Persona> OnConfirmar { get; set; }
+
+    [Parameter]
+    public EventCallback OnDescartar { get; set; }
+
+    private Task EnviarFormulario() => this.OnConfirmar.InvokeAsync(this.Datos);
+}

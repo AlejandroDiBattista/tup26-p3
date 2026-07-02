@@ -1,0 +1,256 @@
+@page "/contactos"
+@rendermode InteractiveServer
+@inject IPersonaServicio Servicio
+
+<PageTitle>Agenda de contactos</PageTitle>
+
+<h1 class="mb-4">📒 Agenda de contactos</h1>
+
+<div class="row g-3 align-items-start">
+
+  
+    <div class="col-lg-4 col-xl-3 d-flex flex-column">
+        <div class="input-group mb-3">
+            <span class="input-group-text"><span class="bi bi-search"></span></span>
+            <input class="form-control" placeholder="Buscar por nombre, apellido o email..."
+                   @bind="this.busqueda" @bind:event="oninput" @bind:after="CargarLista" />
+        </div>
+
+        <button class="btn btn-success w-100 mb-3" @onclick="IniciarAlta">
+            <span class="bi bi-plus-lg"></span> Nueva persona
+        </button>
+
+        <div class="contactos-lista-panel">
+            @if (this.personas is null)
+            {
+                <p><em>Cargando...</em></p>
+            }
+            else if (this.personas.Count == 0)
+            {
+                <div class="alert alert-info">No hay personas que coincidan.</div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var p in this.personas)
+                    {
+                        <button type="button"
+                                class="list-group-item list-group-item-action @(this.actual?.Id == p.Id && !this.mostrandoFormulario ? "active" : "")"
+                                @onclick="() => ElegirPersona(p)">
+                            <div class="fw-semibold">@p.Apellido, @p.Nombre</div>
+                            <small class="d-block text-truncate">@p.Email</small>
+                        </button>
+                    }
+                </div>
+                <p class="text-muted small mt-2">@this.personas.Count persona(s).</p>
+            }
+        </div>
+    </div>
+
+  
+    <div class="col-lg-8 col-xl-9">
+        @if (this.mostrandoFormulario)
+        {
+            <FormularioPersona Datos="this.enFormulario"
+                               EsAlta="this.esAlta"
+                               OnConfirmar="ConfirmarGuardado"
+                               OnDescartar="CerrarFormulario" />
+        }
+        else if (this.actual is not null)
+        {
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h3 class="card-title mb-0">
+                            @this.actual.Nombre @this.actual.Apellido
+                        </h3>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="IniciarEdicion">
+                                <span class="bi bi-pencil"></span> Editar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    @onclick="() => PedirConfirmacion(this.actual)">
+                                <span class="bi bi-trash"></span> Eliminar
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Teléfono</dt>
+                        <dd class="col-sm-9">@this.actual.Telefono</dd>
+
+                        <dt class="col-sm-3">Correo</dt>
+                        <dd class="col-sm-9">@this.actual.Email</dd>
+
+                        @if (!string.IsNullOrWhiteSpace(this.actual.Empresa))
+                        {
+                            <dt class="col-sm-3">Empresa</dt>
+                            <dd class="col-sm-9">@this.actual.Empresa</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.actual.Cargo))
+                        {
+                            <dt class="col-sm-3">Cargo</dt>
+                            <dd class="col-sm-9">@this.actual.Cargo</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.actual.Direccion))
+                        {
+                            <dt class="col-sm-3">Dirección</dt>
+                            <dd class="col-sm-9">@this.actual.Direccion</dd>
+                        }
+                        @if (this.actual.FechaNacimiento is not null)
+                        {
+                            <dt class="col-sm-3">Nacimiento</dt>
+                            <dd class="col-sm-9">
+                                @this.actual.FechaNacimiento.Value.ToString("dd/MM/yyyy")
+                            </dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(this.actual.Notas))
+                        {
+                            <dt class="col-sm-3">Notas</dt>
+                            <dd class="col-sm-9" style="white-space: pre-wrap;">@this.actual.Notas</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-secondary">
+                Seleccioná una persona de la lista o creá una nueva para ver el detalle acá.
+            </div>
+        }
+    </div>
+</div>
+
+
+@if (this.pendienteBorrar is not null)
+{
+    <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.45)">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Eliminar persona?</h5>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Vas a eliminar a
+                        <strong>@this.pendienteBorrar.Nombre @this.pendienteBorrar.Apellido</strong>.
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => this.pendienteBorrar = null">
+                        Cancelar
+                    </button>
+                    <button class="btn btn-danger" @onclick="BorrarConfirmado">
+                        Sí, eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string busqueda = "";
+    private List<Persona>? personas;
+    private Persona? actual;
+    private Persona enFormulario = new();
+    private bool mostrandoFormulario;
+    private bool esAlta;
+    private Persona? pendienteBorrar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.CargarLista();
+    }
+
+    private async Task CargarLista()
+    {
+        this.personas = await this.Servicio.BuscarTodasAsync(this.busqueda);
+    }
+
+    private void ElegirPersona(Persona p)
+    {
+        this.actual = p;
+        this.mostrandoFormulario = false;
+    }
+
+    private void IniciarAlta()
+    {
+        this.enFormulario = new Persona();
+        this.esAlta = true;
+        this.mostrandoFormulario = true;
+        this.actual = null;
+    }
+
+    private void IniciarEdicion()
+    {
+        if (this.actual is null)
+        {
+            return;
+        }
+
+        
+        this.enFormulario = new Persona
+        {
+            Id = this.actual.Id,
+            Nombre = this.actual.Nombre,
+            Apellido = this.actual.Apellido,
+            Telefono = this.actual.Telefono,
+            Email = this.actual.Email,
+            Empresa = this.actual.Empresa,
+            Cargo = this.actual.Cargo,
+            Direccion = this.actual.Direccion,
+            FechaNacimiento = this.actual.FechaNacimiento,
+            Notas = this.actual.Notas,
+        };
+        this.esAlta = false;
+        this.mostrandoFormulario = true;
+    }
+
+    private void CerrarFormulario()
+    {
+        this.mostrandoFormulario = false;
+    }
+
+    private async Task ConfirmarGuardado(Persona persona)
+    {
+        if (this.esAlta)
+        {
+            await this.Servicio.AgregarAsync(persona);
+        }
+        else
+        {
+            await this.Servicio.ModificarAsync(persona);
+        }
+
+        this.mostrandoFormulario = false;
+        await this.CargarLista();
+        // vuelve a mostrar la persona recién guardada .
+        this.actual = await this.Servicio.BuscarPorIdAsync(persona.Id);
+    }
+
+    private void PedirConfirmacion(Persona p)
+    {
+        this.pendienteBorrar = p;
+    }
+
+    private async Task BorrarConfirmado()
+    {
+        if (this.pendienteBorrar is not null)
+        {
+            await this.Servicio.BorrarAsync(this.pendienteBorrar.Id);
+
+            if (this.actual?.Id == this.pendienteBorrar.Id)
+            {
+                this.actual = null;
+            }
+
+            this.pendienteBorrar = null;
+            await this.CargarLista();
+        }
+    }
+}

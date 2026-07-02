@@ -1,0 +1,24 @@
+@* Menú de navegación lateral. *@
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">📒 AgendaWeb</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Menú" id="navbar-toggle" class="navbar-toggler" />
+<label for="navbar-toggle" class="navbar-toggler"></label>
+
+<div class="nav-scrollable">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Inicio
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="contactos">
+                <span class="bi bi-person-lines-fill" aria-hidden="true"></span> Contactos
+            </NavLink>
+        </div>
+    </nav>
+</div>
