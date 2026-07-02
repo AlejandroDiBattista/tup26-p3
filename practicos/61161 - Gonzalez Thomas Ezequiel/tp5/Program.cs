@@ -2,13 +2,12 @@ using tp5.Components;
 using Microsoft.EntityFrameworkCore;
 using tp5.Data;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services.AddDbContext<AgendaContext>(options =>
+    
+builder.Services.AddDbContext<AgendaaContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
