@@ -14,9 +14,22 @@
 
     <div class="col-md-4">
 
-        <h3>Contactos</h3>
+        <div class="d-flex align-items-start mb-3">
 
-        <input class="form-control mb-3"
+    <div>
+        <h3 class="mb-0">Agenda</h3>
+        <small class="text-muted">
+            Contactos personales y profesionales
+        </small>
+    </div>
+
+   <button class="btn btn-primary ms-auto mt-1" @onclick="NuevoContacto">
+    <i class="bi bi-plus-lg"></i> Agregar contacto
+</button>
+
+</div>
+
+<input class="form-control mb-3"
        placeholder="Buscar..."
        @bind="textoBusqueda"
        @bind:event="oninput" />
@@ -50,37 +63,61 @@
         <h3>Detalle</h3>
 
         @if (contactoSeleccionado == null)
-        {
-            <p>Seleccione un contacto.</p>
-        }
-        else
-        {
-            <div class="card">
+{
+    <p>Seleccione un contacto.</p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
 
-                <div class="card-body">
-
-                    <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
-
-                    <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
-
-                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
-
-                    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
-
-                    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
-
-                    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
-
-                    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
-
-                    <p><strong>Fecha de nacimiento:</strong> @contactoSeleccionado.FechaNacimiento</p>
-
-                    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
-
-                </div>
-
+            <div class="mb-2">
+                <label>Nombre</label>
+                <input class="form-control" @bind="contactoSeleccionado.Nombre" />
             </div>
-        }
+
+            <div class="mb-2">
+                <label>Apellido</label>
+                <input class="form-control" @bind="contactoSeleccionado.Apellido" />
+            </div>
+
+            <div class="mb-2">
+                <label>Teléfono</label>
+                <input class="form-control" @bind="contactoSeleccionado.Telefono" />
+            </div>
+
+            <div class="mb-2">
+                <label>Email</label>
+                <input class="form-control" @bind="contactoSeleccionado.Email" />
+            </div>
+
+            <div class="mb-2">
+                <label>Empresa</label>
+                <input class="form-control" @bind="contactoSeleccionado.Empresa" />
+            </div>
+
+            <div class="mb-2">
+                <label>Cargo</label>
+                <input class="form-control" @bind="contactoSeleccionado.Cargo" />
+            </div>
+
+            <div class="mb-2">
+                <label>Dirección</label>
+                <input class="form-control" @bind="contactoSeleccionado.Direccion" />
+            </div>
+
+            <div class="mb-2">
+                <label>Notas</label>
+                <textarea class="form-control" @bind="contactoSeleccionado.Notas"></textarea>
+            </div>
+
+            <button class="btn btn-success" @onclick="GuardarContacto">
+                Guardar
+            </button>
+
+        </div>
+    </div>
+}
 
     </div>
 
@@ -93,6 +130,8 @@
         private string textoBusqueda = "";
 
     private Contacto? contactoSeleccionado;
+
+    private bool esNuevo = false;
 
     private IEnumerable<Contacto> contactosFiltrados
 {
@@ -119,5 +158,28 @@
     {
         contactoSeleccionado = contacto;
     }
+
+    private void NuevoContacto()
+{
+    contactoSeleccionado = new Contacto();
+    esNuevo = true;
+}
+
+private async Task GuardarContacto()
+{
+    if (contactoSeleccionado == null)
+        return;
+
+    if (esNuevo)
+    {
+        Db.Contactos.Add(contactoSeleccionado);
+    }
+
+    await Db.SaveChangesAsync();
+
+    contactos = await Db.Contactos.ToListAsync();
+
+    esNuevo = false;
+}
 
 }
