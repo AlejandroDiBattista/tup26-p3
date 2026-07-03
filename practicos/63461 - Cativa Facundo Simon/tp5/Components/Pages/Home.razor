@@ -155,9 +155,10 @@ else
     }
 
     private void SeleccionarContacto(Contacto contacto)
-    {
-        contactoSeleccionado = contacto;
-    }
+{
+    contactoSeleccionado = contacto;
+    esNuevo = false;
+}
 
     private void NuevoContacto()
 {
@@ -173,6 +174,10 @@ private async Task GuardarContacto()
     if (esNuevo)
     {
         Db.Contactos.Add(contactoSeleccionado);
+    }
+    else
+    {
+        Db.Contactos.Update(contactoSeleccionado);
     }
 
     await Db.SaveChangesAsync();
