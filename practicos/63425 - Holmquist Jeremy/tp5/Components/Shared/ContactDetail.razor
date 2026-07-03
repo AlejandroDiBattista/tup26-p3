@@ -1,0 +1,52 @@
+@using tp5.Models
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@Contacto.Nombre @Contacto.Apellido</h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditar.InvokeAsync(Contacto)">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="() => OnEliminar.InvokeAsync(Contacto)">Eliminar</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Teléfono</dt>
+            <dd class="col-sm-8">@Contacto.Telefono</dd>
+
+            <dt class="col-sm-4">Correo</dt>
+            <dd class="col-sm-8">@Contacto.CorreoElectronico</dd>
+
+            @if (!string.IsNullOrEmpty(Contacto.Empresa))
+            {
+                <dt class="col-sm-4">Empresa</dt>
+                <dd class="col-sm-8">@Contacto.Empresa</dd>
+            }
+            @if (!string.IsNullOrEmpty(Contacto.Cargo))
+            {
+                <dt class="col-sm-4">Cargo</dt>
+                <dd class="col-sm-8">@Contacto.Cargo</dd>
+            }
+            @if (!string.IsNullOrEmpty(Contacto.Direccion))
+            {
+                <dt class="col-sm-4">Dirección</dt>
+                <dd class="col-sm-8">@Contacto.Direccion</dd>
+            }
+            @if (Contacto.FechaNacimiento.HasValue)
+            {
+                <dt class="col-sm-4">Nacimiento</dt>
+                <dd class="col-sm-8">@Contacto.FechaNacimiento.Value.ToString("dd/MM/yyyy")</dd>
+            }
+            @if (!string.IsNullOrEmpty(Contacto.Notas))
+            {
+                <dt class="col-sm-4">Notas</dt>
+                <dd class="col-sm-8">@Contacto.Notas</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Contacto Contacto { get; set; } = default!;
+    [Parameter] public EventCallback<Contacto> OnEditar { get; set; }
+    [Parameter] public EventCallback<Contacto> OnEliminar { get; set; }
+}

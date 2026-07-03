@@ -1,0 +1,88 @@
+@page "/agenda"
+@rendermode InteractiveServer
+@using tp5.Models
+@using tp5.Services
+@inject ContactoService ContactoSvc
+
+<PageTitle>Agenda de Contactos</PageTitle>
+
+<div class="d-flex vh-100 overflow-hidden">
+    <div class="border-end overflow-auto" style="width:340px; min-width:340px;">
+        <ContactList Contactos="contactos"
+                     Seleccionado="seleccionado"
+                     OnSeleccionar="Seleccionar"
+                     OnNuevo="Nuevo"
+                     OnFiltrar="Filtrar" />
+    </div>
+    <div class="flex-grow-1 overflow-auto p-4">
+        @if (editando)
+        {
+            <ContactEdit Contacto="editContacto"
+                         OnGuardar="Guardar"
+                         OnCancelar="CancelarEdicion" />
+        }
+        else if (seleccionado is not null)
+        {
+            <ContactDetail Contacto="seleccionado"
+                           OnEditar="Editar"
+                           OnEliminar="Eliminar" />
+        }
+        else
+        {
+            <div class="text-muted d-flex align-items-center justify-content-center h-100">
+                <p>Seleccioná un contacto para ver el detalle.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    List<Contacto> contactos = [];
+    Contacto? seleccionado;
+    Contacto editContacto = new();
+    bool editando;
+    string filtro = string.Empty;
+
+    protected override async Task OnInitializedAsync() => await CargarAsync();
+
+    async Task CargarAsync()
+    {
+        contactos = await ContactoSvc.GetAllAsync(filtro);
+    }
+
+    void Seleccionar(Contacto c) { seleccionado = c; editando = false; }
+
+    void Nuevo() { editContacto = new(); editando = true; seleccionado = null; }
+
+    void Editar(Contacto c)
+    {
+        editContacto = new Contacto
+        {
+            Id = c.Id, Nombre = c.Nombre, Apellido = c.Apellido,
+            Telefono = c.Telefono, CorreoElectronico = c.CorreoElectronico,
+            Empresa = c.Empresa, Cargo = c.Cargo, Direccion = c.Direccion,
+            FechaNacimiento = c.FechaNacimiento, Notas = c.Notas
+        };
+        editando = true;
+    }
+
+    async Task Guardar(Contacto c)
+    {
+        if (c.Id == 0) await ContactoSvc.AddAsync(c);
+        else await ContactoSvc.UpdateAsync(c);
+        editando = false;
+        await CargarAsync();
+        seleccionado = contactos.FirstOrDefault(x => x.Nombre == c.Nombre && x.Apellido == c.Apellido);
+    }
+
+    void CancelarEdicion() { editando = false; }
+
+    async Task Eliminar(Contacto c)
+    {
+        await ContactoSvc.DeleteAsync(c.Id);
+        seleccionado = null;
+        await CargarAsync();
+    }
+
+    async Task Filtrar(string f) { filtro = f; await CargarAsync(); }
+}

@@ -1,0 +1,66 @@
+@using tp5.Models
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">@(Contacto.Id == 0 ? "Nuevo Contacto" : "Editar Contacto")</h5>
+    </div>
+    <div class="card-body">
+        <EditForm Model="Contacto" OnValidSubmit="Guardar">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre *</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Nombre" />
+                    <ValidationMessage For="() => Contacto.Nombre" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Apellido *</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Apellido" />
+                    <ValidationMessage For="() => Contacto.Apellido" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono *</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Telefono" />
+                    <ValidationMessage For="() => Contacto.Telefono" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Correo electrónico *</label>
+                    <InputText class="form-control" @bind-Value="Contacto.CorreoElectronico" />
+                    <ValidationMessage For="() => Contacto.CorreoElectronico" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Empresa</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Empresa" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cargo</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Cargo" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Dirección</label>
+                    <InputText class="form-control" @bind-Value="Contacto.Direccion" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Fecha de nacimiento</label>
+                    <InputDate class="form-control" @bind-Value="Contacto.FechaNacimiento" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notas</label>
+                    <InputTextArea class="form-control" rows="3" @bind-Value="Contacto.Notas" />
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" @onclick="() => OnCancelar.InvokeAsync()">Cancelar</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Contacto Contacto { get; set; } = default!;
+    [Parameter] public EventCallback<Contacto> OnGuardar { get; set; }
+    [Parameter] public EventCallback OnCancelar { get; set; }
+
+    async Task Guardar() => await OnGuardar.InvokeAsync(Contacto);
+}
