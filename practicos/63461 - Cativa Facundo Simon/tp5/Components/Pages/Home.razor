@@ -1,5 +1,7 @@
 @page "/"
 
+@rendermode InteractiveServer
+
 @using Microsoft.EntityFrameworkCore
 @using tp5.Data
 @using tp5.Models
@@ -8,45 +10,91 @@
 
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<h2 class="mb-4">Agenda de contactos</h2>
+<div class="row">
 
-@if (contactos == null)
-{
-    <p>Cargando contactos...</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-            </tr>
-        </thead>
+    <div class="col-md-4">
 
-        <tbody>
-            @foreach (var contacto in contactos)
-            {
-                <tr>
-                    <td>@contacto.Nombre</td>
-                    <td>@contacto.Apellido</td>
-                    <td>@contacto.Telefono</td>
-                    <td>@contacto.Email</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+        <h3>Contactos</h3>
+
+        @if (contactos == null)
+        {
+            <p>Cargando...</p>
+        }
+        else
+        {
+            <ul class="list-group">
+
+                @foreach (var contacto in contactos)
+                {
+                    <li class="list-group-item @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                        @onclick="() => SeleccionarContacto(contacto)"
+                        style="cursor:pointer">
+
+                        @contacto.Nombre @contacto.Apellido
+
+                    </li>
+                }
+
+            </ul>
+        }
+
+    </div>
+
+    <div class="col-md-8">
+
+        <h3>Detalle</h3>
+
+        @if (contactoSeleccionado == null)
+        {
+            <p>Seleccione un contacto.</p>
+        }
+        else
+        {
+            <div class="card">
+
+                <div class="card-body">
+
+                    <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
+
+                    <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
+
+                    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+
+                    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+
+                    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+
+                    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+
+                    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+
+                    <p><strong>Fecha de nacimiento:</strong> @contactoSeleccionado.FechaNacimiento</p>
+
+                    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
 
 @code {
 
     private List<Contacto>? contactos;
 
+    private Contacto? contactoSeleccionado;
+
     protected override async Task OnInitializedAsync()
     {
         contactos = await Db.Contactos.ToListAsync();
+    }
+
+    private void SeleccionarContacto(Contacto contacto)
+    {
+        contactoSeleccionado = contacto;
     }
 
 }
