@@ -18,9 +18,11 @@ DotNetEnv.Env.Load();
 
 // ------------------config y arranque -------------------------------------
 bool cerrar = false;
-var url = Environment.GetEnvironmentVariable("GEMINI_API_URL");
-var apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-var modelo = Environment.GetEnvironmentVariable("GEMINI_MODEL");
+
+var proveedor = (args.Length > 0 ? args[0] : "openai").ToUpperInvariant();
+var url = Environment.GetEnvironmentVariable($"{proveedor}_API_URL");
+var apiKey = Environment.GetEnvironmentVariable($"{proveedor}_API_KEY");
+var modelo = Environment.GetEnvironmentVariable($"{proveedor}_MODEL") ?? "gpt-5.4-mini";
 
 IChatClient chat = new OpenAIClient(
         new ApiKeyCredential(apiKey ?? ""),
@@ -28,7 +30,7 @@ IChatClient chat = new OpenAIClient(
     .GetChatClient(modelo)
     .AsIChatClient();
 List<ChatMessage> mensajes = [
-    new(ChatRole.System, File.ReadAllText("AGENTS.md") + 
+    new(ChatRole.System, File.ReadAllText("AGENTS.md") +
     $"\n\nDirectorio de trabajo actual: {Directory.GetCurrentDirectory()}")
 ];
 
@@ -36,8 +38,7 @@ IChatClient herramientas = new ChatClientBuilder(chat)
     .UseFunctionInvocation()
     .Build();
 
-var opcionesHerramientas = new ChatOptions
-{
+var opcionesHerramientas = new ChatOptions {
     Tools = [
         AIFunctionFactory.Create(LeerArchivo, "LeerArchivo"),
         AIFunctionFactory.Create(EscribirArchivo, "EscribirArchivo"),
@@ -50,7 +51,8 @@ var opcionesHerramientas = new ChatOptions
 
 ConfigurationManager.Enable(ConfigLocations.All);
 ConfigurationManager.Apply();
-Scheme entrad = new Scheme() { Normal = new Terminal.Gui.Drawing.Attribute(Color.Black, Color.Gray) };
+Scheme entrad = new() { Normal = new(Color.White, Color.DarkGray), Focus = new(Color.White, Color.DarkGray) };
+SchemeManager.AddScheme("entrad", entrad); 
 using IApplication app = Application.Create().Init();
 using Window gui = new() { };
 
@@ -60,21 +62,20 @@ using var ventana = new Window {
     Title = $" Asistente IA · {modelo} ",
     Width = Dim.Fill(),
     Height = Dim.Percent(90),
-    SchemeName = "entrad"
 };
 
 var entrada = new TextField {
-    X = 0,
+    X = 2,
     Y = Pos.Bottom(ventana),
-    Width = Dim.Fill(),
+    Width = Dim.Percent(85),
     Text = "",
-    Height = Dim.Fill()
+    Height = Dim.Fill(),
+    SchemeName = "entrad"
 };
 var visualizador = new Markdown {
     Width = Dim.Fill(),
     Height = Dim.Fill()
 };
-ventana.Add(visualizador);
 
 
 // ----------------------------Funcion para enviar mensajes------------------------------------------
@@ -115,9 +116,7 @@ entrada.KeyDown += async (sender, e) => {
         }
         e.Handled = true;
     }
-
 };
-
 
 // ================== HERRAMIENTAS DEL AGENTE =================
 
@@ -137,14 +136,14 @@ static string EscribirArchivo(
     return $"Correcto - Ruta : {ruta}";
 }
 
-[Description ("Listar archivos de una carpeta y que tiene")]
+[Description("Listar archivos de una carpeta y que tiene")]
 static string Listar(
-    [Description ("Ruta del directorio")] string ruta = "")
-{
+    [Description("Ruta del directorio")] string ruta = "") {
     var elementos = Directory.GetFileSystemEntries(ruta);
 
     return $"Elementos: {string.Join("\n", elementos)}";
-};
+}
+;
 
 // -----------------------------CERRAR APP------------------------.
 var dialogosalir = new Dialog { X = Pos.Center(), Y = Pos.Center(), Width = 50, Height = 10 };
@@ -166,18 +165,19 @@ gui.KeyDown += async (sender, e) => {
         cancelar.Title = "Cancelar";
         e.Handled = true;
         app.Run(dialogosalir);
-        cancelar.Accepting += (_, e) => {
-            app!.RequestStop();
-            e.Handled = true;
-        };
-        confirmar.Accepting += (_, e) => {
-            app.RequestStop();
-            cerrar = true;
-        };
         if (cerrar) app.RequestStop();
     }
 };
+cancelar.Accepting += (_, e) => {
+    app!.RequestStop();
+    e.Handled = true;
+};
+confirmar.Accepting += (_, e) => {
+    app.RequestStop();
+    cerrar = true;
+};
 
 
+ventana.Add(visualizador);
 gui.Add(ventana, entrada);
 app.Run(gui);
