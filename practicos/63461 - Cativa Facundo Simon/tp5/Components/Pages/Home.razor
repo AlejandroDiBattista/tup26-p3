@@ -225,8 +225,13 @@ private void EditarContacto()
     editando = true;
 }
 
-private void CancelarEdicion()
+private async Task CancelarEdicion()
 {
+    if (contactoSeleccionado != null && !esNuevo)
+    {
+        await Db.Entry(contactoSeleccionado).ReloadAsync();
+    }
+
     editando = false;
 }
 
