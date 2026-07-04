@@ -1,7 +1,252 @@
 @page "/"
 
+@rendermode InteractiveServer
+
+@using Microsoft.EntityFrameworkCore
+@using tp5.Data
+@using tp5.Models
+
+@inject AgendaDbContext Db
+
 <PageTitle>TP5: AgendaWeb</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center vh-100">
-    <h1 class="display-3 fw-bold"><i class="bi bi-person-vcard me-3"></i>TP5: AgendaWeb</h1>
+<div class="row">
+
+    <div class="col-md-4">
+
+        <div class="d-flex align-items-start mb-3">
+
+    <div>
+        <h3 class="mb-0">Agenda</h3>
+        <small class="text-muted">
+            Contactos personales y profesionales
+        </small>
+    </div>
+
+   <button class="btn btn-primary ms-auto mt-1" @onclick="NuevoContacto">
+    <i class="bi bi-plus-lg"></i> Agregar contacto
+</button>
+
 </div>
+
+<input class="form-control mb-3"
+       placeholder="Buscar..."
+       @bind="textoBusqueda"
+       @bind:event="oninput" />
+
+        @if (contactos == null)
+        {
+            <p>Cargando...</p>
+        }
+        else
+        {
+            <ul class="list-group">
+
+                @foreach (var contacto in contactosFiltrados)
+                {
+                    <li class="list-group-item @(contactoSeleccionado?.Id == contacto.Id ? "active" : "")"
+                        @onclick="() => SeleccionarContacto(contacto)"
+                        style="cursor:pointer">
+
+                        @contacto.Nombre @contacto.Apellido
+
+                    </li>
+                }
+
+            </ul>
+        }
+
+    </div>
+
+    <div class="col-md-8">
+
+        <h3>Detalle</h3>
+
+        @if (contactoSeleccionado == null)
+{
+    <p>Seleccione un contacto.</p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+
+            @if (editando)
+{
+    <div class="mb-2">
+        <label>Nombre</label>
+        <input class="form-control" @bind="contactoSeleccionado.Nombre" />
+    </div>
+
+    <div class="mb-2">
+        <label>Apellido</label>
+        <input class="form-control" @bind="contactoSeleccionado.Apellido" />
+    </div>
+
+    <div class="mb-2">
+        <label>Teléfono</label>
+        <input class="form-control" @bind="contactoSeleccionado.Telefono" />
+    </div>
+
+    <div class="mb-2">
+        <label>Email</label>
+        <input class="form-control" @bind="contactoSeleccionado.Email" />
+    </div>
+
+    <div class="mb-2">
+        <label>Empresa</label>
+        <input class="form-control" @bind="contactoSeleccionado.Empresa" />
+    </div>
+
+    <div class="mb-2">
+        <label>Cargo</label>
+        <input class="form-control" @bind="contactoSeleccionado.Cargo" />
+    </div>
+
+    <div class="mb-2">
+        <label>Dirección</label>
+        <input class="form-control" @bind="contactoSeleccionado.Direccion" />
+    </div>
+
+    <div class="mb-2">
+        <label>Notas</label>
+        <textarea class="form-control" @bind="contactoSeleccionado.Notas"></textarea>
+    </div>
+
+    <button class="btn btn-success me-2" @onclick="GuardarContacto">
+        Guardar
+    </button>
+
+    @if (!esNuevo)
+    {
+        <button class="btn btn-secondary" @onclick="CancelarEdicion">
+            Cancelar
+        </button>
+    }
+}
+else
+{
+    <p><strong>Nombre:</strong> @contactoSeleccionado.Nombre</p>
+    <p><strong>Apellido:</strong> @contactoSeleccionado.Apellido</p>
+    <p><strong>Teléfono:</strong> @contactoSeleccionado.Telefono</p>
+    <p><strong>Email:</strong> @contactoSeleccionado.Email</p>
+    <p><strong>Empresa:</strong> @contactoSeleccionado.Empresa</p>
+    <p><strong>Cargo:</strong> @contactoSeleccionado.Cargo</p>
+    <p><strong>Dirección:</strong> @contactoSeleccionado.Direccion</p>
+    <p><strong>Notas:</strong> @contactoSeleccionado.Notas</p>
+
+    <button class="btn btn-primary me-2" @onclick="EditarContacto">
+        Editar
+    </button>
+
+    <button class="btn btn-danger" @onclick="EliminarContacto">
+        Eliminar
+    </button>
+}
+
+        </div>
+    </div>
+}
+
+    </div>
+
+</div>
+
+@code {
+
+    private List<Contacto>? contactos;
+
+        private string textoBusqueda = "";
+
+    private Contacto? contactoSeleccionado;
+
+    private bool esNuevo = false;
+private bool editando = false;
+
+    private IEnumerable<Contacto> contactosFiltrados
+{
+    get
+    {
+        if (contactos == null)
+            return Enumerable.Empty<Contacto>();
+
+        if (string.IsNullOrWhiteSpace(textoBusqueda))
+            return contactos;
+
+        return contactos.Where(c =>
+            c.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Apellido.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
+    }
+}
+
+    protected override async Task OnInitializedAsync()
+    {
+        contactos = await Db.Contactos.ToListAsync();
+    }
+
+private void SeleccionarContacto(Contacto contacto)
+{
+    contactoSeleccionado = contacto;
+    esNuevo = false;
+    editando = false;
+}
+
+    private void NuevoContacto()
+{
+    contactoSeleccionado = new Contacto();
+    esNuevo = true;
+    editando = true;
+}
+
+private async Task GuardarContacto()
+{
+    if (contactoSeleccionado == null)
+        return;
+
+    if (esNuevo)
+    {
+        Db.Contactos.Add(contactoSeleccionado);
+    }
+    else
+    {
+        Db.Contactos.Update(contactoSeleccionado);
+    }
+
+    await Db.SaveChangesAsync();
+
+    contactos = await Db.Contactos.ToListAsync();
+
+    esNuevo = false;
+    editando = false;
+}
+
+private void EditarContacto()
+{
+    editando = true;
+}
+
+private async Task CancelarEdicion()
+{
+    if (contactoSeleccionado != null && !esNuevo)
+    {
+        await Db.Entry(contactoSeleccionado).ReloadAsync();
+    }
+
+    editando = false;
+}
+
+private async Task EliminarContacto()
+{
+    if (contactoSeleccionado == null)
+        return;
+
+    Db.Contactos.Remove(contactoSeleccionado);
+
+    await Db.SaveChangesAsync();
+
+    contactos = await Db.Contactos.ToListAsync();
+
+    contactoSeleccionado = null;
+}
+
+}

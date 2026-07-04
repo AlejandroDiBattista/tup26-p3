@@ -1,6 +1,16 @@
+@* Tabla de rutas de la aplicación. *@
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <div class="alert alert-warning mt-4">
+                <h3>404 — Página no encontrada</h3>
+                <p>La dirección que buscás no existe.</p>
+                <a class="btn btn-primary" href="/contactos">Ir a la agenda</a>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>

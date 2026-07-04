@@ -1,0 +1,34 @@
+@using tp5.Models
+
+<div class="p-3 border-bottom d-flex gap-2">
+    <input class="form-control form-control-sm" placeholder="Buscar..."
+           @oninput="OnInput" value="@busqueda" />
+    <button class="btn btn-sm btn-primary text-nowrap" @onclick="OnNuevo">+ Nuevo</button>
+</div>
+
+<ul class="list-group list-group-flush">
+    @foreach (var c in Contactos)
+    {
+        <li class="list-group-item list-group-item-action @(Seleccionado?.Id == c.Id ? "active" : "")"
+            style="cursor:pointer" @onclick="() => OnSeleccionar.InvokeAsync(c)">
+            <div class="fw-semibold">@c.Apellido, @c.Nombre</div>
+            <small class="text-muted">@c.Telefono</small>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter] public List<Contacto> Contactos { get; set; } = [];
+    [Parameter] public Contacto? Seleccionado { get; set; }
+    [Parameter] public EventCallback<Contacto> OnSeleccionar { get; set; }
+    [Parameter] public EventCallback OnNuevo { get; set; }
+    [Parameter] public EventCallback<string> OnFiltrar { get; set; }
+
+    string busqueda = string.Empty;
+
+    async Task OnInput(ChangeEventArgs e)
+    {
+        busqueda = e.Value?.ToString() ?? string.Empty;
+        await OnFiltrar.InvokeAsync(busqueda);
+    }
+}
