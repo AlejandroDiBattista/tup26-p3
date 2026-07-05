@@ -1,85 +1,137 @@
-# Cronograma de defensa del segundo parcial
+# TUP 2026 - Programación III
 
-Cada turno dura 20 minutos y puede incluir hasta 2 estudiantes.
+Resultados del cursado 2026 de Programación III.
 
-### Cómo se calcula la nota final del parcial
+Este listado muestra, por estudiante, el estado de los trabajos prácticos, los parciales y la condición académica: **Promoción**, **Promoción en suspenso**, **Regular** o **Libre**.
 
-- 3 puntos si el TP5 funciona correctamente.
-- 3 puntos si el TP6 funciona correctamente.
-- 1 punto por cada consigna correctamente resuelta durante la defensa del parcial, hasta un máximo de 4 puntos.
+**Promoción en suspenso** indica que la persona cumple las condiciones académicas para promocionar, pero todavía tiene pendiente alguna condición administrativa.
 
-## Comisión 7
+Como medida personal, y sin que esto implique un compromiso institucional, mantendré la promoción en suspenso hasta que la persona se presente a rendir el examen final. En esa instancia, se conservará la promoción de la materia.
 
-### Miércoles 1 de julio
+## C7
 
-| Horario   | Estudiante                            |
-|:---------:|:--------------------------------------|
-| **10:00** | 63456 - Ávila Lahr, Joaquín           |
-|           | 63402 - Condori, Nahuel Ariel         |
-| **10:20** | 63419 - Coronel, Tomás                |
-|           | 63241 - Cortez, Josías                |
-| **10:40** | 63776 - Fuensalida, Ulises Nahuel     |
-|           | 63396 - Gil Garau, Atalía Trinidad    |
-| **11:00** | 63457 - González Dupuy, Ignacio       |
-|           | 63174 - Jerez, Luciano Germán         |
-| **11:20** | 63700 - Jiménez, Nelson Maximiliano   |
-|           | 63399 - Lazarte, Gonzalo Romeo        |
-| **11:40** | 63350 - Páez Carabajal, Santiago      |
-|           | 61581 - Paz, Naim Federico            |
-| **12:00** | 63268 - Condori, Karina Edith         |
+### Promoción
 
-### Jueves 2 de julio
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+63387   Sosa Gonella, Luca               🟢🟢🟢🟢🟢🟢   🟢🟢   
+63393   Ritorto, Lucca                   🟢🟢🟢🟢🟢🟢   🟢🟢   
+63447   Suárez, Sofía Celeste            🟢🟢🟢🟢🟢🟢   🟢🟢   
+63399   Lazarte, Gonzalo Romeo           🟢🟢🟢🟢🟢🟢   🟢🟢   
+63457   González Dupuy, Ignacio          🟢🟢🟢🟢🟢🟢   🟢🟢   
+63546   Sosa Paz, Jeremías               🟢🟢🟢🟢🟢🟢   🟢🟢   
+63547   Sosa Paz, José Lisandro          🟢🟢🟢🟢🟢🟢   🟢🟢   
+```
 
-| Horario   | Estudiante                            |
-|:---------:|:--------------------------------------|
-| **10:00** | 63647 - Paz, Valentina                |
-|           | 63389 - Pereyra Petroni, Nicolas      |
-| **10:20** | 63354 - Perondi, Luciano              |
-|           | 63393 - Ritorto, Lucca                |
-| **10:40** | 63387 - Sosa Gonella, Luca            |
-|           | 63546 - Sosa Paz, Jeremías            |
-| **11:00** | 63547 - Sosa Paz, José Lisandro       |
-|           | 63447 - Suárez, Sofía Celeste         |
-| **11:20** | 61490 - Valdez Bustamante, Tomás      |
-|           | 63397 - Vercellone, Tomás             |
+### Promoción en suspenso
 
-## Comisión 9
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+61581   Paz, Naim Federico               🟢🟢🟢🟢🟢🟢   🟢🟢   
+63350   Páez Carabajal, Santiago         🟢🟢🟢🟢🟢🟢   🟢🟢   
+63354   Perondi, Luciano                 🟢🟢🟢🟢🟢🟢   🟢🟢   
+63389   Pereyra Petroni, Nicolas         🟢🟢🟢🟢🟢🟢   🟢🟢   
+63396   Gil Garau, Atalía Trinidad       🟢🟢🟢🟢🟢🟢   🟢🟢   
+63397   Vercellone, Tomás                🟢🟢🟢🟢🟢🟢   🟢🟢   
+63419   Coronel, Tomás                   🟢🟢🟢🟢🟢🟢   🟢🟢   
+63456   Ávila Lahr, Joaquín              🟢🟢🟢🟢🟢🟢   🟢🟢   
+63647   Paz, Valentina                   🟢🟢🟢🟢🟢🟢   🟢🟢   
+```
 
-### Miércoles 1 de julio
+### Regular
 
-| Horario   | Estudiante                            |
-|:---------:|:--------------------------------------|
-| **08:00** | 63385 - Almaraz Sintora, Nahuel       |
-|           | 63300 - Álvarez, Hernán Fabricio      |
-| **08:20** | 63313 - Ávila Puntano, Benjamín       |
-|           | 63222 - Bajre Martínez, Julián        |
-| **08:40** | 61801 - Benega, Maximiliano Abraham   |
-|           | 63493 - Busnelli, Bruno               |
-| **09:00** | 63150 - Carlino, Joaquín              |
-|           | 63341 - Carrer, Juan Cruz             |
-| **09:20** | 63218 - Cortés, Guillermo Augusto     |
-|           | 63266 - Decima, Juan Cruz             |
-| **09:40** | 63137 - Díaz, José Simón              |
-|           | 63737 - Galván, Rocío Julieta         |
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+61490   Valdez Bustamante, Tomás         🟢🟢🔴🟢🟢🔴   🟡🟢   
+63174   Jerez, Luciano Germán            🟢🟢🟢🟢🟢🟢   🟢🔴   
+63208   Rosconi, Ignacio Federico        🔴🟢🔴🔴🟢🟢   🟡⚪   
+63241   Cortez, Josías                   🟢🟢🟢🟢🟢🟢   🟢🟡   
+63268   Condori, Karina Edith            🟢🟢🟢🟢🟢🟢   🟡🔴   
+63402   Condori, Nahuel Ariel            🟢🟢🟢🟢🟢🟢   🟢🔴   
+63420   Pereyra, Valentina Nazaret       🔴🟢🔴🔴🟢🟢   🟡🟢   
+63700   Jiménez, Nelson Maximiliano      🟢🟢🟢🟢🟢🟢   🟢⚪   
+63776   Fuensalida, Ulises Nahuel        🟢🟢🟡🟡🟢🟢   🟢⚪   
+```
 
-### Jueves 2 de julio
+### Libre
 
-| Horario   | Estudiante                            |
-|:---------:|:--------------------------------------|
-| **08:00** | 63345 - García, Franco Tomás          |
-|           | 61489 - Gómez, Tomás                  |
-| **08:20** | 63182 - González Rojas, Emmanuel      |
-|           | 63717 - González, Octavio             |
-| **08:40** | 63231 - Herrera, Rocío Tatiana        |
-|           | 63219 - Lazarte, Sergio Fabricio      |
-| **09:00** | 63297 - Lezana, Juan Ignacio          |
-|           | 63388 - López, Leandro Joel           |
-| **09:20** | 63213 - Marina Noguera, Morena Giova  |
-|           | 63494 - Medina, Lourdes Natalia       |
-| **09:40** | 63418 - Miranda, Gonzalo Emanuel      |
-|           | 63234 - Molina, Lázaro Exequiel       |
-| **12:00** | 63412 - Morán, Facundo Martín         |
-|           | 63220 - Pérez Del Rien, Valentina     |
-| **12:20** | 63216 - Sánchez, Sofía Micaela        |
-|           | 63207 - Saravia, César Nahum          |
-| **12:40** | 61026 - Thompson, María José          |
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+61577   González, Lucas Alfredo          🟢🔴🔴🔴🟡🔴   🟢⚪   
+63211   Montero, Luca                    🟢🟢🔴🔴🟡🔴   🟢⚪   
+63415   Chávez, Lucas Francisco          🔴🔴🔴🔴🔴🔴   🟢⚪   
+```   
+
+
+## C9   
+
+### Promoción
+
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+61026   Thompson, María José             🟢🟢🟢🟢🟢🟢   🟢🟢   
+61489   Gómez, Tomás                     🟢🟢🟢🟢🟢🟢   🟢🟢   
+63182   González Rojas, Emmanuel         🟢🟢🟢🟢🟢🟢   🟢🟢   
+63207   Saravia, César Nahum             🟢🟢🟢🟢🟢🟢   🟢🟢   
+63218   Cortés, Guillermo Augusto        🟢🟢🟢🟢🟢🟢   🟢🟢   
+63297   Lezana, Juan Ignacio             🟢🟢🟢🟢🟢🟢   🟢🟢   
+63300   Álvarez, Hernán Fabricio         🟢🟢🟢🟢🟢🟢   🟢🟢   
+63313   Ávila Puntano, Benjamín          🟢🟢🟢🟢🟢🟢   🟢🟢   
+63341   Carrer, Juan Cruz                🟢🟢🟢🟢🟢🟢   🟢🟢   
+63388   López, Leandro Joel              🟢🟢🟢🟢🟢🟢   🟢🟢   
+63494   Medina, Lourdes Natalia          🟢🟢🟢🟢🟢🟢   🟢🟢   
+63717   González, Octavio                🟢🟢🟢🟢🟢🟢   🟢🟢   
+63737   Galván, Rocío Julieta            🟢🟢🟢🟢🟢🟢   🟢🟢   
+```
+
+### Promoción en suspenso
+
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+63150   Carlino, Joaquín                 🟢🟢🟢🟢🟢🟢   🟢🟢   
+63213   Marina Noguera, Morena Giovann   🟢🟢🟢🟢🟢🟢   🟢🟢   
+63216   Sánchez, Sofía Micaela           🟢🟢🟢🟢🟢🟢   🟢🟢   
+63219   Lazarte, Sergio Fabricio         🟢🟢🟢🟢🟢🟢   🟢🟢   
+63220   Pérez Del Rien, Valentina        🟢🟢🟢🟢🟢🟢   🟢🟢   
+63231   Herrera, Rocío Tatiana           🟢🟢🟢🟢🟢🟢   🟢🟢   
+63234   Molina, Lázaro Exequiel          🟢🟢🟢🟢🟢🟢   🟢🟢   
+63266   Decima, Juan Cruz                🟢🟢🟢🟢🟢🟢   🟢🟢   
+63412   Morán, Facundo Martín            🟢🟢🟢🟢🟢🟢   🟢🟢   
+63493   Busnelli, Bruno                  🟢🟢🟢🟢🟢🟢   🟢🟢   
+```
+
+### Regular
+
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+61057   Getar, Thomas                    🟢🟢🟢🔴🟢🔴   🟡⚪   
+61161   González, Thomas Ezequiel        🟢🟢🔴🟢🟢🔴   🟡⚪   
+61641   Figueroa, Nahuel Ramón           🟢🟢🟢🔴🟢🔴   🟡⚪   
+61801   Benega, Maximiliano Abraham      🟢🟢🟢🟢🟢🟢   🟡🟢   
+63137   Díaz, José Simón                 🟢🟢🔴🟢🟢🟢   🟡🟢   
+63217   Altamiranda Borquez, Bian        🟢🔴🔴🔴🟢🟢   🟢⚪   
+63222   Bajre Martínez, Julián           🟢🟢🟢🟢🟢🟢   🟡🟢   
+63232   Roldan, Enzo Joaquín             🟢🟢🟢🔴🟢🔴   🟡⚪   
+63345   García, Franco Tomás             🔴🟢🟢🟢🟢🟢   🟢🟢   
+63385   Almaraz Sintora, Nahuel          🟢🟢🟢🟢🟢🟢   🟢🔴   
+63418   Miranda, Gonzalo Emanuel         🟢🟢🟢🟢🟢🟢   🟡🟢   
+63425   Holmquist, Jeremy                🟢🟢🔴🔴🟢🔴   🟡⚪   
+63461   Cativa, Facundo Simón            🟢🟢🔴🔴🟢🔴   🟢⚪   
+64016   Cura, Rocío Aylen                🔴🟢🟢🔴🟢🔴   🟡⚪   
+```
+
+### Libre
+
+```text
+Legajo  Nombre y Apellido                Prácticos     Parciales
+61907   Kargachin, Guadalupe             🔴🔴🔴🔴🔴🔴   🟡⚪   
+62844   Guzmán, Luciano Leonel           🔴🟢🟢🔴🟡🔴   🟢⚪   
+63205   Navarro Aragón, Facundo          🔴🔴🔴🔴🔴🔴   🟢⚪   
+```   
+
+
+> Referencias:
+> * En **Prácticos**, cada icono representa un trabajo práctico: 🟢 presentado, 🟡 rechazado, 🔴 no presentado.
+> * En **Parciales**, el primer icono corresponde al primer parcial y el segundo al segundo parcial: 🟢 promoción, 🟡 regular, 🔴 desaprobado, ⚪ no corresponde.
+
+> Nota: Los resultados pueden actualizarse. Ante cualquier duda, consulte con el docente a cargo.
