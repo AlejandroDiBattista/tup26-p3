@@ -12,7 +12,7 @@
             <p>Todos tus contactos, organizados en un solo lugar.</p>
         </div>
         <button class="btn btn-primary btn-lg" @onclick="NuevoContacto">
-            <i class="bi bi-person-plus-fill"></i> Nuevo contacto
+            <i class="bi bi-person-plus-fill"></i> Baja de Contacto
         </button>
     </header>
 
@@ -101,10 +101,10 @@
                     </div>
                     <div class="detail-actions">
                         <button class="btn btn-outline-primary" @onclick="EditarSeleccionado">
-                            <i class="bi bi-pencil-square"></i> Editar
+                            <i class="bi bi-pencil-square"></i> Modificar Contacto
                         </button>
                         <button class="btn btn-outline-danger" @onclick="EliminarContacto" disabled="@guardando">
-                            <i class="bi bi-trash3"></i> Eliminar
+                            <i class="bi bi-trash3"></i> Baja de Contacto
                         </button>
                     </div>
                 </div>
@@ -183,7 +183,7 @@
                     {
                         <div class="detail-actions">
                             <button class="btn btn-outline-danger" @onclick="EliminarContacto" disabled="@guardando">
-                                <i class="bi bi-trash3"></i> Eliminar
+                                <i class="bi bi-trash3"></i> Baja de Contacto
                             </button>
                         </div>
                     }
@@ -228,6 +228,11 @@
                                     <label class="form-label" for="direccion">Direccion</label>
                                     <input id="direccion" class="form-control" @bind="modelo.Direccion" @bind:event="oninput" />
                                 </div>
+                                <div class="form-wide">
+                                    <label class="form-label" for="legajo">Lgajoe</label>
+                                    <input id="legajo" class="form-control" @bind="modelo.Legajo" @bind:event="oninput" />
+                                </div>
+
                                 <div>
                                     <label class="form-label" for="fechaNacimiento">Fecha de nacimiento</label>
                                     <InputDate id="fechaNacimiento" class="form-control" @bind-Value="modelo.FechaNacimiento" />

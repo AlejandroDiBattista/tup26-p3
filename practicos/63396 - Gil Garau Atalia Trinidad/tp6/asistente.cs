@@ -138,7 +138,7 @@ public sealed class Agente
 
         cliente = new OpenAIClient(
                 new ApiKeyCredential(apiKey),
-                new OpenAIClientOptions { Endpoint = new Uri(apiUrl) })
+                new OpenAIClientOptions { Endpoint = new Uri(NormalizarEndpoint(apiUrl)) })
             .GetChatClient(Modelo)
             .AsIChatClient()
             .AsBuilder()
@@ -207,5 +207,15 @@ public sealed class Agente
             throw new UnauthorizedAccessException("No se puede acceder a rutas fuera del espacio de trabajo.");
 
         return rutaCompleta;
+    }
+
+    static string NormalizarEndpoint(string url)
+    {
+        var limpio = url.Trim();
+
+        if (limpio.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+            limpio = limpio[..^"/chat/completions".Length];
+
+        return limpio.TrimEnd('/');
     }
 }

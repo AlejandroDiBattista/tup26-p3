@@ -20,7 +20,7 @@
             <button type="button"
                     class="btn btn-primary mt-2"
                     @onclick="MostrarNuevo">
-                Nuevo contacto
+                Alta de contacto
             </button>
         </div>
     </div>
@@ -39,7 +39,7 @@
                                 class="list-group-item list-group-item-action @(seleccionado?.Id == contacto.Id ? "active" : "")"
                                 @onclick="() => Seleccionar(contacto)">
                             <div class="fw-semibold">@contacto.Apellido, @contacto.Nombre</div>
-                            <div class="small">@contacto.Empresa</div>
+                            <div class="small">@contacto.Telefono, @contacto.Email</div>
                         </button>
                     }
                 </div>
@@ -78,6 +78,9 @@
                             <dt class="col-sm-4">Teléfono</dt>
                             <dd class="col-sm-8">@seleccionado.Telefono</dd>
 
+                            <dt class="col-sm-4">Legajo</dt>
+                            <dd class="col-sm-8">@seleccionado.Legajo</dd>
+
                             <dt class="col-sm-4">Email</dt>
                             <dd class="col-sm-8">@seleccionado.Email</dd>
 
@@ -103,13 +106,13 @@
                             <button type="button"
                                     class="btn btn-warning"
                                     @onclick="() => MostrarEditar(seleccionado)">
-                                Editar
+                                Modificar contacto
                             </button>
 
                             <button type="button"
                                     class="btn btn-danger"
                                     @onclick="EliminarSeleccionado">
-                                Eliminar
+                                Baja de contacto
                             </button>
                         </div>
                     }

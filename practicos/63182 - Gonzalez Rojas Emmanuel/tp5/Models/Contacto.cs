@@ -18,6 +18,8 @@ public class Contacto
 
     public string Direccion { get; set; } = "";
 
+    public int Legajo { get; set; } = 0;
+
     public DateOnly? FechaNacimiento { get; set; }
 
     public string Notas { get; set; } = "";

@@ -12,4 +12,5 @@ public class Contacto
     public string Direccion { get; set; } = "";
     public DateOnly? FechaNacimiento { get; set; }
     public string Notas { get; set; } = "";
+    public string Legajo { get; set; } = "";
 }

@@ -1,17 +1,34 @@
-using tp5.Components;
+using AgendaWeb.Components;
+using AgendaWeb.Datos;
+using AgendaWeb.Servicios;
+using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+var constructor = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorComponents()
+
+constructor.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var app = builder.Build();
 
-app.UseHttpsRedirection();
-app.UseAntiforgery();
+constructor.Services.AddDbContextFactory<LibretaDbContext>(config =>
+    config.UseSqlite("Data Source=contactos.db"));
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
+//lógica de aplicación, acceso a datos.
+constructor.Services.AddScoped<IPersonaServicio, PersonaServicio>();
+
+var aplicacion = constructor.Build();
+
+if (!aplicacion.Environment.IsDevelopment())
+{
+    aplicacion.UseExceptionHandler("/Error", createScopeForErrors: true);
+    aplicacion.UseHsts();
+}
+
+aplicacion.UseHttpsRedirection();
+aplicacion.UseAntiforgery();
+aplicacion.MapStaticAssets();
+
+aplicacion.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+aplicacion.Run();

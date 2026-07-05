@@ -18,6 +18,11 @@
             <input class="form-control" @bind="Modelo.Apellido" />
         </div>
 
+         <div class="col-md-6">
+            <label class="form-label">Legajo *</label>
+            <input class="form-control" @bind="Modelo.Legajo" />
+        </div>
+
         <div class="col-md-6">
             <label class="form-label">Teléfono *</label>
             <input class="form-control" @bind="Modelo.Telefono" />
@@ -113,6 +118,7 @@
             error = "El teléfono no puede estar vacío.";
             return;
         }
+
 
         if (string.IsNullOrWhiteSpace(Modelo.Email))
         {

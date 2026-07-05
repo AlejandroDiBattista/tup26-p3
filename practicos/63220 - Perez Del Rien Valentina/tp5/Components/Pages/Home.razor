@@ -17,7 +17,7 @@
             <p class="text-secondary mb-0">Contactos personales y profesionales</p>
         </div>
         <button class="btn btn-primary px-3" @onclick="NuevoContacto">
-            <i class="bi bi-plus"></i> Nuevo contacto
+            <i class="bi bi-plus"></i> Alta contacto
         </button>
     </div>
 
@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="text-start">
                                     <h6 class="mb-0 fw-semibold @(isSelected ? "text-primary" : "text-dark")">@contacto.Nombre @contacto.Apellido</h6>
-                                    <small class="text-secondary" style="font-size: 0.8rem;">@(string.IsNullOrWhiteSpace(contacto.Empresa) ? "Independiente" : contacto.Empresa)</small>
+                                    <small class="text-secondary" style="font-size: 0.8rem;">@(string.IsNullOrWhiteSpace(contacto.Telefono) ? "Independiente" : contacto.Telefono) | @contacto.Email</small>
                                 </div>
                             </div>
                         </button>
@@ -81,7 +81,7 @@
                                 </div>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
-                                    <button type="submit" class="btn btn-danger"><i class="bi bi-floppy"></i> Guardar cambios</button>
+                                    <button type="submit" class="btn btn-danger"><i class="bi bi-floppy"></i> Guardar</button>
                                 </div>
                             </div>
 
@@ -93,6 +93,10 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold text-dark">Apellido</label>
                                     <InputText class="form-control bg-light" @bind-Value="contactoEdicion.Apellido" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-dark">Legajo</label>
+                                    <InputNumber class="form-control bg-light" @bind-Value="contactoEdicion.Legajo" />
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold text-dark">Empresa</label>
@@ -145,10 +149,10 @@
                             </div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-outline-secondary" @onclick="EditarContacto">
-                                    <i class="bi bi-pencil"></i> Editar
+                                    <i class="bi bi-pencil"></i> Modificar Contacto
                                 </button>
                                 <button class="btn btn-outline-danger" @onclick="EliminarContacto">
-                                    <i class="bi bi-trash3"></i> Eliminar
+                                    <i class="bi bi-trash3"></i> Baja Contacto
                                 </button>
                             </div>
                         </div>
@@ -248,9 +252,10 @@
             contactosFiltrados = contactos.ToList();
         else
             contactosFiltrados = contactos.Where(c => 
-                c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-                c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
-                c.Empresa.Contains(busqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                (c.Nombre != null && c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (c.Apellido != null && c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (c.Empresa != null && c.Empresa.Contains(busqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (c.Legajo.ToString().Contains(busqueda, StringComparison.OrdinalIgnoreCase))).ToList();
     }
 
     private void SeleccionarContacto(Contacto c)
@@ -281,7 +286,8 @@
                 Cargo = contactoSeleccionado.Cargo,
                 Direccion = contactoSeleccionado.Direccion,
                 FechaNacimiento = contactoSeleccionado.FechaNacimiento,
-                Notas = contactoSeleccionado.Notas
+                Notas = contactoSeleccionado.Notas,
+                Legajo = contactoSeleccionado.Legajo
             };
             modoEdicion = true;
         }

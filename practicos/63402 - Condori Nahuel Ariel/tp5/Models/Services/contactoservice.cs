@@ -26,7 +26,7 @@ public class ContactoService
                 c.Apellido.Contains(filtro) ||
                 c.Telefono.Contains(filtro) ||
                 c.Email.Contains(filtro) ||
-                c.Empresa.Contains(filtro));
+                c.Empresa.Contains(filtro)) ;
         }
 
         return await query

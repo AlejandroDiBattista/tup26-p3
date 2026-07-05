@@ -14,7 +14,7 @@
         </div>
 
         <button class="btn btn-primary" @onclick="() => NuevoContacto()">
-            <i class="bi bi-plus-lg"></i> Nuevo contacto
+            <i class="bi bi-plus-lg"></i> Alta de Contacto
         </button>
     </div>
 
@@ -88,6 +88,9 @@
                             <label class="form-label">Notas</label>
                             <InputTextArea class="form-control" rows="4" @bind-Value="contactoFormulario.Notas" />
                         </div>
+                        <div> class="col-12">
+                            <label class="form-label">Legajo</label>
+                            <InputNumber class="form-control" @bind-Value="contactoFormulario.Legajo" />
                     </div>
 
                     <div class="acciones-formulario">
@@ -110,10 +113,10 @@
 
                     <div class="botones-detalle">
                         <button class="btn btn-outline-dark" @onclick="() => EditarContacto(contactoSeleccionado)">
-                            <i class="bi bi-pencil"></i> Editar
+                            <i class="bi bi-pencil"></i> Modificar Contacto
                         </button>
                         <button class="btn btn-outline-danger" @onclick="() => EliminarContacto(contactoSeleccionado)">
-                            <i class="bi bi-trash"></i> Eliminar
+                            <i class="bi bi-trash"></i> Baja de Contacto
                         </button>
                     </div>
                 </div>

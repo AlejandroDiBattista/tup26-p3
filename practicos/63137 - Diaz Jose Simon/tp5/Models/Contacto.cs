@@ -18,6 +18,7 @@ public class Contacto
     [Phone(ErrorMessage = "El formato del teléfono no es válido.")]
     [StringLength(20, ErrorMessage = "El teléfono no puede superar los 20 caracteres.")]
     public string Telefono { get; set; } = string.Empty;
+    public int Legajo {get; set;} = 0;
 
     [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
     [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]

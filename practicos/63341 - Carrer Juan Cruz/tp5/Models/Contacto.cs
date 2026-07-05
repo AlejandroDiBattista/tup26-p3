@@ -2,6 +2,7 @@ namespace tp5.Models;
 
 public class Contacto
 {
+    public int Legajo { get; set; } = 0;
     public int Id { get; set; }
     public string Nombre { get; set; } = "";
     public string Apellido { get; set; } = "";

@@ -12,7 +12,7 @@ builder.Services.AddRazorComponents()
 
 /*Registrar el DBContext con SQLite */
 builder.Services.AddDbContext<AgendaContext>(options =>
-    options.UseSqlite("Data Source=agenda.db"));
+    options.UseSqlite("Data Source=contactos.db"));
 
 builder.Services.AddScoped<ContactoService>();
 

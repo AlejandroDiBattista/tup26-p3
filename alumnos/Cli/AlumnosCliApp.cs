@@ -49,6 +49,9 @@ static class AlumnosCliApp {
                 .WithDescription("Ejecuta el TP5 de un alumno y abre el navegador en su página.");
             config.AddCommand<EjecutarTp6Command>("ejecutar-tp6")
                 .WithDescription("Ejecuta el TP6 de un alumno en la terminal actual.");
+            config.AddCommand<RevisarRecuperacionCommand>("defender-parcial")
+                .WithAlias("revisar-recuperacion")
+                .WithDescription("Defiende alumnos con recuperación del segundo parcial y registra el resultado.");
             config.AddCommand<LimpiarArchivosTemporalesCommand>("limpiar-archivos-temporales")
                 .WithDescription("Elimina bin, obj, .vs, cachés de compilación y temporales SQLite dentro de prácticos.");
         });
@@ -87,11 +90,16 @@ static class AlumnosCliApp {
 
             if (codigo != 0) { AnsiConsole.MarkupLine($"[red]El comando terminó con código {codigo}.[/]"); }
 
-            AnsiConsole.MarkupLine("[grey]Presioná una tecla para volver al menú...[/]");
-            Console.ReadKey(intercept: true);
+            if (!VuelveDirectoAlMenu(args)) {
+                AnsiConsole.MarkupLine("[grey]Presioná una tecla para volver al menú...[/]");
+                Console.ReadKey(intercept: true);
+            }
             AnsiConsole.Clear();
         }
     }
+
+    static bool VuelveDirectoAlMenu(string[] args) =>
+        args.Length > 0 && args[0] is "defender-parcial" or "revisar-recuperacion";
 
     static void MostrarComandoEnEjecucion(string[] args) {
         string descripcion = DescribirComando(args);
@@ -123,6 +131,7 @@ static class AlumnosCliApp {
             "capturar-pantallas" => $"Capturar pantallas{detalle}",
             "ejecutar-tp5" => $"Ejecutar TP5{detalle}",
             "ejecutar-tp6" => $"Ejecutar TP6{detalle}",
+            "defender-parcial" or "revisar-recuperacion" => "Defender parcial",
             "limpiar-archivos-temporales" => "Limpiar archivos temporales",
             "listar-grupos-whatsapp" => "Listar grupos y participantes de WhatsApp",
             _ => args[0]
@@ -158,6 +167,7 @@ static class AlumnosCliApp {
             "capturar-pantallas" => ConstruirArgumentosCapturarPantallas(),
             "ejecutar-tp5" => ["ejecutar-tp5"],
             "ejecutar-tp6" => ["ejecutar-tp6"],
+            "defender-parcial" => ["defender-parcial"],
             "listar-practicos-faltantes" => ConstruirArgumentosPracticosFaltantes(),
             "exportar-estado" => ["exportar-estado"],
             "exportar-markdown" => ["exportar-markdown"],
@@ -205,6 +215,7 @@ static class AlumnosCliApp {
 
     static IReadOnlyList<InteractiveChoiceGroup> ObtenerGruposOpcionesPrincipales() => [
         new("Alumnos y asistencia", [
+            new("defender-parcial",               "Defender parcial",               "Abrir TP5 y registrar el segundo parcial"),
             new("listar-alumnos",                 "Listar alumnos",                 "Mostrar todos los alumnos"),
             new("contar-asistencias",             "Contar asistencias",             "Reconstruir asistencias y marcar presentes de hoy"),
             new("listar-grupos-whatsapp",         "Listar grupos de WhatsApp",      "Listar grupos y participantes")

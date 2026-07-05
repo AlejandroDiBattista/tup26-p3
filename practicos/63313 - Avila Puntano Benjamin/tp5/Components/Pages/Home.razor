@@ -9,7 +9,7 @@
     <div class="row flex-grow-1" style="overflow: hidden;">
         <div class="col-md-4 d-flex flex-column" style="height: 100%;">
             <input class="form-control mb-2" placeholder="Buscar..." @bind="busqueda" @bind:event="oninput" />
-            <button class="btn btn-success btn-sm mb-2" @onclick='() => Nav.NavigateTo("/nuevo")'>+ Nuevo</button>
+            <button class="btn btn-success btn-sm mb-2" @onclick='() => Nav.NavigateTo("/nuevo")'>+ Alta de contacto</button>
             <div class="list-group" style="overflow-y: auto; flex-grow: 1;">
                 @foreach (var c in ContactosFiltrados)
                 {
@@ -44,13 +44,15 @@
                     { <p><strong>Cargo:</strong> @seleccionado.Cargo</p> }
                     @if (!string.IsNullOrEmpty(seleccionado.Direccion))
                     { <p><strong>Dirección:</strong> @seleccionado.Direccion</p> }
+                    @if (!string.IsNullOrEmpty(seleccionado.Legajo))
+                    { <p><strong>Legajo:</strong> @seleccionado.Legajo</p> }
                     @if (seleccionado.FechaNacimiento.HasValue)
                     { <p><strong>Nacimiento:</strong> @seleccionado.FechaNacimiento</p> }
                     @if (!string.IsNullOrEmpty(seleccionado.Notas))
                     { <p><strong>Notas:</strong> @seleccionado.Notas</p> }
                     <div class="d-flex gap-2 mt-2">
-                        <button class="btn btn-primary btn-sm" @onclick="IniciarEdicion">Editar</button>
-                        <button class="btn btn-danger btn-sm" @onclick="Eliminar">Eliminar</button>
+                        <button class="btn btn-primary btn-sm" @onclick="IniciarEdicion">Modificar contacto</button>
+                        <button class="btn btn-danger btn-sm" @onclick="Eliminar">Baja de contacto</button>
                     </div>
                 </div>
             }
@@ -73,7 +75,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-2">
-                                <label>Teléfono</label>
+                                <label>Telefono</label>
                                 <InputText class="form-control" @bind-Value="contactoEdicion.Telefono" />
                             </div>
                             <div class="col-md-6 mb-2">
@@ -92,8 +94,13 @@
                             </div>
                         </div>
                         <div class="mb-2">
-                            <label>Dirección</label>
+                            <label>Direccion</label>
                             <InputText class="form-control" @bind-Value="contactoEdicion.Direccion" />
+                        </div>
+                        <div class="mb-2">
+
+                           <label>Legajo</label>
+                            <InputText class="form-control" @bind-Value="contactoEdicion.Legajo" />
                         </div>
                         <div class="mb-2">
                             <label>Fecha de nacimiento</label>
@@ -124,6 +131,7 @@
     List<Contacto> ContactosFiltrados => contactos
         .Where(c => string.IsNullOrEmpty(busqueda) ||
             c.Nombre.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+            c.Legajo.Contains(busqueda, StringComparison.OrdinalIgnoreCase))||
             c.Apellido.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
         .ToList();
 
@@ -145,6 +153,7 @@
             Empresa = c.Empresa,
             Cargo = c.Cargo,
             Direccion = c.Direccion,
+            Legajo = c.Legajo,
             FechaNacimiento = c.FechaNacimiento,
             Notas = c.Notas
         };
@@ -168,8 +177,10 @@
         seleccionado.Empresa = contactoEdicion.Empresa;
         seleccionado.Cargo = contactoEdicion.Cargo;
         seleccionado.Direccion = contactoEdicion.Direccion;
+        seleccionado.Legajo = contactoEdicion.Legajo;
         seleccionado.FechaNacimiento = contactoEdicion.FechaNacimiento;
         seleccionado.Notas = contactoEdicion.Notas;
+        
 
         Db.Contactos.Update(seleccionado);
         await Db.SaveChangesAsync();

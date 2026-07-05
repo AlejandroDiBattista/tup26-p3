@@ -19,6 +19,7 @@ namespace tp5.Models
         [EmailAddress(ErrorMessage = "El email no tiene un formato válido")]
         public string Email { get; set; } = "";
 
+        public string? Legajo { get; set; }
         public string? Empresa { get; set; }
 
         public string? Cargo { get; set; }

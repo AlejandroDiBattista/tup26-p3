@@ -44,7 +44,7 @@ else
                                 disabled="@Ocupado"
                                 @onclick="NuevoContacto">
                             <i class="bi bi-person-plus me-1"></i>
-                            Nuevo
+                            Alta de baja 
                         </button>
                     </div>
 
@@ -84,7 +84,7 @@ else
                 <section class="border rounded bg-white p-4 shadow-sm">
                     @if (modoNuevo)
                     {
-                        <h2 class="h4 mb-4">Nuevo contacto</h2>
+                        <h2 class="h4 mb-4">Alta de contacto</h2>
                         <FormularioContacto Contacto="nuevoContacto" />
 
                         @if (!string.IsNullOrEmpty(mensajeError))
@@ -104,7 +104,7 @@ else
                     }
                     else if (modoEditar)
                     {
-                        <h2 class="h4 mb-4">Editar contacto</h2>
+                        <h2 class="h4 mb-4">Modificar contacto</h2>
                         <FormularioContacto Contacto="contactoEditado" />
 
                         @if (!string.IsNullOrEmpty(mensajeError))
@@ -114,7 +114,7 @@ else
 
                         <button class="btn btn-success"
                                 @onclick="GuardarEdicion">
-                            Guardar cambios
+                            Guardar 
                         </button>
                         <button class="btn btn-secondary ms-2"
                                 @onclick="CancelarEdicion">
@@ -151,6 +151,10 @@ else
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
+                            <strong>Legajo</strong>
+                            <div>@contactoSeleccionado.Legajo</div>
+                            </div>
+                            <div class="col-md-6">
                                 <strong>Teléfono</strong>
                                 <div>@contactoSeleccionado.Telefono</div>
                             </div>
@@ -185,13 +189,13 @@ else
                         <button class="btn btn-outline-success"
                                 @onclick="EditarContacto">
                         
-                            Editar
+                            Modificar Editar
                         </button>
 
                         <button class="btn btn-danger ms-2"
                                 @onclick="EliminarContacto">
                            <i class="bi bi-trash me-1"></i>
-                            Eliminar
+                            Baja de contacto 
                       </button>
                         
                     }
@@ -220,7 +224,7 @@ else
     private IEnumerable<Contacto> ContactosFiltrados =>
         contactos?.Where(c =>
             string.IsNullOrWhiteSpace(textoBusqueda) ||
-            $"{c.Nombre} {c.Apellido}".Contains(
+            $"{c.Nombre} {c.Apellido} {c.Legajo}".Contains(
                 textoBusqueda.Trim(),
                 StringComparison.OrdinalIgnoreCase))
         ?? Enumerable.Empty<Contacto>();
@@ -261,7 +265,7 @@ else
         if (!DatosValidos(nuevoContacto))
         {
             mensajeError =
-                "Nombre, apellido, teléfono y email son obligatorios.";
+                "Legajo, nombre, apellido, teléfono y email son obligatorios.";
             return;
         }
 
@@ -349,7 +353,8 @@ else
 
     private static bool DatosValidos(Contacto contacto)
     {
-        return !string.IsNullOrWhiteSpace(contacto.Nombre) &&
+        return contacto.Legajo > 0 &&
+               !string.IsNullOrWhiteSpace(contacto.Nombre) &&
                !string.IsNullOrWhiteSpace(contacto.Apellido) &&
                !string.IsNullOrWhiteSpace(contacto.Telefono) &&
                !string.IsNullOrWhiteSpace(contacto.Email);
@@ -366,6 +371,7 @@ else
     {
         destino.Id = origen.Id;
         destino.Nombre = origen.Nombre;
+        destino.Legajo = origen.Legajo;
         destino.Apellido = origen.Apellido;
         destino.Telefono = origen.Telefono;
         destino.Email = origen.Email;

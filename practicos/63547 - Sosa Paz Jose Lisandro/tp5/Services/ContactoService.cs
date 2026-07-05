@@ -18,7 +18,7 @@ public class ContactoService(IDbContextFactory<AgendaDbContext> dbFactory)
                 c.Nombre.ToLower().Contains(filtro) ||
                 c.Apellido.ToLower().Contains(filtro) ||
                 c.Telefono.ToLower().Contains(filtro) ||
-                c.CorreoElectronico.ToLower().Contains(filtro) ||
+                c.Email.ToLower().Contains(filtro) ||
                 (c.Empresa != null && c.Empresa.ToLower().Contains(filtro)));
         }
 

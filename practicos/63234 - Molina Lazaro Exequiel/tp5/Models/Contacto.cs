@@ -13,6 +13,7 @@ public class Contacto
     [Required(ErrorMessage = "El email es obligatorio")]
     [EmailAddress(ErrorMessage = "El email no es válido")]
     public string Email { get; set; } = "";
+    public int Legajo { get; set; }=0;
     public string Empresa { get; set; } = "";
     public string Cargo { get; set; } = "";
     public string Direccion { get; set; } = "";

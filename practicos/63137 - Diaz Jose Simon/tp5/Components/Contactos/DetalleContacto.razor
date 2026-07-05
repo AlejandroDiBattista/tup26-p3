@@ -17,10 +17,10 @@ else
             </h4>
             <div>
                 <button class="btn btn-outline-primary btn-sm me-2" @onclick="OnEditar">
-                    <i class="bi bi-pencil me-1"></i>Editar
+                    <i class="bi bi-pencil me-1"></i>Modificar contacto
                 </button>
                 <button class="btn btn-outline-danger btn-sm" @onclick="OnEliminar">
-                    <i class="bi bi-trash me-1"></i>Eliminar
+                    <i class="bi bi-trash me-1"></i>Baja de contacto
                 </button>
             </div>
         </div>
@@ -29,6 +29,10 @@ else
                 <div class="col-md-6">
                     <strong>Teléfono</strong>
                     <p class="mb-0">@Contacto.Telefono</p>
+                </div>
+                <div class="col-md-6">
+                    <strong>Legajo</strong>
+                    <p class="mb-0">@Contacto.Legajo</p>
                 </div>
                 <div class="col-md-6">
                     <strong>Correo electrónico</strong>

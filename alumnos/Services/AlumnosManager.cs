@@ -88,7 +88,7 @@ static class AlumnosManager {
 
     public static void Escribir(IEnumerable<Alumno> alumnos, string rutaArchivo) {
         string[] etiquetas = ["Legajo", "Nombre y Apellido", "Teléfono", "GitHub", "Prácticos", "Exm", "Prs", "Ast", "Nta", "Recuperación", "Observaciones"];
-        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "----", "---", "---", "---", "------------", "------------------------"];
+        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "----", "---", "---", "---", "----------------", "------------------------"];
         try {
             List<Alumno> alumnosOrdenados = new(alumnos);
             alumnosOrdenados.Sort(Alumno.Comparar);
@@ -175,7 +175,7 @@ static class AlumnosManager {
 
     public static void Listar(IEnumerable<Alumno> alumnos, string titulo = "Listado de Alumnos") {
         string[] campos = ["Legajo", "Nombre y Apellido", "Teléfono", "GitHub", "Prácticos", "Exm", "Prs", "Ast", "Nta", "Recuperación"];
-        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "----", "---", "---", "---", "------------"];
+        string[] guiones = ["------", "------------------------------", "-------------", "-------------------------", "----------", "----", "---", "---", "---", "----------------"];
 
         string comision = "";
         if (!alumnos.Any()) {
@@ -446,6 +446,8 @@ static class AlumnosManager {
                 recuperacion = recuperacionDetectada;
                 string observacionesRestantes = LimpiarCampo(string.Join(" ", columnas.Skip(9 + 2)));
                 observaciones = LimpiarCampo($"{observacionesDetectadas} {observacionesRestantes}");
+            } else if (string.IsNullOrWhiteSpace(posibleRecuperacion)) {
+                observaciones = LimpiarCampo(string.Join(" ", columnas.Skip(9 + 1)));
             } else {
                 observaciones = LimpiarCampo(string.Join(" ", columnas.Skip(9)));
             }
@@ -459,13 +461,13 @@ static class AlumnosManager {
     }
 
     static string FormatearFilaTabla(params string?[] columnas) {
-        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 12, 0];
+        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 16, 0];
         string[] separadores = ["  ", "  ", "   ", "  ", "   ", "   ", "   ", "  ", "  ", "  "];
         return FormatearFilaConAnchos(anchos, separadores, columnas).TrimEnd();
     }
 
     static string FormatearSeparadorTabla(params string?[] columnas) {
-        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 12, 0];
+        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 16, 0];
         string[] separadores = ["  ", "  ", "   ", "  ", "   ", "  ", "   ", "  ", "  ", "  "];
         return FormatearFilaConAnchos(anchos, separadores, columnas).TrimEnd();
     }
@@ -477,7 +479,7 @@ static class AlumnosManager {
     }
 
     static string FormatearFilaTablaListado(params string?[] columnas) {
-        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 12];
+        int[] anchos = [6, 30, 13, 25, 10, 3, 3, -2, -3, 16];
         string[] separadores = ["  ", "  ", "   ", "  ", "   ", "   ", "   ", "  ", "  "];
         return FormatearFilaConAnchos(anchos, separadores, columnas).TrimEnd();
     }

@@ -15,6 +15,8 @@ public class Contacto
     [Required(ErrorMessage = "Requerido")]
     public string Telefono { get; set; } = "";
 
+    public int Legajo { get; set; } = 0;
+
     [Required(ErrorMessage = "Requerido")]
     [EmailAddress(ErrorMessage = "Email inválido")]
     public string Email { get; set; } = "";

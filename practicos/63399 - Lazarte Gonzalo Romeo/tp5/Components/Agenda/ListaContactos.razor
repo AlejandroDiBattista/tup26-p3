@@ -41,7 +41,8 @@
                         <div class="text-start overflow-hidden">
                             <div class="fw-semibold text-truncate">@contacto.NombreCompleto</div>
                             <div class="small text-secondary text-truncate">
-                                @(string.IsNullOrWhiteSpace(contacto.Empresa) ? contacto.Email : contacto.Empresa)
+                                @(contacto.Email)
+                                @(contacto.Telefono)
                             </div>
                         </div>
                     </button>

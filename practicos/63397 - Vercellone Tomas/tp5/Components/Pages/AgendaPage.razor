@@ -9,7 +9,7 @@
         <p class="agenda-subtitulo">@subtitulo</p>
     </div>
     <button class="btn btn-primary btn-nuevo" @onclick="NuevoContacto">
-        + Nuevo contacto
+        Alta de contacto
     </button>
 </div>
 
@@ -44,7 +44,7 @@
                         </div>
                         <div class="info-item">
                             <span class="nombre-item">@contacto.NombreCompleto</span>
-                            <span class="empresa-item">@(contacto.Empresa ?? "Independiente")</span>
+                            <span class="empresa-item">@contacto.Telefono @contacto.Email</span>
                         </div>
                     </div>
                 }
@@ -125,7 +125,7 @@
             Apellido = contacto.Apellido,
             Telefono = contacto.Telefono,
             Email = contacto.Email,
-            Empresa = contacto.Empresa,
+            Legajo = contacto.Legajo,
             Cargo = contacto.Cargo,
             Direccion = contacto.Direccion,
             FechaNacimiento = contacto.FechaNacimiento,

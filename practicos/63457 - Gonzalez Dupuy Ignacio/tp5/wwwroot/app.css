@@ -36,3 +36,31 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+.columna-scroll {
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.columna-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.columna-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.columna-scroll::-webkit-scrollbar-thumb {
+    background: #b0b0b0;
+    border-radius: 10px;
+}
+
+.columna-scroll::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+.columna-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #b0b0b0 #f1f1f1;
+}

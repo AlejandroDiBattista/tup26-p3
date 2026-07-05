@@ -12,6 +12,9 @@ public class Contacto
     [Required(ErrorMessage = "El teléfono es obligatorio.")]
     [Phone(ErrorMessage = "El teléfono no es válido.")]
     public string Telefono { get; set; } = "";
+
+    public int Legajo { get; set; } = 0;
+    
     [Required(ErrorMessage = "El email es obligatorio.")]
     [EmailAddress(ErrorMessage = "El email no es válido.")]
     public string Email { get; set; } = "";

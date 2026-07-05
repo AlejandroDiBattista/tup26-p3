@@ -18,10 +18,10 @@
     </div>
     <div class="d-flex gap-2">
         <button class="btn btn-outline-secondary" @onclick="() => OnEditar.InvokeAsync(Contacto)">
-            <i class="bi bi-pencil me-1"></i> Editar
+            <i class="bi bi-pencil me-1"></i> Modificar contacto
         </button>
         <button class="btn btn-outline-danger" @onclick="() => confirmandoEliminar = true">
-            <i class="bi bi-trash me-1"></i> Eliminar
+            <i class="bi bi-trash me-1"></i> Baja de contacto
         </button>
     </div>
 </div>
@@ -83,6 +83,15 @@
             <span class="texto-notas">@Contacto.Notas</span>
         </FilaDetalle>
     }
+
+    @if (!string.IsNullOrWhiteSpace(Contacto.Notas))
+    {
+        <FilaDetalle Icono="bi-text" Etiqueta="Legajo">
+            <span class="texto-notas">@Contacto.Legajo</span>
+        </FilaDetalle>
+    }
+
+
 </div>
 
 @code {

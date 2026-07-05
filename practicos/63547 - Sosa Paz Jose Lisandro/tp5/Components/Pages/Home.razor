@@ -11,7 +11,7 @@
         <h1>TP5: AgendaWeb</h1>
         <p>Agenda de contactos</p>
     </div>
-    <button class="btn btn-primary" @onclick="NuevoContacto">Nuevo contacto</button>
+    <button class="btn btn-primary" @onclick="NuevoContacto">modificar contacto</button>
 </div>
 
 <div class="agenda-layout">
@@ -35,7 +35,7 @@
                         <span class="contact-avatar">@Iniciales(contacto)</span>
                         <span>
                             <strong>@contacto.Nombre @contacto.Apellido</strong>
-                            <small>@(string.IsNullOrWhiteSpace(contacto.Empresa) ? contacto.Telefono : contacto.Empresa)</small>
+                            <small>@contacto.Telefono : @contacto.Email</small>
                         </span>
                     </button>
                 }
@@ -77,8 +77,8 @@
                     </div>
                     <div>
                         <label class="form-label">Correo electronico</label>
-                        <InputText class="form-control" @bind-Value="contactoFormulario.CorreoElectronico" />
-                        <ValidationMessage For="() => contactoFormulario.CorreoElectronico" />
+                        <InputText class="form-control" @bind-Value="contactoFormulario.Email" />
+                        <ValidationMessage For="() => contactoFormulario.Email" />
                     </div>
                     <div>
                         <label class="form-label">Empresa</label>
@@ -102,6 +102,13 @@
                     </div>
                 </div>
 
+<div>
+                        <label class="form-label">Direccion</label>
+                        <InputText class="form-control" @bind-Value="contactoFormulario.Direccion" />
+                    </div>
+
+
+
                 <div class="actions">
                     <button type="button" class="btn btn-outline-secondary" @onclick="CancelarEdicion">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar cambios</button>
@@ -119,13 +126,13 @@
             </div>
 
             <div class="actions top-actions">
-                <button class="btn btn-outline-primary" @onclick="EditarContacto">Editar</button>
-                <button class="btn btn-outline-danger" @onclick="EliminarContacto">Eliminar</button>
+                <button class="btn btn-outline-primary" @onclick="EditarContacto">modificar contacto</button>
+                <button class="btn btn-outline-danger" @onclick="EliminarContacto">baja de contacto</button>
             </div>
 
             <dl class="contact-detail-list">
                 <dt>Email</dt>
-                <dd>@contactoSeleccionado.CorreoElectronico</dd>
+                <dd>@contactoSeleccionado.Email</dd>
                 <dt>Telefono</dt>
                 <dd>@contactoSeleccionado.Telefono</dd>
                 <dt>Empresa</dt>
@@ -242,7 +249,7 @@
         Nombre = contacto.Nombre,
         Apellido = contacto.Apellido,
         Telefono = contacto.Telefono,
-        CorreoElectronico = contacto.CorreoElectronico,
+        Email = contacto.Email,
         Empresa = contacto.Empresa,
         Cargo = contacto.Cargo,
         Direccion = contacto.Direccion,
