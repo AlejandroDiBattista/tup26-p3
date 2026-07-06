@@ -134,4 +134,5 @@ Legajo  Nombre y Apellido                Prácticos     Parciales
 > * En **Prácticos**, cada icono representa un trabajo práctico: 🟢 presentado, 🟡 rechazado, 🔴 no presentado.
 > * En **Parciales**, el primer icono corresponde al primer parcial y el segundo al segundo parcial: 🟢 promoción, 🟡 regular, 🔴 desaprobado, ⚪ no corresponde.
 
-> Nota: Los resultados pueden actualizarse. Ante cualquier duda, consulte con el docente a cargo.
+> Nota 1: Los resultados pueden actualizarse. Ante cualquier duda, consulte con el docente a cargo.
+> Nota 2: Como se rinde el final? Se debe realizar y defender la siguiente Aplicacion Web [Sistema de agenda de contactos con historial de comunicaciones](examen-final.md)
